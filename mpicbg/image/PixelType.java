@@ -6,6 +6,7 @@ package mpicbg.image;
  */
 public abstract class PixelType
 {
+	public Class c = float.class;
 	/**
 	 * Returns the number of channels used in this image. 
 	 * @return int - Number of channels

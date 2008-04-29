@@ -8,16 +8,10 @@ public abstract class PixelPointer
 	final PixelContainer container;
 	
 	/**
-	 * Returns the current integer position in the PixelContainer
-	 * @return The integer location of this PixelPointer in the PixelContainer
+	 * Returns the current location in the PixelContainer
+	 * @return The location of this PixelPointer in the PixelContainer
 	 */
-	abstract int[] getGridLocation();
-	
-	/**
-	 * Returns the current floating point position in the PixelContainer
-	 * @return The floating point location of this PixelPointer in the PixelContainer
-	 */
-	abstract double[] getLocation();
+	abstract double[] getCoordinates();
 
 	/**
 	 * Returns the intensity for the current position. It might be interpolated if the location is not integer.
@@ -29,22 +23,20 @@ public abstract class PixelPointer
 	 * Computes the projection of the Raw Pixel intensity of type PixelType.getType() to ARGB
 	 * To be implemented as a static method.
 	 * 
-	 * @param pixel raw pixel data
 	 * @return rgba integer
 	 */
-	abstract int toRGBA( Object pixel );	
+	abstract int toRGBA();	
 
 	/**
 	 * Computes the projection of the Raw Pixel intensity of type PixelType.getType() to an 8-Bit Grayvalue
 	 * To be implemented as a static method.
 	 * 
-	 * @param pixel raw pixel data
 	 * @return rgba integer
 	 */
-	abstract int toByte( Object pixel );	
+	abstract int toByte();	
 
 	PixelPointer( PixelContainer pc )
 	{
 		container = pc;
-	}	
+	}
 }
