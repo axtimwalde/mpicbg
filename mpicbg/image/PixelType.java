@@ -1,6 +1,3 @@
-/**
- * 
- */
 package mpicbg.image;
 
 /**
@@ -10,32 +7,21 @@ package mpicbg.image;
 public abstract class PixelType
 {
 	/**
-	 * 
-	 * @return number of channels
+	 * Returns the number of channels used in this image. 
+	 * @return int - Number of channels
 	 */
-	abstract int getSize();
+	abstract int getNumberOfChannels();
 	
 	/**
-	 * 
-	 * @return type of all channels 
+	 * Returns the type of each channel in this image.  
+	 * @return Class - Type of all individual channels 
 	 */
 	abstract Class getType();
 	
 	/**
-	 * To be imnplemented as a static method.
-	 * 
-	 * @param pixel raw pixel data
-	 * 
-	 * @return rgba integer
+	 * Returns the number of Bytes required to store one pixel in memory (all Channels!)   
+	 * @return int - Number of Bytes required to store one pixel 
 	 */
-	abstract int toRGBA( Object pixel );
+	abstract int sizeOf();
 	
-	private void test()
-	{
-		Object t =  null;
-		float[] s = (float[])t;
-		t = s;
-		
-		Float[] g = (Float[])t;
-	}
 }

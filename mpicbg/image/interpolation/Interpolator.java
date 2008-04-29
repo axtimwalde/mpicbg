@@ -1,14 +1,13 @@
-/**
- * 
- */
-package mpicbg.image;
+package mpicbg.image.interpolation;
+
+import mpicbg.image.PixelPointer;
 
 /**
  * @author Preibisch and Saalfeld
  *
  */
+
 public interface Interpolator
 {
-	Object get( double[] location );
 	Object get( PixelPointer p );
 }
