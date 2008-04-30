@@ -4,31 +4,34 @@ import mpicbg.image.interpolation.Interpolator;
 
 public abstract class DirectBytePixelPointer extends DirectPixelPointer 
 {
+	final byte[] register;
+	
 	public DirectBytePixelPointer( PixelContainer pc, Interpolator ip )
 	{
 		super( pc, ip );
+		register = new byte[ container.getPixelType().getNumChannels() ];
 	}
 	
 	
 	@Override
 	public void add( PixelPointer p )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		byte[] b = this.getBytes();
 		byte[] a = p.getBytes();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] += a[ i ];
-		setBytes( b );
+		set( b );
 	}
 
 	@Override
 	public void add( byte a )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		byte[] b = this.getBytes();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] += a;
-		setBytes( b );
+		set( b );
 	}
 
 	@Override
@@ -50,22 +53,22 @@ public abstract class DirectBytePixelPointer extends DirectPixelPointer
 	@Override
 	public void div( PixelPointer p )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		byte[] b = this.getBytes();
 		byte[] a = p.getBytes();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] /= a[ i ];
-		setBytes( b );
+		set( b );
 	}
 
 	@Override
 	public void div( byte a )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		byte[] b = this.getBytes();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] /= a;
-		setBytes( b );
+		set( b );
 	}
 
 	@Override
@@ -87,22 +90,22 @@ public abstract class DirectBytePixelPointer extends DirectPixelPointer
 	@Override
 	public void mul( PixelPointer p )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		byte[] b = this.getBytes();
 		byte[] a = p.getBytes();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] *= a[ i ];
-		setBytes( b );
+		set( b );
 	}
 
 	@Override
 	public void mul( byte a )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		byte[] b = this.getBytes();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] *= a;
-		setBytes( b );
+		set( b );
 	}
 	
 	@Override
@@ -124,22 +127,22 @@ public abstract class DirectBytePixelPointer extends DirectPixelPointer
 	@Override
 	public void sub( PixelPointer p )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		byte[] b = this.getBytes();
 		byte[] a = p.getBytes();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] -= a[ i ];
-		setBytes( b );
+		set( b );
 	}
 
 	@Override
 	public void sub( byte a )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		byte[] b = this.getBytes();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] -= a;
-		setBytes( b );
+		set( b );
 	}
 
 	@Override

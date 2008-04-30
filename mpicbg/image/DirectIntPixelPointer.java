@@ -13,12 +13,12 @@ public abstract class DirectIntPixelPointer extends DirectPixelPointer
 	@Override
 	public void add( PixelPointer p )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		int[] b = this.getInts();
 		int[] a = p.getInts();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] += a[ i ];
-		setInts( b );
+		set( b );
 	}
 
 	@Override
@@ -30,11 +30,11 @@ public abstract class DirectIntPixelPointer extends DirectPixelPointer
 	@Override
 	public void add( int a )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		int[] b = this.getInts();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] += a;
-		setInts( b );
+		set( b );
 	}
 
 	@Override
@@ -50,12 +50,12 @@ public abstract class DirectIntPixelPointer extends DirectPixelPointer
 	@Override
 	public void div( PixelPointer p )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		int[] b = this.getInts();
 		int[] a = p.getInts();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] /= a[ i ];
-		setInts( b );
+		set( b );
 	}
 
 	@Override
@@ -67,11 +67,11 @@ public abstract class DirectIntPixelPointer extends DirectPixelPointer
 	@Override
 	public void div( int a )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		int[] b = this.getInts();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] /= a;
-		setInts( b );
+		set( b );
 	}
 
 	@Override
@@ -87,12 +87,12 @@ public abstract class DirectIntPixelPointer extends DirectPixelPointer
 	@Override
 	public void mul( PixelPointer p )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		int[] b = this.getInts();
 		int[] a = p.getInts();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] *= a[ i ];
-		setInts( b );
+		set( b );
 	}
 
 	@Override
@@ -104,11 +104,11 @@ public abstract class DirectIntPixelPointer extends DirectPixelPointer
 	@Override
 	public void mul( int a )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		int[] b = this.getInts();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] *= a;
-		setInts( b );
+		set( b );
 	}
 
 	@Override
@@ -124,12 +124,12 @@ public abstract class DirectIntPixelPointer extends DirectPixelPointer
 	@Override
 	public void sub( PixelPointer p )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		int[] b = this.getInts();
 		int[] a = p.getInts();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] -= a[ i ];
-		setInts( b );
+		set( b );
 	}
 
 	@Override
@@ -141,11 +141,11 @@ public abstract class DirectIntPixelPointer extends DirectPixelPointer
 	@Override
 	public void sub( int a )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		int[] b = this.getInts();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] -= a;
-		setInts( b );
+		set( b );
 	}
 
 	@Override

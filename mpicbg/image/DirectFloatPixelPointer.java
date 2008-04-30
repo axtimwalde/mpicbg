@@ -13,12 +13,12 @@ public abstract class DirectFloatPixelPointer extends DirectPixelPointer
 	@Override
 	public void add( PixelPointer p )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		float[] b = this.getFloats();
 		float[] a = p.getFloats();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] += a[ i ];
-		setFloats( b );
+		set( b );
 	}
 
 	@Override
@@ -36,11 +36,11 @@ public abstract class DirectFloatPixelPointer extends DirectPixelPointer
 	@Override
 	public void add( float a )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		float[] b = this.getFloats();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] += a;
-		setFloats( b );
+		set( b );
 	}
 
 	@Override
@@ -50,12 +50,12 @@ public abstract class DirectFloatPixelPointer extends DirectPixelPointer
 	@Override
 	public void div( PixelPointer p )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		float[] b = this.getFloats();
 		float[] a = p.getFloats();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] /= a[ i ];
-		setFloats( b );
+		set( b );
 	}
 
 	@Override
@@ -73,11 +73,11 @@ public abstract class DirectFloatPixelPointer extends DirectPixelPointer
 	@Override
 	public void div( float a )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		float[] b = this.getFloats();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] /= a;
-		setFloats( b );
+		set( b );
 	}
 
 	@Override
@@ -87,12 +87,12 @@ public abstract class DirectFloatPixelPointer extends DirectPixelPointer
 	@Override
 	public void mul( PixelPointer p )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		float[] b = this.getFloats();
 		float[] a = p.getFloats();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] *= a[ i ];
-		setFloats( b );
+		set( b );
 	}
 
 	@Override
@@ -110,11 +110,11 @@ public abstract class DirectFloatPixelPointer extends DirectPixelPointer
 	@Override
 	public void mul( float a )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		float[] b = this.getFloats();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] *= a;
-		setFloats( b );
+		set( b );
 	}
 
 	@Override
@@ -124,12 +124,12 @@ public abstract class DirectFloatPixelPointer extends DirectPixelPointer
 	@Override
 	public void sub( PixelPointer p )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		float[] b = this.getFloats();
 		float[] a = p.getFloats();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] -= a[ i ];
-		setFloats( b );
+		set( b );
 	}
 
 	@Override
@@ -147,11 +147,11 @@ public abstract class DirectFloatPixelPointer extends DirectPixelPointer
 	@Override
 	public void sub( float a )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		float[] b = this.getFloats();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] -= a;
-		setFloats( b );
+		set( b );
 	}
 
 	@Override

@@ -9,7 +9,8 @@ package mpicbg.image;
  */
 public interface DirectIteratable
 {
-	public void next( int dimension );
-	public void previous( int dimension );
-	public boolean outOfBounds( int dimension );
+	public void next() throws OutOfBoundsException;
+	public void prev() throws OutOfBoundsException;
+	public boolean hasNext();
+	public boolean hasPrev();
 }

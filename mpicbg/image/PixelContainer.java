@@ -19,7 +19,7 @@ public abstract class PixelContainer
 		type = pt;
 	}
 	
-	public PixelType getPixelType()
+	final public PixelType getPixelType()
 	{
 		return type;
 	}

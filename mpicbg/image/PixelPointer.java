@@ -15,6 +15,7 @@ public abstract class PixelPointer
 	 * @return coordinates in PixelContainer
 	 */
 	abstract double[] getCoordinates();
+	abstract void getCoordinates( double[] coordinates );
 
 	/**
 	 * Returns the values.  Depending on the PixelType those are either byte[],
@@ -25,46 +26,60 @@ public abstract class PixelPointer
 	abstract Object get();
 	
 	/**
-	 * Typed version of {@link #get()}
+	 * Writes the values of .  Depending on the PixelType those are either byte[],
+	 * short[], int[], long[], float[] or double[].
 	 * 
 	 * @return values
 	 */
-	abstract byte[] getBytes();
+	abstract void get( Object a );
+	abstract void get( byte[] a );
+	abstract void get( short[] a );
+	abstract void get( int[] a );
+	abstract void get( long[] a );
+	abstract void get( float[] a );
+	abstract void get( double[] a );
 	
 	/**
 	 * Typed version of {@link #get()}
 	 * 
 	 * @return values
 	 */
-	abstract short[] getShorts();
+	public abstract byte[] getBytes();
 	
 	/**
 	 * Typed version of {@link #get()}
 	 * 
 	 * @return values
 	 */
-	abstract int[] getInts();
+	public abstract short[] getShorts();
 	
 	/**
 	 * Typed version of {@link #get()}
 	 * 
 	 * @return values
 	 */
-	abstract long[] getLongs();
+	public abstract int[] getInts();
 	
 	/**
 	 * Typed version of {@link #get()}
 	 * 
 	 * @return values
 	 */
-	abstract float[] getFloats();
+	public abstract long[] getLongs();
 	
 	/**
 	 * Typed version of {@link #get()}
 	 * 
 	 * @return values
 	 */
-	abstract double[] getDoubles();
+	public abstract float[] getFloats();
+	
+	/**
+	 * Typed version of {@link #get()}
+	 * 
+	 * @return values
+	 */
+	public abstract double[] getDoubles();
 
 	/**
 	 * Computes the projection of the Raw Pixel intensity of type PixelType.getType() to ARGB
@@ -72,7 +87,7 @@ public abstract class PixelPointer
 	 * 
 	 * @return rgba integer
 	 */
-	abstract int toRGBA();	
+	public abstract int toRGBA();	
 
 	/**
 	 * Computes the projection of the Raw Pixel intensity of type PixelType.getType() to an 8-Bit Grayvalue
@@ -80,7 +95,7 @@ public abstract class PixelPointer
 	 * 
 	 * @return rgba integer
 	 */
-	abstract int toByte();	
+	public abstract int toByte();	
 
 	PixelPointer( PixelContainer pc, Interpolator ip )
 	{

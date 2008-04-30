@@ -2,7 +2,7 @@ package mpicbg.image;
 
 import mpicbg.image.interpolation.Interpolator;
 
-public abstract class DirectShortPixelPointer extends DirectPixelPointer 
+public abstract class DirectShortPixelPointer extends DirectPixelPointer implements DirectRandomAccessible
 {
 	public DirectShortPixelPointer( PixelContainer pc, Interpolator ip )
 	{
@@ -13,12 +13,12 @@ public abstract class DirectShortPixelPointer extends DirectPixelPointer
 	@Override
 	public void add( PixelPointer p )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		short[] b = this.getShorts();
 		short[] a = p.getShorts();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] += a[ i ];
-		setShorts( b );
+		set( b );
 	}
 
 	@Override
@@ -27,11 +27,11 @@ public abstract class DirectShortPixelPointer extends DirectPixelPointer
 	@Override
 	public void add( short a )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		short[] b = this.getShorts();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] += a;
-		setShorts( b );
+		set( b );
 	}
 
 	@Override
@@ -50,12 +50,12 @@ public abstract class DirectShortPixelPointer extends DirectPixelPointer
 	@Override
 	public void div( PixelPointer p )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		short[] b = this.getShorts();
 		short[] a = p.getShorts();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] /= a[ i ];
-		setShorts( b );
+		set( b );
 	}
 
 	@Override
@@ -64,11 +64,11 @@ public abstract class DirectShortPixelPointer extends DirectPixelPointer
 	@Override
 	public void div( short a )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		short[] b = this.getShorts();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] /= a;
-		setShorts( b );
+		set( b );
 	}
 
 	@Override
@@ -87,12 +87,12 @@ public abstract class DirectShortPixelPointer extends DirectPixelPointer
 	@Override
 	public void mul( PixelPointer p )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		short[] b = this.getShorts();
 		short[] a = p.getShorts();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] *= a[ i ];
-		setShorts( b );
+		set( b );
 	}
 
 	@Override
@@ -101,11 +101,11 @@ public abstract class DirectShortPixelPointer extends DirectPixelPointer
 	@Override
 	public void mul( short a )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		short[] b = this.getShorts();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] *= a;
-		setShorts( b );
+		set( b );
 	}
 
 	@Override
@@ -124,12 +124,12 @@ public abstract class DirectShortPixelPointer extends DirectPixelPointer
 	@Override
 	public void sub( PixelPointer p )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		short[] b = this.getShorts();
 		short[] a = p.getShorts();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] -= a[ i ];
-		setShorts( b );
+		set( b );
 	}
 
 	@Override
@@ -138,11 +138,11 @@ public abstract class DirectShortPixelPointer extends DirectPixelPointer
 	@Override
 	public void sub( short a )
 	{
-		int n = container.getPixelType().getNumberOfChannels();
+		int n = container.getPixelType().getNumChannels();
 		short[] b = this.getShorts();
 		for ( int i = 0; i < n; ++i )
 			b[ i ] -= a;
-		setShorts( b );
+		set( b );
 	}
 
 	@Override

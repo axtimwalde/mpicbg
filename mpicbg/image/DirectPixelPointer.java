@@ -24,18 +24,18 @@ public abstract class DirectPixelPointer extends PixelPointer
 		return coordinates.clone();
 	}
 	
-	public void getDirectCoordinates( final int[] coordinates )
+	public void getDirectCoordinates( int[] coordinates )
 	{
 		System.arraycopy( this.coordinates, 0, coordinates, 0, coordinates.length );
 	}
 	
 	abstract public void set( Object o );
-	abstract public void setBytes( byte[] a );
-	abstract public void setShorts( short[] a );
-	abstract public void setInts( int[] a );
-	abstract public void setLongs( long[] a );
-	abstract public void setFloats( float[] a );
-	abstract public void setDoubles( double[] a );
+	abstract public void set( byte[] a );
+	abstract public void set( short[] a );
+	abstract public void set( int[] a );
+	abstract public void set( long[] a );
+	abstract public void set( float[] a );
+	abstract public void set( double[] a );
 	
 	abstract public void add( PixelPointer p );
 	abstract public void add( byte a );
