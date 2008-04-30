@@ -7,9 +7,15 @@ package mpicbg.image;
 public abstract class PixelContainer
 {
 	final PixelType type;
+	int[] size;
+	double[] resolution;
+	Object data = null;
 	
-	PixelContainer( PixelType pt )
+	
+	PixelContainer( int[] size, double[] resolution, PixelType pt )
 	{
+		this.size = size.clone();
+		this.resolution = resolution.clone();
 		type = pt;
 	}
 	
@@ -17,5 +23,9 @@ public abstract class PixelContainer
 	{
 		return type;
 	}
+	
+	public int getNumDimensions(){ return size.length; }
+	public int[] getSize(){ return size.clone(); }
+	public double[] getResolution(){ return resolution.clone(); }
 
 }
