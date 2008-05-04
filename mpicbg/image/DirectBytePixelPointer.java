@@ -6,7 +6,7 @@ public abstract class DirectBytePixelPointer extends DirectPixelPointer
 {
 	final byte[] register;
 	
-	public DirectBytePixelPointer( PixelContainer pc, Interpolator ip )
+	public DirectBytePixelPointer( Container pc, Interpolator ip )
 	{
 		super( pc, ip );
 		register = new byte[ container.getPixelType().getNumChannels() ];

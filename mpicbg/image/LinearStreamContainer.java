@@ -7,7 +7,7 @@ package mpicbg.image;
  * @author Preibisch and Saalfeld
  *
  */
-public class LinearStreamContainer extends PixelContainer
+public class LinearStreamContainer extends Container implements Iteratable
 {
 	final DirectIterator directIterator;
 	final DirectDimensionIteratable directDimensionIteratable; 

@@ -13,7 +13,7 @@ public abstract class DirectPixelPointer extends PixelPointer
 {
 	final int[] coordinates;
 	
-	DirectPixelPointer( PixelContainer pc, Interpolator ip )
+	DirectPixelPointer( Container pc, Interpolator ip )
 	{
 		super( pc, ip );
 		coordinates = new int[ pc.getNumDimensions() ];

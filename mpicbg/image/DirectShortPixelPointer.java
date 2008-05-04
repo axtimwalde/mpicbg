@@ -4,7 +4,7 @@ import mpicbg.image.interpolation.Interpolator;
 
 public abstract class DirectShortPixelPointer extends DirectPixelPointer implements DirectRandomAccessible
 {
-	public DirectShortPixelPointer( PixelContainer pc, Interpolator ip )
+	public DirectShortPixelPointer( Container pc, Interpolator ip )
 	{
 		super( pc, ip );
 	}

@@ -11,7 +11,7 @@ import mpicbg.image.interpolation.Interpolator;
  */
 public abstract class DirectDimensionIterator extends DirectPixelPointer implements DirectDimensionIteratable
 {
-	DirectDimensionIterator( PixelContainer pc, Interpolator ip )
+	DirectDimensionIterator( Container pc, Interpolator ip )
 	{
 		super( pc, ip );
 	}

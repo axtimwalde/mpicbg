@@ -4,7 +4,7 @@ import mpicbg.image.interpolation.Interpolator;
 
 public abstract class DirectIntPixelPointer extends DirectPixelPointer 
 {
-	public DirectIntPixelPointer( PixelContainer pc, Interpolator ip )
+	public DirectIntPixelPointer( Container pc, Interpolator ip )
 	{
 		super( pc, ip );
 	}
