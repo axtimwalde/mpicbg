@@ -173,7 +173,7 @@ public class FloatArray2DScaleOctave
 			
 			//System.out.println( "sigma[" + i + "] = " + SIGMA[ i ] + "; sigma_diff[" + i + "] = " + SIGMA_DIFF[ i ] );
 
-			KERNEL_DIFF[ i ] = Filter.createGaussianKernel1D(
+			KERNEL_DIFF[ i ] = Filter.createGaussianKernel(
 					SIGMA_DIFF[ i ],
 					true );
 		}
@@ -256,9 +256,7 @@ public class FloatArray2DScaleOctave
 		for ( int i = 1; i < SIGMA_DIFF.length; ++i )
 		{
 			if ( state == State.STUB && i == STEPS ) continue;
-			// use precomputed kernels
 			l[ i ] = Filter.convolveSeparable( l[ 0 ], KERNEL_DIFF[ i ], KERNEL_DIFF[ i ] );
-			//l[ i ] = ImageFilter.computeGaussian( l[ 0 ], SIGMA_DIFF[ i ] );
 		}
 		d = new FloatArray2D[ STEPS + 2 ];
 		for ( int i = 0; i < d.length; ++i )
