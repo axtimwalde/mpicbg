@@ -1,5 +1,4 @@
 import mpicbg.imagefeatures.*;
-import mpicbg.models.*;
 
 import ij.plugin.*;
 import ij.gui.*;
@@ -154,15 +153,19 @@ public class SIFT_Test implements PlugIn, KeyListener
 		FloatArray2D fa = ImageArrayConverter.ImageToFloatArray2D( ip1 );
 		Filter.enhance( fa, 1.0f );
 		
+		float[] initial_kernel;
+		
 		if ( upscale )
 		{
 			FloatArray2D fat = new FloatArray2D( fa.width * 2 - 1, fa.height * 2 - 1 ); 
 			FloatArray2DScaleOctave.upsample( fa, fat );
 			fa = fat;
-			fa = Filter.computeGaussianFastMirror( fa, ( float )Math.sqrt( initial_sigma * initial_sigma - 1.0 ) );
+			initial_kernel = Filter.createGaussianKernel( ( float )Math.sqrt( initial_sigma * initial_sigma - 1.0 ), true );
 		}
 		else
-			fa = Filter.computeGaussianFastMirror( fa, ( float )Math.sqrt( initial_sigma * initial_sigma - 0.25 ) );
+			initial_kernel = Filter.createGaussianKernel( ( float )Math.sqrt( initial_sigma * initial_sigma - 0.25 ), true );
+		
+		fa = Filter.convolveSeparable( fa, initial_kernel, initial_kernel );
 		
 		long start_time = System.currentTimeMillis();
 		System.out.print( "processing SIFT ..." );
