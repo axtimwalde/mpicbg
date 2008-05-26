@@ -165,7 +165,7 @@ public class SIFT_Align implements PlugIn, KeyListener
 		FloatArray2D g = ImageArrayConverter.ImageToFloatArray2D( ip );
 
 		float sigma = ( float )Math.sqrt( 0.25 / s / s - 0.25 );
-		float[] kernel = Filter.createGaussianKernel1D( sigma, true );
+		float[] kernel = Filter.createGaussianKernel( sigma, true );
 		
 		g = Filter.convolveSeparable( g, kernel, kernel );
 
@@ -304,15 +304,20 @@ public class SIFT_Align implements PlugIn, KeyListener
 		FloatArray2D fa = ImageArrayConverter.ImageToFloatArray2D( ip2 );
 		Filter.enhance( fa, 1.0f );
 		
+		float[] initial_kernel;
+		
 		if ( upscale )
 		{
 			FloatArray2D fat = new FloatArray2D( fa.width * 2 - 1, fa.height * 2 - 1 ); 
 			FloatArray2DScaleOctave.upsample( fa, fat );
 			fa = fat;
-			fa = Filter.computeGaussianFastMirror( fa, ( float )Math.sqrt( initial_sigma * initial_sigma - 1.0 ) );
+			initial_kernel = Filter.createGaussianKernel( ( float )Math.sqrt( initial_sigma * initial_sigma - 1.0 ), true );
 		}
 		else
-			fa = Filter.computeGaussianFastMirror( fa, ( float )Math.sqrt( initial_sigma * initial_sigma - 0.25 ) );
+			initial_kernel = Filter.createGaussianKernel( ( float )Math.sqrt( initial_sigma * initial_sigma - 0.25 ), true );
+		
+		fa = Filter.convolveSeparable( fa, initial_kernel, initial_kernel );
+		
 		
 		long start_time = System.currentTimeMillis();
 		System.out.print( "processing SIFT ..." );
@@ -339,10 +344,9 @@ public class SIFT_Align implements PlugIn, KeyListener
 				FloatArray2D fat = new FloatArray2D( fa.width * 2 - 1, fa.height * 2 - 1 ); 
 				FloatArray2DScaleOctave.upsample( fa, fat );
 				fa = fat;
-				fa = Filter.computeGaussianFastMirror( fa, ( float )Math.sqrt( initial_sigma * initial_sigma - 1.0 ) );
 			}
-			else
-				fa = Filter.computeGaussianFastMirror( fa, ( float )Math.sqrt( initial_sigma * initial_sigma - 0.25 ) );
+			
+			fa = Filter.convolveSeparable( fa, initial_kernel, initial_kernel );
 			
 			fs1 = fs2;
 			
