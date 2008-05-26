@@ -242,6 +242,8 @@ public abstract class Model {
 			}
 			//System.out.println( ( num_inliers - inliers.size() ) + " candidates with e > " + t + " removed by iterative robust regression." );
 			//System.out.println( inliers.size() + " inliers remaining." );
+			
+			model.error = observer.mean;
 		}
 		while ( num_inliers > inliers.size() );
 		
