@@ -11,7 +11,6 @@ import java.util.Vector;
 import java.awt.TextField;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.awt.Label;
 
 /**
  * Extract landmark correspondences in two images as PointRoi.
@@ -167,24 +166,26 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 		FloatArray2D fa1 = ImageArrayConverter.ImageToFloatArray2D( ip1 );
 		Filter.enhance( fa1, 1.0f );
 		FloatArray2D fa2 = ImageArrayConverter.ImageToFloatArray2D( ip2 );
-		Filter.enhance( fa1, 1.0f );
+		Filter.enhance( fa2, 1.0f );
+		
+		float[] initial_kernel;
 		
 		if ( upscale )
 		{
 			FloatArray2D fat = new FloatArray2D( fa1.width * 2 - 1, fa1.height * 2 - 1 ); 
 			FloatArray2DScaleOctave.upsample( fa1, fat );
 			fa1 = fat;
-			fa1 = Filter.computeGaussianFastMirror( fa1, ( float )Math.sqrt( initial_sigma * initial_sigma - 1.0 ) );
 			fat = new FloatArray2D( fa2.width * 2 - 1, fa2.height * 2 - 1 ); 
 			FloatArray2DScaleOctave.upsample( fa2, fat );
 			fa2 = fat;
-			fa2 = Filter.computeGaussianFastMirror( fa2, ( float )Math.sqrt( initial_sigma * initial_sigma - 1.0 ) );
+			initial_kernel = Filter.createGaussianKernel( ( float )Math.sqrt( initial_sigma * initial_sigma - 1.0 ), true );
 		}
 		else
-		{
-			fa1 = Filter.computeGaussianFastMirror( fa1, ( float )Math.sqrt( initial_sigma * initial_sigma - 0.25 ) );
-			fa2 = Filter.computeGaussianFastMirror( fa2, ( float )Math.sqrt( initial_sigma * initial_sigma - 0.25 ) );
-		}
+			initial_kernel = Filter.createGaussianKernel( ( float )Math.sqrt( initial_sigma * initial_sigma - 0.25 ), true );
+			
+		fa1 = Filter.convolveSeparable( fa1, initial_kernel, initial_kernel );
+		fa2 = Filter.convolveSeparable( fa2, initial_kernel, initial_kernel );
+		
 		
 		long start_time = System.currentTimeMillis();
 		IJ.log( "Processing SIFT ..." );
