@@ -14,6 +14,6 @@ package mpicbg.imagefeatures;
  */
 public abstract class FloatArray
 {
-    public float data[] = null;
+	public float data[];
     public abstract FloatArray clone();
 }
