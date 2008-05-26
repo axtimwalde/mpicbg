@@ -9,13 +9,13 @@ import mpicbg.image.interpolation.Interpolator;
  * @author Preibisch and Saalfeld
  *
  */
-public abstract class DirectLinearStreamIterator extends DirectPixelPointer implements Iteratable
+public abstract class DirectLinearStreamDimensionIterator extends DirectPixelPointer implements Iteratable
 {
 	int i = 0;
 	boolean hasNext = false;
 	boolean hasPrev = false;
 	
-	DirectLinearStreamIterator( LinearStreamContainer pc, Interpolator ip )
+	DirectLinearStreamDimensionIterator( LinearStreamContainer pc, Interpolator ip )
 	{
 		super ( pc, ip );
 		if ( ( ( LinearStreamContainer )container ).getStreamLength() > 1 ) hasNext = true;

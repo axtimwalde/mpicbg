@@ -10,8 +10,8 @@ package mpicbg.image;
 public class LinearStreamContainer extends Container implements Iteratable
 {
 	final DirectIterator directIterator;
-	final DirectDimensionIteratable directDimensionIteratable; 
-	final DirectRandomAccessible directRandomAccessible; 
+	final IteratableByDimension directDimensionIteratable; 
+	final RandomAccessible directRandomAccessible; 
 	int streamLength;
 	
 	public int getStreamLength(){ return streamLength; }
@@ -42,7 +42,7 @@ public class LinearStreamContainer extends Container implements Iteratable
 		else data = new Object[ streamLength ];
 	}
 	
-	public DirectRandomAccessible getDirectRandomAccessor()
+	public RandomAccessible getDirectRandomAccessor()
 	{
 		
 	}

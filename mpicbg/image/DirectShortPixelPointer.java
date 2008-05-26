@@ -2,7 +2,7 @@ package mpicbg.image;
 
 import mpicbg.image.interpolation.Interpolator;
 
-public abstract class DirectShortPixelPointer extends DirectPixelPointer implements DirectRandomAccessible
+public abstract class DirectShortPixelPointer extends DirectPixelPointer implements RandomAccessible
 {
 	public DirectShortPixelPointer( Container pc, Interpolator ip )
 	{
