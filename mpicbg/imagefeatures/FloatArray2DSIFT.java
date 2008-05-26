@@ -181,7 +181,7 @@ public class FloatArray2DSIFT
 			
 			//System.out.println( "sigma[" + i + "] = " + sigma[ i ] + "; sigma_diff[" + i + "] = " + sigma_diff[ i ] );
 
-			kernel_diff[ i ] = Filter.createGaussianKernel1D( sigma_diff[ i ], true );
+			kernel_diff[ i ] = Filter.createGaussianKernel( sigma_diff[ i ], true );
 		}
 		
 		FloatArray2D next;
@@ -374,7 +374,7 @@ public class FloatArray2DSIFT
 				
 		// create a circular gaussian window with sigma 1.5 times that of the feature
 		FloatArray2D gaussianMask =
-			Filter.create_gaussian_kernel_2D_offset(
+			Filter.createGaussianKernelOffset(
 					octave_sigma * 1.5f,
 					c[ 0 ] - ( float )Math.floor( c[ 0 ] ),
 					c[ 1 ] - ( float )Math.floor( c[ 1 ] ),
