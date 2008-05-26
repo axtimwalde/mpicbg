@@ -1,14 +1,6 @@
 package mpicbg.imagefeatures;
 
 /**
- * <p>Title: ImageFilter</p>
- *
- * <p>Description: </p>
- *
- * <p>Copyright: Copyright (c) 2007</p>
- *
- * <p>Company: </p>
- *
  * License: GPL
  *
  * This program is free software; you can redistribute it and/or
@@ -24,16 +16,15 @@ package mpicbg.imagefeatures;
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @author Stephan Preibisch <preibisch@mpi-cbg.de> and Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Preibisch <preibisch@mpi-cbg.de> and
+ *   Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.1b
  */
-
-import java.util.Random;
 
 public class Filter
 {
 	/**
-	 * return a integer that is flipped in the range [0 ... mod - 1]
+	 * Return an unsigned integer that bounces in a ping pong manneris flipped in the range [0 ... mod - 1]
 	 *
 	 * @param a the value to be flipped
 	 * @param range the size of the range
@@ -49,7 +40,10 @@ public class Filter
 	}
 	
 	/**
-	 * fast floor ld of unsigned v
+	 * Fast floor log_2 of an unsigned integer value.
+	 * 
+	 * @param v unsigned integer
+	 * @return floor log_2
 	 */
 	public static final int ldu( int v )
 	{
@@ -64,440 +58,96 @@ public class Filter
 	}
 	
     /**
-     * Create a 1d-Gaussian kernel of appropriate size
+     * Create a 1d-Gaussian kernel of appropriate size.
      *
      * @param sigma Standard deviation of the Gaussian kernel
      * @param normalize Normalize integral of the Gaussian kernel to 1 or not...
      * 
      * @return float[] Gaussian kernel of appropriate size
      */
-    public static float[] createGaussianKernel1D( float sigma, boolean normalize )
-    {
-        int size = 3;
-        float[] gaussianKernel;
-
-        if (sigma <= 0)
-        {
-         gaussianKernel = new float[3];
-         gaussianKernel[1] = 1;
-        }
-        else
-        {
-         size = Math.max(3, (int)(2*(int)(3*sigma + 0.5)+1));
-
-         float two_sq_sigma = 2*sigma*sigma;
-         gaussianKernel = new float[size];
-
-         for (int x = size/2; x >= 0; --x)
-         {
-             float val = (float)Math.exp(-(float)(x*x)/two_sq_sigma);
-
-             gaussianKernel[size/2-x] = val;
-             gaussianKernel[size/2+x] = val;
-         }
-     }
-
-     if (normalize)
-     {
-         float sum = 0;
-         for (float value : gaussianKernel)
-             sum += value;
-
-         for (int i = 0; i < gaussianKernel.length; i++)
-             gaussianKernel[i] /= sum;
-     }
-
-
-        return gaussianKernel;
-    }
-
-
-    public static FloatArray2D createGaussianKernel2D(float sigma, boolean normalize)
-    {
-        int size = 3;
-        FloatArray2D gaussianKernel;
-
-        if (sigma <= 0)
-        {
-         gaussianKernel = new FloatArray2D(3, 3);
-         gaussianKernel.data[4] = 1;
-        }
-        else
-        {
-         size = Math.max(3, (int)(2*(int)(3*sigma + 0.5)+1));
-
-         float two_sq_sigma = 2*sigma*sigma;
-         gaussianKernel = new FloatArray2D(size, size);
-
-         for (int y = size/2; y >= 0; --y)
-         {
-             for (int x = size/2; x >= 0; --x)
-             {
-              float val = (float)Math.exp(-(float)(y*y+x*x)/two_sq_sigma);
-
-              gaussianKernel.set(val, size/2-x, size/2-y);
-              gaussianKernel.set(val, size/2-x, size/2+y);
-              gaussianKernel.set(val, size/2+x, size/2-y);
-              gaussianKernel.set(val, size/2+x, size/2+y);
-             }
-         }
-        }
-
-        if (normalize)
-        {
-            float sum = 0;
-            for (float value : gaussianKernel.data)
-                sum += value;
-
-            for (int i = 0; i < gaussianKernel.data.length; i++)
-                gaussianKernel.data[i] /= sum;
-        }
-
-
-        return gaussianKernel;
-    }
-
-    /*
-    ** create a normalized gaussian impulse with appropriate size and offset center
-    */
-    static public FloatArray2D create_gaussian_kernel_2D_offset(
-                    float sigma,
-                    float offset_x,
-                    float offset_y,
-                    boolean normalize)
-    {
-            int size = 3;
-            FloatArray2D gaussian_kernel;
-            if (sigma == 0)
-            {
-                    gaussian_kernel = new FloatArray2D(3 ,3);
-                    gaussian_kernel.data[4] = 1;
-            }
-            else
-            {
-                    size = Math.max(3, (int)( 2 * Math.round( 3 * sigma ) + 1 ) );
-                    float two_sq_sigma = 2*sigma*sigma;
-                    // float normalization_factor = 1.0/(float)M_PI/two_sq_sigma;
-                    gaussian_kernel = new FloatArray2D( size, size );
-                    for ( int x = size - 1; x >= 0; --x )
-                    {
-                            float fx = (float)( x - size / 2 );
-                            for ( int y = size-1; y >= 0; --y )
-                            {
-                                    float fy = (float)(y-size/2);
-                                    float val = (float)( Math.exp( -( Math.pow( fx - offset_x, 2)+Math.pow(fy-offset_y, 2))/two_sq_sigma));
-                                    gaussian_kernel.set(val, x, y);
-                            }
-                    }
-            }
-            if (normalize)
-            {
-                    float sum = 0;
-                    for (float value : gaussian_kernel.data)
-                    sum += value;
-
-                    for (int i = 0; i < gaussian_kernel.data.length; i++)
-                    gaussian_kernel.data[i] /= sum;
-            }
-            return gaussian_kernel;
-    }
-
-    public static FloatArray2D computeIncreasingGaussianX(FloatArray2D input, float stDevStart, float stDevEnd)
-    {
-        FloatArray2D output = new FloatArray2D(input.width, input.height);
-
-        int width = input.width;
-        float changeFilterSize = (float)(stDevEnd - stDevStart)/(float)width;
-        float sigma;
-        int filterSize;
-
-        float avg;
-
-        for (int x = 0; x < input.width; x++)
-        {
-            sigma = stDevStart + changeFilterSize * (float) x;
-            FloatArray2D kernel = createGaussianKernel2D(sigma, true);
-            filterSize = kernel.width;
-
-            for (int y = 0; y < input.height; y++)
-            {
-                avg = 0;
-
-                for (int fx = -filterSize / 2; fx <= filterSize / 2; fx++)
-                    for (int fy = -filterSize / 2; fy <= filterSize / 2; fy++)
-                    {
-                        try
-                        {
-                            avg += input.get(x + fx, y + fy) * kernel.get(fx + filterSize/2, fy + filterSize/2);
-                        }
-                        catch (Exception e)
-                        {}
-                        ;
-
-                    }
-
-                output.set(avg, x, y);
-            }
-        }
-        return output;
-    }
-
-    public static FloatArray2D computeGaussian(FloatArray2D input, float sigma)
-    {
-        FloatArray2D output = new FloatArray2D(input.width, input.height);
-
-        float avg, kernelsum;
-
-        FloatArray2D kernel = createGaussianKernel2D(sigma, true);
-        int filterSize = kernel.width;
-
-        for (int x = 0; x < input.width; x++)
-        {
-            for (int y = 0; y < input.height; y++)
-            {
-                avg = 0;
-                kernelsum = 0;
-
-                for (int fx = -filterSize / 2; fx <= filterSize / 2; fx++)
-                    for (int fy = -filterSize / 2; fy <= filterSize / 2; fy++)
-                    {
-                        try
-                        {
-                            avg += input.get(x + fx, y + fy) * kernel.get(fx + filterSize/2, fy + filterSize/2);
-                            kernelsum += kernel.get(fx + filterSize/2, fy + filterSize/2);
-                        }
-                        catch (Exception e)
-                        {};
-
-                    }
-
-                output.set(avg/kernelsum, x, y);
-            }
-        }
-        return output;
-    }
-
-
-    public static FloatArray2D computeGaussianFastMirror(FloatArray2D input, float sigma)
-    {
-        FloatArray2D output = new FloatArray2D(input.width, input.height);
-
-        float avg, kernelsum = 0;
-        float[] kernel = createGaussianKernel1D(sigma, true);
-        int filterSize = kernel.length;
-
-        // get kernel sum
-        for (double value : kernel)
-            kernelsum += value;
-
-        // fold in x
-        for (int x = 0; x < input.width; x++)
-            for (int y = 0; y < input.height; y++)
-                {
-                    avg = 0;
-
-                    if (x -filterSize / 2 >= 0 && x + filterSize / 2 < input.width)
-                        for (int f = -filterSize / 2; f <= filterSize / 2; f++)
-                            avg += input.get(x + f, y) * kernel[f + filterSize / 2];
-                    else
-                        for (int f = -filterSize / 2; f <= filterSize / 2; f++)
-                            avg += input.getMirror(x + f, y) * kernel[f + filterSize / 2];
-
-                    output.set(avg / kernelsum, x, y);
-
-                }
-
-        // fold in y
-        for (int x = 0; x < input.width; x++)
-            {
-                float[] temp = new float[input.height];
-
-                for (int y = 0; y < input.height; y++)
-                {
-                    avg = 0;
-
-                    if (y -filterSize / 2 >= 0 && y + filterSize / 2 < input.height)
-                        for (int f = -filterSize / 2; f <= filterSize / 2; f++)
-                            avg += output.get(x, y + f) * kernel[f + filterSize / 2];
-                     else
-                        for (int f = -filterSize / 2; f <= filterSize / 2; f++)
-                            avg += output.getMirror(x, y + f) * kernel[f + filterSize / 2];
-
-                    temp[y] = avg / kernelsum;
-                }
-
-                for (int y = 0; y < input.height; y++)
-                    output.set(temp[y], x, y);
-            }
-
-        return output;
-    }
-
-    public static FloatArray2D distortSamplingX(FloatArray2D input)
-    {
-        FloatArray2D output = new FloatArray2D(input.width, input.height);
-
-        int filterSize = 3;
-        float avg;
-
-        Random rnd = new Random(353245632);
-
-        for (int x = 0; x < input.width; x++)
-        {
-            FloatArray2D kernel = new FloatArray2D(3,1);
-
-            float random = (rnd.nextFloat()-0.5f)*2;
-            float val1, val2, val3;
-
-            if (random < 0)
-            {
-                val1 = -random;
-                val2 = 1+random;
-                val3 = 0;
-            }
-            else
-            {
-                val3 = random;
-                val2 = 1-random;
-                val1 = 0;
-            }
-
-            kernel.set(val1, 0, 0);
-            kernel.set(val2, 1, 0);
-            kernel.set(val3, 2, 0);
-
-            for (int y = 0; y < input.height; y++)
-            {
-                avg = 0;
-
-                for (int fx = -filterSize / 2; fx <= filterSize / 2; fx++)
-                {
-                    try
-                    {
-                        avg += input.get(x + fx, y) * kernel.get(fx + filterSize / 2, 0);
-                    } catch (Exception e)
-                    {}
-                    ;
-                }
-
-                output.set(avg, x, y);
-            }
-        }
-        return output;
-    }
-
-    public static FloatArray2D distortSamplingY(FloatArray2D input)
-    {
-        FloatArray2D output = new FloatArray2D(input.width, input.height);
-
-        int filterSize = 3;
-        float avg;
-
-        Random rnd = new Random(7893469);
-
-        for (int y = 0; y < input.height; y++)
-        {
-            FloatArray2D kernel = new FloatArray2D(1,3);
-
-            float random = (rnd.nextFloat()-0.5f)*2;
-            float val1, val2, val3;
-
-            if (random < 0)
-            {
-                val1 = -random;
-                val2 = 1+random;
-                val3 = 0;
-            }
-            else
-            {
-                val3 = random;
-                val2 = 1-random;
-                val1 = 0;
-            }
-
-            kernel.set(val1, 0, 0);
-            kernel.set(val2, 0, 1);
-            kernel.set(val3, 0, 2);
-
-            for (int x = 0; x < input.width; x++)
-            {
-                avg = 0;
-
-                for (int fy = -filterSize / 2; fy <= filterSize / 2; fy++)
-                {
-                    try
-                    {
-                        avg += input.get(x, y + fy) * kernel.get(0, fy + filterSize / 2);
-                    } catch (Exception e)
-                    {}
-                    ;
-                }
-
-                output.set(avg, x, y);
-            }
-        }
-        return output;
-    }
-
-    public static FloatArray2D computeLaPlaceFilter3(FloatArray2D input)
-    {
-        FloatArray2D output = new FloatArray2D(input.width, input.height);
-
-        float derivX, derivY;
-        float x1, x2, x3;
-        float y1, y2, y3;
-
-        for (int y = 1; y < input.height -1 ; y++)
-            for (int x = 1; x < input.width -1; x++)
-            {
-                x1 = input.get(x-1,y);
-                x2 = input.get(x,y);
-                x3 = input.get(x+1,y);
-
-                derivX = x1 - 2*x2 + x3;
-
-                y1 = input.get(x,y-1);
-                y2 = input.get(x,y);
-                y3 = input.get(x,y+1);
-
-                derivY = y1 - 2*y2 + y3;
-
-                output.set((float)Math.sqrt(Math.pow(derivX,2) + Math.pow(derivY,2)), x, y);
-            }
-
-        return output;
-    }
-
-    public static FloatArray2D computeLaPlaceFilter5(FloatArray2D input)
-    {
-        FloatArray2D output = new FloatArray2D(input.width, input.height);
-
-        float derivX, derivY;
-        float x1, x3, x5;
-        float y1, y3, y5;
-
-        for (int y = 2; y < input.height -2 ; y++)
-            for (int x = 2; x < input.width -2; x++)
-            {
-                x1 = input.get(x-2,y);
-                x3 = input.get(x,y);
-                x5 = input.get(x+2,y);
-
-                derivX = x1 - 2*x3 + x5;
-
-                y1 = input.get(x,y-2);
-                y3 = input.get(x,y);
-                y5 = input.get(x,y+2);
-
-                derivY = y1 - 2*y3 + y5;
-
-                output.set((float)Math.sqrt(Math.pow(derivX,2) + Math.pow(derivY,2)), x, y);
-            }
-
-        return output;
-    }
-
-    public static FloatArray2D[] createGradients( FloatArray2D array)
+    public static float[] createGaussianKernel( float sigma, boolean normalize )
+	{
+		int size = 3;
+		float[] kernel;
+
+		if ( sigma <= 0 )
+		{
+			kernel = new float[ 3 ];
+			kernel[ 1 ] = 1;
+		}
+		else
+		{
+			size = Math.max( 3, ( int ) ( 2 * ( int ) ( 3 * sigma + 0.5 ) + 1 ) );
+
+			float two_sq_sigma = 2 * sigma * sigma;
+			kernel = new float[ size ];
+
+			for ( int x = size / 2; x >= 0; --x )
+			{
+				float val = ( float ) Math.exp( -( float ) ( x * x ) / two_sq_sigma );
+
+				kernel[ size / 2 - x ] = val;
+				kernel[ size / 2 + x ] = val;
+			}
+		}
+
+		if ( normalize )
+		{
+			float sum = 0;
+			for ( float value : kernel )
+				sum += value;
+
+			for ( int i = 0; i < kernel.length; i++ )
+				kernel[ i ] /= sum;
+		}
+
+		return kernel;
+	}
+
+    /**
+	 * Create a normalized 2d gaussian impulse with appropriate size with its
+	 * center slightly moved away from the middle.
+	 * 
+	 */
+	static public FloatArray2D createGaussianKernelOffset( float sigma, float offset_x, float offset_y, boolean normalize )
+	{
+		int size = 3;
+		FloatArray2D kernel;
+		if ( sigma == 0 )
+		{
+			kernel = new FloatArray2D( 3, 3 );
+			kernel.data[ 4 ] = 1;
+		}
+		else
+		{
+			size = Math.max( 3, ( int ) ( 2 * Math.round( 3 * sigma ) + 1 ) );
+			float two_sq_sigma = 2 * sigma * sigma;
+			// float normalization_factor = 1.0/(float)M_PI/two_sq_sigma;
+			kernel = new FloatArray2D( size, size );
+			for ( int x = size - 1; x >= 0; --x )
+			{
+				float fx = ( float ) ( x - size / 2 );
+				for ( int y = size - 1; y >= 0; --y )
+				{
+					float fy = ( float ) ( y - size / 2 );
+					float val = ( float ) ( Math.exp( -( Math.pow( fx - offset_x, 2 ) + Math.pow( fy - offset_y, 2 ) ) / two_sq_sigma ) );
+					kernel.set( val, x, y );
+				}
+			}
+		}
+		if ( normalize )
+		{
+			float sum = 0;
+			for ( float value : kernel.data )
+				sum += value;
+
+			for ( int i = 0; i < kernel.data.length; i++ )
+				kernel.data[ i ] /= sum;
+		}
+		return kernel;
+	}
+
+    public static FloatArray2D[] createGradients( FloatArray2D array )
      {
          FloatArray2D[] gradients = new FloatArray2D[2];
          gradients[0] = new FloatArray2D(array.width, array.height);
@@ -532,7 +182,10 @@ public class Filter
      }
     
     /**
-     * in place enhance all values of a FloatArray to fill the given range
+     * In place enhance all values of a FloatArray to fill the given range.
+     * 
+     * @param src source
+     * @param scale defines the range 
      */
     public static final void enhance( FloatArray2D src, float scale )
     {
@@ -549,7 +202,7 @@ public class Filter
     }
     
     /**
-	 * convolve an image with a horizontal and a vertical kernel
+	 * Convolve an image with a horizontal and a vertical kernel
 	 * simple straightforward, not optimized---replace this with a trusted better version soon
 	 * 
 	 * @param input the input image
@@ -586,26 +239,9 @@ public class Filter
 			ya[ i ] = input.width * flipInRange( i + yl, input.height );
 		}
 		
-//		String xa_str = "xa: ";
-//		String xb_str = "xb: ";
-//		String ya_str = "ya: ";
-//		String yb_str = "yb: ";
-//		for ( int i = 0; i < xa.length; ++i )
-//		{
-//			xa_str = xa_str + xa[ i ] + ", ";
-//			xb_str = xb_str + xb[ i ] + ", ";
-//			ya_str = ya_str + ( ya[ i ] / input.width ) + ", ";
-//			yb_str = yb_str + ( yb[ i ] / input.width ) + ", ";
-//		}
-//		
-//		System.out.println( xb_str );
-//		System.out.println( xa_str );
-//		System.out.println( yb_str );
-//		System.out.println( ya_str );
-		
-		
 		xl += hl;
 		yl += vl;
+		
 		// horizontal convolution per row
 		int rl = input.height * input.width;
 		for ( int r = 0; r < rl; r += input.width )
