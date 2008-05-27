@@ -82,12 +82,12 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 	// initial sigma
 	private static float initial_sigma = 1.6f;
 	// feature descriptor size
-	private static int fdsize = 8;
+	private static int fdsize = 16;
 	// size restrictions for scale octaves, use octaves < max_size and > min_size only
 	private static int min_size = 64;
 	private static int max_size = 1024;
 	// maximal allowed alignment error in px
-	private static float max_epsilon = 100.0f;
+	private static float max_epsilon = 25.0f;
 	private static float min_inlier_ratio = 0.05f;
 	
 	/**
@@ -125,7 +125,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		i1.clear();
 		i2.clear();
 		
-		if ( IJ.versionLessThan( "1.37i" ) ) return;
+		if ( IJ.versionLessThan( "1.40c" ) ) return;
 		
 		int[] ids = WindowManager.getIDList();
 		if ( ids == null || ids.length < 2 )
