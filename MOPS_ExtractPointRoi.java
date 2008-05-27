@@ -10,8 +10,7 @@ import java.util.Collections;
 import java.util.Vector;
 import java.util.HashMap;
 import java.util.ArrayList;
-import java.awt.Color;
-import java.awt.Graphics;
+import java.awt.geom.GeneralPath;
 import java.awt.Polygon;
 import java.awt.Shape;
 import java.awt.TextField;
@@ -120,7 +119,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 	{
 		// cleanup
 		impFeature1 = null;
-		impFeature1 = null;
+		impFeature2 = null;
 		m1.clear();
 		m2.clear();
 		i1.clear();
@@ -162,7 +161,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		
 		if (gd.wasCanceled()) return;
 		
-		Toolbar.getInstance().setTool( Toolbar.getInstance().addTool( "Feature Selector" ) );
+		Toolbar.getInstance().setTool( Toolbar.getInstance().addTool( "Select_a_Feature" ) );
 		
 		imp1 = WindowManager.getImage( ids[ gd.getNextChoiceIndex() ] );
 		imp2 = WindowManager.getImage( ids[ gd.getNextChoiceIndex() ] );	
@@ -314,15 +313,17 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 			imp2.setRoi( pr2 );
 			
 			IJ.log( inliers.size() + " corresponding features with a maximal displacement of " + model.getError() + " identified." );
+			
+			imp1.getCanvas().addMouseListener( this );
+			imp2.getCanvas().addMouseListener( this );
+			imp1.getCanvas().addKeyListener( this );
+			imp2.getCanvas().addKeyListener( this );
+			ImagePlus.addImageListener( this );
 		}
 		else
 		{
 			IJ.log( "No correspondences found." );
 		}
-		
-		imp1.getCanvas().addMouseListener( this );
-		imp2.getCanvas().addMouseListener( this );
-		ImagePlus.addImageListener( this );
 	}
 	
 	
@@ -360,36 +361,62 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 	}
 	
 	/**
-	 * Create a descriptor Shape.
+	 * Create a descriptor Path.
 	 */
 	public static Shape createFeatureDescriptorShape( Feature f )
 	{
-		double scale = f.scale * Math.sqrt( f.descriptor.length ) * 4  / 2;
+		GeneralPath path = new GeneralPath();
+		
+		int w = ( int )Math.sqrt( f.descriptor.length );
+		double scale = f.scale * w * 4.0  / 2.0;
 		double sin = Math.sin( f.orientation );
 	    double cos = Math.cos( f.orientation );
 	    
-	    int[] x = new int[ 6 ];
-	    int[] y = new int[ 6 ];
-	    
 	    double fx = f.location[ 0 ];
 	    double fy = f.location[ 1 ];
+	    double pd = 2.0 / w;
 
-	    x[ 0 ] = ( int )( fx + ( sin - cos ) * scale );
-	    y[ 0 ] = ( int )( fy - ( sin + cos ) * scale );
+	    double x1 = fx + ( -cos + sin ) * scale;
+	    double y1 = fy + ( -sin - cos ) * scale;
+	    double x2 = fx + ( sin + cos ) * scale;
+	    double y2 = fy + ( sin - cos ) * scale;
+	    // Mark the upper left corner with a special edge
+	    double x3 = fx + ( cos - ( 1.0 - pd ) * sin ) * scale;
+	    double y3 = fy + ( sin + ( 1.0 - pd ) * cos ) * scale;
+	    double x4 = fx + ( ( 1.0 - pd ) * cos - sin ) * scale;
+	    double y4 = fy + ( ( 1.0 - pd ) * sin + cos ) * scale;
+	    double x5 = fx - ( sin + cos ) * scale;
+	    double y5 = fy - ( sin - cos ) * scale;
 	    
-	    x[ 1 ] = ( int )fx;
-	    y[ 1 ] = ( int )fy;
+	    path.moveTo( x1, y1 );
+	    path.lineTo( x2, y2 );
+	    path.lineTo( x3, y3 );
+	    path.lineTo( x4, y4 );
+	    path.lineTo( x5, y5 );
+	    path.lineTo( x1, y1 );
 	    
-	    x[ 2 ] = ( int )( fx + ( sin + cos ) * scale );
-	    y[ 2 ] = ( int )( fy + ( sin - cos ) * scale );
-	    x[ 3 ] = ( int )( fx - ( sin - cos ) * scale );
-	    y[ 3 ] = ( int )( fy + ( sin + cos ) * scale );
-	    x[ 4 ] = ( int )( fx - ( sin + cos ) * scale );
-	    y[ 4 ] = ( int )( fy - ( sin - cos ) * scale );
-	    x[ 5 ] = x[ 0 ];
-	    y[ 5 ] = y[ 0 ];
+	    for ( int y = 1; y < w; ++y )
+	    {
+	    	double dy = 1.0 - y * 2.0 / w;
+	    	path.moveTo(
+	    			fx + ( -cos + dy * sin ) * scale,
+	    			fy + ( -sin - dy * cos ) * scale );
+	    	path.lineTo(
+	    			fx + ( cos + dy * sin ) * scale,
+	    			fy + ( sin - dy * cos ) * scale );
+	    }
+	    for ( int x = 1; x < w; ++x )
+	    {
+	    	double dx = 1.0 - x * 2.0 / w;
+	    	path.moveTo(
+	    			fx + ( dx * cos + sin ) * scale,
+	    			fy + ( dx * sin - cos ) * scale );
+	    	path.lineTo(
+	    			fx + ( dx * cos - sin ) * scale,
+	    			fy + ( dx * sin + cos ) * scale );
+	    }
 	    
-	    return new Polygon( x, y, x.length );
+	    return path;
 	}
 	
 	public static void drawFeatureDescriptor( FloatProcessor fp, Feature f )
@@ -420,9 +447,28 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 	public void imageOpened( ImagePlus imp ){}
 	public void imageUpdated( ImagePlus imp ){}
 	
-	public void keyPressed(KeyEvent e)
+	public void keyPressed( KeyEvent e)
 	{
-		if (
+		if ( e.getKeyCode() == KeyEvent.VK_ESCAPE )
+		{
+			if ( imp1 != null )
+			{
+				imp1.getCanvas().removeMouseListener( this );
+				imp1.getCanvas().removeKeyListener( this );
+				imp1.getCanvas().setDisplayList( null );
+				imp1.setRoi( ( Roi )null );
+			}
+			if ( impFeature1 != null ) impFeature1.close();
+			if ( imp2 != null )
+			{
+				imp2.getCanvas().removeMouseListener( this );
+				imp2.getCanvas().removeKeyListener( this );
+				imp2.getCanvas().setDisplayList( null );
+				imp2.setRoi( ( Roi )null );
+			}
+			if ( impFeature2 != null ) impFeature2.close();
+		}
+		else if (
 				( e.getKeyCode() == KeyEvent.VK_F1 ) &&
 				( e.getSource() instanceof TextField ) ){}
 	}
@@ -433,77 +479,89 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 	
 	public void mousePressed( MouseEvent e )
 	{
-		ImageWindow win = WindowManager.getCurrentWindow();
-		int x = win.getCanvas().offScreenX( e.getX() );
-		int y = win.getCanvas().offScreenY( e.getY() );
-		
-		Feature f1;
-		Feature f2;
-		
-		ArrayList< Feature > fl;
-		Feature target = null;
-		double target_d = Double.MAX_VALUE;
-		if ( win.getImagePlus() == imp1 )
-			fl = i1;
-		else
-			fl = i2;
-	
-		for ( Feature f : fl )
+		if ( e.getButton() == MouseEvent.BUTTON1 )
 		{
-			double dx = f.location[ 0 ] - x;
-			double dy = f.location[ 1 ] - y;
-			double d =  dx * dx + dy * dy;
-			if ( d < 64 && d < target_d )
-			{
-				target = f;
-				target_d = d;
-			}
-		}
+			ImageWindow win = WindowManager.getCurrentWindow();
+			int x = win.getCanvas().offScreenX( e.getX() );
+			int y = win.getCanvas().offScreenY( e.getY() );
+			
+			Feature f1;
+			Feature f2;
+			
+			ArrayList< Feature > fl;
+			Feature target = null;
+			double target_d = Double.MAX_VALUE;
+			if ( win.getImagePlus() == imp1 )
+				fl = i1;
+			else
+				fl = i2;
 		
-		if ( target != null )
-		{
-			if ( imp1 != null && imp1.isVisible() )
+			for ( Feature f : fl )
 			{
-				f1 = i1.get( fl.indexOf( target ) );
-				imp1.getCanvas().setDisplayList( createFeatureShape( f1 ), Roi.getColor(), null );
-				if ( impFeature1 == null || !impFeature1.isVisible() )
+				double dx = win.getCanvas().getMagnification() * ( f.location[ 0 ] - x );
+				double dy = win.getCanvas().getMagnification() * ( f.location[ 1 ] - y );
+				double d =  dx * dx + dy * dy;
+				if ( d < 64.0 && d < target_d )
 				{
-					impFeature1 = createFeatureDescriptorImage( "Feature " + imp1.getTitle(), f1 );
-					impFeature1.updateAndDraw();
-					impFeature1.show();
-					impFeature1.getWindow().setLocationAndSize(
-							impFeature1.getWindow().getX(),
-							impFeature1.getWindow().getY(),
-							fdsize * 16, fdsize * 16 );
-				}
-				else
-				{
-					drawFeatureDescriptor( ( FloatProcessor )impFeature1.getProcessor().convertToFloat(), f1 );
-					impFeature1.updateAndDraw();
-					impFeature1.show();
+					target = f;
+					target_d = d;
 				}
 			}
 			
-			if ( imp2 != null && imp2.isVisible() )
+			if ( target != null )
 			{
-				f2 = i2.get( fl.indexOf( target ) );
-				imp2.getCanvas().setDisplayList( createFeatureShape( f2 ), Roi.getColor(), null );
-				if ( impFeature2 == null || !impFeature2.isVisible() )
+				if ( imp1 != null && imp1.isVisible() )
 				{
-					impFeature2 = createFeatureDescriptorImage( "Feature " + imp2.getTitle(), f2 );
-					impFeature2.updateAndDraw();
-					impFeature2.show();
-					impFeature2.getWindow().setLocationAndSize(
-							impFeature2.getWindow().getX(),
-							impFeature2.getWindow().getY(),
-							fdsize * 16, fdsize * 16 );
+					f1 = i1.get( fl.indexOf( target ) );
+					//imp1.getCanvas().setDisplayList( createFeatureShape( f1 ), Roi.getColor(), null );
+					imp1.getCanvas().setDisplayList( createFeatureDescriptorShape( f1 ), Roi.getColor(), null );
+					if ( impFeature1 == null || !impFeature1.isVisible() )
+					{
+						impFeature1 = createFeatureDescriptorImage( "Feature " + imp1.getTitle(), f1 );
+						impFeature1.updateAndDraw();
+						impFeature1.show();
+						impFeature1.getWindow().setLocationAndSize(
+								impFeature1.getWindow().getX(),
+								impFeature1.getWindow().getY(),
+								fdsize * 16, fdsize * 16 );
+					}
+					else
+					{
+						drawFeatureDescriptor( ( FloatProcessor )impFeature1.getProcessor().convertToFloat(), f1 );
+						impFeature1.updateAndDraw();
+						impFeature1.show();
+					}
 				}
-				else
+				
+				if ( imp2 != null && imp2.isVisible() )
 				{
-					drawFeatureDescriptor( ( FloatProcessor )impFeature2.getProcessor().convertToFloat(), f2 );
-					impFeature2.updateAndDraw();
-					impFeature2.show();
+					f2 = i2.get( fl.indexOf( target ) );
+					//imp2.getCanvas().setDisplayList( createFeatureShape( f2 ), Roi.getColor(), null );
+					imp2.getCanvas().setDisplayList( createFeatureDescriptorShape( f2 ), Roi.getColor(), null );
+					if ( impFeature2 == null || !impFeature2.isVisible() )
+					{
+						impFeature2 = createFeatureDescriptorImage( "Feature " + imp2.getTitle(), f2 );
+						impFeature2.updateAndDraw();
+						impFeature2.show();
+						impFeature2.getWindow().setLocationAndSize(
+								impFeature2.getWindow().getX(),
+								impFeature2.getWindow().getY(),
+								fdsize * 16, fdsize * 16 );
+					}
+					else
+					{
+						drawFeatureDescriptor( ( FloatProcessor )impFeature2.getProcessor().convertToFloat(), f2 );
+						impFeature2.updateAndDraw();
+						impFeature2.show();
+					}
 				}
+			}
+			else
+			{
+				if ( imp1 != null && imp1.isVisible() )
+					imp1.getCanvas().setDisplayList( null );
+				if ( imp2 != null && imp2.isVisible() )
+					imp2.getCanvas().setDisplayList( null );
 			}
 		}
 		
