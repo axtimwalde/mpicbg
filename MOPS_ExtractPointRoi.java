@@ -125,7 +125,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		i1.clear();
 		i2.clear();
 		
-		if ( IJ.versionLessThan( "1.37i" ) ) return;
+		if ( IJ.versionLessThan( "1.40c" ) ) return;
 		
 		int[] ids = WindowManager.getIDList();
 		if ( ids == null || ids.length < 2 )
