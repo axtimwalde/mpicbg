@@ -137,8 +137,6 @@ public class FloatArray2DMOPS
 			sigma[ i ] = initial_sigma * ( float )Math.pow( 2.0f, ( float )i / ( float )steps );
 			sigma_diff[ i ] = ( float )Math.sqrt( sigma[ i ] * sigma[ i ] - initial_sigma * initial_sigma );
 			
-			//System.out.println( "sigma[" + i + "] = " + sigma[ i ] + "; sigma_diff[" + i + "] = " + sigma_diff[ i ] );
-
 			kernel_diff[ i ] = Filter.createGaussianKernel( sigma_diff[ i ], true );
 		}
 		
