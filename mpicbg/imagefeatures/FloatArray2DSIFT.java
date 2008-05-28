@@ -154,18 +154,6 @@ public class FloatArray2DSIFT
 			int min_size,
 			int max_size )
 	{
-		// estimate the number of octaves needed using a simple while loop instead of ld
-		int o = 0;
-		float w = ( float )src.width;
-		float h = ( float )src.height;
-		while ( w > ( float )min_size && h > ( float )min_size )
-		{
-			w /= 2.0f;
-			h /= 2.0f;
-			++o;
-		}
-		octaves = new FloatArray2DScaleOctave[ o ];
-		
 		float[] sigma = new float[ steps + 3 ];
 		sigma[ 0 ] = initial_sigma;
 		float[] sigma_diff = new float[ steps + 3 ];
@@ -183,6 +171,19 @@ public class FloatArray2DSIFT
 
 			kernel_diff[ i ] = Filter.createGaussianKernel( sigma_diff[ i ], true );
 		}
+		
+		// estimate the number of octaves needed using a simple while loop instead of ld
+		int o = 0;
+		float w = ( float )src.width;
+		float h = ( float )src.height;
+		int max_kernel_size = kernel_diff[ steps + 2 ].length;
+		while ( w > Math.max( max_kernel_size, min_size ) && h > Math.max( max_kernel_size, min_size ) )
+		{
+			w /= 2.0f;
+			h /= 2.0f;
+			++o;
+		}
+		octaves = new FloatArray2DScaleOctave[ o ];
 		
 		FloatArray2D next;
 		

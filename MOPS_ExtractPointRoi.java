@@ -11,7 +11,6 @@ import java.util.Vector;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.awt.geom.GeneralPath;
-import java.awt.Polygon;
 import java.awt.Shape;
 import java.awt.TextField;
 import java.awt.Event;
@@ -209,7 +208,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		
 		long start_time = System.currentTimeMillis();
 		IJ.log( "Processing MOPS ..." );
-		mops.init( fa1, steps, initial_sigma, min_size, max_size );
+		mops.init( fa1, steps, initial_sigma, min_size / 4, max_size );
 		fs1 = mops.run( max_size );
 		Collections.sort( fs1 );
 		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );
@@ -217,7 +216,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		
 		start_time = System.currentTimeMillis();
 		IJ.log( "Processing MOPS ..." );
-		mops.init( fa2, steps, initial_sigma, min_size, max_size );
+		mops.init( fa2, steps, initial_sigma, min_size / 4, max_size );
 		fs2 = mops.run( max_size);
 		Collections.sort( fs2 );
 		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );
