@@ -328,83 +328,64 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 	
 	
 	/**
-	 * Create a descriptor ROI.
-	 */
-	public static Shape createFeatureShape( Feature f )
-	{
-		double scale = f.scale * Math.sqrt( f.descriptor.length ) * 4  / 2;
-		double sin = Math.sin( f.orientation );
-	    double cos = Math.cos( f.orientation );
-	    
-	    int[] x = new int[ 6 ];
-	    int[] y = new int[ 6 ];
-	    
-	    double fx = f.location[ 0 ];
-	    double fy = f.location[ 1 ];
-
-	    x[ 0 ] = ( int )( fx + ( sin - cos ) * scale );
-	    y[ 0 ] = ( int )( fy - ( sin + cos ) * scale );
-	    
-	    x[ 1 ] = ( int )fx;
-	    y[ 1 ] = ( int )fy;
-	    
-	    x[ 2 ] = ( int )( fx + ( sin + cos ) * scale );
-	    y[ 2 ] = ( int )( fy + ( sin - cos ) * scale );
-	    x[ 3 ] = ( int )( fx - ( sin - cos ) * scale );
-	    y[ 3 ] = ( int )( fy + ( sin + cos ) * scale );
-	    x[ 4 ] = ( int )( fx - ( sin + cos ) * scale );
-	    y[ 4 ] = ( int )( fy - ( sin - cos ) * scale );
-	    x[ 5 ] = x[ 0 ];
-	    y[ 5 ] = y[ 0 ];
-	    
-	    return new Polygon( x, y, x.length );
-	}
-	
-	/**
-	 * Create a descriptor Path.
+	 * Create a Shape that illustrates the descriptor patch.
+	 * 
+	 * @param f the feature to be illustrated
+	 * @return the illustration
 	 */
 	public static Shape createFeatureDescriptorShape( Feature f )
 	{
 		GeneralPath path = new GeneralPath();
 		
 		int w = ( int )Math.sqrt( f.descriptor.length );
-		double scale = f.scale * w * 4.0  / 2.0;
+		double scale = f.scale * ( double )w * 4.0  / 2.0;
 		double sin = Math.sin( f.orientation );
-	    double cos = Math.cos( f.orientation );
-	    
-	    double fx = f.location[ 0 ];
-	    double fy = f.location[ 1 ];
-	    double pd = 2.0 / w;
+		double cos = Math.cos( f.orientation );
 
-	    double x1 = fx + ( -cos + sin ) * scale;
-	    double y1 = fy + ( -sin - cos ) * scale;
-	    double x2 = fx + ( sin + cos ) * scale;
-	    double y2 = fy + ( sin - cos ) * scale;
-	    // Mark the upper left corner with a special edge
-	    double x3 = fx + ( cos - ( 1.0 - pd ) * sin ) * scale;
-	    double y3 = fy + ( sin + ( 1.0 - pd ) * cos ) * scale;
-	    double x4 = fx + ( ( 1.0 - pd ) * cos - sin ) * scale;
-	    double y4 = fy + ( ( 1.0 - pd ) * sin + cos ) * scale;
-	    double x5 = fx - ( sin + cos ) * scale;
-	    double y5 = fy - ( sin - cos ) * scale;
-	    
-	    path.moveTo( x1, y1 );
-	    path.lineTo( x2, y2 );
-	    path.lineTo( x3, y3 );
-	    path.lineTo( x4, y4 );
-	    path.lineTo( x5, y5 );
-	    path.lineTo( x1, y1 );
-	    
-	    for ( int y = 1; y < w; ++y )
-	    {
-	    	double dy = 1.0 - y * 2.0 / w;
-	    	path.moveTo(
-	    			fx + ( -cos + dy * sin ) * scale,
-	    			fy + ( -sin - dy * cos ) * scale );
-	    	path.lineTo(
-	    			fx + ( cos + dy * sin ) * scale,
-	    			fy + ( sin - dy * cos ) * scale );
-	    }
+		double fx = f.location[ 0 ];
+		double fy = f.location[ 1 ];
+		double pd = 4.0 / scale;
+
+		
+		path.moveTo(
+				fx + ( -cos + sin ) * scale,
+				fy + ( -sin - cos ) * scale );
+		path.lineTo(
+				fx + ( sin + cos ) * scale,
+				fy + ( sin - cos ) * scale );
+		path.lineTo(
+				fx + ( cos - sin ) * scale,
+				fy + ( sin + cos ) * scale );
+		path.lineTo(
+				fx - ( sin + cos ) * scale,
+				fy - ( sin - cos ) * scale );
+		path.closePath();
+		
+		// Mark the upper left corner with a little arrow
+		path.moveTo(
+				fx + ( ( 1.0 + pd ) * cos - ( 1.0 + pd ) * sin ) * scale,
+				fy + ( ( 1.0 + pd ) * sin + ( 1.0 + pd ) * cos ) * scale );
+		path.lineTo(
+				fx + ( ( 1.0 + 4 * pd ) * cos - ( 1.0 + 2.5 * pd ) * sin ) * scale,
+				fy + ( ( 1.0 + 4 * pd ) * sin + ( 1.0 + 2.5 * pd ) * cos ) * scale );
+		path.lineTo(
+				fx + ( ( 1.0 + 2.75 * pd ) * cos - ( 1.0 + 2.75 * pd ) * sin ) * scale,
+				fy + ( ( 1.0 + 2.75 * pd ) * sin + ( 1.0 + 2.75 * pd ) * cos ) * scale );
+		path.lineTo(
+				fx + ( ( 1.0 + 2.5 * pd ) * cos - ( 1.0 + 4 * pd ) * sin ) * scale,
+				fy + ( ( 1.0 + 2.5 * pd ) * sin + ( 1.0 + 4 * pd ) * cos ) * scale );
+		path.closePath();
+		
+		for ( int y = 1; y < w; ++y )
+		{
+			double dy = 1.0 - y * 2.0 / w;
+			path.moveTo(
+					fx + ( -cos + dy * sin ) * scale,
+					fy + ( -sin - dy * cos ) * scale );
+			path.lineTo(
+					fx + ( cos + dy * sin ) * scale,
+					fy + ( sin - dy * cos ) * scale );
+		}
 	    for ( int x = 1; x < w; ++x )
 	    {
 	    	double dx = 1.0 - x * 2.0 / w;
