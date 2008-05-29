@@ -229,7 +229,7 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 			break;
 		}
 		
-		IJ.showMessage( modelClass.getCanonicalName() );
+		//IJ.showMessage( modelClass.getCanonicalName() );
 		
 		try
 		{
@@ -243,8 +243,9 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 		}
 		catch ( Exception e )
 		{
-			System.err.println( e.getMessage() );
+			IJ.error( e.getMessage() );
 		}
+			
 		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );	
 		
 		if ( model != null )
@@ -275,7 +276,7 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 			imp1.setRoi( pr1 );
 			imp2.setRoi( pr2 );
 			
-			IJ.log( inliers.size() + " corresponding features with a maximal displacement of " + model.getError() + " identified." );
+			IJ.log( inliers.size() + " corresponding features with an average displacement of " + model.getError() + " identified." );
 		}
 		else
 		{
