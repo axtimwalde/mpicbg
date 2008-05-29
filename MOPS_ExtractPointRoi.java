@@ -261,7 +261,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		}
 		catch ( Exception e )
 		{
-			System.err.println( e.getMessage() );
+			IJ.error( e.getMessage() );
 		}
 		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );	
 		
