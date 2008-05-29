@@ -61,4 +61,14 @@ public class Point
 		}
 		return ( float )Math.sqrt( sum );
 	}
+	
+	/**
+	 * Clone this Point instance.
+	 */
+	public Point clone()
+	{
+		Point p = new Point( l.clone() );
+		p.w = w.clone();
+		return p;
+	}
 }
