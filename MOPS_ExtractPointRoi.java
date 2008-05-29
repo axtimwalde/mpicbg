@@ -454,7 +454,6 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 	}
 
 	public void keyReleased( KeyEvent e ){}
-
 	public void keyTyped( KeyEvent e ){}
 	
 	public void mousePressed( MouseEvent e )
@@ -552,8 +551,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 	public void mouseExited(MouseEvent e) {}
 	public void mouseClicked(MouseEvent e) {}	
 	public void mouseEntered(MouseEvent e) {}
-	public void mouseMoved(MouseEvent e) {}
-
+	
 	
 	public static String modifiers( int flags )
 	{
@@ -573,6 +571,4 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 			s = " [no modifiers]";
 		return s;
 	}
-
-
 }
