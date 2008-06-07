@@ -102,6 +102,8 @@ public class SIFT_Align implements PlugIn, KeyListener
 	private static int fdsize = 4;
 	// feature descriptor orientation bins
 	private static int fdbins = 8;
+	// closest/next closest neighbour distance ratio
+	private static float rod = 0.92f;
 	// size restrictions for scale octaves, use octaves < max_size and > min_size only
 	private static int min_size = 64;
 	private static int max_size = 1024;
@@ -220,6 +222,7 @@ public class SIFT_Align implements PlugIn, KeyListener
 		gd.addNumericField( "feature_descriptor_orientation_bins :", fdbins, 0 );
 		gd.addNumericField( "minimum_image_size :", min_size, 0 );
 		gd.addNumericField( "maximum_image_size :", max_size, 0 );
+		gd.addNumericField( "closest/next_closest_ratio :", rod, 2 );
 		gd.addNumericField( "minimal_alignment_error :", min_epsilon, 2 );
 		gd.addNumericField( "maximal_alignment_error :", max_epsilon, 2 );
 		gd.addNumericField( "inlier_ratio :", min_inlier_ratio, 2 );
@@ -236,6 +239,7 @@ public class SIFT_Align implements PlugIn, KeyListener
 		fdbins = ( int )gd.getNextNumber();
 		min_size = ( int )gd.getNextNumber();
 		max_size = ( int )gd.getNextNumber();
+		rod = ( float )gd.getNextNumber();
 		min_epsilon = ( float )gd.getNextNumber();
 		max_epsilon = ( float )gd.getNextNumber();
 		min_inlier_ratio = ( float )gd.getNextNumber();
@@ -362,7 +366,7 @@ public class SIFT_Align implements PlugIn, KeyListener
 			start_time = System.currentTimeMillis();
 			System.out.print( "identifying correspondences using brute force ..." );
 			Vector< PointMatch > candidates = 
-				FloatArray2DSIFT.createMatches( fs2, fs1, 1.5f, null, Float.MAX_VALUE );
+				FloatArray2DSIFT.createMatches( fs2, fs1, 1.5f, null, Float.MAX_VALUE, rod );
 			System.out.println( " took " + ( System.currentTimeMillis() - start_time ) + "ms" );
 			
 			IJ.log( candidates.size() + " potentially corresponding features identified" );
