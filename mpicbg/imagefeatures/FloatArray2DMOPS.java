@@ -480,12 +480,14 @@ public class FloatArray2DMOPS
 	 * 
 	 * @param fs1 feature collection from set 1
 	 * @param fs2 feature collection from set 2
+	 * @param rod Ratio of distances (closest/next closest match)
 	 * 
 	 * @return matches
 	 */
 	public static Vector< PointMatch > createMatches(
 			List< Feature > fs1,
-			List< Feature > fs2 )
+			List< Feature > fs2,
+			float rod )
 	{
 		Vector< PointMatch > matches = new Vector< PointMatch >();
 		
@@ -508,8 +510,8 @@ public class FloatArray2DMOPS
 				else if ( d < second_best_d )
 					second_best_d = d;
 			}
-			//if ( best != null && second_best_d < Float.MAX_VALUE && best_d / second_best_d < 0.92 )
-			if ( best != null )
+			if ( best != null && second_best_d < Float.MAX_VALUE && best_d / second_best_d < rod )
+			//if ( best != null )
 				matches.addElement(
 						new PointMatch(
 								new Point(
@@ -517,8 +519,8 @@ public class FloatArray2DMOPS
 								new Point(
 										new float[] { best.location[ 0 ], best.location[ 1 ] } ),
 								( f1.scale + best.scale ) / 2.0f ) );
-			else
-				System.out.println( "No match found." );
+//			else
+//				System.out.println( "No match found." );
 		}
 		
 		// now remove ambiguous matches
@@ -551,12 +553,14 @@ public class FloatArray2DMOPS
 	 * 
 	 * @param fs1 feature collection from set 1
 	 * @param fs2 feature collection from set 2
+	 * @param rod Ratio of distances (closest/next closest match)
 	 * 
 	 * @return matches
 	 */
 	public static Vector< PointMatch > createMatches(
 			List< Feature > fs1,
 			List< Feature > fs2,
+			float rod,
 			HashMap< Point, Feature > m1,
 			HashMap< Point, Feature > m2 )
 	{
@@ -581,8 +585,8 @@ public class FloatArray2DMOPS
 				else if ( d < second_best_d )
 					second_best_d = d;
 			}
-			//if ( best != null && second_best_d < Float.MAX_VALUE && best_d / second_best_d < 0.92 )
-			if ( best != null )
+			if ( best != null && second_best_d < Float.MAX_VALUE && best_d / second_best_d < rod )
+			//if ( best != null )
 			{
 				Point p1 = new Point( new float[] { f1.location[ 0 ], f1.location[ 1 ] } );
 				Point p2 = new Point( new float[] { best.location[ 0 ], best.location[ 1 ] } );
@@ -592,8 +596,8 @@ public class FloatArray2DMOPS
 				m1.put( p1, f1 );
 				m2.put( p2, best );
 			}
-			else
-				System.out.println( "No match found." );
+//			else
+//				System.out.println( "No match found." );
 		}
 		
 		// now remove ambiguous matches
@@ -635,6 +639,7 @@ public class FloatArray2DMOPS
 	 * @param max_sd maximal difference in size (ratio max/min)
 	 * @param model transformation model to be applied to fs2
 	 * @param max_id maximal distance in image space ($\sqrt{x^2+y^2}$)
+	 * @param rod Ratio of distances (closest/next closest match)
 	 * 
 	 * @return matches
 	 * 
@@ -645,7 +650,8 @@ public class FloatArray2DMOPS
 			List< Feature > fs2,
 			float max_sd,
 			Model model,
-			float max_id )
+			float max_id,
+			float rod )
 	{
 		Vector< PointMatch > matches = new Vector< PointMatch >();
 		float min_sd = 1.0f / max_sd;
@@ -692,7 +698,7 @@ public class FloatArray2DMOPS
 				else if ( d < second_best_d )
 					second_best_d = d;
 			}
-			if ( best != null && second_best_d < Float.MAX_VALUE && best_d / second_best_d < 0.92 )
+			if ( best != null && second_best_d < Float.MAX_VALUE && best_d / second_best_d < rod )
 				// not weighted
 //				matches.addElement(
 //						new PointMatch(
