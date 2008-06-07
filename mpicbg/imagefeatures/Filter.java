@@ -77,7 +77,7 @@ public class Filter
 		}
 		else
 		{
-			size = Math.max( 3, ( int ) ( 2 * ( int ) ( 3 * sigma + 0.5 ) + 1 ) );
+			size = Math.max( 3, ( int ) ( 2 * ( int )( 3 * sigma + 0.5 ) + 1 ) );
 
 			float two_sq_sigma = 2 * sigma * sigma;
 			kernel = new float[ size ];
@@ -189,12 +189,12 @@ public class Filter
      */
     public static final void enhance( FloatArray2D src, float scale )
     {
-    	float min = Float.MAX_VALUE;
-    	float max = Float.MIN_VALUE;
-    	for ( int i = 0; i < src.data.length; ++i )
+    	float min = src.data[ 0 ];
+    	float max = min;
+    	for ( float f : src.data )
     	{
-    		if ( src.data[ i ] < min ) min = src.data[ i ];
-    		else if ( src.data[ i ] > max ) max = src.data[ i ];
+    		if ( f < min ) min = f;
+    		else if ( f > max ) max = f;
     	}
     	scale /= ( max - min );
     	for ( int i = 0; i < src.data.length; ++i )
