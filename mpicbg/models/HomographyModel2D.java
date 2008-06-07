@@ -63,25 +63,20 @@ public class HomographyModel2D extends Model
 	 * </pre>
 	 */
 	private Matrix fitToUnitSquare(
-		Point p1,
-		Point p2,
-		Point p3,
-		Point p4 )
+		float[] p1,
+		float[] p2,
+		float[] p3,
+		float[] p4 )
 	{
-		float[] l1 = p1.getL();
-		float[] l2 = p2.getL();
-		float[] l3 = p3.getL();
-		float[] l4 = p4.getL();
+		double x1 = p1[ 0 ];
+		double x2 = p2[ 0 ];
+		double x3 = p3[ 0 ];
+		double x4 = p4[ 0 ];
 		
-		double x1 = l1[ 0 ];
-		double x2 = l2[ 0 ];
-		double x3 = l3[ 0 ];
-		double x4 = l4[ 0 ];
-		
-		double y1 = l1[ 1 ];
-		double y2 = l2[ 1 ];
-		double y3 = l3[ 1 ];
-		double y4 = l4[ 1 ];
+		double y1 = p1[ 1 ];
+		double y2 = p2[ 1 ];
+		double y3 = p3[ 1 ];
+		double y4 = p4[ 1 ];
 		
 		double s = ( x2 - x3 ) * ( y4 - y3 ) - ( x4 - x3 ) * ( y2 - y3 );
 		
@@ -165,8 +160,16 @@ public class HomographyModel2D extends Model
 			PointMatch[] p = new PointMatch[ MIN_SET_SIZE ];
 			matches.toArray( p );
 			
-			Matrix h1 = fitToUnitSquare( p[ 0 ].getP1(), p[ 1 ].getP1(), p[ 2 ].getP1(), p[ 3 ].getP1() );
-			Matrix h2 = fitToUnitSquare( p[ 0 ].getP2(), p[ 1 ].getP2(), p[ 2 ].getP2(), p[ 3 ].getP2() );
+			Matrix h1 = fitToUnitSquare(
+					p[ 0 ].getP1().getL(),
+					p[ 1 ].getP1().getL(),
+					p[ 2 ].getP1().getL(),
+					p[ 3 ].getP1().getL() );
+			Matrix h2 = fitToUnitSquare(
+					p[ 0 ].getP2().getW(),
+					p[ 1 ].getP2().getW(),
+					p[ 2 ].getP2().getW(),
+					p[ 3 ].getP2().getW() );
 			
 			h1 = getInverse( h1 );
 			a = h1.times( h2 );
