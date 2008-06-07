@@ -559,12 +559,14 @@ public class FloatArray2DSIFT
 	 * 
 	 * @param fs1 feature collection from set 1
 	 * @param fs2 feature collection from set 2
+	 * @param rod Ratio of distances (closest/next closest match)
 	 * 
 	 * @return matches
 	 */
 	public static Vector< PointMatch > createMatches(
 			List< Feature > fs1,
-			List< Feature > fs2 )
+			List< Feature > fs2,
+			float rod )
 	{
 		Vector< PointMatch > matches = new Vector< PointMatch >();
 		
@@ -586,7 +588,7 @@ public class FloatArray2DSIFT
 				else if ( d < second_best_d )
 					second_best_d = d;
 			}
-			if ( best != null && second_best_d < Float.MAX_VALUE && best_d / second_best_d < 0.92 )
+			if ( best != null && second_best_d < Float.MAX_VALUE && best_d / second_best_d < rod )
 				matches.addElement(
 						new PointMatch(
 								new Point(
@@ -629,6 +631,7 @@ public class FloatArray2DSIFT
 	 * @param max_sd maximal difference in size (ratio max/min)
 	 * @param model transformation model to be applied to fs2
 	 * @param max_id maximal distance in image space ($\sqrt{x^2+y^2}$)
+	 * @param rod Ratio of distances (closest/next closest match)
 	 * 
 	 * @return matches
 	 * 
@@ -639,7 +642,8 @@ public class FloatArray2DSIFT
 			List< Feature > fs2,
 			float max_sd,
 			Model model,
-			float max_id )
+			float max_id,
+			float rod )
 	{
 		Vector< PointMatch > matches = new Vector< PointMatch >();
 		float min_sd = 1.0f / max_sd;
@@ -686,7 +690,7 @@ public class FloatArray2DSIFT
 				else if ( d < second_best_d )
 					second_best_d = d;
 			}
-			if ( best != null && second_best_d < Float.MAX_VALUE && best_d / second_best_d < 0.92 )
+			if ( best != null && second_best_d < Float.MAX_VALUE && best_d / second_best_d < rod )
 				// not weighted
 //				matches.addElement(
 //						new PointMatch(
