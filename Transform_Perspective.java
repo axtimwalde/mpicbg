@@ -138,8 +138,8 @@ public class Transform_Perspective implements PlugIn, MouseListener,  MouseMotio
 			double target_d = Double.MAX_VALUE;
 			for ( int i = 0; i < q.length; ++i )
 			{
-				double dx = win.getCanvas().getMagnification() * ( q[ i ].getL()[ 0 ] - x );
-				double dy = win.getCanvas().getMagnification() * ( q[ i ].getL()[ 1 ]  - y );
+				double dx = win.getCanvas().getMagnification() * ( q[ i ].getW()[ 0 ] - x );
+				double dy = win.getCanvas().getMagnification() * ( q[ i ].getW()[ 1 ]  - y );
 				double d =  dx * dx + dy * dy;
 				if ( d < 64.0 && d < target_d )
 				{
@@ -165,15 +165,15 @@ public class Transform_Perspective implements PlugIn, MouseListener,  MouseMotio
 			int x = win.getCanvas().offScreenX( e.getX() );
 			int y = win.getCanvas().offScreenY( e.getY() );
 			
-			float[] fq = q[ targetIndex ].getL();
+			float[] fq = q[ targetIndex ].getW();
 			
 			int[] rx = new int[ q.length ];
 			int[] ry = new int[ q.length ];
 			
 			for ( int i = 0; i < q.length; ++i )
 			{
-				rx[ i ] = ( int )q[ i ].getL()[ 0 ];
-				ry[ i ] = ( int )q[ i ].getL()[ 1 ];
+				rx[ i ] = ( int )q[ i ].getW()[ 0 ];
+				ry[ i ] = ( int )q[ i ].getW()[ 1 ];
 			}
 				
 			rx[ targetIndex ] = x;
