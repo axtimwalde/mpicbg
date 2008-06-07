@@ -82,6 +82,8 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 	private static float initial_sigma = 1.6f;
 	// feature descriptor size
 	private static int fdsize = 16;
+	// closest/next closest neighbour distance ratio
+	private static float rod = 0.92f;
 	// size restrictions for scale octaves, use octaves < max_size and > min_size only
 	private static int min_size = 64;
 	private static int max_size = 1024;
@@ -152,6 +154,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		gd.addNumericField( "feature_descriptor_width :", fdsize, 0 );
 		gd.addNumericField( "minimum_image_size :", min_size, 0 );
 		gd.addNumericField( "maximum_image_size :", max_size, 0 );
+		gd.addNumericField( "closest/next_closest_ratio :", rod, 2 );
 		gd.addNumericField( "maximal_alignment_error :", max_epsilon, 2 );
 		gd.addNumericField( "inlier_ratio :", min_inlier_ratio, 2 );
 		gd.addCheckbox( "upscale_image_first", upscale );
@@ -170,6 +173,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		fdsize = ( int )gd.getNextNumber();
 		min_size = ( int )gd.getNextNumber();
 		max_size = ( int )gd.getNextNumber();
+		rod = ( float )gd.getNextNumber();
 		max_epsilon = ( float )gd.getNextNumber();
 		min_inlier_ratio = ( float )gd.getNextNumber();
 		upscale = gd.getNextBoolean();
@@ -225,7 +229,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		start_time = System.currentTimeMillis();
 		IJ.log( "Identifying correspondence candidates using brute force ..." );
 		Vector< PointMatch > candidates = 
-				FloatArray2DMOPS.createMatches( fs1, fs2, m1, m2 );
+				FloatArray2DMOPS.createMatches( fs1, fs2, rod, m1, m2 );
 		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );	
 		IJ.log( candidates.size() + " potentially corresponding features identified." );
 			
@@ -312,6 +316,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 			imp2.setRoi( pr2 );
 			
 			IJ.log( inliers.size() + " corresponding features with a maximal displacement of " + model.getError() + " identified." );
+			IJ.log( "Estimated transformation model: " + model );
 			
 			imp1.getCanvas().addMouseListener( this );
 			imp2.getCanvas().addMouseListener( this );
