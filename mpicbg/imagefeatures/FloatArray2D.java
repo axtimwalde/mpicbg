@@ -26,14 +26,14 @@ public class FloatArray2D extends FloatArray
 	final public int width;
 	final public int height;
 
-	public FloatArray2D( int width, int height )
+	public FloatArray2D( final int width, final int height )
 	{
 		data = new float[ width * height ];
 		this.width = width;
 		this.height = height;
 	}
 
-	public FloatArray2D( float[] data, int width, int height )
+	public FloatArray2D( final float[] data, final int width, final int height )
 	{
 		this.data = data;
 		this.width = width;
@@ -42,17 +42,17 @@ public class FloatArray2D extends FloatArray
 
 	public FloatArray2D clone()
 	{
-		FloatArray2D clone = new FloatArray2D( width, height );
-		System.arraycopy( this.data, 0, clone.data, 0, this.data.length );
+		FloatArray2D clone = new FloatArray2D( data.clone(), width, height );
+		//System.arraycopy( this.data, 0, clone.data, 0, this.data.length );
 		return clone;
 	}
 
-	final public float get( int x, int y )
+	final public float get( final int x, final int y )
 	{
 		return data[ y * width + x ];
 	}
 
-	final public void set( float value, int x, int y )
+	final public void set( final float value, final int x, final int y )
 	{
 		data[ y * width + x ] = value;
 	}
