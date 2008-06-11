@@ -6,7 +6,6 @@ import ij.plugin.PlugIn;
 import ij.process.*;
 import ij.gui.*;
 
-import mpicbg.imagefeatures.Feature;
 import mpicbg.models.*;
 
 import java.awt.Event;
