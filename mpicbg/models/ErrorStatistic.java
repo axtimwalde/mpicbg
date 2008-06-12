@@ -39,6 +39,8 @@ public class ErrorStatistic
 		}
 		else
 			median = values.get( values.size() / 2 );
+		if ( new_value < min ) min = new_value;
+		if ( new_value > max ) max = new_value;
 	}
 	
 	final public double getWideSlope( int width ) throws IndexOutOfBoundsException
