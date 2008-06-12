@@ -7,7 +7,9 @@ import ij.gui.*;
 
 import mpicbg.models.*;
 
+import java.awt.Color;
 import java.awt.Event;
+import java.awt.Shape;
 import java.awt.TextField;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -36,6 +38,8 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 	final ElasticMesh mesh = new ElasticMesh();
 	
 	int targetIndex = -1;
+	
+	boolean showMesh = false;
 	
 	public void run( String arg )
     {
@@ -197,6 +201,31 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 		}
 	}
 	
+	public void optimize()
+	{
+		try
+		{
+			mesh.optimize( Float.MAX_VALUE, 10000, 100, ipOrig, ip, imp );
+		}
+		catch ( NotEnoughDataPointsException ex )
+		{
+			ex.printStackTrace( System.err );
+		}
+	}
+	
+	public void showMesh()
+	{
+		Shape meshIllustration = mesh.illustrateMesh();
+		imp.getCanvas().setDisplayList( meshIllustration, Color.white, null );
+		mesh.updateMesh();
+	}
+	
+	public void apply()
+	{
+		mesh.apply( ipOrig, ip );
+		imp.updateAndDraw();
+	}
+	
 	public void keyPressed( KeyEvent e)
 	{
 		if ( e.getKeyCode() == KeyEvent.VK_ESCAPE || e.getKeyCode() == KeyEvent.VK_ENTER )
@@ -214,6 +243,14 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 				imp.setProcessor( null, ipOrig );
 			}
 		}
+		else if ( e.getKeyCode() == KeyEvent.VK_Y )
+		{
+			showMesh = !showMesh;
+			if ( showMesh )
+				showMesh();
+			else
+				imp.getCanvas().setDisplayList( null );			
+		} 
 		else if (
 				( e.getKeyCode() == KeyEvent.VK_F1 ) &&
 				( e.getSource() instanceof TextField ) ){}
@@ -249,10 +286,37 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 		//IJ.log( "Mouse pressed: " + x + ", " + y + " " + modifiers( e.getModifiers() ) );
 	}
 
-	public void mouseReleased( MouseEvent e ){}
 	public void mouseExited( MouseEvent e ) {}
 	public void mouseClicked( MouseEvent e ) {}	
 	public void mouseEntered( MouseEvent e ) {}
+	
+	public void mouseReleased( MouseEvent e )
+	{
+		if ( e.getButton() == MouseEvent.BUTTON1 && targetIndex >= 0 )
+		{
+			ImageWindow win = WindowManager.getCurrentWindow();
+			int xm = win.getCanvas().offScreenX( e.getX() );
+			int ym = win.getCanvas().offScreenY( e.getY() );
+			
+			float[] fq = hooks[ targetIndex ].getW();
+			
+			fq[ 0 ] = x[ targetIndex ] = xm;
+			fq[ 1 ] = y[ targetIndex ] = ym;
+			
+			handles = new PointRoi( x, y, hooks.length );
+			imp.setRoi( handles );
+				
+			fq[ 0 ] = xm;
+			fq[ 1 ] = ym;
+			
+			optimize();
+			apply();
+			if ( showMesh )
+				showMesh();
+			else
+				imp.getCanvas().setDisplayList( null );
+		}
+	}
 	
 	public void mouseDragged( MouseEvent e )
 	{
@@ -272,18 +336,6 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 				
 			fq[ 0 ] = xm;
 			fq[ 1 ] = ym;
-			
-			try
-			{
-				mesh.optimize( Float.MAX_VALUE, 10000, 100, ipOrig, ip, imp );
-			}
-			catch ( NotEnoughDataPointsException ex )
-			{
-				ex.printStackTrace( System.err );
-			}
-			
-			mesh.updateMesh();
-			mesh.apply( ipOrig, ip );
 		}
 	}
 	
