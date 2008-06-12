@@ -18,6 +18,8 @@ JAVAS=$(wildcard \
     Transform_Affine.java \
     Transform_Perspective.java \
     Transform_ElasticMesh.java \
+    ElasticMesh.java \
+    TransformMesh.java \
     mpicbg/*/*.java)
 CLASSES=$(patsubst %.java,%.class,$(JAVAS))
 ALL_CLASSES=$(patsubst %.java,%*.class,$(JAVAS))
