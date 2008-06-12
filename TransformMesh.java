@@ -1,6 +1,9 @@
 import ij.IJ;
 import ij.process.ImageProcessor;
 
+import java.awt.Color;
+import java.awt.Shape;
+import java.awt.geom.GeneralPath;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashSet;
@@ -9,6 +12,7 @@ import java.util.HashMap;
 import mpicbg.models.AffineModel2D;
 import mpicbg.models.PointMatch;
 import mpicbg.models.NotEnoughDataPointsException;
+import mpicbg.imagefeatures.Feature;
 import mpicbg.imagefeatures.FloatArray2D;
 
 
@@ -109,9 +113,42 @@ X:			for ( int x = ( int )box[ 0 ][ 0 ]; x <= ( int )box[ 1 ][ 0 ]; ++x )
 	
 	public void apply( ImageProcessor src, ImageProcessor trg )
 	{
+		trg.setColor( Color.black );
+		trg.fill();
 		Set< AffineModel2D > s = a.keySet();
 		for ( AffineModel2D ai : s )
 			apply( ai, src, trg );
+	}
+	
+	private void illustrateTriangle( AffineModel2D ai, GeneralPath path )
+	{
+		ArrayList< PointMatch > m = a.get( ai );
+		
+		float[] w = m.get( 0 ).getP2().getW();
+		path.moveTo( w[ 0 ], w[ 1 ] );
+		
+		for ( int i = 1; i < m.size(); ++i )
+		{
+			w = m.get( i ).getP2().getW();
+			path.lineTo( w[ 0 ], w[ 1 ] );
+		}
+		path.closePath();
+	}
+	
+	/**
+	 * Create a Shape that illustrates the mesh.
+	 * 
+	 * @return the illustration
+	 */
+	public Shape illustrateMesh()
+	{
+		GeneralPath path = new GeneralPath();
+		
+		Set< AffineModel2D > s = a.keySet();
+		for ( AffineModel2D ai : s )
+			illustrateTriangle( ai, path );
+		
+		return path;
 	}
 	
 	public void update( PointMatch p )
