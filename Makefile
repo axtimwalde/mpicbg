@@ -14,7 +14,10 @@ JAVACOPTS=-classpath ../ij.jar$(CPSEP)$(JAVACOPTSJARS) -target 1.5 -source 1.5
 JAVAS=$(wildcard \
     MOPS_ExtractPointRoi.java \
     SIFT_ExtractPointRoi.java \
+    SIFT_align.java \
+    Transform_Affine.java \
     Transform_Perspective.java \
+    Transform_ElasticMesh.java \
     mpicbg/*/*.java)
 CLASSES=$(patsubst %.java,%.class,$(JAVAS))
 ALL_CLASSES=$(patsubst %.java,%*.class,$(JAVAS))
