@@ -91,18 +91,25 @@ public class ElasticMesh extends TransformMesh
 			/**
 			 * Add PointMatches for each connectedHandle.
 			 */
-			System.
 			Tile t = pt.get( handle );
 			float[] here = handle.getP2().getW();
 			for ( PointMatch m : connectedHandles )
 			{
+				Tile o = pt.get( m );
 				Point p2 = points.get( m );
 				float[] there = m.getP2().getW();
 				Point p1 = new Point( new float[]{ there[ 0 ] - here[ 0 ], there[ 1 ] - here[ 1 ] } );
+				
+				System.out.println( "Adding virtual intra-section PointMatch at: (" + p1.getL()[ 0 ] + ", " + p1.getL()[ 1 ] );
+				
 				p1.apply( pt.get( m ).getModel() );
 				t.addMatch( new PointMatch( p1, p2 ) );
-				t.addConnectedTile( pt.get( m ) );
+				t.addConnectedTile( o );
 				t.update();
+				o.addMatch( new PointMatch( p2, p1 ) );
+				o.addConnectedTile( t );
+				o.update();
+				
 			}
 		}
 		
@@ -156,7 +163,7 @@ public class ElasticMesh extends TransformMesh
 		{
 			Tile t = pt.get( m );
 			t.update();
-			m.apply( t.getModel() );
+
 			double d = t.getDistance();
 			if ( d < min_d ) min_d = d;
 			if ( d > max_d ) max_d = d;
@@ -201,12 +208,20 @@ public class ElasticMesh extends TransformMesh
 			{
 				Tile t = pt.get( m );
 				
-				System.out.println( t.getMatches().size() );
+				//System.out.println( t.getMatches().size() );
 				if ( fixedTiles.contains( t ) ) continue;
 				t.update();
 				t.updateModel();
 				t.update();
-				m.getP2().apply( t.getModel() );
+				
+				/**
+				 * Update the location of the handle
+				 */
+				float[] w = m.getP2().getW();
+				w[ 0 ] = 0;
+				w[ 1 ] = 0;
+				t.getModel().applyInPlace( w );
+				
 				error += t.getDistance();
 //				System.out.println( t.getModel() );
 			}
@@ -215,7 +230,7 @@ public class ElasticMesh extends TransformMesh
 			update();
 			observer.add( error );			
 			
-			if ( i >= maxPlateauwidth && error < maxError && observer.getWideSlope( maxPlateauwidth ) >= 0.0 )
+			if ( i >= maxPlateauwidth && error < maxError && observer.getWideSlope( maxPlateauwidth ) >= -0.0001 )
 			{
 				System.out.println( "Exiting at iteration " + i + " with error " + decimalFormat.format( observer.mean ) );
 				break;
