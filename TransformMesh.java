@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.HashMap;
 
 import mpicbg.models.AffineModel2D;
+import mpicbg.models.Point;
 import mpicbg.models.PointMatch;
 import mpicbg.models.NotEnoughDataPointsException;
 import mpicbg.imagefeatures.Feature;
@@ -48,6 +49,90 @@ public class TransformMesh
 			l.get( pm ).add( m );
 		}
 	}
+	
+	public void init( int numX, int numY, float width, float height )
+	{
+		PointMatch[] pq = new PointMatch[ numX * numY + ( numX - 1 ) * ( numY - 1 ) ];
+		
+		float dy = height / ( numY - 1 );
+		float dx = width / ( numX - 1 );
+		
+		int i = 0;
+		for ( int xi = 0; xi < numX; ++xi )
+		{
+			float xip = xi * dx;
+			Point p = new Point( new float[]{ xip, 0 } );
+			pq[ i ]  = new PointMatch( p, p.clone() );
+			
+			++i;
+		}
+		for ( int yi = 1; yi < numY; ++yi )
+		{
+			// odd row
+			float yip = yi * dy - dy / 2;
+			for ( int xi = 1; xi < numX; ++xi )
+			{
+				float xip = xi * dx - dx / 2;
+				
+				Point p  = new Point( new float[]{ xip, yip } );
+				pq[ i ] = new PointMatch( p, p.clone() );
+				
+				int i1 = i - numX;
+				int i2 = i1 + 1;
+				
+				ArrayList< PointMatch > t1 = new ArrayList< PointMatch >();
+				t1.add( pq[ i1 ] );
+				t1.add( pq[ i2 ] );
+				t1.add( pq[ i ] );
+				
+				addTriangle( t1 );
+				
+				++i;
+			}
+			
+			// even row
+			yip = yi * dy;
+			Point p  = new Point( new float[]{ 0, yip } );
+			pq[ i ] = new PointMatch( p, p.clone() );
+			
+			++i;
+			
+			for ( int xi = 1; xi < numX; ++xi )
+			{
+				float xip = xi * dx;
+								
+				p = new Point( new float[]{ xip, yip } );
+				pq[ i ] = new PointMatch( p, p.clone() );
+				
+				int i1 = i - 2 * numX;
+				int i2 = i1 + 1;
+				int i3 = i1 + numX;
+				int i4 = i - 1;
+				
+				ArrayList< PointMatch > t1 = new ArrayList< PointMatch >();
+				t1.add( pq[ i1 ] );
+				t1.add( pq[ i3 ] );
+				t1.add( pq[ i4 ] );
+				
+				ArrayList< PointMatch > t2 = new ArrayList< PointMatch >();
+				t2.add( pq[ i4 ] );
+				t2.add( pq[ i3 ] );
+				t2.add( pq[ i ] );
+				
+				ArrayList< PointMatch > t3 = new ArrayList< PointMatch >();
+				t3.add( pq[ i ] );
+				t3.add( pq[ i3 ] );
+				t3.add( pq[ i2 ] );
+				
+				addTriangle( t1 );
+				addTriangle( t2 );
+				addTriangle( t3 );
+				
+				++i;
+			}
+		}
+	}
+	
 	
 	/**
 	 * 
