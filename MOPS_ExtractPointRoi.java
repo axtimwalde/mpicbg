@@ -7,7 +7,7 @@ import ij.*;
 import ij.process.*;
 
 import java.util.Collections;
-import java.util.Vector;
+import java.util.List;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.awt.geom.GeneralPath;
@@ -109,8 +109,8 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 	private ImagePlus impFeature1;
 	private ImagePlus impFeature2;
 	
-	private Vector< Feature > fs1;
-	private Vector< Feature > fs2;
+	private List< Feature > fs1;
+	private List< Feature > fs2;
 	final private HashMap< Point, Feature > m1 = new HashMap< Point, Feature >();
 	final private HashMap< Point, Feature > m2 = new HashMap< Point, Feature >();
 	final private ArrayList< Feature > i1 = new ArrayList< Feature >();
@@ -228,7 +228,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 			
 		start_time = System.currentTimeMillis();
 		IJ.log( "Identifying correspondence candidates using brute force ..." );
-		Vector< PointMatch > candidates = 
+		List< PointMatch > candidates = 
 				FloatArray2DMOPS.createMatches( fs1, fs2, rod, m1, m2 );
 		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );	
 		IJ.log( candidates.size() + " potentially corresponding features identified." );
@@ -236,7 +236,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		start_time = System.currentTimeMillis();
 		IJ.log( "Filtering correspondence candidates by geometric consensus ..." );
 		// filter false positives
-		Vector< PointMatch > inliers = new Vector< PointMatch >();
+		List< PointMatch > inliers = new ArrayList< PointMatch >();
 		
 		// TODO Implement other models for choice
 		Model model = null;
