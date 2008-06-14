@@ -52,7 +52,7 @@ package mpicbg.imagefeatures;
  * @version 0.1b
  */
 
-import java.util.Vector;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 import mpicbg.models.*;
@@ -267,7 +267,7 @@ public class FloatArray2DMOPS
 	void processCandidate(
 			float[] c,
 			int o,
-			Vector< Feature > features )
+			List< Feature > features )
 	{
 		final int ORIENTATION_BINS = 36;
 		final float ORIENTATION_BIN_SIZE = 2.0f * ( float )Math.PI / ( float )ORIENTATION_BINS;
@@ -348,7 +348,7 @@ public class FloatArray2DMOPS
 		float orientation = ( ( float )max_i + offset ) * ORIENTATION_BIN_SIZE - ( float )Math.PI;
 
 		// assign descriptor and add the Feature instance to the collection
-		features.addElement(
+		features.add(
 				new Feature(
 						octave_sigma * scale,
 						orientation,
@@ -386,7 +386,7 @@ public class FloatArray2DMOPS
 					offset = ( e0 - e2 ) / 2.0f / ( e0 - 2.0f * e1 + e2 );
 					orientation = ( ( float )i + 0.5f + offset ) * ORIENTATION_BIN_SIZE - ( float )Math.PI;
 
-					features.addElement(
+					features.add(
 							new Feature(
 									octave_sigma * scale,
 									orientation,
@@ -411,13 +411,13 @@ public class FloatArray2DMOPS
 	 * 
 	 * @return detected features
 	 */
-	public Vector< Feature > runOctave( int o )
+	public List< Feature > runOctave( int o )
 	{
-		Vector< Feature > features = new Vector< Feature >();
+		List< Feature > features = new ArrayList< Feature >();
 		FloatArray2DScaleOctave octave = octaves[ o ];
 		octave.build();
 		dog.run( octave );
-		Vector< float[] > candidates = dog.getCandidates();
+		List< float[] > candidates = dog.getCandidates();
 		for ( float[] c : candidates )
 		{
 			this.processCandidate( c, o, features );
@@ -434,9 +434,9 @@ public class FloatArray2DMOPS
 	 * 
 	 * @return detected features
 	 */
-	public Vector< Feature > run()
+	public List< Feature > run()
 	{
-		Vector< Feature > features = new Vector< Feature >();
+		List< Feature > features = new ArrayList< Feature >();
 		for ( int o = 0; o < octaves.length; ++o )
 		{
 			if ( octaves[ o ].state == FloatArray2DScaleOctave.State.EMPTY ) continue;
@@ -445,7 +445,7 @@ public class FloatArray2DMOPS
 		for ( int o = 0; o < octaves.length - O_SCALE_LD2; ++o )
 		{
 			if ( octaves[ o ].state == FloatArray2DScaleOctave.State.EMPTY ) continue;
-			Vector< Feature > more = runOctave( o );
+			List< Feature > more = runOctave( o );
 			features.addAll( more );
 		}
 		return features;
@@ -458,16 +458,16 @@ public class FloatArray2DMOPS
 	 * 
 	 * @return detected features
 	 */
-	public Vector< Feature > run( int max_size )
+	public List< Feature > run( int max_size )
 	{
-		Vector< Feature > features = new Vector< Feature >();
+		List< Feature > features = new ArrayList< Feature >();
 		for ( int o = 0; o < octaves.length; ++o )
 			if ( octaves[ o ].width <= max_size && octaves[ o ].height <= max_size )
 				octaves[ o ].build();
 		for ( int o = 0; o < octaves.length - O_SCALE_LD2; ++o )
 			if ( octaves[ o ].width <= max_size && octaves[ o ].height <= max_size )
 			{
-				Vector< Feature > more = runOctave( o );
+				List< Feature > more = runOctave( o );
 				features.addAll( more );
 			}
 		
@@ -484,12 +484,12 @@ public class FloatArray2DMOPS
 	 * 
 	 * @return matches
 	 */
-	public static Vector< PointMatch > createMatches(
+	public static List< PointMatch > createMatches(
 			List< Feature > fs1,
 			List< Feature > fs2,
 			float rod )
 	{
-		Vector< PointMatch > matches = new Vector< PointMatch >();
+		List< PointMatch > matches = new ArrayList< PointMatch >();
 		
 		for ( Feature f1 : fs1 )
 		{
@@ -512,7 +512,7 @@ public class FloatArray2DMOPS
 			}
 			if ( best != null && second_best_d < Float.MAX_VALUE && best_d / second_best_d < rod )
 			//if ( best != null )
-				matches.addElement(
+				matches.add(
 						new PointMatch(
 								new Point(
 										new float[] { f1.location[ 0 ], f1.location[ 1 ] } ),
@@ -536,12 +536,12 @@ public class FloatArray2DMOPS
 				if ( m_p2[ 0 ] == n_p2[ 0 ] && m_p2[ 1 ] == n_p2[ 1 ] )
 				{
 					amb = true;
-					matches.removeElementAt( j );
+					matches.remove( j );
 				}
 				else ++j;
 			}
 			if ( amb )
-				matches.removeElementAt( i );
+				matches.remove( i );
 			else ++i;
 		}
 		return matches;
@@ -557,14 +557,14 @@ public class FloatArray2DMOPS
 	 * 
 	 * @return matches
 	 */
-	public static Vector< PointMatch > createMatches(
+	public static List< PointMatch > createMatches(
 			List< Feature > fs1,
 			List< Feature > fs2,
 			float rod,
 			HashMap< Point, Feature > m1,
 			HashMap< Point, Feature > m2 )
 	{
-		Vector< PointMatch > matches = new Vector< PointMatch >();
+		List< PointMatch > matches = new ArrayList< PointMatch >();
 		
 		for ( Feature f1 : fs1 )
 		{
@@ -591,7 +591,7 @@ public class FloatArray2DMOPS
 				Point p1 = new Point( new float[] { f1.location[ 0 ], f1.location[ 1 ] } );
 				Point p2 = new Point( new float[] { best.location[ 0 ], best.location[ 1 ] } );
 						
-				matches.addElement(	new PointMatch( p1,	p2,	( f1.scale + best.scale ) / 2.0f ) );
+				matches.add(	new PointMatch( p1,	p2,	( f1.scale + best.scale ) / 2.0f ) );
 				
 				m1.put( p1, f1 );
 				m2.put( p2, best );
@@ -615,13 +615,13 @@ public class FloatArray2DMOPS
 					m1.remove( n.getP1() );
 					m2.remove( n.getP2() );
 					amb = true;
-					matches.removeElementAt( j );
+					matches.remove( j );
 				}
 				else ++j;
 			}
 			if ( amb )
 			{
-				matches.removeElementAt( i );
+				matches.remove( i );
 				m1.remove( m.getP1() );
 				m2.remove( m.getP2() );
 			}
@@ -645,7 +645,7 @@ public class FloatArray2DMOPS
 	 * 
 	 * TODO implement the spatial constraints
 	 */
-	public static Vector< PointMatch > createMatches(
+	public static List< PointMatch > createMatches(
 			List< Feature > fs1,
 			List< Feature > fs2,
 			float max_sd,
@@ -653,7 +653,7 @@ public class FloatArray2DMOPS
 			float max_id,
 			float rod )
 	{
-		Vector< PointMatch > matches = new Vector< PointMatch >();
+		List< PointMatch > matches = new ArrayList< PointMatch >();
 		float min_sd = 1.0f / max_sd;
 		
 		int size = fs2.size();
@@ -707,7 +707,7 @@ public class FloatArray2DMOPS
 //								new Point(
 //										new float[] { best.location[ 0 ], best.location[ 1 ] } ) ) );
 				// weighted with the features scale
-				matches.addElement(
+				matches.add(
 						new PointMatch(
 								new Point(
 										new float[] { f1.location[ 0 ], f1.location[ 1 ] } ),
@@ -729,14 +729,14 @@ public class FloatArray2DMOPS
 				{
 					amb = true;
 					//System.out.println( "removing ambiguous match at " + j );
-					matches.removeElementAt( j );
+					matches.remove( j );
 				}
 				else ++j;
 			}
 			if ( amb )
 			{
 				//System.out.println( "removing ambiguous match at " + i );
-				matches.removeElementAt( i );
+				matches.remove( i );
 			}
 			else ++i;
 		}
@@ -749,7 +749,7 @@ public class FloatArray2DMOPS
 	 * @param rs
 	 */
 	public static float[] featureSizeHistogram(
-			Vector< Feature > features,
+			List< Feature > features,
 			float min,
 			float max,
 			int bins )
