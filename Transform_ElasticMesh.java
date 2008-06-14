@@ -61,8 +61,7 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 		numY = ( int )gd.getNextNumber();
 		
 		// intitialize the transform mesh
-		init( numX, numY );
-		
+		mesh.init( numX, numY, imp.getWidth(), imp.getHeight() );		
 		mesh.init();
 		
 		x = new int[]{ ip.getWidth() / 4, 3 * ip.getWidth() / 4, ip.getWidth() / 4 };
@@ -104,108 +103,11 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 		imp.getCanvas().addKeyListener( this );
     }
 	
-	public void init( int numX, int numY )
-	{
-		pq = new PointMatch[ numX * numY + ( numX - 1 ) * ( numY - 1 ) ];
-//		x = new int[ pq.length ];
-//		y = new int[ pq.length ];
-	
-		float dy = ( float )ip.getHeight() / ( numY - 1 );
-		float dx = ( float )ip.getWidth() / ( numX - 1 );
-		
-		int i = 0;
-		for ( int xi = 0; xi < numX; ++xi )
-		{
-			float xip = xi * dx;
-			Point p = new Point( new float[]{ xip, 0 } );
-			pq[ i ]  = new PointMatch( p, p.clone() );
-			
-//			x[ i ] = ( int )( xip );
-//			y[ i ] = 0;
-			
-			++i;
-		}
-		for ( int yi = 1; yi < numY; ++yi )
-		{
-			// odd row
-			float yip = yi * dy - dy / 2;
-			for ( int xi = 1; xi < numX; ++xi )
-			{
-				float xip = xi * dx - dx / 2;
-				
-				Point p  = new Point( new float[]{ xip, yip } );
-				pq[ i ] = new PointMatch( p, p.clone() );
-				
-//				x[ i ] = ( int )( xip);
-//				y[ i ] = ( int )( yip);
-				
-				int i1 = i - numX;
-				int i2 = i1 + 1;
-				
-				ArrayList< PointMatch > t1 = new ArrayList< PointMatch >();
-				t1.add( pq[ i1 ] );
-				t1.add( pq[ i2 ] );
-				t1.add( pq[ i ] );
-				
-				mesh.addTriangle( t1 );
-				
-				++i;
-			}
-			
-			// even row
-			yip = yi * dy;
-			Point p  = new Point( new float[]{ 0, yip } );
-			pq[ i ] = new PointMatch( p, p.clone() );
-			
-//			x[ i ] = ( int )( 0 );
-//			y[ i ] = ( int )( yip );
-			
-			++i;
-			
-			for ( int xi = 1; xi < numX; ++xi )
-			{
-				float xip = xi * dx;
-								
-				p = new Point( new float[]{ xip, yip } );
-				pq[ i ] = new PointMatch( p, p.clone() );
-				
-//				x[ i ] = ( int )( xip );
-//				y[ i ] = ( int )( yip );
-				
-				int i1 = i - 2 * numX;
-				int i2 = i1 + 1;
-				int i3 = i1 + numX;
-				int i4 = i - 1;
-				
-				ArrayList< PointMatch > t1 = new ArrayList< PointMatch >();
-				t1.add( pq[ i1 ] );
-				t1.add( pq[ i3 ] );
-				t1.add( pq[ i4 ] );
-				
-				ArrayList< PointMatch > t2 = new ArrayList< PointMatch >();
-				t2.add( pq[ i4 ] );
-				t2.add( pq[ i3 ] );
-				t2.add( pq[ i ] );
-				
-				ArrayList< PointMatch > t3 = new ArrayList< PointMatch >();
-				t3.add( pq[ i ] );
-				t3.add( pq[ i3 ] );
-				t3.add( pq[ i2 ] );
-				
-				mesh.addTriangle( t1 );
-				mesh.addTriangle( t2 );
-				mesh.addTriangle( t3 );
-				
-				++i;
-			}
-		}
-	}
-	
 	public void optimize()
 	{
 		try
 		{
-			mesh.optimize( Float.MAX_VALUE, 10000, 100, ipOrig, ip, imp );
+			mesh.optimize( Float.MAX_VALUE, 10000, 100 );
 		}
 		catch ( NotEnoughDataPointsException ex )
 		{
