@@ -33,7 +33,9 @@ public class ElasticMesh extends TransformMesh
 	 */
 	final HashMap< PointMatch, Tile > pt = new HashMap< PointMatch, Tile >();
 	final HashSet< Tile > fixedTiles = new HashSet< Tile >();
+	
 	private double error = Double.MAX_VALUE;
+	public double getError(){ return error; }
 	
 	final static private DecimalFormat decimalFormat = new DecimalFormat();
 	final static private DecimalFormatSymbols decimalFormatSymbols = new DecimalFormatSymbols();
@@ -130,6 +132,8 @@ public class ElasticMesh extends TransformMesh
 	public Tile findClosest( float[] there )
 	{
 		Set< PointMatch > s = pt.keySet();
+		System.out.println( s.size() );
+		
 		PointMatch closest = null;
 		float cd = Float.MAX_VALUE;
 		for ( PointMatch handle : s )
@@ -144,8 +148,6 @@ public class ElasticMesh extends TransformMesh
 				closest = handle;
 			}
 		}
-		System.out.println( closest );
-		System.out.println( pt.get( closest ) );
 		return pt.get( closest );
 	}
 	
@@ -174,6 +176,49 @@ public class ElasticMesh extends TransformMesh
 	}
 	
 	/**
+	 * Performs one optimization iteration and writes its error into the ErrorStatistics
+	 * 
+	 * @param observer collecting the error after update
+	 * @throws NotEnoughDataPointsException
+	 */
+	void optimizeIteration( ErrorStatistic observer ) throws NotEnoughDataPointsException
+	{
+		Set< PointMatch > s = l.keySet();
+		
+		error = 0.0;
+		for ( PointMatch m : s )
+		{
+			Tile t = pt.get( m );
+			
+			//System.out.println( t.getMatches().size() );
+			if ( fixedTiles.contains( t ) ) continue;
+			t.update();
+			t.updateModel();
+			t.update();
+			
+			/**
+			 * Update the location of the handle
+			 */
+			float[] w = m.getP2().getW();
+			w[ 0 ] = 0;
+			w[ 1 ] = 0;
+			t.getModel().applyInPlace( w );
+			
+			error += t.getDistance();
+			update( m );
+		}
+		error /= s.size();
+		
+		update();
+		observer.add( error );
+	}
+	
+	public void fixTile( Tile t )
+	{
+		fixedTiles.add( t );
+	}
+	
+	/**
 	 * Minimize the displacement of all PointMatches of all tiles.
 	 * 
 	 * @param maxError do not accept convergence if error is > max_error
@@ -191,44 +236,15 @@ public class ElasticMesh extends TransformMesh
 	public void optimize(
 			float maxError,
 			int maxIterations,
-			int maxPlateauwidth,
-			ImageProcessor src,
-			ImageProcessor trg,
-			ImagePlus imp ) throws NotEnoughDataPointsException 
+			int maxPlateauwidth ) throws NotEnoughDataPointsException 
 	{
-		Set< PointMatch > s = l.keySet();
 		ErrorStatistic observer = new ErrorStatistic();
 		
 		int i = 0;
 		
 		while ( i < maxIterations )  // do not run forever
 		{
-			error = 0.0;
-			for ( PointMatch m : s )
-			{
-				Tile t = pt.get( m );
-				
-				//System.out.println( t.getMatches().size() );
-				if ( fixedTiles.contains( t ) ) continue;
-				t.update();
-				t.updateModel();
-				t.update();
-				
-				/**
-				 * Update the location of the handle
-				 */
-				float[] w = m.getP2().getW();
-				w[ 0 ] = 0;
-				w[ 1 ] = 0;
-				t.getModel().applyInPlace( w );
-				
-				error += t.getDistance();
-//				System.out.println( t.getModel() );
-			}
-			error /= s.size();
-			
-			update();
-			observer.add( error );			
+			optimizeIteration( observer );			
 			
 			if ( i >= maxPlateauwidth && error < maxError && observer.getWideSlope( maxPlateauwidth ) >= -0.0001 )
 			{
