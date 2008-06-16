@@ -12,7 +12,7 @@ JAVACOPTSJARS=$(shell echo "$(EXTJARS)" | tr \  $(CPSEP))
 JAVACOPTS=-classpath ../ij.jar$(CPSEP)$(JAVACOPTSJARS) -target 1.5 -source 1.5
 
 JAVAS=$(wildcard \
-    Align_ElasticMeshStack \
+    Align_ElasticMeshStack.java \
     ElasticMesh.java \
     ElasticMeshStack.java \
     MOPS_ExtractPointRoi.java \
