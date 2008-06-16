@@ -6,15 +6,12 @@ import java.awt.Shape;
 import java.awt.geom.GeneralPath;
 import java.util.ArrayList;
 import java.util.Set;
-import java.util.HashSet;
 import java.util.HashMap;
 
 import mpicbg.models.AffineModel2D;
 import mpicbg.models.Point;
 import mpicbg.models.PointMatch;
 import mpicbg.models.NotEnoughDataPointsException;
-import mpicbg.imagefeatures.Feature;
-import mpicbg.imagefeatures.FloatArray2D;
 
 
 public class TransformMesh
