@@ -17,7 +17,7 @@ JAVAS=$(wildcard \
     ElasticMeshStack.java \
     MOPS_ExtractPointRoi.java \
     SIFT_ExtractPointRoi.java \
-    SIFT_align.java \
+    SIFT_Align.java \
     Transform_Affine.java \
     Transform_ElasticMesh.java \
     Transform_Perspective.java \
