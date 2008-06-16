@@ -47,7 +47,10 @@ public class ElasticMeshStack
 	 * @param observer collecting the error after update
 	 * @throws NotEnoughDataPointsException
 	 */
-	public void optimizeAndDrawIteration( ErrorStatistic observer, ImageStack src, ImageStack trg ) throws NotEnoughDataPointsException
+	public void optimizeAndDrawIteration(
+			ErrorStatistic observer,
+			ImageStack src,
+			ImageStack trg ) throws NotEnoughDataPointsException
 	{
 		error = 0.0;
 		for ( ElasticMesh m : meshes )
@@ -58,6 +61,10 @@ public class ElasticMeshStack
 			int i = meshes.indexOf( m ) + 1;
 			ImageProcessor ipSrc = src.getProcessor( i );
 			ImageProcessor ipTrg = trg.getProcessor( i );
+			
+			//ImageProcessor tmp = ipTrg.duplicate();
+			//m.apply( ipSrc, tmp );
+			//ipTrg.setPixels( tmp.getPixels() );
 			
 			m.apply( ipSrc, ipTrg );
 		}
@@ -107,12 +114,11 @@ public class ElasticMeshStack
 			ImagePlus imp ) throws NotEnoughDataPointsException 
 	{
 		ErrorStatistic observer = new ErrorStatistic();
-		
 		int i = 0;
 		
 		while ( i < maxIterations )  // do not run forever
 		{
-			if ( i % 100 == 0 )
+			if ( i % 10 == 0 )
 			{
 				optimizeAndDrawIteration( observer, src, trg );
 				imp.updateAndDraw();
