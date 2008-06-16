@@ -102,7 +102,7 @@ public class ElasticMesh extends TransformMesh
 				float[] there = m.getP2().getW();
 				Point p1 = new Point( new float[]{ there[ 0 ] - here[ 0 ], there[ 1 ] - here[ 1 ] } );
 				
-				System.out.println( "Adding virtual intra-section PointMatch at: (" + p1.getL()[ 0 ] + ", " + p1.getL()[ 1 ] );
+				//System.out.println( "Adding virtual intra-section PointMatch at: (" + p1.getL()[ 0 ] + ", " + p1.getL()[ 1 ] );
 				
 				p1.apply( pt.get( m ).getModel() );
 				t.addMatch( new PointMatch( p1, p2 ) );
@@ -115,7 +115,7 @@ public class ElasticMesh extends TransformMesh
 			}
 		}
 		
-		System.out.println( pt.size() );
+		//System.out.println( pt.size() );
 	}
 	
 	/**
@@ -132,7 +132,7 @@ public class ElasticMesh extends TransformMesh
 	public Tile findClosest( float[] there )
 	{
 		Set< PointMatch > s = pt.keySet();
-		System.out.println( s.size() );
+		//System.out.println( s.size() );
 		
 		PointMatch closest = null;
 		float cd = Float.MAX_VALUE;
