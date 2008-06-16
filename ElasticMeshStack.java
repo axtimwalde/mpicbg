@@ -1,3 +1,4 @@
+import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.process.ImageProcessor;
@@ -5,12 +6,9 @@ import ij.process.ImageProcessor;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
-import java.util.Set;
 
 import mpicbg.models.ErrorStatistic;
 import mpicbg.models.NotEnoughDataPointsException;
-import mpicbg.models.PointMatch;
-import mpicbg.models.Tile;
 
 /**
  * @author saalfeld
@@ -128,17 +126,17 @@ public class ElasticMeshStack
 			
 			if ( i >= maxPlateauwidth && error < maxError && observer.getWideSlope( maxPlateauwidth ) >= -0.0001 )
 			{
-				System.out.println( "Exiting at iteration " + i + " with error " + decimalFormat.format( observer.mean ) );
+				IJ.log( "Exiting at iteration " + i + " with error " + decimalFormat.format( observer.mean ) );
 				break;
 			}
 			
 			++i;
 		}
 		
-		System.out.println( "Successfully optimized " + meshes.size() + " sices:" );
-		System.out.println( "  average displacement: " + decimalFormat.format( observer.mean ) + "px" );
-		System.out.println( "  minimal displacement: " + decimalFormat.format( observer.min ) + "px" );
-		System.out.println( "  maximal displacement: " + decimalFormat.format( observer.max ) + "px" );
+		IJ.log( "Successfully optimized " + meshes.size() + " slices:" );
+		IJ.log( "  average displacement: " + decimalFormat.format( observer.mean ) + "px" );
+		IJ.log( "  minimal displacement: " + decimalFormat.format( observer.min ) + "px" );
+		IJ.log( "  maximal displacement: " + decimalFormat.format( observer.max ) + "px" );
 	}
 	
 	public void clear()
