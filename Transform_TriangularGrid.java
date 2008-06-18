@@ -15,6 +15,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
+import java.util.Set;
 
 public class Transform_TriangularGrid implements PlugIn, MouseListener,  MouseMotionListener, KeyListener
 {
@@ -32,14 +33,12 @@ public class Transform_TriangularGrid implements PlugIn, MouseListener,  MouseMo
 	int[] y;
 	PointRoi handles;
 	
-	final TransformMesh mt = new TransformMesh();
+	protected TransformMesh mt;
 	
 	int targetIndex = -1;
 	
 	public void run( String arg )
     {
-		// cleanup
-		mt.clear();
 		
 		imp = IJ.getImage();
 		ip = imp.getProcessor();
@@ -56,8 +55,21 @@ public class Transform_TriangularGrid implements PlugIn, MouseListener,  MouseMo
 		numY = ( int )gd.getNextNumber();
 		
 		// intitialize the transform mesh
-		initMesh( numX, numY );
+		mt = new TransformMesh( numX, numY, imp.getWidth(), imp.getHeight() );
+		Set< PointMatch > pqs = mt.l.keySet();
+		pq = new PointMatch[ pqs.size() ];
+		mt.l.keySet().toArray( pq );
 		
+		System.out.println( pq.length );
+		
+		x = new int[ pq.length ];
+		y = new int[ pq.length ];
+		
+		for ( int i = 0; i < pq.length; ++i )
+		{
+			x[ i ] = ( int )pq[ i ].getP2().getW()[ 0 ];
+			y[ i ] = ( int )pq[ i ].getP2().getW()[ 1 ];
+		}
 		
 		handles = new PointRoi( x, y, x.length );
 		imp.setRoi( handles );
@@ -68,103 +80,6 @@ public class Transform_TriangularGrid implements PlugIn, MouseListener,  MouseMo
 		imp.getCanvas().addMouseMotionListener( this );
 		imp.getCanvas().addKeyListener( this );
     }
-	
-	public void initMesh( int numX, int numY )
-	{
-		pq = new PointMatch[ numX * numY + ( numX - 1 ) * ( numY - 1 ) ];
-		x = new int[ pq.length ];
-		y = new int[ pq.length ];
-		
-		float dy = ( float )ip.getHeight() / ( numY - 1 );
-		float dx = ( float )ip.getWidth() / ( numX - 1 );
-		
-		int i = 0;
-		for ( int xi = 0; xi < numX; ++xi )
-		{
-			float xip = xi * dx;
-			Point p = new Point( new float[]{ xip, 0 } );
-			pq[ i ]  = new PointMatch( p, p.clone() );
-			
-			x[ i ] = ( int )( xip );
-			y[ i ] = 0;
-			
-			++i;
-		}
-		for ( int yi = 1; yi < numY; ++yi )
-		{
-			// odd row
-			float yip = yi * dy - dy / 2;
-			for ( int xi = 1; xi < numX; ++xi )
-			{
-				float xip = xi * dx - dx / 2;
-				
-				Point p  = new Point( new float[]{ xip, yip } );
-				pq[ i ] = new PointMatch( p, p.clone() );
-				
-				x[ i ] = ( int )( xip);
-				y[ i ] = ( int )( yip);
-				
-				int i1 = i - numX;
-				int i2 = i1 + 1;
-				
-				ArrayList< PointMatch > t1 = new ArrayList< PointMatch >();
-				t1.add( pq[ i1 ] );
-				t1.add( pq[ i2 ] );
-				t1.add( pq[ i ] );
-				
-				mt.addTriangle( t1 );
-				
-				++i;
-			}
-			
-			// even row
-			yip = yi * dy;
-			Point p  = new Point( new float[]{ 0, yip } );
-			pq[ i ] = new PointMatch( p, p.clone() );
-			
-			x[ i ] = ( int )( 0 );
-			y[ i ] = ( int )( yip );
-			
-			++i;
-			
-			for ( int xi = 1; xi < numX; ++xi )
-			{
-				float xip = xi * dx;
-								
-				p = new Point( new float[]{ xip, yip } );
-				pq[ i ] = new PointMatch( p, p.clone() );
-				
-				x[ i ] = ( int )( xip );
-				y[ i ] = ( int )( yip );
-				
-				int i1 = i - 2 * numX;
-				int i2 = i1 + 1;
-				int i3 = i1 + numX;
-				int i4 = i - 1;
-				
-				ArrayList< PointMatch > t1 = new ArrayList< PointMatch >();
-				t1.add( pq[ i1 ] );
-				t1.add( pq[ i3 ] );
-				t1.add( pq[ i4 ] );
-				
-				ArrayList< PointMatch > t2 = new ArrayList< PointMatch >();
-				t2.add( pq[ i4 ] );
-				t2.add( pq[ i3 ] );
-				t2.add( pq[ i ] );
-				
-				ArrayList< PointMatch > t3 = new ArrayList< PointMatch >();
-				t3.add( pq[ i ] );
-				t3.add( pq[ i3 ] );
-				t3.add( pq[ i2 ] );
-				
-				mt.addTriangle( t1 );
-				mt.addTriangle( t2 );
-				mt.addTriangle( t3 );
-				
-				++i;
-			}
-		}
-	}
 	
 	public void keyPressed( KeyEvent e)
 	{
@@ -250,7 +165,7 @@ public class Transform_TriangularGrid implements PlugIn, MouseListener,  MouseMo
 			fq[ 0 ] = x;
 			fq[ 1 ] = y;
 			
-			mt.update( pq[ targetIndex ] );
+			mt.updateAffine( pq[ targetIndex ] );
 					
 			mt.apply( ipOrig, ip );
 		}
