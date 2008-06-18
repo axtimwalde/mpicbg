@@ -35,7 +35,7 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 	Point[] hooks;
 	PointRoi handles;
 	
-	final ElasticMesh mesh = new ElasticMesh();
+	protected ElasticMesh mesh;
 	
 	int targetIndex = -1;
 	
@@ -43,9 +43,6 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 	
 	public void run( String arg )
     {
-		// cleanup
-		mesh.clear();
-		
 		imp = IJ.getImage();
 		ip = imp.getProcessor();
 		ipOrig = ip.duplicate();
@@ -61,8 +58,7 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 		numY = ( int )gd.getNextNumber();
 		
 		// intitialize the transform mesh
-		mesh.init( numX, numY, imp.getWidth(), imp.getHeight() );		
-		mesh.init();
+		mesh = new ElasticMesh( numX, numY, imp.getWidth(), imp.getHeight() );		
 		
 		x = new int[]{ ip.getWidth() / 4, 3 * ip.getWidth() / 4, ip.getWidth() / 4 };
 		y = new int[]{ ip.getHeight() / 4, ip.getHeight() / 2, 3 * ip.getHeight() / 4 };
@@ -72,23 +68,11 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 		for ( int i = 0; i < hooks.length; ++i )
 		{
 			System.out.println( i );
-			float[] here = new float[]{ x[ i ], y[ i ] };
-			hooks[ i ] = new Point( here );
-			Tile o = mesh.findClosest( here );
-			float[] there = here.clone();
-			try
-			{
-				System.out.println( o );
-				
-				o.getModel().applyInverseInPlace( there );
-			}
-			catch ( NoninvertibleModelException e )
-			{
-				e.printStackTrace( System.err );
-			}
-			Point p2 = new Point( there );
+			hooks[ i ] = new Point( new float[]{ x[ i ], y[ i ] } );
+			Tile o = mesh.findClosest( hooks[ i ].getL() );
+			Point p2 = new Point( new float[]{ x[ i ], y[ i ] } );
 			
-			o.addMatch( new PointMatch( p2, hooks[ i ], 100f ) );
+			o.addMatch( new PointMatch( p2, hooks[ i ], 10f ) );
 			screen.addMatch( new PointMatch( hooks[ i ], p2 ) );
 			
 		}
@@ -119,7 +103,7 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 	{
 		Shape meshIllustration = mesh.illustrateMesh();
 		imp.getCanvas().setDisplayList( meshIllustration, Color.white, null );
-		mesh.updateMesh();
+		mesh.updateAffines();
 	}
 	
 	public void apply()
