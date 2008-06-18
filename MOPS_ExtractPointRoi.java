@@ -6,6 +6,8 @@ import ij.gui.*;
 import ij.*;
 import ij.process.*;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.Collections;
 import java.util.List;
 import java.util.HashMap;
@@ -76,6 +78,9 @@ import java.awt.event.MouseListener;
  */
 public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener, ImageListener
 {
+	final static private DecimalFormat decimalFormat = new DecimalFormat();
+	final static private DecimalFormatSymbols decimalFormatSymbols = new DecimalFormatSymbols();
+	
 	// steps
 	private static int steps = 3;
 	// initial sigma
@@ -116,6 +121,15 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 	final private ArrayList< Feature > i1 = new ArrayList< Feature >();
 	final private ArrayList< Feature > i2 = new ArrayList< Feature >();
 	
+	public MOPS_ExtractPointRoi()
+	{
+		decimalFormatSymbols.setGroupingSeparator( ',' );
+		decimalFormatSymbols.setDecimalSeparator( '.' );
+		decimalFormat.setDecimalFormatSymbols( decimalFormatSymbols );
+		decimalFormat.setMaximumFractionDigits( 3 );
+		decimalFormat.setMinimumFractionDigits( 3 );		
+	}
+	
 	public void run( String args )
 	{
 		// cleanup
@@ -141,7 +155,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 			titles[ i ] = ( WindowManager.getImage( ids[ i ] ) ).getTitle();
 		}
 		
-		String[] methods = new String[]{ "Translation", "Rigid" };
+		String[] methods = new String[]{ "Translation", "Rigid", "Affine" };
 		
 		GenericDialog gd = new GenericDialog( "Extract Landmark Correspondences" );
 		String current = WindowManager.getCurrentImage().getTitle();
@@ -249,6 +263,9 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		case 1:
 			modelClass = RigidModel2D.class;
 			break;
+		case 2:
+			modelClass = AffineModel2D.class;
+			break;
 		}
 		
 		//IJ.showMessage( modelClass.getCanonicalName() );
@@ -315,7 +332,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 			imp1.setRoi( pr1 );
 			imp2.setRoi( pr2 );
 			
-			IJ.log( inliers.size() + " corresponding features with a maximal displacement of " + model.getError() + " identified." );
+			IJ.log( inliers.size() + " corresponding features with a maximal displacement of " + decimalFormat.format( model.getError() ) + "px identified." );
 			IJ.log( "Estimated transformation model: " + model );
 			
 			imp1.getCanvas().addMouseListener( this );

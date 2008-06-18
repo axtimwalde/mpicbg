@@ -6,6 +6,8 @@ import ij.gui.*;
 import ij.*;
 import ij.process.*;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.Collections;
 import java.util.Vector;
 import java.awt.TextField;
@@ -73,6 +75,9 @@ import java.awt.event.KeyListener;
  */
 public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 {
+	final static private DecimalFormat decimalFormat = new DecimalFormat();
+	final static private DecimalFormatSymbols decimalFormatSymbols = new DecimalFormatSymbols();
+	
 	// steps
 	private static int steps = 3;
 	// initial sigma
@@ -87,7 +92,7 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 	private static int min_size = 64;
 	private static int max_size = 1024;
 	// maximal allowed alignment error in px
-	private static float max_epsilon = 100.0f;
+	private static float max_epsilon = 25.0f;
 	private static float min_inlier_ratio = 0.05f;
 	
 	/**
@@ -101,6 +106,15 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 	private static boolean upscale = false;
 	private static float scale = 1.0f;
 	private static int method = 1;
+	
+	public SIFT_ExtractPointRoi()
+	{
+		decimalFormatSymbols.setGroupingSeparator( ',' );
+		decimalFormatSymbols.setDecimalSeparator( '.' );
+		decimalFormat.setDecimalFormatSymbols( decimalFormatSymbols );
+		decimalFormat.setMaximumFractionDigits( 3 );
+		decimalFormat.setMinimumFractionDigits( 3 );		
+	}
 	
 	public void run( String args )
 	{
@@ -119,7 +133,7 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 			titles[ i ] = ( WindowManager.getImage( ids[ i ] ) ).getTitle();
 		}
 		
-		String[] methods = new String[]{ "Translation", "Rigid" };
+		String[] methods = new String[]{ "Translation", "Rigid", "Affine" };
 		
 		GenericDialog gd = new GenericDialog( "Extract Landmark Correspondences" );
 		String current = WindowManager.getCurrentImage().getTitle();
@@ -231,6 +245,9 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 		case 1:
 			modelClass = RigidModel2D.class;
 			break;
+		case 2:
+			modelClass = AffineModel2D.class;
+			break;
 		}
 		
 		//IJ.showMessage( modelClass.getCanonicalName() );
@@ -280,7 +297,8 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 			imp1.setRoi( pr1 );
 			imp2.setRoi( pr2 );
 			
-			IJ.log( inliers.size() + " corresponding features with an average displacement of " + model.getError() + " identified." );
+			IJ.log( inliers.size() + " corresponding features with an average displacement of " + decimalFormat.format( model.getError() ) + "px identified." );
+			IJ.log( "Estimated transformation model: " + model );
 		}
 		else
 		{
