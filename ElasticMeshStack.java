@@ -45,7 +45,7 @@ public class ElasticMeshStack
 	 * @param observer collecting the error after update
 	 * @throws NotEnoughDataPointsException
 	 */
-	public void optimizeAndDrawIteration(
+	public void optimizeIterationAndDraw(
 			ErrorStatistic observer,
 			ImageStack src,
 			ImageStack trg ) throws NotEnoughDataPointsException
@@ -68,6 +68,37 @@ public class ElasticMeshStack
 		}
 		error /= meshes.size();
 		observer.add( error );
+		
+		IJ.showStatus( "Optimizing... e=" + decimalFormat.format( error ) );
+	}
+	
+	/**
+	 * Performs one optimization iteration and writes its error into the ErrorStatistics
+	 * 
+	 * @param observer collecting the error after update
+	 * @throws NotEnoughDataPointsException
+	 */
+	public void optimizeIterationByWeightAndDraw(
+			ErrorStatistic observer,
+			ImageStack src,
+			ImageStack trg ) throws NotEnoughDataPointsException
+	{
+		error = 0.0;
+		for ( ElasticMesh m : meshes )
+		{
+			m.optimizeIterationByWeight( observer );
+			error += m.getError();
+			
+			int i = meshes.indexOf( m ) + 1;
+			ImageProcessor ipSrc = src.getProcessor( i );
+			ImageProcessor ipTrg = trg.getProcessor( i );
+			
+			m.apply( ipSrc, ipTrg );
+		}
+		error /= meshes.size();
+		observer.add( error );
+		
+		IJ.showStatus( "Optimizing... e=" + decimalFormat.format( error ) );
 	}
 	
 	/**
@@ -82,6 +113,24 @@ public class ElasticMeshStack
 		for ( ElasticMesh m : meshes )
 		{
 			m.optimizeIteration( observer );
+			error += m.getError();
+		}
+		error /= meshes.size();
+		observer.add( error );
+	}
+	
+	/**
+	 * Performs one optimization iteration and writes its error into the ErrorStatistics
+	 * 
+	 * @param observer collecting the error after update
+	 * @throws NotEnoughDataPointsException
+	 */
+	public void optimizeIterationByWeight( ErrorStatistic observer ) throws NotEnoughDataPointsException
+	{
+		error = 0.0;
+		for ( ElasticMesh m : meshes )
+		{
+			m.optimizeIterationByWeight( observer );
 			error += m.getError();
 		}
 		error /= meshes.size();
@@ -106,6 +155,48 @@ public class ElasticMeshStack
 	public void optimize(
 			float maxError,
 			int maxIterations,
+			int maxPlateauwidth ) throws NotEnoughDataPointsException 
+	{
+		ErrorStatistic observer = new ErrorStatistic();
+		int i = 0;
+		
+		while ( i < maxIterations )  // do not run forever
+		{
+			optimizeIteration( observer );
+			
+			if ( i >= maxPlateauwidth && error < maxError && observer.getWideSlope( maxPlateauwidth ) >= -0.0001 )
+			{
+				IJ.log( "Exiting at iteration " + i + " with error " + decimalFormat.format( observer.mean ) );
+				break;
+			}
+			
+			++i;
+		}
+		
+		System.out.println( "Successfully optimized " + meshes.size() + " slices:" );
+		System.out.println( "  average displacement: " + decimalFormat.format( observer.mean ) + "px" );
+		System.out.println( "  minimal displacement: " + decimalFormat.format( observer.min ) + "px" );
+		System.out.println( "  maximal displacement: " + decimalFormat.format( observer.max ) + "px" );
+	}
+	
+	/**
+	 * Minimize the displacement of all PointMatches of all tiles.
+	 * 
+	 * @param maxError do not accept convergence if error is > max_error
+	 * @param maxIterations stop after that many iterations even if there was
+	 *   no minimum found
+	 * @param maxPlateauwidth convergence is reached if the average slope in
+	 *   an interval of this size is 0.0 (in double accuracy).  This prevents
+	 *   the algorithm from stopping at plateaus smaller than this value.
+	 * 
+	 * TODO  Johannes Schindelin suggested to start from a good guess, which is
+	 *   e.g. the propagated unoptimized pose of a tile relative to its
+	 *   connected tile that was already identified during RANSAC
+	 *   correspondence check.  Thank you, Johannes, great hint!
+	 */
+	public void optimizeAndDraw(
+			float maxError,
+			int maxIterations,
 			int maxPlateauwidth,
 			ImageStack src,
 			ImageStack trg,
@@ -118,11 +209,104 @@ public class ElasticMeshStack
 		{
 			if ( i % 10 == 0 )
 			{
-				optimizeAndDrawIteration( observer, src, trg );
+				optimizeIterationAndDraw( observer, src, trg );
 				imp.updateAndDraw();
 			}
 			else
 				optimizeIteration( observer );
+			
+			if ( i >= maxPlateauwidth && error < maxError && observer.getWideSlope( maxPlateauwidth ) >= -0.0001 )
+			{
+				IJ.log( "Exiting at iteration " + i + " with error " + decimalFormat.format( observer.mean ) );
+				break;
+			}
+			
+			++i;
+		}
+		
+		IJ.log( "Successfully optimized " + meshes.size() + " slices:" );
+		IJ.log( "  average displacement: " + decimalFormat.format( observer.mean ) + "px" );
+		IJ.log( "  minimal displacement: " + decimalFormat.format( observer.min ) + "px" );
+		IJ.log( "  maximal displacement: " + decimalFormat.format( observer.max ) + "px" );
+	}
+	
+	/**
+	 * Minimize the displacement of all PointMatches of all tiles.
+	 * 
+	 * @param maxError do not accept convergence if error is > max_error
+	 * @param maxIterations stop after that many iterations even if there was
+	 *   no minimum found
+	 * @param maxPlateauwidth convergence is reached if the average slope in
+	 *   an interval of this size is 0.0 (in double accuracy).  This prevents
+	 *   the algorithm from stopping at plateaus smaller than this value.
+	 * 
+	 * TODO  Johannes Schindelin suggested to start from a good guess, which is
+	 *   e.g. the propagated unoptimized pose of a tile relative to its
+	 *   connected tile that was already identified during RANSAC
+	 *   correspondence check.  Thank you, Johannes, great hint!
+	 */
+	public void optimizeByWeight(
+			float maxError,
+			int maxIterations,
+			int maxPlateauwidth ) throws NotEnoughDataPointsException 
+	{
+		ErrorStatistic observer = new ErrorStatistic();
+		int i = 0;
+		
+		while ( i < maxIterations )  // do not run forever
+		{
+			optimizeIterationByWeight( observer );
+			
+			if ( i >= maxPlateauwidth && error < maxError && observer.getWideSlope( maxPlateauwidth ) >= -0.0001 )
+			{
+				IJ.log( "Exiting at iteration " + i + " with error " + decimalFormat.format( observer.mean ) );
+				break;
+			}
+			
+			++i;
+		}
+		
+		System.out.println( "Successfully optimized " + meshes.size() + " slices:" );
+		System.out.println( "  average displacement: " + decimalFormat.format( observer.mean ) + "px" );
+		System.out.println( "  minimal displacement: " + decimalFormat.format( observer.min ) + "px" );
+		System.out.println( "  maximal displacement: " + decimalFormat.format( observer.max ) + "px" );
+	}
+	
+	/**
+	 * Minimize the displacement of all PointMatches of all tiles.
+	 * 
+	 * @param maxError do not accept convergence if error is > max_error
+	 * @param maxIterations stop after that many iterations even if there was
+	 *   no minimum found
+	 * @param maxPlateauwidth convergence is reached if the average slope in
+	 *   an interval of this size is 0.0 (in double accuracy).  This prevents
+	 *   the algorithm from stopping at plateaus smaller than this value.
+	 * 
+	 * TODO  Johannes Schindelin suggested to start from a good guess, which is
+	 *   e.g. the propagated unoptimized pose of a tile relative to its
+	 *   connected tile that was already identified during RANSAC
+	 *   correspondence check.  Thank you, Johannes, great hint!
+	 */
+	public void optimizeByWeightAndDraw(
+			float maxError,
+			int maxIterations,
+			int maxPlateauwidth,
+			ImageStack src,
+			ImageStack trg,
+			ImagePlus imp ) throws NotEnoughDataPointsException 
+	{
+		ErrorStatistic observer = new ErrorStatistic();
+		int i = 0;
+		
+		while ( i < maxIterations )  // do not run forever
+		{
+			if ( i % 10 == 0 )
+			{
+				optimizeIterationByWeightAndDraw( observer, src, trg );
+				imp.updateAndDraw();
+			}
+			else
+				optimizeIterationByWeight( observer );
 			
 			if ( i >= maxPlateauwidth && error < maxError && observer.getWideSlope( maxPlateauwidth ) >= -0.0001 )
 			{
