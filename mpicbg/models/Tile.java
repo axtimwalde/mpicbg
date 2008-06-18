@@ -203,6 +203,39 @@ public class Tile
 	}
 	
 	/**
+	 * Apply the current {@link Model} to all local point coordinates by weight.
+	 * Update average transfer error.
+	 *
+	 */
+	final public void updateWeighted()
+	{
+		// tile center world coordinates
+		wc = model.apply( lc );
+		
+		double d = 0.0;
+		double e = 0.0;
+		
+		int num_matches = matches.size();
+		if ( num_matches > 0 )
+		{
+			double sum_weight = 0.0;
+			for ( PointMatch match : matches )
+			{
+				match.applyWeighted( model );
+				double dl = match.getDistance();
+				d += dl;
+				e += dl * dl * match.getWeight();
+				sum_weight += match.getWeight();
+			}
+			d /= num_matches;
+			e /= sum_weight;
+		}
+		distance = ( float )d;
+		error = ( float )e;
+		model.setError( e );
+	}
+	
+	/**
 	 * randomly dice new model until the error is smaller than the old one
 	 * 
 	 * @param max_num_tries maximal number of tries before returning false (which means "no better model found")
@@ -234,10 +267,10 @@ public class Tile
 	 * Update the transformation {@link Model}.  That is, fit it to the
 	 * current set of {@link PointMatch}es.
 	 */
-	final public void updateModel() throws NotEnoughDataPointsException
+	final public void fitModel() throws NotEnoughDataPointsException
 	{
 		model.fit( matches );
-		update();
+		//update(); // Do not update!  The user wants to decide about the update strategy (weighted or unweighted)
 	}
 	
 	/**
@@ -273,11 +306,11 @@ public class Tile
 	 * Do not normalize by changing the weight, correpondences are weighted by
 	 * feature scale. 
 	 * 
-	 * @param other_tile
+	 * @param o
 	 * @param matches
 	 */
 	final public void connect(
-			Tile other_tile,
+			Tile o,
 			Collection< PointMatch > matches )
 	{
 //		float num_matches = ( float )matches.size();
@@ -285,10 +318,10 @@ public class Tile
 //			m.setWeight( 1.0f / num_matches );
 		
 		this.addMatches( matches );
-		other_tile.addMatches( PointMatch.flip( matches ) );
+		o.addMatches( PointMatch.flip( matches ) );
 		
-		this.addConnectedTile( other_tile );
-		other_tile.addConnectedTile( this );
+		this.addConnectedTile( o );
+		o.addConnectedTile( this );
 	}
 	
 	/**
@@ -301,15 +334,15 @@ public class Tile
 			Collection< Tile > tiles )
 	{
 		ArrayList< ArrayList< Tile > > graphs = new ArrayList< ArrayList< Tile > >();
-		int num_inspected_tiles = 0;
+		int numInspectedTiles = 0;
 A:		for ( Tile tile : tiles )
 		{
-			for ( ArrayList< Tile > known_graph : graphs )
-				if ( known_graph.contains( tile ) ) continue A; 
+			for ( ArrayList< Tile > knownGraph : graphs )
+				if ( knownGraph.contains( tile ) ) continue A; 
 			ArrayList< Tile > current_graph = new ArrayList< Tile >();
-			num_inspected_tiles += tile.traceConnectedGraph( current_graph );
+			numInspectedTiles += tile.traceConnectedGraph( current_graph );
 			graphs.add( current_graph );
-			if ( num_inspected_tiles == tiles.size() ) break;
+			if ( numInspectedTiles == tiles.size() ) break;
 		}
 		return graphs;
 	}
@@ -339,16 +372,16 @@ A:		for ( Tile tile : tiles )
 	 *   
 	 *   !!!!This is wrong:
 	 *   
-	 *      +-+
-	 *      | |
-	 *    +-+-+-+
-	 *    | | | |
-	 *    +-+-+-+
-	 *      | |
-	 *      +-+
+	 *      +-+     +-----+
+	 *      | |     |     |
+	 *    +-+-+-+   | +-+ |
+	 *    | | | |   | | | |
+	 *    +-+-+-+   | +-+ |
+	 *      | |     |     |
+	 *      +-+     +-----+
 	 *      
-	 *   Test for edge intersections instead:  If only one single edge of this
-	 *   intersects with one of t both tiles intersect.
+	 *   Test for edge intersections and points:  If only one single edge of
+	 *   this intersects with one of t both tiles intersect.
 	 * 
 	 * @param t the other {@link Tile}
 	 */
