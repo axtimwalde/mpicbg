@@ -67,7 +67,7 @@ public class AffineModel2D extends Model
 	@Override
 	public void fit( Collection< PointMatch > matches ) throws NotEnoughDataPointsException
 	{
-		if ( matches.size() < MIN_SET_SIZE ) throw new NotEnoughDataPointsException( matches.size() + " correspondences are not enough to estimate a 2d homography model, at least " + MIN_SET_SIZE + " correspondences required." );
+		if ( matches.size() < MIN_SET_SIZE ) throw new NotEnoughDataPointsException( matches.size() + " correspondences are not enough to estimate a 2d affine model, at least " + MIN_SET_SIZE + " correspondences required." );
 		
 		// center of mass:
 		float pcx = 0, pcy = 0;
