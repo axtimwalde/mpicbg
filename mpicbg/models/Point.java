@@ -9,13 +9,13 @@ package mpicbg.models;
 public class Point
 {
 	/**
-	 * world coordinates
+	 * World coordinates
 	 */
 	private float[] w;
 	final public float[] getW() { return w; }
 	
 	/**
-	 * local coordinates
+	 * Local coordinates
 	 */
 	final private float[] l;
 	final public float[] getL() { return l; }
@@ -23,7 +23,7 @@ public class Point
 	/**
 	 * Constructor
 	 *          
-	 * sets this.l to the given float[] reference
+	 * Sets this.l to the given float[] reference.
 	 * 
 	 * @param l reference to the local coordinates of the point
 	 */
@@ -35,13 +35,29 @@ public class Point
 	}
 	
 	/**
-	 * apply a model to the point
+	 * Apply a model to the point.
+	 * 
+	 * Transfers the local coordinates to new world coordinates.
+	 */
+	
+	final public void apply( Model model )
+	{
+		System.arraycopy( l, 0, w, 0, l.length );
+		model.applyInPlace( w );
+	}
+	
+	/**
+	 * apply a model to the point by a given weight
 	 * 
 	 * transfers the local coordinates to new world coordinates
 	 */
-	final public void apply( Model model )
+	final public void applyWeighted( Model model, float weight )
 	{
-		w = model.apply( l );
+		weight = Math.max( 0.0f, Math.min( 1.0f, weight ) );
+		float[] a = model.apply( l );
+		float weight1 = 1.0f - weight;
+		for ( int i = 0; i < a.length; ++i )
+			w[ i ] = weight * a[ i ] + weight1 * w[ i ];
 	}
 	
 	/**
