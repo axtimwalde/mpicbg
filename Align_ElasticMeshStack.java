@@ -255,7 +255,7 @@ public class Align_ElasticMeshStack implements PlugIn
 	{
 		try
 		{
-			meshes.optimize( Float.MAX_VALUE, 10000, 100, stack, stackAligned, impAligned );
+			meshes.optimizeAndDraw( Float.MAX_VALUE, 10000, 100, stack, stackAligned, impAligned );
 			apply();
 		}
 		catch ( NotEnoughDataPointsException ex )
