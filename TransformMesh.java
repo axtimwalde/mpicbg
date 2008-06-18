@@ -4,6 +4,8 @@ import ij.process.ImageProcessor;
 import java.awt.Color;
 import java.awt.Shape;
 import java.awt.geom.GeneralPath;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashMap;
@@ -16,40 +18,19 @@ import mpicbg.models.NotEnoughDataPointsException;
 
 public class TransformMesh
 {
+	protected float width, height;
+	public float getWidth(){ return width; }
+	public float getHeight(){ return height; }
+	
 	final HashMap< AffineModel2D, ArrayList< PointMatch > > a = new HashMap< AffineModel2D, ArrayList< PointMatch > >();
 	final HashMap< PointMatch, ArrayList< AffineModel2D > > l = new HashMap< PointMatch, ArrayList< AffineModel2D > >();
 	
-	/**
-	 * Add a triangle defined by 3 PointMatches that defines an
-	 * AffineTransform2D.
-	 * 
-	 * @param t 3 PointMatches (will not be copied, so do not reuse this list!)
-	 */
-	public void addTriangle( ArrayList< PointMatch > t )
-	{
-		AffineModel2D m = new AffineModel2D();
-		try
-		{
-			m.fit( t );
-		}
-		catch ( NotEnoughDataPointsException e )
-		{
-			IJ.error( e.getMessage() );
-			e.printStackTrace( System.err );
-		}
-		a.put( m, t );
-		
-		for ( PointMatch pm : t )
-		{
-			if ( !l.containsKey( pm ) )
-				l.put( pm, new ArrayList< AffineModel2D >() );
-			l.get( pm ).add( m );
-		}
-	}
-	
-	public void init( int numX, int numY, float width, float height )
+	public TransformMesh( int numX, int numY, float width, float height )
 	{
 		PointMatch[] pq = new PointMatch[ numX * numY + ( numX - 1 ) * ( numY - 1 ) ];
+		
+		this.width = width;
+		this.height = height;
 		
 		float dy = height / ( numY - 1 );
 		float dx = width / ( numX - 1 );
@@ -130,6 +111,33 @@ public class TransformMesh
 		}
 	}
 	
+	/**
+	 * Add a triangle defined by 3 PointMatches that defines an
+	 * AffineTransform2D.
+	 * 
+	 * @param t 3 PointMatches (will not be copied, so do not reuse this list!)
+	 */
+	public void addTriangle( ArrayList< PointMatch > t )
+	{
+		AffineModel2D m = new AffineModel2D();
+		try
+		{
+			m.fit( t );
+		}
+		catch ( NotEnoughDataPointsException e )
+		{
+			IJ.error( e.getMessage() );
+			e.printStackTrace( System.err );
+		}
+		a.put( m, t );
+		
+		for ( PointMatch pm : t )
+		{
+			if ( !l.containsKey( pm ) )
+				l.put( pm, new ArrayList< AffineModel2D >() );
+			l.get( pm ).add( m );
+		}
+	}	
 	
 	/**
 	 * 
@@ -165,10 +173,10 @@ public class TransformMesh
 		{
 X:			for ( int x = ( int )box[ 0 ][ 0 ]; x <= ( int )box[ 1 ][ 0 ]; ++x )
 			{
-				for ( int j = 0; j < pm.size(); ++j )
+				for ( int i = 0; i < pm.size(); ++i )
 				{
-					PointMatch r1 = pm.get( j );
-					PointMatch r2 = pm.get( ( j + 1 ) % pm.size() );
+					PointMatch r1 = pm.get( i );
+					PointMatch r2 = pm.get( ( i + 1 ) % pm.size() );
 					float[] t1 = r1.getP2().getW();
 					float[] t2 = r2.getP2().getW();
 					
@@ -233,7 +241,7 @@ X:			for ( int x = ( int )box[ 0 ][ 0 ]; x <= ( int )box[ 1 ][ 0 ]; ++x )
 		return path;
 	}
 	
-	public void update( PointMatch p )
+	public void updateAffine( PointMatch p )
 	{
 		for ( AffineModel2D ai : l.get( p ) )
 		{
@@ -249,9 +257,20 @@ X:			for ( int x = ( int )box[ 0 ][ 0 ]; x <= ( int )box[ 1 ][ 0 ]; ++x )
 		}
 	}
 	
-	public void clear()
+	public void updateAffines()
 	{
-		a.clear();
-		l.clear();
+		Set< AffineModel2D > s = a.keySet();
+		for ( AffineModel2D ai : s )
+		{
+			try
+			{
+				ai.fit( a.get( ai ) );
+			}
+			catch ( NotEnoughDataPointsException e )
+			{
+				IJ.error( e.getMessage() );
+				e.printStackTrace( System.err );
+			}
+		}
 	}
 }
