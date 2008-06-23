@@ -16,7 +16,6 @@ package mpicbg.image;
  */
 public class FloatStream extends Container
 {
-	PixelType type;
 	float[] data;
 	
 	FloatStream( PixelType type, int[] dim )
@@ -25,18 +24,19 @@ public class FloatStream extends Container
 		
 		int l = type.getNumChannels();
 		for ( int i = 0; i < dim.length; ++i )
-			l *= size[ i ];
+			l *= dim[ i ];
 		
 		data = new float[ l ];
 	}
 	
 	FloatStream( PixelType type, int[] dim, double[] res )
 	{
-		super( type, dim, res );
+		this( type, dim );
+		setRes( res );		
 	}
 	
-	public FloatStreamCursor getCursor()
+	public Cursor getIterator()
 	{
-		return new FloatStreamCursor( this );
+		return new FloatStreamIterator( this );
 	}
 }

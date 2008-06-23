@@ -1,75 +1,138 @@
 package mpicbg.image;
 
-public class FloatStreamCursor implements Iteratable, IteratableByDimension, RandomAccessible
+import mpicbg.image.interpolation.Interpolator;
+
+public class FloatStreamCursor extends Cursor implements Readable
 {
-	final FloatStream image;
-	
-	int i = 0;
-	boolean hasNext = false;
-	boolean hasPrev = false;
-	
-	final int[] iByDim;
-	final boolean[] hasNextByDim;
-	final boolean[] hasPrevByDim;
+	protected int i = -1;
+	final protected float[] a;
 	
 	FloatStreamCursor( FloatStream image )
 	{
-		this.image = image;
-		int nd = image.getNumDim();
-		iByDim = new int[ nd ];
-		hasNextByDim = new boolean[ nd ];
-		hasPrevByDim = new boolean[ nd ];
+		this( image, null );
 	}
 	
-
-	public boolean hasNext(){ return hasNext; }
-	public boolean hasPrev(){ return hasPrev; }
-
-	public void next() throws OutOfBoundsException
+	FloatStreamCursor( FloatStream image, Interpolator ip )
 	{
-		for ( int j = image.getNumDim() - 1; j >= 0; --j )
-		{
-			iByDim[ j ] = ++iByDim[ j ] % image.getDim( j );
-			hasNextByDim[ j ] = ( iByDim[ j ] != image.getDim( j ) - 1 );
-			hasPrevByDim[ j ] = ( iByDim[ j ] != 0 );
-			...
-		}
+		super( image, ip );
+		a = new float[ container.getPixelType().getNumChannels() ];
+	}
+	
+	final public void read( final float[] c )
+	{
+		System.arraycopy( ( ( FloatStream )container ).data, i, c, 0, c.length );
+	}
+	
+	final public float getFloatChannel( final int c )
+	{
+		return ( ( FloatStream )container ).data[ i + c ];
 	}
 
-	public void prev() throws OutOfBoundsException
+	final public float[] getFloats()
 	{
-		// TODO Auto-generated method stub
-
+		final float[] f = new float[ container.getPixelType().getNumChannels() ];
+		read( f );
+		return f;
 	}
 
-	public boolean hasNext( int dimension )
+	
+	final public void read( final Object[] c )
 	{
-		// TODO Auto-generated method stub
-		return false;
+		read( a );
+		for ( int i = 0; i < c.length; ++i )
+			c[ i ] = a[ i ];
 	}
-
-	public boolean hasPrev( int dimension )
+	final public void read( final byte[] c )
 	{
-		// TODO Auto-generated method stub
-		return false;
+		read( a );
+		for ( int i = 0; i < c.length; ++i )
+			c[ i ] = ( byte )a[ i ];
 	}
-
-	public void next( int dimension ) throws OutOfBoundsException
+	final public void read( final short[] c )
 	{
-		// TODO Auto-generated method stub
-
+		read( a );
+		for ( int i = 0; i < c.length; ++i )
+			c[ i ] = ( short )a[ i ];
 	}
-
-	public void prev( int dimension ) throws OutOfBoundsException
+	final public void read( final int[] c )
 	{
-		// TODO Auto-generated method stub
-
+		read( a );
+		for ( int i = 0; i < c.length; ++i )
+			c[ i ] = ( int )a[ i ];
 	}
-
-	public void to( int[] location )
+	final public void read( final long[] c )
 	{
-		// TODO Auto-generated method stub
-
+		read( a );
+		for ( int i = 0; i < c.length; ++i )
+			c[ i ] = ( long )a[ i ];
 	}
-
+	final public void read( final double[] c )
+	{
+		read( a );
+		for ( int i = 0; i < c.length; ++i )
+			c[ i ] = ( double )a[ i ];
+	}
+	
+	
+	final public Object[] get()
+	{
+		Object[] c = new Object[ container.getPixelType().getNumChannels() ];
+		read( c );
+		return c;
+	}
+	final public byte[] getBytes()
+	{
+		byte[] c = new byte[ container.getPixelType().getNumChannels() ];
+		read( c );
+		return c;
+	}
+	final public short[] getShorts()
+	{
+		short[] c = new short[ container.getPixelType().getNumChannels() ];
+		read( c );
+		return c;
+	}
+	final public int[] getInts()
+	{
+		int[] c = new int[ container.getPixelType().getNumChannels() ];
+		read( c );
+		return c;
+	}
+	final public long[] getLongs()
+	{
+		long[] c = new long[ container.getPixelType().getNumChannels() ];
+		read( c );
+		return c;
+	}
+	final public double[] getDoubles()
+	{
+		double[] c = new double[ container.getPixelType().getNumChannels() ];
+		read( c );
+		return c;
+	}
+	
+	final public Object getChannel( final int c )
+	{
+		return getFloatChannel( c );
+	}
+	final public byte getByteChannel( final int c )
+	{
+		return ( byte )getFloatChannel( c );
+	}
+	final public short getShortChannel( final int c )
+	{
+		return ( short )getFloatChannel( c );
+	}
+	final public int getIntChannel( final int c )
+	{
+		return ( byte )getFloatChannel( c );
+	}
+	final public long getLongChannel( final int c )
+	{
+		return ( long )getFloatChannel( c );
+	}
+	final public double getDoubleChannel( final int c )
+	{
+		return getFloatChannel( c );
+	}
 }

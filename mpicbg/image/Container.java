@@ -9,9 +9,9 @@ package mpicbg.image;
  */
 public abstract class Container
 {
-	int[] dim;
-	double[] res;
-	double[] size;
+	final int[] dim;
+	final double[] res;
+	final double[] size;
 	final PixelType type;
 	
 	/**
@@ -22,7 +22,7 @@ public abstract class Container
 	 * @param type
 	 * @param dim per dimension size in px
 	 */
-	Container( PixelType type, int[] dim )
+	Container( final PixelType type, final int[] dim )
 	{
 		this.type = type;
 		this.dim = dim.clone();
@@ -46,7 +46,7 @@ public abstract class Container
 	 * @param dim per dimension size in px
 	 * @param res per dimension resolution in px/m
 	 */
-	Container( PixelType type, int[] dim, double[] res )
+	Container( final PixelType type, final int[] dim, final double[] res )
 	{
 		this( type, dim );
 		setRes( res );
@@ -57,56 +57,56 @@ public abstract class Container
 	 * 
 	 * @return pixel type
 	 */
-	public PixelType getPixelType(){ return type; }
+	final public PixelType getPixelType(){ return type; }
 	
 	/**
 	 * Get the number of Dimensions.
 	 * 
 	 * @return number of dimensions
 	 */
-	public int getNumDim(){ return dim.length; }
+	final public int getNumDim(){ return dim.length; }
 	
 	/**
 	 * Get the pixel dimensions of the image.
 	 * 
 	 * @return copy of pixel dimensions
 	 */
-	public int[] getDim(){ return dim.clone(); }
+	final public int[] getDim(){ return dim.clone(); }
 	
 	/**
 	 * Get one pixel dimensions of the image.
 	 * 
 	 * @return one pixel dimension
 	 */
-	public int getDim( int d ){ return dim[ d ]; }
+	final public int getDim( final int d ){ return dim[ d ]; }
 	
 	/**
 	 * Get the physical dimensions of the image.
 	 * 
 	 * @return copy of physical dimensions
 	 */
-	public double[] getSize(){ return size.clone(); }
+	final public double[] getSize(){ return size.clone(); }
 	
 	/**
 	 * Get one physical dimension of the image.
 	 * 
 	 * @return one physical dimension
 	 */
-	public double getSize( int d ){ return size[ d ]; }
+	final public double getSize( final int d ){ return size[ d ]; }
 	
 	/**
 	 * Get the resolution of the image.
 	 * 
 	 * @return copy of the resolution
 	 */
-	public double[] getRes(){ return res.clone(); }
+	final public double[] getRes(){ return res.clone(); }
 
 	/**
 	 * Get one dimensional resolution of the image.
 	 * 
 	 * @return copy of the resolution
 	 */
-	public double getRes( int d ){ return res[ d ]; }
+	final public double getRes( final int d ){ return res[ d ]; }
 	
 	/**
 	 * Set the resolution of the image.
@@ -118,9 +118,9 @@ public abstract class Container
 	 * 
 	 * @param res
 	 */
-	public void setRes( double[] res )
+	final public void setRes( final double[] res )
 	{
-		int l = Math.min( dim.length, res.length );
+		final int l = Math.min( dim.length, res.length );
 		for ( int i = 0; i < l; ++i )
 		{
 			this.res[ i ] = res[ i ];
@@ -133,7 +133,7 @@ public abstract class Container
 	 * 
 	 * @param res dimensional resolution
 	 */
-	public void setRes( double res, int d )
+	final public void setRes( final double res, final int d )
 	{
 		this.res[ d ] = res;
 		size[ d ] = dim[ d ] / res;
