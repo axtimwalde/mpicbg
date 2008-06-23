@@ -2,6 +2,9 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.process.ImageProcessor;
 
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Shape;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
@@ -33,6 +36,7 @@ public class ElasticMesh extends TransformMesh
 	 */
 	final HashMap< PointMatch, Tile > pt = new HashMap< PointMatch, Tile >();
 	final HashSet< Tile > fixedTiles = new HashSet< Tile >();
+	final public int numVertices(){ return pt.size(); }
 	
 	private double error = Double.MAX_VALUE;
 	public double getError(){ return error; }
@@ -296,6 +300,56 @@ public class ElasticMesh extends TransformMesh
 //			updateMesh();
 //			apply( src, trg );
 //			imp.updateAndDraw();
+			++i;
+		}
+		
+		System.out.println( "Successfully optimized configuration of " + pt.size() + " tiles:" );
+		System.out.println( "  average displacement: " + decimalFormat.format( observer.mean ) + "px" );
+		System.out.println( "  minimal displacement: " + decimalFormat.format( observer.min ) + "px" );
+		System.out.println( "  maximal displacement: " + decimalFormat.format( observer.max ) + "px" );
+	}
+	
+	/**
+	 * Minimize the displacement of all PointMatches of all tiles.
+	 * 
+	 * @param maxError do not accept convergence if error is > max_error
+	 * @param maxIterations stop after that many iterations even if there was
+	 *   no minimum found
+	 * @param maxPlateauwidth convergence is reached if the average slope in
+	 *   an interval of this size is 0.0 (in double accuracy).  This prevents
+	 *   the algorithm from stopping at plateaus smaller than this value.
+	 * 
+	 * TODO  Johannes Schindelin suggested to start from a good guess, which is
+	 *   e.g. the propagated unoptimized pose of a tile relative to its
+	 *   connected tile that was already identified during RANSAC
+	 *   correspondence check.  Thank you, Johannes, great hint!
+	 */
+	public void optimizeAndDraw(
+			float maxError,
+			int maxIterations,
+			int maxPlateauwidth,
+			ImageProcessor src,
+			ImageProcessor trg,
+			ImagePlus imp ) throws NotEnoughDataPointsException 
+	{
+		ErrorStatistic observer = new ErrorStatistic();
+		
+		int i = 0;
+		
+		while ( i < maxIterations )  // do not run forever
+		{
+			optimizeIteration( observer );
+			Shape illustration = illustrateMesh();
+			imp.getCanvas().setDisplayList( illustration, Color.white, null );
+			imp.updateAndDraw();
+			IJ.showStatus( "Optimizing... e=" + decimalFormat.format( error ) );
+			
+			if ( i >= maxPlateauwidth && error < maxError && observer.getWideSlope( maxPlateauwidth ) >= 0.0 )
+			{
+				System.out.println( "Exiting at iteration " + i + " with error " + decimalFormat.format( observer.mean ) );
+				break;
+			}
+			
 			++i;
 		}
 		
