@@ -17,6 +17,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotionListener, KeyListener
 {
@@ -40,6 +41,51 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 	int targetIndex = -1;
 	
 	boolean showMesh = false;
+	boolean pleaseIllustrate = false;
+	
+	final class OptimizeThread extends Thread
+	{
+		public void run()
+		{
+			while ( true )
+			{
+				try
+				{
+					optimize();
+					pleaseIllustrate = false;
+					apply();
+					synchronized ( this ){ wait(); }
+				}
+				catch ( Throwable t ){ t.printStackTrace(); }
+			}
+		}
+	}
+	
+	final class IllustrateThread extends Thread
+	{
+		public void run()
+		{
+			while ( true )
+			{
+				try
+				{
+					synchronized ( this ){
+						if ( pleaseIllustrate && showMesh )
+						{
+							showMesh();
+							wait( 20 );
+						}
+						else
+							wait();
+					}
+				}
+				catch ( Throwable t ){ t.printStackTrace(); }
+			}
+		}
+	}
+
+	private Thread opt;
+	private Thread ill;
 	
 	public void run( String arg )
     {
@@ -48,14 +94,19 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 		ipOrig = ip.duplicate();
 		
 		GenericDialog gd = new GenericDialog( "Grid Transform" );
-		gd.addNumericField( "horizontal_handles :", numX, 0 );
-		gd.addNumericField( "vertical_handles :", numY, 0 );
+		gd.addNumericField( "handles_per_row :", numX, 0 );
+		//gd.addNumericField( "vertical_handles :", numY, 0 );
 		gd.showDialog();
 		
 		if (gd.wasCanceled()) return;
 		
 		numX = ( int )gd.getNextNumber();
-		numY = ( int )gd.getNextNumber();
+		//numY = ( int )gd.getNextNumber();
+		float dx = ( float )imp.getWidth() / ( float )( numX - 1 );
+		float dy = 2.0f * ( float )Math.sqrt(4.0f / 5.0f * dx * dx );
+		System.out.println( dy );
+		numY = Math.round( imp.getHeight() / dy ) + 1;
+		System.out.println( numY );
 		
 		// intitialize the transform mesh
 		mesh = new ElasticMesh( numX, numY, imp.getWidth(), imp.getHeight() );		
@@ -82,6 +133,12 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 		
 		Toolbar.getInstance().setTool( Toolbar.getInstance().addTool( "Drag_the_handles." ) );
 		
+		
+		opt = new OptimizeThread();
+		ill = new IllustrateThread();
+		opt.start();
+		ill.start();
+		
 		imp.getCanvas().addMouseListener( this );
 		imp.getCanvas().addMouseMotionListener( this );
 		imp.getCanvas().addKeyListener( this );
@@ -91,7 +148,7 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 	{
 		try
 		{
-			mesh.optimize( Float.MAX_VALUE, 10000, 100 );
+			mesh.optimize( Float.MAX_VALUE, 100 * mesh.numVertices(), mesh.numVertices() );
 		}
 		catch ( NotEnoughDataPointsException ex )
 		{
@@ -116,6 +173,8 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 	{
 		if ( e.getKeyCode() == KeyEvent.VK_ESCAPE || e.getKeyCode() == KeyEvent.VK_ENTER )
 		{
+			opt.interrupt();
+			ill.interrupt();
 			if ( imp != null )
 			{
 				imp.getCanvas().removeMouseListener( this );
@@ -133,9 +192,21 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 		{
 			showMesh = !showMesh;
 			if ( showMesh )
-				showMesh();
+			{
+				synchronized ( ill )
+				{
+					if ( pleaseIllustrate == false )
+						showMesh();
+					else
+						ill.notify();
+				}
+			}
 			else
-				imp.getCanvas().setDisplayList( null );			
+			{
+				pleaseIllustrate = false;
+				ill.interrupt();
+				imp.getCanvas().setDisplayList( null );
+			}			
 		} 
 		else if (
 				( e.getKeyCode() == KeyEvent.VK_F1 ) &&
@@ -178,30 +249,7 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 	
 	public void mouseReleased( MouseEvent e )
 	{
-		if ( e.getButton() == MouseEvent.BUTTON1 && targetIndex >= 0 )
-		{
-			ImageWindow win = WindowManager.getCurrentWindow();
-			int xm = win.getCanvas().offScreenX( e.getX() );
-			int ym = win.getCanvas().offScreenY( e.getY() );
-			
-			float[] fq = hooks[ targetIndex ].getW();
-			
-			fq[ 0 ] = x[ targetIndex ] = xm;
-			fq[ 1 ] = y[ targetIndex ] = ym;
-			
-			handles = new PointRoi( x, y, hooks.length );
-			imp.setRoi( handles );
-				
-			fq[ 0 ] = xm;
-			fq[ 1 ] = ym;
-			
-			optimize();
-			apply();
-			if ( showMesh )
-				showMesh();
-			else
-				imp.getCanvas().setDisplayList( null );
-		}
+		
 	}
 	
 	public void mouseDragged( MouseEvent e )
@@ -222,6 +270,14 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 				
 			fq[ 0 ] = xm;
 			fq[ 1 ] = ym;
+			
+			if ( showMesh )
+				synchronized ( ill )
+				{
+					pleaseIllustrate = true;
+					ill.notify();
+				}
+			synchronized ( opt ){ opt.notify(); }
 		}
 	}
 	
