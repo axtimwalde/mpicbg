@@ -27,6 +27,7 @@ public class TransformMesh
 	
 	public TransformMesh( int numX, int numY, float width, float height )
 	{
+		float w = width * height / numX / numY;
 		PointMatch[] pq = new PointMatch[ numX * numY + ( numX - 1 ) * ( numY - 1 ) ];
 		
 		this.width = width;
@@ -40,74 +41,130 @@ public class TransformMesh
 		{
 			float xip = xi * dx;
 			Point p = new Point( new float[]{ xip, 0 } );
-			pq[ i ]  = new PointMatch( p, p.clone() );
+			pq[ i ] = new PointMatch( p, p.clone() );
 			
 			++i;
 		}
+		
+		Point p;
+		int i1, i2, i3;
+		ArrayList< PointMatch > t1, t2;
+		
 		for ( int yi = 1; yi < numY; ++yi )
 		{
 			// odd row
 			float yip = yi * dy - dy / 2;
-			for ( int xi = 1; xi < numX; ++xi )
+
+			p  = new Point( new float[]{ dx - dx / 2, yip } );
+			pq[ i ] = new PointMatch( p, p.clone(), w );
+			
+			i1 = i - numX;
+			i2 = i1 + 1;
+			
+			t1 = new ArrayList< PointMatch >();
+			t1.add( pq[ i1 ] );
+			t1.add( pq[ i2 ] );
+			t1.add( pq[ i ] );
+			
+			addTriangle( t1 );
+			
+			++i;
+			
+			for ( int xi = 2; xi < numX; ++xi )
 			{
 				float xip = xi * dx - dx / 2;
 				
-				Point p  = new Point( new float[]{ xip, yip } );
-				pq[ i ] = new PointMatch( p, p.clone() );
+				p  = new Point( new float[]{ xip, yip } );
+				pq[ i ] = new PointMatch( p, p.clone(), w );
 				
-				int i1 = i - numX;
-				int i2 = i1 + 1;
+				i1 = i - numX;
+				i2 = i1 + 1;
+				i3 = i - 1;
 				
-				ArrayList< PointMatch > t1 = new ArrayList< PointMatch >();
+				t1 = new ArrayList< PointMatch >();
 				t1.add( pq[ i1 ] );
 				t1.add( pq[ i2 ] );
 				t1.add( pq[ i ] );
 				
 				addTriangle( t1 );
 				
+				t2 = new ArrayList< PointMatch >();
+				t2.add( pq[ i1 ] );
+				t2.add( pq[ i ] );
+				t2.add( pq[ i3 ] );
+				
+				addTriangle( t2 );
+				
 				++i;
 			}
 			
 			// even row
 			yip = yi * dy;
-			Point p  = new Point( new float[]{ 0, yip } );
-			pq[ i ] = new PointMatch( p, p.clone() );
+			p  = new Point( new float[]{ 0, yip } );
+			pq[ i ] = new PointMatch( p, p.clone(), w );
+			
+			i1 = i - numX + 1;
+			i2 = i1 - numX;
+			
+			t1 = new ArrayList< PointMatch >();
+			t1.add( pq[ i2 ] );
+			t1.add( pq[ i1 ] );
+			t1.add( pq[ i ] );
+			
+			addTriangle( t1 );
 			
 			++i;
 			
-			for ( int xi = 1; xi < numX; ++xi )
+			for ( int xi = 1; xi < numX - 1; ++xi )
 			{
 				float xip = xi * dx;
 								
 				p = new Point( new float[]{ xip, yip } );
-				pq[ i ] = new PointMatch( p, p.clone() );
+				pq[ i ] = new PointMatch( p, p.clone(), w );
 				
-				int i1 = i - 2 * numX;
-				int i2 = i1 + 1;
-				int i3 = i1 + numX;
-				int i4 = i - 1;
+				i1 = i - numX;
+				i2 = i1 + 1;
+				i3 = i - 1;
 				
-				ArrayList< PointMatch > t1 = new ArrayList< PointMatch >();
+				t1 = new ArrayList< PointMatch >();
 				t1.add( pq[ i1 ] );
+				t1.add( pq[ i ] );
 				t1.add( pq[ i3 ] );
-				t1.add( pq[ i4 ] );
-				
-				ArrayList< PointMatch > t2 = new ArrayList< PointMatch >();
-				t2.add( pq[ i4 ] );
-				t2.add( pq[ i3 ] );
-				t2.add( pq[ i ] );
-				
-				ArrayList< PointMatch > t3 = new ArrayList< PointMatch >();
-				t3.add( pq[ i ] );
-				t3.add( pq[ i3 ] );
-				t3.add( pq[ i2 ] );
 				
 				addTriangle( t1 );
+				
+				t2 = new ArrayList< PointMatch >();
+				t2.add( pq[ i1 ] );
+				t2.add( pq[ i2 ] );
+				t2.add( pq[ i ] );
+				
 				addTriangle( t2 );
-				addTriangle( t3 );
 				
 				++i;
 			}
+			
+			p  = new Point( new float[]{ width, yip } );
+			pq[ i ] = new PointMatch( p, p.clone(), w );
+			
+			i1 = i - numX;
+			i2 = i1 - numX + 1;
+			i3 = i - 1;
+			
+			t1 = new ArrayList< PointMatch >();
+			t1.add( pq[ i3 ] );
+			t1.add( pq[ i1 ] );
+			t1.add( pq[ i ] );
+			
+			addTriangle( t1 );
+			
+			t2 = new ArrayList< PointMatch >();
+			t2.add( pq[ i1 ] );
+			t2.add( pq[ i2 ] );
+			t2.add( pq[ i ] );
+			
+			addTriangle( t2 );
+			
+			++i;
 		}
 	}
 	
