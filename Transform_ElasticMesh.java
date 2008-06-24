@@ -16,8 +16,6 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseListener;
-import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotionListener, KeyListener
 {
@@ -73,7 +71,7 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 						if ( pleaseIllustrate && showMesh )
 						{
 							showMesh();
-							wait( 20 );
+							wait( 50 );
 						}
 						else
 							wait();
