@@ -1,75 +1,49 @@
 package mpicbg.image;
 
-public class FloatStreamIteratorByDimension implements Iteratable, IteratableByDimension
+public class FloatStreamIteratorByDimension extends FloatStreamReadableAndWritable implements IteratableByDimension, Localizable
 {
-	final FloatStream image;
-	
-	int i = 0;
-	boolean hasNext = false;
-	boolean hasPrev = false;
+	final protected int[] step;
 	
 	final int[] iByDim;
-	final boolean[] hasNextByDim;
-	final boolean[] hasPrevByDim;
 	
-	FloatStreamIteratorByDimension( FloatStream image )
+	FloatStreamIteratorByDimension( FloatStream stream )
 	{
-		this.image = image;
-		int nd = image.getNumDim();
+		super( stream );
+		int nd = stream.getNumDim();
 		iByDim = new int[ nd ];
-		hasNextByDim = new boolean[ nd ];
-		hasPrevByDim = new boolean[ nd ];
+		step = new int[ nd ];
+		step[ 0 ] = stream.getPixelType().getNumChannels();
+		for ( int d = 1; d < nd; ++d )
+			step[ d ] = step[ d - 1 ] * container.getDim( d - 1 );
 	}
 	
-
-	public boolean hasNext(){ return hasNext; }
-	public boolean hasPrev(){ return hasPrev; }
-
-	public void next() throws OutOfBoundsException
+	final public boolean hasNext( int d ){ return iByDim[ d ] < container.getDim( d ) - 1; }
+	final public boolean hasPrev( int d ){ return iByDim[ d ] > 0; }
+	
+	public void next( int d ) throws OutOfBoundsException
 	{
-		for ( int j = image.getNumDim() - 1; j >= 0; --j )
-		{
-			iByDim[ j ] = ++iByDim[ j ] % image.getDim( j );
-			hasNextByDim[ j ] = ( iByDim[ j ] != image.getDim( j ) - 1 );
-			hasPrevByDim[ j ] = ( iByDim[ j ] != 0 );
-			//...
-		}
+		++iByDim[ d ];
+		i += step[ d ];
 	}
-
-	public void prev() throws OutOfBoundsException
+	public void prev( int d ) throws OutOfBoundsException
 	{
-		// TODO Auto-generated method stub
-
+		--iByDim[ d ];
+		i -= step[ d ];
 	}
-
-	public boolean hasNext( int dimension )
+	
+	public float[] localize()
 	{
-		// TODO Auto-generated method stub
-		return false;
+		float[] l = new float[ iByDim.length ];
+		localize( l );
+		return l;
 	}
-
-	public boolean hasPrev( int dimension )
+	public void localize( float[] l )
 	{
-		// TODO Auto-generated method stub
-		return false;
+		for ( int d = 0; d < l.length; ++d )
+			l[ d ] = iByDim[ d ];
 	}
-
-	public void next( int dimension ) throws OutOfBoundsException
+	public void localize( int[] l )
 	{
-		// TODO Auto-generated method stub
-
+		System.arraycopy( iByDim, 0, l, 0, l.length );
 	}
-
-	public void prev( int dimension ) throws OutOfBoundsException
-	{
-		// TODO Auto-generated method stub
-
-	}
-
-	public void to( int[] location )
-	{
-		// TODO Auto-generated method stub
-
-	}
-
 }

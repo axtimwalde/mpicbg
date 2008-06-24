@@ -1,107 +1,41 @@
 package mpicbg.image;
 
-import java.util.NoSuchElementException;
-
-public class FloatStreamIterator extends FloatWritable implements Iteratable
+public class FloatStreamIterator extends FloatStreamReadableAndWritable implements Iteratable, Localizable
 {
-	protected int i = 0;
-	final int step;
-	
-	private final float[] data;
-	
 	FloatStreamIterator( FloatStream stream )
 	{
 		super( stream );
-		step = stream.getPixelType().getNumChannels();
-		data = stream.data;
 	}
 
-	final public boolean hasNext(){ return i >= data.length - step; }
-	final public boolean hasPrev(){ return i >= step; }
+	final public boolean hasNext(){ return i < data.length - numChannels; }
+	final public boolean hasPrev(){ return i > 0; }
 	
-	public void set( float[] c )
-	{
-		synchronized ( data ){ System.arraycopy( c, 0, data, i, c.length ); }
-	}
-	public void setChannel( float v, int c )
-	{
-		synchronized ( data ){ data[ i + c ] = v; }
-	}
+	public void next() throws OutOfBoundsException{ i += numChannels; }
+	public void prev() throws OutOfBoundsException{ i -= numChannels; }
 	
-	
-	public void add( Readable c )
+	public float[] localize()
 	{
-		c.read( a );
-		synchronized ( data )
-		{
-			for ( int j = 0; j < a.length; ++j )
-				data[ i + j ] += a[ j ];
-		}
+		float[] l = new float[ container.getNumDim() ];
+		localize( l );
+		return l;
 	}
-	public void add( float c )
+	public void localize( float[] l )
 	{
-		synchronized ( data )
+		int r = i / numChannels;
+		for ( int d = 0; d < l.length; ++d )
 		{
-			for ( int j = 0; j < step; ++j )
-				data[ i + j ] += c;
-		}
+			l[ d ] = r % container.getDim( d );
+			r /= container.getDim( d );
+		}		
 	}
-	
-	public void sub( Readable c )
+	public void localize( int[] l )
 	{
-		c.read( a );
-		synchronized ( data )
+		int r = i / numChannels;
+		
+		for ( int d = 0; d < l.length; ++d )
 		{
-			for ( int j = 0; j < a.length; ++j )
-				data[ i + j ] -= a[ j ];
-		}
+			l[ d ] = r % container.getDim( d );
+			r /= container.getDim( d );
+		}		
 	}
-	public void sub( float c )
-	{
-		synchronized ( data )
-		{
-			for ( int j = 0; j < step; ++j )
-				data[ i + j ] -= c;
-		}
-	}
-	
-	public void mul( Readable c )
-	{
-		c.read( a );
-		synchronized ( data )
-		{
-			for ( int j = 0; j < a.length; ++j )
-				data[ i + j ] *= a[ j ];
-		}
-	}
-	public void mul( float c )
-	{
-		synchronized ( data )
-		{
-			for ( int j = 0; j < step; ++j )
-				data[ i + j ] *= c;
-		}
-	}
-	
-	public void div( Readable c )
-	{
-		c.read( a );
-		synchronized ( data )
-		{
-			for ( int j = 0; j < a.length; ++j )
-				data[ i + j ] /= a[ j ];
-		}
-	}
-	public void div( float c )
-	{
-		synchronized ( data )
-		{
-			for ( int j = 0; j < step; ++j )
-				data[ i + j ] /= c;
-		}
-	}
-	
-	public void next() throws NoSuchElementException{ i += step; }
-	public void prev() throws NoSuchElementException{ i -= step; }
-
 }
