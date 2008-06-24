@@ -122,7 +122,7 @@ public class ElasticMesh extends TransformMesh
 	 * 
 	 * Then say t.addMatch(PointMatch) and o.add(PointMatch.flip())
 	 */
-	public Tile findClosest( float[] there )
+	synchronized public Tile findClosest( float[] there )
 	{
 		Set< PointMatch > s = pt.keySet();
 		//System.out.println( s.size() );
@@ -148,7 +148,7 @@ public class ElasticMesh extends TransformMesh
 	 * Update all PointMatches in all tiles and estimate the average
 	 * displacement. 
 	 */
-	final private void update()
+	synchronized final private void update()
 	{
 		Set< PointMatch > s = l.keySet();
 		double cd = 0.0;
@@ -172,7 +172,7 @@ public class ElasticMesh extends TransformMesh
 	 * Update all PointMatches in all tiles and estimate the average
 	 * displacement by weight of the PointMatch. 
 	 */
-	final private void updateByWeight()
+	synchronized final private void updateByWeight()
 	{
 		Set< PointMatch > s = l.keySet();
 		double cd = 0.0;
@@ -198,7 +198,7 @@ public class ElasticMesh extends TransformMesh
 	 * @param observer collecting the error after update
 	 * @throws NotEnoughDataPointsException
 	 */
-	void optimizeIteration( ErrorStatistic observer ) throws NotEnoughDataPointsException
+	synchronized void optimizeIteration( ErrorStatistic observer ) throws NotEnoughDataPointsException
 	{
 		Set< PointMatch > s = l.keySet();
 		
@@ -231,7 +231,7 @@ public class ElasticMesh extends TransformMesh
 	 * @param observer collecting the error after update
 	 * @throws NotEnoughDataPointsException
 	 */
-	void optimizeIterationByWeight( ErrorStatistic observer ) throws NotEnoughDataPointsException
+	synchronized void optimizeIterationByWeight( ErrorStatistic observer ) throws NotEnoughDataPointsException
 	{
 		Set< PointMatch > s = l.keySet();
 		
@@ -300,56 +300,6 @@ public class ElasticMesh extends TransformMesh
 //			updateMesh();
 //			apply( src, trg );
 //			imp.updateAndDraw();
-			++i;
-		}
-		
-		System.out.println( "Successfully optimized configuration of " + pt.size() + " tiles:" );
-		System.out.println( "  average displacement: " + decimalFormat.format( observer.mean ) + "px" );
-		System.out.println( "  minimal displacement: " + decimalFormat.format( observer.min ) + "px" );
-		System.out.println( "  maximal displacement: " + decimalFormat.format( observer.max ) + "px" );
-	}
-	
-	/**
-	 * Minimize the displacement of all PointMatches of all tiles.
-	 * 
-	 * @param maxError do not accept convergence if error is > max_error
-	 * @param maxIterations stop after that many iterations even if there was
-	 *   no minimum found
-	 * @param maxPlateauwidth convergence is reached if the average slope in
-	 *   an interval of this size is 0.0 (in double accuracy).  This prevents
-	 *   the algorithm from stopping at plateaus smaller than this value.
-	 * 
-	 * TODO  Johannes Schindelin suggested to start from a good guess, which is
-	 *   e.g. the propagated unoptimized pose of a tile relative to its
-	 *   connected tile that was already identified during RANSAC
-	 *   correspondence check.  Thank you, Johannes, great hint!
-	 */
-	public void optimizeAndDraw(
-			float maxError,
-			int maxIterations,
-			int maxPlateauwidth,
-			ImageProcessor src,
-			ImageProcessor trg,
-			ImagePlus imp ) throws NotEnoughDataPointsException 
-	{
-		ErrorStatistic observer = new ErrorStatistic();
-		
-		int i = 0;
-		
-		while ( i < maxIterations )  // do not run forever
-		{
-			optimizeIteration( observer );
-			Shape illustration = illustrateMesh();
-			imp.getCanvas().setDisplayList( illustration, Color.white, null );
-			imp.updateAndDraw();
-			IJ.showStatus( "Optimizing... e=" + decimalFormat.format( error ) );
-			
-			if ( i >= maxPlateauwidth && error < maxError && observer.getWideSlope( maxPlateauwidth ) >= 0.0 )
-			{
-				System.out.println( "Exiting at iteration " + i + " with error " + decimalFormat.format( observer.mean ) );
-				break;
-			}
-			
 			++i;
 		}
 		
