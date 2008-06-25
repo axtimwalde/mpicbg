@@ -1,6 +1,8 @@
 package mpicbg.image;
 
-public class FloatStreamIterator extends FloatStreamReadableAndWritable implements Iteratable, Localizable
+public class FloatStreamIterator
+		extends FloatStreamReadableAndWritable
+		implements Iteratable, Localizable, LocalizableFactory< FloatStreamIterator >
 {
 	FloatStreamIterator( FloatStream stream )
 	{
@@ -37,5 +39,21 @@ public class FloatStreamIterator extends FloatStreamReadableAndWritable implemen
 			l[ d ] = r % container.getDim( d );
 			r /= container.getDim( d );
 		}		
+	}
+
+	@Override
+	public IteratableByDimension toIteratableByDimension()
+	{
+		int[] l = new int[ container.getNumDim() ];
+		localize( l );
+		return new FloatStreamIteratorByDimension( ( FloatStream )container, l );
+	}
+
+	@Override
+	public RandomAccessible toRandomAccessible()
+	{
+		int[] l = new int[ container.getNumDim() ];
+		localize( l );
+		return new FloatStreamRandomAccess( ( FloatStream )container, l );
 	}
 }
