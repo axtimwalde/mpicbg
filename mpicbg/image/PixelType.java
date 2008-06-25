@@ -5,28 +5,22 @@ package mpicbg.image;
  * @author Preibisch and Saalfeld
  *
  */
-public abstract class PixelType
+interface PixelType
 {
-	final Class type;
-	final int numChannels;
-	PixelType( Class type, int numChannels )
-	{
-		this.type = type;
-		this.numChannels = numChannels;
-	}
 	/**
 	 * Get the number of channels.
 	 *  
 	 * @return int number of channels
 	 */
-	final public int getNumChannels(){ return numChannels; }
+	public int getNumChannels();
 	
 	/**
-	 * Get the type of each channel.
 	 * 
-	 * @return Class type of all individual channels 
+	 * @param min
+	 * @param max
 	 */
-	final public Class getType(){ return type; }
+	public void setVisibleRange( double min, double max );
+	public void setVisibleRange( double[] min, double[] max );
 	
 	/**
 	 * Computes the projection of a pixel instance to ARGB.
@@ -34,13 +28,19 @@ public abstract class PixelType
 	 * @param cursor pointer to the pixel instance
 	 * @return integer
 	 */
-	public abstract int getRGBA( Cursor cursor );	
+	int toRGBA( Readable cursor );
 
 	/**
 	 * Computes the projection of a pixel instance to an 8bit grey value.
 	 * 
 	 * @return byte
 	 */
-	public abstract byte toByte( Cursor cursor );
+	byte toByte( Readable cursor );
 	
+	/**
+	 * Computes the projection of a pixel instance to an 8bit grey value.
+	 * 
+	 * @return byte
+	 */
+	float toFloat( Readable cursor );
 }
