@@ -1,7 +1,7 @@
 package mpicbg.image;
 
 /**
- * A Cursor that can read.
+ * A Cursor which can read.
  * 
  * @author Saalfeld and Preibisch
  *
