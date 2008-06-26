@@ -36,6 +36,8 @@ public class FloatStreamRandomAccess
 		to( l );
 	}
 
+	final public boolean isInside(){ return i > -1 && i < data.length; }
+
 	public void to( int[] l )
 	{
 		i = l[ 0 ] * step[ 0 ];

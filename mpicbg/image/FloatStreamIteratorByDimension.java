@@ -62,15 +62,15 @@ public class FloatStreamIteratorByDimension extends FloatStreamReadableAndWritab
 		}
 	}
 
-	final public boolean hasNext( int d ){ return iByDim[ d ] < container.getDim( d ) - 1; }
-	final public boolean hasPrev( int d ){ return iByDim[ d ] > 0; }
+	final public boolean isInside(){ return i > -1 && i < data.length; }
+	final public boolean isInside( int d ){ return iByDim[ d ] > -1 && iByDim[ d ] < container.getDim( d ); }
 	
-	public void next( int d ) throws OutOfBoundsException
+	public void next( int d )
 	{
 		++iByDim[ d ];
 		i += step[ d ];
 	}
-	public void prev( int d ) throws OutOfBoundsException
+	public void prev( int d )
 	{
 		--iByDim[ d ];
 		i -= step[ d ];
