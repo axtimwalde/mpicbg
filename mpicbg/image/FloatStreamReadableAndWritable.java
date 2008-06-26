@@ -30,16 +30,16 @@ abstract public class FloatStreamReadableAndWritable extends FloatReadableAndWri
 		return f;
 	}
 	
-	public void set( float[] c )
+	public void set( final float[] c )
 	{
 		synchronized ( data ){ System.arraycopy( c, 0, data, i, c.length ); }
 	}
-	public void setChannel( float v, int c )
+	public void setChannel( final float v, final int c )
 	{
 		synchronized ( data ){ data[ i + c ] = v; }
 	}	
 	
-	public void add( Readable c )
+	public void add( final Readable c )
 	{
 		c.read( a );
 		synchronized ( data )
@@ -48,7 +48,7 @@ abstract public class FloatStreamReadableAndWritable extends FloatReadableAndWri
 				data[ i + j ] += a[ j ];
 		}
 	}
-	public void add( float c )
+	public void add( final float c )
 	{
 		synchronized ( data )
 		{
@@ -57,7 +57,7 @@ abstract public class FloatStreamReadableAndWritable extends FloatReadableAndWri
 		}
 	}
 	
-	public void sub( Readable c )
+	public void sub( final Readable c )
 	{
 		c.read( a );
 		synchronized ( data )
@@ -66,7 +66,7 @@ abstract public class FloatStreamReadableAndWritable extends FloatReadableAndWri
 				data[ i + j ] -= a[ j ];
 		}
 	}
-	public void sub( float c )
+	public void sub( final float c )
 	{
 		synchronized ( data )
 		{
@@ -75,7 +75,7 @@ abstract public class FloatStreamReadableAndWritable extends FloatReadableAndWri
 		}
 	}
 	
-	public void mul( Readable c )
+	public void mul( final Readable c )
 	{
 		c.read( a );
 		synchronized ( data )
@@ -84,7 +84,7 @@ abstract public class FloatStreamReadableAndWritable extends FloatReadableAndWri
 				data[ i + j ] *= a[ j ];
 		}
 	}
-	public void mul( float c )
+	public void mul( final float c )
 	{
 		synchronized ( data )
 		{
@@ -93,7 +93,7 @@ abstract public class FloatStreamReadableAndWritable extends FloatReadableAndWri
 		}
 	}
 	
-	public void div( Readable c )
+	public void div( final Readable c )
 	{
 		c.read( a );
 		synchronized ( data )
@@ -102,7 +102,7 @@ abstract public class FloatStreamReadableAndWritable extends FloatReadableAndWri
 				data[ i + j ] /= a[ j ];
 		}
 	}
-	public void div( float c )
+	public void div( final float c )
 	{
 		synchronized ( data )
 		{
