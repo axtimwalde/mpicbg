@@ -26,8 +26,8 @@ public class FloatPixel implements PixelType
 		// cut of values outside that range (numerical instabilities + if v is exactly one it should be 255 as well)
 		if (v < 0) v = 0;
 		if (v >= sizeOfByte) v = sizeOfByte - 0.5;
-				
-		return (byte)v; 
+
+		return (byte)v; 		
 	}
 
 	@Override
