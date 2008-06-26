@@ -21,6 +21,12 @@ abstract public class Cursor
 	}
 	
 	/**
+	 * Returns if the cursor is inside the image
+	 * @return boolean
+	 */
+	public abstract boolean isInside();
+	
+	/**
 	 * Computes the projection of a pixel instance to ARGB.
 	 * 
 	 * This method risks a class cast exception for non readable cursors.
