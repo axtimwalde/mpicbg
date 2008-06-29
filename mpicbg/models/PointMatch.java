@@ -34,8 +34,41 @@ public class PointMatch
 			weight *= wi;
 	}
 	
+	protected float strength = 1.0f;
+	
 	private float distance;
 	final public float getDistance(){ return distance; }
+	
+	/**
+	 * Constructor
+	 * 
+	 * Create a PointMatch with an Array of weights and a strength.
+	 * The Array of weights will be copied.
+	 * Strength should be a value in [0-1] which gives the amount of
+	 * application.  strength = 0 means p1 will not be transferred,
+	 * strength = 1 means p1 will be fully transferred
+	 * 
+	 * @param p1 Point 1
+	 * @param p2 Point 2
+	 * @param weights Array of weights
+	 * @param strength how much should applyByStrength affect p1
+	 */
+	public PointMatch(
+			Point p1,
+			Point p2,
+			float[] weights,
+			float strength )
+	{
+		this.p1 = p1;
+		this.p2 = p2;
+		
+		this.weights = weights.clone();
+		calculateWeight();
+		
+		this.strength = strength;
+		
+		distance = Point.distance( p1, p2 );
+	}
 	
 	/**
 	 * Constructor
@@ -87,6 +120,36 @@ public class PointMatch
 	/**
 	 * Constructor
 	 * 
+	 * Create a PointMatch with one weight and strength.
+	 * Strength should be a value in [0-1] which gives the amount of
+	 * application.  strength = 0 means p1 will not be transferred,
+	 * strength = 1 means p1 will be fully transferred
+	 * 
+	 * @param p1 Point 1
+	 * @param p2 Point 2
+	 * @param weight Weight
+	 * @param strength how much should applyByStrength affect p1
+	 */
+	public PointMatch(
+			Point p1,
+			Point p2,
+			float weight,
+			float strength )
+	{
+		this.p1 = p1;
+		this.p2 = p2;
+		
+		weights = new float[]{ weight };
+		this.weight = weight;
+		
+		this.strength = strength;
+		
+		distance = Point.distance( p1, p2 );
+	}
+	
+	/**
+	 * Constructor
+	 * 
 	 * Create a PointMatch without weight.
 	 * 
 	 * @param p1 Point 1
@@ -117,16 +180,16 @@ public class PointMatch
 	}
 	
 	/**
-	 * Weigthed application a model to Point 1, update distance.
+	 * Application of a model to Point 1, update distance.
 	 * Point 1 assures weight to be in the range [0,1].
 	 * That is, the resulting location ends up somewhere between its actual
 	 * location and the transferred one.
 	 * 
 	 * @param model
 	 */
-	final public void applyWeighted( Model model )
+	final public void applyByStrength( Model model )
 	{
-		p1.applyWeighted( model, weight );
+		p1.apply( model, strength );
 		distance = Point.distance( p1, p2 );
 	}
 	
@@ -148,6 +211,5 @@ public class PointMatch
 							match.weights ) );
 		}
 		return list;
-	}
-	
+	}	
 }
