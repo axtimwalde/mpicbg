@@ -56,9 +56,9 @@ public class Transform_TriangularGrid implements PlugIn, MouseListener,  MouseMo
 		
 		// intitialize the transform mesh
 		mt = new TransformMesh( numX, numY, imp.getWidth(), imp.getHeight() );
-		Set< PointMatch > pqs = mt.l.keySet();
+		Set< PointMatch > pqs = mt.va.keySet();
 		pq = new PointMatch[ pqs.size() ];
-		mt.l.keySet().toArray( pq );
+		mt.va.keySet().toArray( pq );
 		
 		System.out.println( pq.length );
 		
