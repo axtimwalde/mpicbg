@@ -35,8 +35,10 @@ public class Align_ElasticMeshStack implements PlugIn
 	// maximal allowed alignment error in px
 	private static float max_epsilon = 25.0f;
 	private static float min_inlier_ratio = 0.05f;
-	private static int numX = 12;
-	private static int numY = 12;
+	private static int numX = 32;
+	private static int numY = 32;
+	// alpha [0 smooth, 1 less smooth ;)]
+	private static float alpha = 1.0f;
 	
 	/**
 	 * Set true to double the size of the image by linear interpolation to
@@ -87,7 +89,8 @@ public class Align_ElasticMeshStack implements PlugIn
 		gd.addCheckbox( "upscale_image_first", upscale );
 		gd.addMessage( "Mesh Parameters:" );
 		gd.addNumericField( "horizontal_handles :", numX, 0 );
-		gd.addNumericField( "vertical_handles :", numY, 0 );
+		//gd.addNumericField( "vertical_handles :", numY, 0 );
+		gd.addNumericField( "alpha :", alpha, 2 );
 		gd.showDialog();
 		if (gd.wasCanceled()) return;
 			
@@ -104,7 +107,11 @@ public class Align_ElasticMeshStack implements PlugIn
 		if ( upscale ) scale = 2.0f;
 		else scale = 1.0f;
 		numX = ( int )gd.getNextNumber();
-		numY = ( int )gd.getNextNumber();
+		//numY = ( int )gd.getNextNumber();
+		alpha = ( float )gd.getNextNumber();
+		float dx = ( float )imp.getWidth() / ( float )( numX - 1 );
+		float dy = 2.0f * ( float )Math.sqrt( 4.0f / 5.0f * dx * dx );
+		numY = Math.round( imp.getHeight() / dy ) + 1;
 		
 		stack = imp.getStack();
 		stackAligned = new ImageStack( stack.getWidth(), stack.getHeight() );
@@ -146,9 +153,7 @@ public class Align_ElasticMeshStack implements PlugIn
 			
 		IJ.log( features2.size() + " features identified and processed" );
 		
-		m2 = new ElasticMesh();
-		m2.init( numX, numY, imp.getWidth(), imp.getHeight() );
-		m2.init();
+		m2 = new ElasticMesh( numX, numY, imp.getWidth(), imp.getHeight() );
 		
 		meshes.addMesh( m2 );
 			
@@ -180,9 +185,7 @@ public class Align_ElasticMeshStack implements PlugIn
 				
 			IJ.log( features2.size() + " features identified and processed");
 				
-			m2 = new ElasticMesh();
-			m2.init( numX, numY, imp.getWidth(), imp.getHeight() );
-			m2.init();
+			m2 = new ElasticMesh( numX, numY, imp.getWidth(), imp.getHeight() );
 			
 			start_time = System.currentTimeMillis();
 			IJ.log( "identifying correspondences using brute force ..." );
@@ -217,24 +220,12 @@ public class Align_ElasticMeshStack implements PlugIn
 					float[] there = pm.getP2().getL();
 					Tile t = m1.findClosest( here );
 					Tile o = m2.findClosest( there );
-					 
-					try
-					{
-						here = t.getModel().applyInverse( here );
-						there = o.getModel().applyInverse( there );
-						Point p1 = new Point( here );
-						p1.apply( t.getModel() );
-						
-						Point p2 = new Point( there );
-						p2.apply( o.getModel() );
-						
-						t.addMatch( new PointMatch( p1, p2, 10f ) );
-						o.addMatch( new PointMatch( p2, p1, 10f ) );
-					}
-					catch ( NoninvertibleModelException e )
-					{
-						e.printStackTrace( System.err );
-					}
+					
+					m2.addMatchWeightedByDistance( new PointMatch( pm.getP1(), pm.getP2(), 10f ), alpha );
+					m1.addMatchWeightedByDistance( new PointMatch( pm.getP2(), pm.getP1(), 10f ), alpha );
+					
+					t.addConnectedTile( o );
+					o.addConnectedTile( t );
 				}
 			}
 			
@@ -255,7 +246,7 @@ public class Align_ElasticMeshStack implements PlugIn
 	{
 		try
 		{
-			meshes.optimizeAndDraw( Float.MAX_VALUE, 10000, 100, stack, stackAligned, impAligned );
+			meshes.optimizeByStrength( Float.MAX_VALUE, 1000, 100 );
 			apply();
 		}
 		catch ( NotEnoughDataPointsException ex )
