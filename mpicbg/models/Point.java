@@ -51,7 +51,7 @@ public class Point
 	 * 
 	 * transfers the local coordinates to new world coordinates
 	 */
-	final public void applyWeighted( Model model, float weight )
+	final public void apply( Model model, float weight )
 	{
 		weight = Math.max( 0.0f, Math.min( 1.0f, weight ) );
 		float[] a = model.apply( l );
