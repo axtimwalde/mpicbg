@@ -4,8 +4,6 @@ import ij.process.ImageProcessor;
 import java.awt.Color;
 import java.awt.Shape;
 import java.awt.geom.GeneralPath;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashMap;
@@ -18,14 +16,18 @@ import mpicbg.models.NotEnoughDataPointsException;
 
 public class TransformMesh
 {
-	protected float width, height;
+	final protected float width, height;
 	public float getWidth(){ return width; }
 	public float getHeight(){ return height; }
 	
-	final HashMap< AffineModel2D, ArrayList< PointMatch > > a = new HashMap< AffineModel2D, ArrayList< PointMatch > >();
-	final HashMap< PointMatch, ArrayList< AffineModel2D > > l = new HashMap< PointMatch, ArrayList< AffineModel2D > >();
+	final protected HashMap< AffineModel2D, ArrayList< PointMatch > > av = new HashMap< AffineModel2D, ArrayList< PointMatch > >();
+	final protected HashMap< PointMatch, ArrayList< AffineModel2D > > va = new HashMap< PointMatch, ArrayList< AffineModel2D > >();
 	
-	public TransformMesh( int numX, int numY, float width, float height )
+	public TransformMesh(
+			final int numX,
+			final int numY,
+			final float width,
+			final float height )
 	{
 		float w = width * height / numX / numY;
 		PointMatch[] pq = new PointMatch[ numX * numY + ( numX - 1 ) * ( numY - 1 ) ];
@@ -186,13 +188,13 @@ public class TransformMesh
 			IJ.error( e.getMessage() );
 			e.printStackTrace( System.err );
 		}
-		a.put( m, t );
+		av.put( m, t );
 		
 		for ( PointMatch pm : t )
 		{
-			if ( !l.containsKey( pm ) )
-				l.put( pm, new ArrayList< AffineModel2D >() );
-			l.get( pm ).add( m );
+			if ( !va.containsKey( pm ) )
+				va.put( pm, new ArrayList< AffineModel2D >() );
+			va.get( pm ).add( m );
 		}
 	}	
 	
@@ -224,7 +226,7 @@ public class TransformMesh
 	
 	protected void apply( AffineModel2D ai, ImageProcessor src, ImageProcessor trg )
 	{
-		ArrayList< PointMatch > pm = a.get( ai );
+		ArrayList< PointMatch > pm = av.get( ai );
 		float[][] box = getBoundingBox( pm );
 		for ( int y = ( int )box[ 0 ][ 1 ]; y <= ( int )box[ 1 ][ 1 ]; ++y )
 		{
@@ -262,14 +264,14 @@ X:			for ( int x = ( int )box[ 0 ][ 0 ]; x <= ( int )box[ 1 ][ 0 ]; ++x )
 	{
 		trg.setColor( Color.black );
 		trg.fill();
-		Set< AffineModel2D > s = a.keySet();
+		Set< AffineModel2D > s = av.keySet();
 		for ( AffineModel2D ai : s )
 			apply( ai, src, trg );
 	}
 	
 	private void illustrateTriangle( AffineModel2D ai, GeneralPath path )
 	{
-		ArrayList< PointMatch > m = a.get( ai );
+		ArrayList< PointMatch > m = av.get( ai );
 		
 		float[] w = m.get( 0 ).getP2().getW();
 		path.moveTo( w[ 0 ], w[ 1 ] );
@@ -291,7 +293,7 @@ X:			for ( int x = ( int )box[ 0 ][ 0 ]; x <= ( int )box[ 1 ][ 0 ]; ++x )
 	{
 		GeneralPath path = new GeneralPath();
 		
-		Set< AffineModel2D > s = a.keySet();
+		Set< AffineModel2D > s = av.keySet();
 		for ( AffineModel2D ai : s )
 			illustrateTriangle( ai, path );
 		
@@ -300,11 +302,11 @@ X:			for ( int x = ( int )box[ 0 ][ 0 ]; x <= ( int )box[ 1 ][ 0 ]; ++x )
 	
 	public void updateAffine( PointMatch p )
 	{
-		for ( AffineModel2D ai : l.get( p ) )
+		for ( AffineModel2D ai : va.get( p ) )
 		{
 			try
 			{
-				ai.fit( a.get( ai ) );
+				ai.fit( av.get( ai ) );
 			}
 			catch ( NotEnoughDataPointsException e )
 			{
@@ -316,12 +318,12 @@ X:			for ( int x = ( int )box[ 0 ][ 0 ]; x <= ( int )box[ 1 ][ 0 ]; ++x )
 	
 	public void updateAffines()
 	{
-		Set< AffineModel2D > s = a.keySet();
+		Set< AffineModel2D > s = av.keySet();
 		for ( AffineModel2D ai : s )
 		{
 			try
 			{
-				ai.fit( a.get( ai ) );
+				ai.fit( av.get( ai ) );
 			}
 			catch ( NotEnoughDataPointsException e )
 			{
