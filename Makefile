@@ -12,16 +12,11 @@ JAVACOPTSJARS=$(shell echo "$(EXTJARS)" | tr \  $(CPSEP))
 JAVACOPTS=-classpath ../ij.jar$(CPSEP)$(JAVACOPTSJARS) -target 1.5 -source 1.5
 
 JAVAS=$(wildcard \
-    Align_ElasticMeshStack.java \
-    ElasticMesh.java \
-    ElasticMeshStack.java \
     MOPS_ExtractPointRoi.java \
     SIFT_ExtractPointRoi.java \
     SIFT_Align.java \
     Transform_Affine.java \
-    Transform_ElasticMesh.java \
     Transform_Perspective.java \
-    TransformMesh.java \
     mpicbg/*/*.java)
 CLASSES=$(patsubst %.java,%.class,$(JAVAS))
 ALL_CLASSES=$(patsubst %.java,%*.class,$(JAVAS))
