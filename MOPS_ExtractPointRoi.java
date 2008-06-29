@@ -6,8 +6,10 @@ import ij.gui.*;
 import ij.*;
 import ij.process.*;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.Collections;
-import java.util.Vector;
+import java.util.List;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.awt.geom.GeneralPath;
@@ -76,6 +78,9 @@ import java.awt.event.MouseListener;
  */
 public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener, ImageListener
 {
+	final static private DecimalFormat decimalFormat = new DecimalFormat();
+	final static private DecimalFormatSymbols decimalFormatSymbols = new DecimalFormatSymbols();
+	
 	// steps
 	private static int steps = 3;
 	// initial sigma
@@ -109,12 +114,21 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 	private ImagePlus impFeature1;
 	private ImagePlus impFeature2;
 	
-	private Vector< Feature > fs1;
-	private Vector< Feature > fs2;
+	private List< Feature > fs1;
+	private List< Feature > fs2;
 	final private HashMap< Point, Feature > m1 = new HashMap< Point, Feature >();
 	final private HashMap< Point, Feature > m2 = new HashMap< Point, Feature >();
 	final private ArrayList< Feature > i1 = new ArrayList< Feature >();
 	final private ArrayList< Feature > i2 = new ArrayList< Feature >();
+	
+	public MOPS_ExtractPointRoi()
+	{
+		decimalFormatSymbols.setGroupingSeparator( ',' );
+		decimalFormatSymbols.setDecimalSeparator( '.' );
+		decimalFormat.setDecimalFormatSymbols( decimalFormatSymbols );
+		decimalFormat.setMaximumFractionDigits( 3 );
+		decimalFormat.setMinimumFractionDigits( 3 );		
+	}
 	
 	public void run( String args )
 	{
@@ -141,7 +155,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 			titles[ i ] = ( WindowManager.getImage( ids[ i ] ) ).getTitle();
 		}
 		
-		String[] methods = new String[]{ "Translation", "Rigid" };
+		String[] methods = new String[]{ "Translation", "Rigid", "Affine" };
 		
 		GenericDialog gd = new GenericDialog( "Extract Landmark Correspondences" );
 		String current = WindowManager.getCurrentImage().getTitle();
@@ -228,7 +242,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 			
 		start_time = System.currentTimeMillis();
 		IJ.log( "Identifying correspondence candidates using brute force ..." );
-		Vector< PointMatch > candidates = 
+		List< PointMatch > candidates = 
 				FloatArray2DMOPS.createMatches( fs1, fs2, rod, m1, m2 );
 		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );	
 		IJ.log( candidates.size() + " potentially corresponding features identified." );
@@ -236,7 +250,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		start_time = System.currentTimeMillis();
 		IJ.log( "Filtering correspondence candidates by geometric consensus ..." );
 		// filter false positives
-		Vector< PointMatch > inliers = new Vector< PointMatch >();
+		List< PointMatch > inliers = new ArrayList< PointMatch >();
 		
 		// TODO Implement other models for choice
 		Model model = null;
@@ -248,6 +262,9 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 			break;
 		case 1:
 			modelClass = RigidModel2D.class;
+			break;
+		case 2:
+			modelClass = AffineModel2D.class;
 			break;
 		}
 		
@@ -315,7 +332,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 			imp1.setRoi( pr1 );
 			imp2.setRoi( pr2 );
 			
-			IJ.log( inliers.size() + " corresponding features with a maximal displacement of " + model.getError() + " identified." );
+			IJ.log( inliers.size() + " corresponding features with a maximal displacement of " + decimalFormat.format( model.getError() ) + "px identified." );
 			IJ.log( "Estimated transformation model: " + model );
 			
 			imp1.getCanvas().addMouseListener( this );

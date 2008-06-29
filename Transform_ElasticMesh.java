@@ -17,207 +17,191 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
+import java.util.Vector;
 
 public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotionListener, KeyListener
 {
 	// number of x-handles
-	private static int numX = 4;
+	private static int numX = 16;
 	// number of x-handles
 	private static int numY = 3;
+	// alpha [0 smooth, 1 less smooth ;)]
+	private static float alpha = 1.0f;
 	
 	ImagePlus imp;
 	ImageProcessor ip;
 	ImageProcessor ipOrig;
 	
-	PointMatch[] pq;
-	int[] x;
-	int[] y;
-	Point[] hooks;
-	PointRoi handles;
 	
-	final ElasticMesh mesh = new ElasticMesh();
+	/**
+	 * Visualisation
+	 */
+	final ByteProcessor ipPlot = new ByteProcessor( 200, 200 );
+	final ImagePlus impPlot = new ImagePlus( "Optimization", ipPlot );
+	
+	//final ArrayList< PointMatch > pq = new ArrayList< PointMatch >();
+	final ArrayList< Point > hooks = new ArrayList< Point >();
+	PointRoi handles;
+	Tile screen;
+	
+	protected ElasticMesh mesh;
 	
 	int targetIndex = -1;
 	
 	boolean showMesh = false;
+	boolean showPointMatches = false;
+	boolean pleaseIllustrate = false;
+	
+	final Vector< Roi > displayList = new Vector< Roi >();
+	
+	final class OptimizeThread extends Thread
+	{
+		public void run()
+		{
+			while ( !isInterrupted() && hooks.size() > 0 )
+			{
+				try
+				{
+					//mesh.optimizeByWeight( Float.MAX_VALUE, 100 * mesh.numVertices(), mesh.numVertices() );
+					//mesh.optimize( Float.MAX_VALUE, 10000, 100 );
+					
+					mesh.optimizeByStrength( Float.MAX_VALUE, 10000, 100, ipPlot, impPlot );
+					pleaseIllustrate = false;
+					apply();
+					synchronized ( this ){ wait(); }
+				}
+				catch ( NotEnoughDataPointsException ex ){ ex.printStackTrace( System.err ); }
+				catch ( InterruptedException e){ Thread.currentThread().interrupt(); }
+				catch ( Throwable t ){ t.printStackTrace(); }
+			}
+		}
+	}
+	
+	final class IllustrateThread extends Thread
+	{
+		public void run()
+		{
+			while ( true )
+			{
+				try
+				{
+					synchronized ( this )
+					{
+						illustrate();
+						if ( pleaseIllustrate )
+							wait( 100 );
+						else
+							wait();
+					}
+				}
+				catch ( Throwable t ){ t.printStackTrace(); }
+			}
+		}
+	}
+
+	private Thread opt;
+	private Thread ill;
 	
 	public void run( String arg )
     {
-		// cleanup
-		mesh.clear();
+		hooks.clear();
+		//pq.clear();
 		
 		imp = IJ.getImage();
 		ip = imp.getProcessor();
 		ipOrig = ip.duplicate();
 		
 		GenericDialog gd = new GenericDialog( "Grid Transform" );
-		gd.addNumericField( "horizontal_handles :", numX, 0 );
-		gd.addNumericField( "vertical_handles :", numY, 0 );
+		gd.addNumericField( "handles_per_row :", numX, 0 );
+		//gd.addNumericField( "vertical_handles :", numY, 0 );
+		gd.addNumericField( "alpha :", alpha, 2 );
 		gd.showDialog();
 		
 		if (gd.wasCanceled()) return;
 		
+		impPlot.show();
+		
 		numX = ( int )gd.getNextNumber();
-		numY = ( int )gd.getNextNumber();
+		//numY = ( int )gd.getNextNumber();
+		alpha = ( float )gd.getNextNumber();
+		float dx = ( float )imp.getWidth() / ( float )( numX - 1 );
+		float dy = 2.0f * ( float )Math.sqrt(4.0f / 5.0f * dx * dx );
+		//System.out.println( dy );
+		numY = Math.round( imp.getHeight() / dy ) + 1;
+		//System.out.println( numY );
 		
 		// intitialize the transform mesh
-		init( numX, numY );
+		mesh = new ElasticMesh( numX, numY, imp.getWidth(), imp.getHeight() );		
 		
-		mesh.init();
+		screen = new Tile( imp.getWidth(), imp.getHeight(), new RigidModel2D() );
 		
-		x = new int[]{ ip.getWidth() / 4, 3 * ip.getWidth() / 4, ip.getWidth() / 4 };
-		y = new int[]{ ip.getHeight() / 4, ip.getHeight() / 2, 3 * ip.getHeight() / 4 };
-		hooks = new Point[ 3 ];
-		Tile screen = new Tile( imp.getWidth(), imp.getHeight(), new RigidModel2D() );
-		
-		for ( int i = 0; i < hooks.length; ++i )
-		{
-			System.out.println( i );
-			float[] here = new float[]{ x[ i ], y[ i ] };
-			hooks[ i ] = new Point( here );
-			Tile o = mesh.findClosest( here );
-			float[] there = here.clone();
-			try
-			{
-				System.out.println( o );
-				
-				o.getModel().applyInverseInPlace( there );
-			}
-			catch ( NoninvertibleModelException e )
-			{
-				e.printStackTrace( System.err );
-			}
-			Point p2 = new Point( there );
+//		for ( int i = 0; i < 3; ++i )
+//		{
+//			hooks[ i ] = new Point( new float[]{ x[ i ], y[ i ] } );
+//			Tile o = mesh.findClosest( hooks[ i ].getL() );
+//			Point p2 = new Point( new float[]{ x[ i ], y[ i ] } );
+//			
+//			o.addMatch( new PointMatch( p2, hooks[ i ], 10f ) );
+//			screen.addMatch( new PointMatch( hooks[ i ], p2 ) );
 			
-			o.addMatch( new PointMatch( p2, hooks[ i ], 100f ) );
-			screen.addMatch( new PointMatch( hooks[ i ], p2 ) );
+			hooks.add( new Point( new float[]{ ip.getWidth() / 4, ip.getHeight() / 4 } ) );
+			Point p2 = new Point( new float[]{ ip.getWidth() / 4, ip.getHeight() / 4 } ); // use the same local point for each handle (is this correct?)
+			mesh.addMatchWeightedByDistance( new PointMatch( p2, hooks.get( 0 ), 10f ), alpha );
 			
-		}
+			hooks.add( new Point( new float[]{ 3 * ip.getWidth() / 4, ip.getHeight() / 2 } ) );
+			p2 = new Point( new float[]{ 3 * ip.getWidth() / 4, ip.getHeight() / 2 } ); // use the same local point for each handle (is this correct?)
+			mesh.addMatchWeightedByDistance( new PointMatch( p2, hooks.get( 1 ), 10f ), alpha );
+			
+			hooks.add( new Point( new float[]{ ip.getWidth() / 4, 3 * ip.getHeight() / 4 } ) );
+			p2 = new Point( new float[]{ ip.getWidth() / 4, 3 * ip.getHeight() / 4 } ); // use the same local point for each handle (is this correct?)
+			mesh.addMatchWeightedByDistance( new PointMatch( p2, hooks.get( 2 ), 10f ), alpha );
+//		}
 		
-		handles = new PointRoi( x, y, hooks.length );
+		handles = new PointRoi(
+				new int[]{ ip.getWidth() / 4, 3 * ip.getWidth() / 4, ip.getWidth() / 4 },
+				new int[]{ ip.getHeight() / 4, ip.getHeight() / 2, 3 * ip.getHeight() / 4 }, hooks.size() );
 		imp.setRoi( handles );
 		
-		Toolbar.getInstance().setTool( Toolbar.getInstance().addTool( "Drag_the_handles." ) );
+		Toolbar.getInstance().setTool( Toolbar.getInstance().addTool( "Add_and_drag_handles." ) );
+		
+		
+		opt = new OptimizeThread();
+		ill = new IllustrateThread();
+		opt.start();
+		ill.start();
 		
 		imp.getCanvas().addMouseListener( this );
 		imp.getCanvas().addMouseMotionListener( this );
 		imp.getCanvas().addKeyListener( this );
     }
 	
-	public void init( int numX, int numY )
+	void illustrate()
 	{
-		pq = new PointMatch[ numX * numY + ( numX - 1 ) * ( numY - 1 ) ];
-//		x = new int[ pq.length ];
-//		y = new int[ pq.length ];
-	
-		float dy = ( float )ip.getHeight() / ( numY - 1 );
-		float dx = ( float )ip.getWidth() / ( numX - 1 );
-		
-		int i = 0;
-		for ( int xi = 0; xi < numX; ++xi )
+		Shape shape;
+		Roi roi;
+		displayList.clear();
+		synchronized ( mesh )
 		{
-			float xip = xi * dx;
-			Point p = new Point( new float[]{ xip, 0 } );
-			pq[ i ]  = new PointMatch( p, p.clone() );
-			
-//			x[ i ] = ( int )( xip );
-//			y[ i ] = 0;
-			
-			++i;
-		}
-		for ( int yi = 1; yi < numY; ++yi )
-		{
-			// odd row
-			float yip = yi * dy - dy / 2;
-			for ( int xi = 1; xi < numX; ++xi )
+			if ( showMesh )
 			{
-				float xip = xi * dx - dx / 2;
-				
-				Point p  = new Point( new float[]{ xip, yip } );
-				pq[ i ] = new PointMatch( p, p.clone() );
-				
-//				x[ i ] = ( int )( xip);
-//				y[ i ] = ( int )( yip);
-				
-				int i1 = i - numX;
-				int i2 = i1 + 1;
-				
-				ArrayList< PointMatch > t1 = new ArrayList< PointMatch >();
-				t1.add( pq[ i1 ] );
-				t1.add( pq[ i2 ] );
-				t1.add( pq[ i ] );
-				
-				mesh.addTriangle( t1 );
-				
-				++i;
+				shape = mesh.illustrateMesh();
+				roi = new ShapeRoi( shape );
+				roi.setInstanceColor( Color.white );
+				displayList.addElement( roi );
 			}
-			
-			// even row
-			yip = yi * dy;
-			Point p  = new Point( new float[]{ 0, yip } );
-			pq[ i ] = new PointMatch( p, p.clone() );
-			
-//			x[ i ] = ( int )( 0 );
-//			y[ i ] = ( int )( yip );
-			
-			++i;
-			
-			for ( int xi = 1; xi < numX; ++xi )
+			if ( showPointMatches )
 			{
-				float xip = xi * dx;
-								
-				p = new Point( new float[]{ xip, yip } );
-				pq[ i ] = new PointMatch( p, p.clone() );
-				
-//				x[ i ] = ( int )( xip );
-//				y[ i ] = ( int )( yip );
-				
-				int i1 = i - 2 * numX;
-				int i2 = i1 + 1;
-				int i3 = i1 + numX;
-				int i4 = i - 1;
-				
-				ArrayList< PointMatch > t1 = new ArrayList< PointMatch >();
-				t1.add( pq[ i1 ] );
-				t1.add( pq[ i3 ] );
-				t1.add( pq[ i4 ] );
-				
-				ArrayList< PointMatch > t2 = new ArrayList< PointMatch >();
-				t2.add( pq[ i4 ] );
-				t2.add( pq[ i3 ] );
-				t2.add( pq[ i ] );
-				
-				ArrayList< PointMatch > t3 = new ArrayList< PointMatch >();
-				t3.add( pq[ i ] );
-				t3.add( pq[ i3 ] );
-				t3.add( pq[ i2 ] );
-				
-				mesh.addTriangle( t1 );
-				mesh.addTriangle( t2 );
-				mesh.addTriangle( t3 );
-				
-				++i;
+				shape = mesh.illustratePointMatches();
+				roi = new ShapeRoi( shape );
+				roi.setInstanceColor( Color.green );
+				displayList.addElement( roi );
+				shape = mesh.illustratePointMatchDisplacements();
+				roi = new ShapeRoi( shape );
+				roi.setInstanceColor( Color.red );
+				displayList.addElement( roi );
 			}
+			imp.getCanvas().setDisplayList( displayList );
 		}
-	}
-	
-	public void optimize()
-	{
-		try
-		{
-			mesh.optimize( Float.MAX_VALUE, 10000, 100, ipOrig, ip, imp );
-		}
-		catch ( NotEnoughDataPointsException ex )
-		{
-			ex.printStackTrace( System.err );
-		}
-	}
-	
-	public void showMesh()
-	{
-		Shape meshIllustration = mesh.illustrateMesh();
-		imp.getCanvas().setDisplayList( meshIllustration, Color.white, null );
-		mesh.updateMesh();
 	}
 	
 	public void apply()
@@ -226,10 +210,35 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 		imp.updateAndDraw();
 	}
 	
+	private void updateRoi()
+	{
+		int[] x = new int[ hooks.size() ];
+		int[] y = new int[ hooks.size() ];
+		
+		for ( int i = 0; i < hooks.size(); ++ i )
+		{
+			float[] l = hooks.get( i ).getW();
+			x[ i ] = ( int )l[ 0 ];
+			y[ i ] = ( int )l[ 1 ];
+		}
+		handles = new PointRoi( x, y, hooks.size() );
+		imp.setRoi( handles );
+	}
+	
 	public void keyPressed( KeyEvent e)
 	{
 		if ( e.getKeyCode() == KeyEvent.VK_ESCAPE || e.getKeyCode() == KeyEvent.VK_ENTER )
 		{
+			Thread t = opt;
+			opt = null;
+			t.interrupt();
+			
+			t = ill;
+			ill = null;
+			t.interrupt();
+			
+			pleaseIllustrate = false;
+			
 			if ( imp != null )
 			{
 				imp.getCanvas().removeMouseListener( this );
@@ -246,10 +255,48 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 		else if ( e.getKeyCode() == KeyEvent.VK_Y )
 		{
 			showMesh = !showMesh;
-			if ( showMesh )
-				showMesh();
+			if ( showMesh || showPointMatches )
+			{
+				synchronized ( ill )
+				{
+					if ( pleaseIllustrate == false )
+						illustrate();
+					else
+						ill.notify();
+				}
+			}
 			else
-				imp.getCanvas().setDisplayList( null );			
+			{
+				pleaseIllustrate = false;
+				synchronized ( ill )
+				{
+					ill.interrupt();
+					imp.getCanvas().setDisplayList( null );
+				}
+			}			
+		} 
+		else if ( e.getKeyCode() == KeyEvent.VK_U )
+		{
+			showPointMatches = !showPointMatches;
+			if ( showMesh || showPointMatches )
+			{
+				synchronized ( ill )
+				{
+					if ( pleaseIllustrate == false )
+						illustrate();
+					else
+						ill.notify();
+				}
+			}
+			else
+			{
+				pleaseIllustrate = false;
+				synchronized ( ill )
+				{
+					ill.interrupt();
+					imp.getCanvas().setDisplayList( null );
+				}
+			}			
 		} 
 		else if (
 				( e.getKeyCode() == KeyEvent.VK_F1 ) &&
@@ -269,10 +316,11 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 			int ym = win.getCanvas().offScreenY( e.getY() );
 			
 			double target_d = Double.MAX_VALUE;
-			for ( int i = 0; i < hooks.length; ++i )
+			for ( int i = 0; i < hooks.size(); ++i )
 			{
-				double dx = win.getCanvas().getMagnification() * ( x[ i ] - xm );
-				double dy = win.getCanvas().getMagnification() * ( y[ i ] - ym );
+				float[] l = hooks.get( i ).getW(); 
+				double dx = win.getCanvas().getMagnification() * ( l[ 0 ] - xm );
+				double dy = win.getCanvas().getMagnification() * ( l[ 1 ] - ym );
 				double d =  dx * dx + dy * dy;
 				
 				if ( d < 64.0 && d < target_d )
@@ -281,8 +329,25 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 					target_d = d;
 				}
 			}
+			
+			if ( targetIndex == -1 )
+			{
+				float[] l = new float[]{ xm, ym };
+				synchronized ( mesh )
+				{
+					Model m = mesh.findClosest( l ).getModel();
+					try { m.applyInverseInPlace( l ); }
+					catch ( NoninvertibleModelException x ){ x.printStackTrace(); }
+					Point hook = new Point( l );
+					hook.apply( m );
+					hooks.add( hook );
+				
+					mesh.addMatchWeightedByDistance( new PointMatch( new Point( new float[]{ xm, ym } ), hook, 10f ), alpha );
+				}
+				
+				updateRoi();
+			}
 		}
-		
 		//IJ.log( "Mouse pressed: " + x + ", " + y + " " + modifiers( e.getModifiers() ) );
 	}
 
@@ -290,33 +355,7 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 	public void mouseClicked( MouseEvent e ) {}	
 	public void mouseEntered( MouseEvent e ) {}
 	
-	public void mouseReleased( MouseEvent e )
-	{
-		if ( e.getButton() == MouseEvent.BUTTON1 && targetIndex >= 0 )
-		{
-			ImageWindow win = WindowManager.getCurrentWindow();
-			int xm = win.getCanvas().offScreenX( e.getX() );
-			int ym = win.getCanvas().offScreenY( e.getY() );
-			
-			float[] fq = hooks[ targetIndex ].getW();
-			
-			fq[ 0 ] = x[ targetIndex ] = xm;
-			fq[ 1 ] = y[ targetIndex ] = ym;
-			
-			handles = new PointRoi( x, y, hooks.length );
-			imp.setRoi( handles );
-				
-			fq[ 0 ] = xm;
-			fq[ 1 ] = ym;
-			
-			optimize();
-			apply();
-			if ( showMesh )
-				showMesh();
-			else
-				imp.getCanvas().setDisplayList( null );
-		}
-	}
+	public void mouseReleased( MouseEvent e ){}
 	
 	public void mouseDragged( MouseEvent e )
 	{
@@ -326,16 +365,20 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 			int xm = win.getCanvas().offScreenX( e.getX() );
 			int ym = win.getCanvas().offScreenY( e.getY() );
 			
-			float[] fq = hooks[ targetIndex ].getW();
+			float[] l = hooks.get( targetIndex ).getW();
 			
-			fq[ 0 ] = x[ targetIndex ] = xm;
-			fq[ 1 ] = y[ targetIndex ] = ym;
+			l[ 0 ] = xm;
+			l[ 1 ] = ym;
 			
-			handles = new PointRoi( x, y, hooks.length );
-			imp.setRoi( handles );
+			updateRoi();
 				
-			fq[ 0 ] = xm;
-			fq[ 1 ] = ym;
+			if ( showMesh || showPointMatches )
+				synchronized ( ill )
+				{
+					pleaseIllustrate = true;
+					ill.notify();
+				}
+			synchronized ( opt ){ opt.notify(); }
 		}
 	}
 	
