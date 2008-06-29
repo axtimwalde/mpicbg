@@ -9,6 +9,7 @@ public class ErrorStatistic
 {
 	final public ArrayList< Double > values = new ArrayList< Double >();
 	final public ArrayList< Double > slope = new ArrayList< Double >();
+	final public ArrayList< Double > sortedValues = new ArrayList< Double >();
 	
 	public double var0 = 0;		// variance relative to 0
 	public double var = 0;		// variance relative to mean
@@ -31,14 +32,15 @@ public class ErrorStatistic
 		double tmp = new_value - mean;
 		var += tmp * tmp / ( double )( values.size() );
 		std = Math.sqrt( var );
-		Collections.sort( values );
-		if ( values.size() % 2 == 0 )
+		sortedValues.add( new_value );
+		Collections.sort( sortedValues );
+		if ( sortedValues.size() % 2 == 0 )
 		{
-			int m = values.size() / 2;
-			median = ( values.get( m - 1 ) + values.get( m ) ) / 2.0;
+			int m = sortedValues.size() / 2;
+			median = ( sortedValues.get( m - 1 ) + sortedValues.get( m ) ) / 2.0;
 		}
 		else
-			median = values.get( values.size() / 2 );
+			median = sortedValues.get( sortedValues.size() / 2 );
 		if ( new_value < min ) min = new_value;
 		if ( new_value > max ) max = new_value;
 	}
