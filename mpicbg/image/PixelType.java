@@ -16,12 +16,25 @@ interface PixelType
 	
 	/**
 	 * 
+	 * Sets the min and max for returning displayable values
 	 * @param min
 	 * @param max
 	 */
 	public void setVisibleRange( double min, double max );
 	public void setVisibleRange( double[] min, double[] max );
-	
+
+	/**
+	 * Gets the current setting for the min value for each channel
+	 * when creating displayable values
+	 */
+	public double[] getMinVisibleRange( );
+
+	/**
+	 * Gets the current setting for the max value for each channel 
+	 * when creating displayable values
+	 */
+	public double[] getMaxVisibleRange( );
+
 	/**
 	 * Computes the projection of a pixel instance to ARGB.
 	 * 

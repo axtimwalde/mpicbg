@@ -9,11 +9,10 @@ public class FloatStreamIterator
 		super( stream );
 	}
 
-	final public boolean hasNext(){ return i < data.length - numChannels; }
-	final public boolean hasPrev(){ return i > 0; }
+	final public boolean isInside(){ return i > -1 && i < data.length; }
 	
-	public void next() throws OutOfBoundsException{ i += numChannels; }
-	public void prev() throws OutOfBoundsException{ i -= numChannels; }
+	public void next(){ i += numChannels; }
+	public void prev(){ i -= numChannels; }
 	
 	public float[] localize()
 	{
@@ -41,7 +40,6 @@ public class FloatStreamIterator
 		}		
 	}
 
-	@Override
 	public IteratableByDimension toIteratableByDimension()
 	{
 		int[] l = new int[ container.getNumDim() ];
@@ -49,7 +47,6 @@ public class FloatStreamIterator
 		return new FloatStreamIteratorByDimension( ( FloatStream )container, l );
 	}
 
-	@Override
 	public RandomAccessible toRandomAccessible()
 	{
 		int[] l = new int[ container.getNumDim() ];

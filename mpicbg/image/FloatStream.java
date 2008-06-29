@@ -33,10 +33,5 @@ public class FloatStream extends Container
 	{
 		this( type, dim );
 		setRes( res );		
-	}
-	
-	public Cursor getIterator()
-	{
-		return new FloatStreamIterator( this );
-	}
+	}	
 }

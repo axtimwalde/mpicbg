@@ -36,6 +36,8 @@ public class FloatStreamRandomAccess
 		to( l );
 	}
 
+	final public boolean isInside(){ return i > -1 && i < data.length; }
+
 	public void to( int[] l )
 	{
 		i = l[ 0 ] * step[ 0 ];
@@ -74,13 +76,11 @@ public class FloatStreamRandomAccess
 		System.arraycopy( iByDim, 0, l, 0, l.length );
 	}
 
-	@Override
 	public IteratableByDimension toIteratableByDimension()
 	{
 		return new FloatStreamIteratorByDimension( ( FloatStream )container, iByDim );
 	}
 
-	@Override
 	public RandomAccessible toRandomAccessible()
 	{
 		return new FloatStreamRandomAccess( ( FloatStream )container, iByDim );
