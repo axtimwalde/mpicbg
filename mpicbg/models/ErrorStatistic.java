@@ -17,7 +17,7 @@ public class ErrorStatistic
 	public double std = 0;		// standard-deviation
 	public double mean = 0;
 	public double median = 0;
-	public double min = Double.MIN_VALUE;
+	public double min = Double.MAX_VALUE;
 	public double max = 0;
 	
 	final public void add( double new_value )
@@ -27,13 +27,17 @@ public class ErrorStatistic
 		mean = ( mean * values.size() + new_value );
 		values.add( new_value );
 		mean /= values.size();
-		var0 += new_value * new_value / ( double )( values.size() );
+		
+		var0 += new_value * new_value / ( double )( values.size() - 1 );
 		std0 = Math.sqrt( var0 );
+		
 		double tmp = new_value - mean;
-		var += tmp * tmp / ( double )( values.size() );
+		var += tmp * tmp / ( double )( values.size() - 1 );
 		std = Math.sqrt( var );
+		
 		sortedValues.add( new_value );
 		Collections.sort( sortedValues );
+		
 		if ( sortedValues.size() % 2 == 0 )
 		{
 			int m = sortedValues.size() / 2;
@@ -41,6 +45,7 @@ public class ErrorStatistic
 		}
 		else
 			median = sortedValues.get( sortedValues.size() / 2 );
+		
 		if ( new_value < min ) min = new_value;
 		if ( new_value > max ) max = new_value;
 	}
@@ -54,6 +59,7 @@ public class ErrorStatistic
 		while ( i < width && li.hasPrevious() )
 		{
 			s += li.previous();
+			++i;
 		}
 		s /= ( double )width;
 		return s;
