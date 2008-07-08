@@ -9,7 +9,7 @@ import ij.gui.*;
 import mpicbg.imagefeatures.Feature;
 import mpicbg.imagefeatures.Filter;
 import mpicbg.imagefeatures.FloatArray2D;
-import mpicbg.imagefeatures.FloatArray2DMOPS;
+import mpicbg.imagefeatures.FloatArray2DSIFT;
 import mpicbg.imagefeatures.FloatArray2DScaleOctave;
 import mpicbg.imagefeatures.ImageArrayConverter;
 import mpicbg.models.*;
@@ -25,8 +25,10 @@ public class Align_ElasticMeshStack implements PlugIn
 	private static int steps = 3;
 	// initial sigma
 	private static float initial_sigma = 1.6f;
-	// feature descriptor size
-	private static int fdsize = 22;
+//	 feature descriptor size
+	private static int fdsize = 8;
+	// feature descriptor orientation bins
+	private static int fdbins = 8;
 	// closest/next closest neighbour distance ratio
 	private static float rod = 0.92f;
 	// size restrictions for scale octaves, use octaves < max_size and > min_size only
@@ -36,9 +38,17 @@ public class Align_ElasticMeshStack implements PlugIn
 	private static float max_epsilon = 25.0f;
 	private static float min_inlier_ratio = 0.05f;
 	private static int numX = 32;
-	private static int numY = 32;
 	// alpha [0 smooth, 1 less smooth ;)]
 	private static float alpha = 1.0f;
+	// transformation model
+	final static String[] methods = new String[]{ "Translation", "Rigid", "Affine" };
+	final static Class< ? extends Model >[] modelClasses =
+		new Class[]{
+				TranslationModel2D.class,
+				RigidModel2D.class,
+				AffineModel2D.class };
+	private static int localMethod = 1;
+	private static int globalMethod = 1;
 	
 	/**
 	 * Set true to double the size of the image by linear interpolation to
@@ -69,35 +79,38 @@ public class Align_ElasticMeshStack implements PlugIn
 		
 		List< Feature > features1;
 		List< Feature > features2;
-		ElasticMesh m1;
-		ElasticMesh m2;
+		ElasticMovingLeastSquaresMesh m1;
+		ElasticMovingLeastSquaresMesh m2;
 		
 		imp = WindowManager.getCurrentImage();
 		if ( imp == null )  { System.err.println( "You should have a stack open" ); return; }
 		
 			
 		GenericDialog gd = new GenericDialog( "Elastic Stack Registration" );
-		gd.addMessage( "MOPS Parameters:" );
+		gd.addMessage( "SIFT Parameters:" );
 		gd.addNumericField( "steps_per_scale_octave :", steps, 0 );
 		gd.addNumericField( "initial_gaussian_blur :", initial_sigma, 2 );
 		gd.addNumericField( "feature_descriptor_width :", fdsize, 0 );
+		gd.addNumericField( "feature_descriptor_orientation_bins :", fdbins, 0 );
 		gd.addNumericField( "minimum_image_size :", min_size, 0 );
 		gd.addNumericField( "maximum_image_size :", max_size, 0 );
 		gd.addNumericField( "closest/next_closest_ratio :", rod, 2 );
 		gd.addNumericField( "maximal_alignment_error :", ( imp.getWidth() + imp.getHeight() ) / 40, 2 );
 		gd.addNumericField( "inlier_ratio :", min_inlier_ratio, 2 );
 		gd.addCheckbox( "upscale_image_first", upscale );
+		gd.addChoice( "expected_global_transformation :", methods, methods[ globalMethod ] );
 		gd.addMessage( "Mesh Parameters:" );
 		gd.addNumericField( "horizontal_handles :", numX, 0 );
 		//gd.addNumericField( "vertical_handles :", numY, 0 );
 		gd.addNumericField( "alpha :", alpha, 2 );
+		gd.addChoice( "desired_local_transformation :", methods, methods[ localMethod ] );
 		gd.showDialog();
 		if (gd.wasCanceled()) return;
 			
 		steps = ( int )gd.getNextNumber();
 		initial_sigma = ( float )gd.getNextNumber();
 		fdsize = ( int )gd.getNextNumber();
-//		fdbins = ( int )gd.getNextNumber();
+		fdbins = ( int )gd.getNextNumber();
 		min_size = ( int )gd.getNextNumber();
 		max_size = ( int )gd.getNextNumber();
 		rod = ( float )gd.getNextNumber();
@@ -106,12 +119,13 @@ public class Align_ElasticMeshStack implements PlugIn
 		upscale = gd.getNextBoolean();
 		if ( upscale ) scale = 2.0f;
 		else scale = 1.0f;
+		globalMethod = gd.getNextChoiceIndex();
+		Class< ? extends Model > globalModelClass = modelClasses[ globalMethod ];
+		
 		numX = ( int )gd.getNextNumber();
-		//numY = ( int )gd.getNextNumber();
 		alpha = ( float )gd.getNextNumber();
-		float dx = ( float )imp.getWidth() / ( float )( numX - 1 );
-		float dy = 2.0f * ( float )Math.sqrt( 4.0f / 5.0f * dx * dx );
-		numY = Math.round( imp.getHeight() / dy ) + 1;
+		localMethod = gd.getNextChoiceIndex();
+		Class< ? extends Model > localModelClass = modelClasses[ localMethod ];
 		
 		stack = imp.getStack();
 		stackAligned = new ImageStack( stack.getWidth(), stack.getHeight() );
@@ -125,7 +139,7 @@ public class Align_ElasticMeshStack implements PlugIn
 			
 		ip = stack.getProcessor( 1 ).convertToFloat();
 			
-		FloatArray2DMOPS mops = new FloatArray2DMOPS( fdsize );
+		FloatArray2DSIFT sift = new FloatArray2DSIFT( fdsize, fdbins );
 			
 		FloatArray2D fa = ImageArrayConverter.ImageToFloatArray2D( ip );
 		Filter.enhance( fa, 1.0f );
@@ -145,21 +159,20 @@ public class Align_ElasticMeshStack implements PlugIn
 		fa = Filter.convolveSeparable( fa, initial_kernel, initial_kernel );
 				
 		long start_time = System.currentTimeMillis();
-		IJ.log( "processing MOPS ..." );
-		mops.init( fa, steps, initial_sigma, min_size, max_size );
-		features2 = mops.run( max_size ); 
+		IJ.log( "processing SIFT ..." );
+		sift.init( fa, steps, initial_sigma, min_size, max_size );
+		features2 = sift.run( max_size ); 
 		Collections.sort( features2 );
 		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms" );
 			
 		IJ.log( features2.size() + " features identified and processed" );
 		
-		m2 = new ElasticMesh( numX, numY, imp.getWidth(), imp.getHeight() );
+		m2 = new ElasticMovingLeastSquaresMesh( numX, imp.getWidth(), imp.getHeight(), localModelClass, alpha );
 		
 		meshes.addMesh( m2 );
 			
 		for ( int i = 1; i < stack.getSize(); ++i )
 		{
-			System.out.println( numX + " " + numY );
 			ip = stack.getProcessor( i + 1 ).convertToFloat();
 			fa = ImageArrayConverter.ImageToFloatArray2D( ip );
 			Filter.enhance( fa, 1.0f );
@@ -177,31 +190,50 @@ public class Align_ElasticMeshStack implements PlugIn
 			m1 = m2;
 				
 			start_time = System.currentTimeMillis();
-			IJ.log( "processing MOPS ..." );
-			mops.init( fa, steps, initial_sigma, min_size, max_size );
-			features2 = mops.run( max_size);
+			IJ.log( "processing SIFT ..." );
+			sift.init( fa, steps, initial_sigma, min_size, max_size );
+			features2 = sift.run( max_size);
 			Collections.sort( features2 );
 			IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms" );
 				
 			IJ.log( features2.size() + " features identified and processed");
 				
-			m2 = new ElasticMesh( numX, numY, imp.getWidth(), imp.getHeight() );
+			m2 = new ElasticMovingLeastSquaresMesh( numX, imp.getWidth(), imp.getHeight(), localModelClass, alpha );
 			
 			start_time = System.currentTimeMillis();
 			IJ.log( "identifying correspondences using brute force ..." );
 			List< PointMatch > candidates = 
-					FloatArray2DMOPS.createMatches( features1, features2, rod );
+					//FloatArray2DSIFT.createMatches( features1, features2, rod );
+					FloatArray2DSIFT.createMatches( features1, features2, 1.33f, null, 1, rod );
 			IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms" );
 				
 			IJ.log( candidates.size() + " potentially corresponding features identified" );
 				
 			List< PointMatch > inliers = new ArrayList< PointMatch >();
-				
-			RigidModel2D model = null;
+			
+			if ( scale != 1.0f )
+			{
+				ArrayList< PointMatch > scaledCandidates = new ArrayList< PointMatch >( candidates.size() );
+				for ( PointMatch m : candidates )
+				{
+					float[] p1 = m.getP1().getL();
+					float[] p2 = m.getP2().getL();
+					
+					scaledCandidates.add(
+							new PointMatch(
+									new Point( new float[]{ p1[ 0 ] / scale, p1[ 1 ] / scale } ),
+									new Point( new float[]{ p2[ 0 ] / scale, p2[ 1 ] / scale } ),
+									m.getWeights() ) );
+				}
+				candidates.clear();
+				candidates = scaledCandidates;
+			}
+			
+			Model model = null;
 			try
 			{
 				model = Model.filterRansac(
-						RigidModel2D.class,
+						globalModelClass,
 						candidates,
 						inliers,
 						1000,
@@ -214,6 +246,9 @@ public class Align_ElasticMeshStack implements PlugIn
 			}
 			if ( model != null )
 			{
+				IJ.log( inliers.size() + " corresponding features with an average displacement of " + ElasticMeshStack.decimalFormat.format( model.getError() ) + "px identified." );
+				IJ.log( "Estimated global transformation model: " + model );
+				
 				for ( PointMatch pm : inliers )
 				{
 					float[] here = pm.getP1().getL();
@@ -221,8 +256,8 @@ public class Align_ElasticMeshStack implements PlugIn
 					Tile t = m1.findClosest( here );
 					Tile o = m2.findClosest( there );
 					
-					m2.addMatchWeightedByDistance( new PointMatch( pm.getP1(), pm.getP2(), 10f ), alpha );
-					m1.addMatchWeightedByDistance( new PointMatch( pm.getP2(), pm.getP1(), 10f ), alpha );
+					m1.addMatchWeightedByDistance( new PointMatch( pm.getP1(), pm.getP2(), 0.1f ), alpha );
+					m2.addMatchWeightedByDistance( new PointMatch( pm.getP2(), pm.getP1(), 0.1f ), alpha );
 					
 					t.addConnectedTile( o );
 					o.addConnectedTile( t );
@@ -231,10 +266,10 @@ public class Align_ElasticMeshStack implements PlugIn
 			
 			meshes.addMesh( m2 );
 		}
-		ArrayList< ElasticMesh > ms = meshes.meshes;
-		ElasticMesh mm = ms.get( stack.getSize() / 2 );
+		ArrayList< ElasticMovingLeastSquaresMesh > ms = meshes.meshes;
+		ElasticMovingLeastSquaresMesh mm = ms.get( stack.getSize() / 2 );
 		Tile tc = mm.findClosest( new float[]{ imp.getWidth() / 2, imp.getHeight() / 2 } );
-		mm.fixTile( tc );
+		//mm.fixTile( tc );
 		
 		IJ.log( "Optimizing..." );
 		optimize();
@@ -246,8 +281,7 @@ public class Align_ElasticMeshStack implements PlugIn
 	{
 		try
 		{
-			meshes.optimizeByStrength( Float.MAX_VALUE, 1000, 100 );
-			apply();
+			meshes.optimize( Float.MAX_VALUE, 1000, 100, impAligned, stack, stackAligned );
 		}
 		catch ( NotEnoughDataPointsException ex )
 		{
@@ -257,10 +291,10 @@ public class Align_ElasticMeshStack implements PlugIn
 	
 	public void apply()
 	{
-		ArrayList< ElasticMesh > meshStack = meshes.meshes;
+		ArrayList< ElasticMovingLeastSquaresMesh > meshStack = meshes.meshes;
 		for ( int i = 0; i < stack.getSize(); ++ i )
 		{
-			ElasticMesh mesh = meshStack.get( i );
+			ElasticMovingLeastSquaresMesh mesh = meshStack.get( i );
 			mesh.apply( stack.getProcessor( i + 1 ), stackAligned.getProcessor( i + 1 ) );
 		}
 		impAligned.updateAndDraw();
