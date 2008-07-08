@@ -1,21 +1,38 @@
+/**
+ * License: GPL
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License 2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * 
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ *
+ */
 import ij.IJ;
 import ij.ImagePlus;
 import ij.process.ByteProcessor;
-import ij.process.ImageProcessor;
 
 import java.awt.Color;
-import java.awt.Graphics;
 import java.awt.Shape;
 import java.awt.geom.GeneralPath;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
 import mpicbg.models.AffineModel2D;
 import mpicbg.models.ErrorStatistic;
+import mpicbg.models.Model;
 import mpicbg.models.NotEnoughDataPointsException;
 import mpicbg.models.Point;
 import mpicbg.models.PointMatch;
@@ -23,37 +40,28 @@ import mpicbg.models.RigidModel2D;
 import mpicbg.models.Tile;
 
 /**
- * @author saalfeld
+ * 
+ * 
  *
  */
-public class ElasticMesh extends TransformMesh
+public class ElasticMovingLeastSquaresMesh extends MovingLeastSquaresMesh
 {
-	/**
-	 * Tiles are a collection of PointMatches that share a common
-	 * transformation model.  In this implementation, each tile has the size of
-	 * the whole mesh.  By this means, all tiles initially share the same
-	 * reference frame/ coordinate system.
-	 * 
-	 * PointMatches are used for two completely different things:
-	 *  1. Being the vertices which span the mesh and are thus required to find
-	 *     the affine transform inside each of the triangles.  The PointMatches
-	 *     in a, l and pt are meant to be these vertices of the mesh.
-	 *  2. Being actual point correspondences that define the local rigid
-	 *     transformations of each "tile".
-	 */
-	final HashMap< PointMatch, Tile > pt = new HashMap< PointMatch, Tile >();
-	final HashSet< Tile > fixedTiles = new HashSet< Tile >();
-	final public int numVertices(){ return pt.size(); }
-	
-	private double error = Double.MAX_VALUE;
-	public double getError(){ return error; }
+	final protected HashSet< Tile > fixedTiles = new HashSet< Tile >();
 	
 	final static private DecimalFormat decimalFormat = new DecimalFormat();
 	final static private DecimalFormatSymbols decimalFormatSymbols = new DecimalFormatSymbols();
 	
-	public ElasticMesh( int numX, int numY, float width, float height )
+	protected float alpha;
+	
+	public ElasticMovingLeastSquaresMesh(
+			final int numX,
+			final int numY,
+			final float width,
+			final float height,
+			final Class< ? extends Model > modelClass,
+			final float alpha )
 	{
-		super( numX, numY, width, height );
+		super( numX, numY, width, height, modelClass );
 		
 		decimalFormatSymbols.setGroupingSeparator( ',' );
 		decimalFormatSymbols.setDecimalSeparator( '.' );
@@ -61,42 +69,43 @@ public class ElasticMesh extends TransformMesh
 		decimalFormat.setMaximumFractionDigits( 3 );
 		decimalFormat.setMinimumFractionDigits( 3 );
 		
-		float w = 1.0f / numX / numY;
+		this.alpha = alpha;
 		
 		Set< PointMatch > s = va.keySet();
-		for ( PointMatch handle : s )
-		{
-			/**
-			 * Create a tile for each handle.
-			 */
-			RigidModel2D model = new RigidModel2D();
-			//AffineModel2D model = new AffineModel2D();
-			Tile t = new Tile( width, height, model );
-			pt.put( handle, t );
-			//t.update();
-		}
 		
-		for ( PointMatch handle : s )
+		//float w = 1.0f / s.size();
+		// temporary weights for inter-vertex PointMatches
+		float[] w = new float[ 2 ];
+		w[ 0 ] = 100.0f / s.size();
+		
+		for ( PointMatch vertex : s )
 		{
 			/**
-			 * For each handle, collect its connected handles.
+			 * For each vertex, collect its connected vertices.
 			 */
-			HashSet< PointMatch > connectedHandles = new HashSet< PointMatch >();
-			for ( AffineModel2D ai : va.get( handle ) )
+			HashSet< PointMatch > connectedVertices = new HashSet< PointMatch >();
+			for ( AffineModel2D ai : va.get( vertex ) )
 			{
 				for ( PointMatch m : av.get( ai ) )
 				{
-					if ( handle != m ) connectedHandles.add( m );
+					if ( vertex != m ) connectedVertices.add( m );
 				}
 			}
 			
 			/**
-			 * Add PointMatches for each connectedHandle.
+			 * Add PointMatches for each connectedVertex.
 			 * These PointMatches work as "regularizers" for the mesh, that is
 			 * the mesh tries to stay rigid.  The influence of these intra-stability
 			 * points is given by weighting factors.
 			 * 
-			 * TODO Currently we assign a weight of 1 / number of vertices to
+			 * TODO
+			 *   Currently, we assign two weights to each match:
+			 *   1. a constant weight that defines the "stiffness" of the mesh
+			 *   2. a weigh that depends on the distance to the vertex similar
+			 *      to the moving least squares. 
+			 * 
+			 *   Outdated:
+			 * 	 Currently we assign a weight of 1 / number of vertices to
 			 *   each vertex.  That represents a "density" related weight
 			 *   assuming the image has an area of 1.  This will give different
 			 *   results for square and non-square images.
@@ -104,12 +113,14 @@ public class ElasticMesh extends TransformMesh
 			 *   Should we use min( number of vertical, number of horizontal)^2
 			 *   instead?
 			 */
-			Tile t = pt.get( handle );
-			for ( PointMatch m : connectedHandles )
+			Tile t = pt.get( vertex );
+			for ( PointMatch m : connectedVertices )
 			{
 				Tile o = pt.get( m );
 				Point p2 = m.getP2();
 				Point p1 = new Point( p2.getW().clone() );
+				
+				w[ 1 ] = weigh( Point.squareDistance( vertex.getP1(), p2 ), alpha );
 				
 				/*
 				 * non weighted match
@@ -119,89 +130,23 @@ public class ElasticMesh extends TransformMesh
 				/*
 				 * weighted match
 				 */
-				t.addMatch( new PointMatch( p1, p2, w ) );
-				
+				t.addMatch( new PointMatch( p1, p2, w, 1.0f ) );				
 				t.addConnectedTile( o );
 			}
 		}
-		
-		//System.out.println( pt.size() );
 	}
 	
-	/**
-	 * What to use this method for:
-	 * 
-	 * If you want to add a PointMatch between two Tiles t and o do the
-	 * following.
-	 * Tile t is a tile in pt, Tile o is whatever you want it to be.  The
-	 * PointMatch has p1 in Tile t and p2 in Tile o.  To find Tile t being
-	 * closest to some world coordinate float[] (x,y) search pt with
-	 * findClosest(float[]).
-	 * 
-	 * Then say t.addMatch(PointMatch) and o.add(PointMatch.flip())
-	 */
-	synchronized public Tile findClosest( float[] there )
+	public ElasticMovingLeastSquaresMesh( int numX, float width, float height, Class< ? extends Model > modelClass, float alpha )
 	{
-		Set< PointMatch > s = pt.keySet();
-		
-		PointMatch closest = null;
-		float cd = Float.MAX_VALUE;
-		for ( PointMatch handle : s )
-		{
-			float[] here = handle.getP2().getW();
-			float dx = here[ 0 ] - there[ 0 ];
-			float dy = here[ 1 ] - there[ 1 ];
-			float d = dx * dx + dy * dy;
-			if ( d < cd )
-			{
-				cd = d;
-				closest = handle;
-			}
-		}
-		return pt.get( closest );
+		this( numX, numY( numX, width, height ), width, height, modelClass, alpha );
 	}
 	
-	/**
-	 * Add a PointMatch to all Tiles weighted by its distance to the
-	 * corresponding handle.  The distance weight is defined by
-	 * 1/(|m.p2.w - handle.p2.w|^2*alpha)
-	 * 
-	 * @param pm
-	 * @param alpha
-	 */
-	public void addMatchWeightedByDistance( PointMatch pm, float alpha )
-	{
-		Set< PointMatch > s = va.keySet();
-		float[] there = pm.getP2().getW();
-		
-		Tile c = findClosest( there );
-		
-		float[] oldWeights = pm.getWeights();
-		float[] weights = new float[ oldWeights.length + 1 ];
-		System.arraycopy( oldWeights, 0, weights, 0, oldWeights.length );
-		for ( PointMatch m : s )
-		{
-			float[] here = m.getP2().getW();
-			float dx = here[ 0 ] - there[ 0 ];
-			float dy = here[ 1 ] - there[ 1 ];
-			
-			// add a new weight to the existing weights
-			weights[ oldWeights.length ] = 1.0f / ( float )Math.pow( dx * dx + dy * dy, alpha );
-			
-			// add a new PointMatch using the same Points as pm
-			Tile t = pt.get( m );
-			if ( t == c )
-				t.addMatch( new PointMatch( pm.getP1(), pm.getP2(), weights, 1.0f ) );
-			else
-				t.addMatch( new PointMatch( pm.getP1(), pm.getP2(), weights, 0.0f ) );
-		}
-	}
 	
 	/**
 	 * Update all PointMatches in all tiles and estimate the average
 	 * displacement. 
 	 */
-	synchronized final private void update()
+	final private void update( float amount )
 	{
 		Set< PointMatch > s = va.keySet();
 		double cd = 0.0;
@@ -225,12 +170,24 @@ public class ElasticMesh extends TransformMesh
 	 * Update all PointMatches in all tiles and estimate the average
 	 * displacement by weight of the PointMatch. 
 	 */
-	synchronized final private void updateByStrength()
+	final public void updateByStrength( float amount )
 	{
 		Set< PointMatch > s = va.keySet();
 		
 		for ( PointMatch m : s )
-			pt.get( m ).updateByStrength();
+		{
+			Tile t = pt.get( m );
+			
+			/**
+			 * Update the location of the vertex
+			 */
+			m.getP2().apply( t.getModel(), amount );
+			
+			/**
+			 * Update the tile
+			 */
+			t.updateByStrength( amount );
+		}
 		
 		double cd = 0.0;
 		double min_d = Double.MAX_VALUE;
@@ -252,7 +209,7 @@ public class ElasticMesh extends TransformMesh
 	 * @param observer collecting the error after update
 	 * @throws NotEnoughDataPointsException
 	 */
-	synchronized void optimizeIteration( ErrorStatistic observer ) throws NotEnoughDataPointsException
+	public final void optimizeIteration( ErrorStatistic observer ) throws NotEnoughDataPointsException
 	{
 		Set< PointMatch > s = va.keySet();
 		
@@ -267,7 +224,7 @@ public class ElasticMesh extends TransformMesh
 			t.update();
 			
 			/**
-			 * Update the location of the handle
+			 * Update the location of the vertex
 			 */
 			m.getP2().apply( t.getModel() );
 			
@@ -280,12 +237,11 @@ public class ElasticMesh extends TransformMesh
 	}
 	
 	/**
-	 * Performs one optimization iteration and writes its error into the ErrorStatistics
+	 * Performs one optimization iteration.
 	 * 
-	 * @param observer collecting the error after update
 	 * @throws NotEnoughDataPointsException
 	 */
-	synchronized void optimizeIterationByStrength( ErrorStatistic observer ) throws NotEnoughDataPointsException
+	final public void optimizeIteration() throws NotEnoughDataPointsException
 	{
 		Set< PointMatch > s = va.keySet();
 		
@@ -295,16 +251,7 @@ public class ElasticMesh extends TransformMesh
 			if ( fixedTiles.contains( t ) ) continue;
 			
 			t.fitModel();
-			
-			/**
-			 * Update the location of the handle
-			 */
-			m.getP2().apply( t.getModel() );
 		}
-		
-		updateByStrength();
-		
-		observer.add( error );
 	}
 	
 	public void fixTile( Tile t )
@@ -385,17 +332,21 @@ public class ElasticMesh extends TransformMesh
 		
 		while ( i < maxIterations )  // do not run forever
 		{
-			optimizeIterationByStrength( observer );	
+			optimizeIteration();
+			updateByStrength( 0.75f );
+			observer.add( error );
 			
 			ipPlot.set(
 					( int )( i * ( float )ipPlot.getWidth() / ( float )maxIterations ),
 					//( int )( ( double )observer.values.get( observer.values.size() - 1 ) ),
-					( int )( 10 * ( double )observer.values.get( observer.values.size() - 1 ) ),
+					Math.min( ipPlot.getHeight() - 1, Math.max( 0, ipPlot.getHeight() / 2 - ( int )( Math.log( ( double )observer.values.get( observer.values.size() - 1 ) ) * 10 ) ) ),
 					//( int )( 10 * error ),
 					0 );
 			impPlot.updateAndDraw();
 			
-			if ( i >= maxPlateauwidth && error < maxError &&  Math.abs( observer.getWideSlope( maxPlateauwidth ) ) <= 0.0001 )
+			if ( i >= maxPlateauwidth && error < maxError &&
+					Math.abs( observer.getWideSlope( maxPlateauwidth ) ) <= 0.0001 &&
+					Math.abs( observer.getWideSlope( maxPlateauwidth / 2 ) ) <= 0.0001 )
 				break;
 			
 			++i;
