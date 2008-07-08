@@ -1,3 +1,22 @@
+/**
+ * License: GPL
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License 2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * 
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ *
+ */
 import ij.IJ;
 import ij.process.ImageProcessor;
 
@@ -13,7 +32,37 @@ import mpicbg.models.Point;
 import mpicbg.models.PointMatch;
 import mpicbg.models.NotEnoughDataPointsException;
 
-
+/**
+ * Trianguar transformation mesh.
+ * 
+ * See an example to find out how the mesh is constructed:
+ * 
+ * numX = 4; numY = 3:
+ * <pre>
+ * *---*---*---*
+ * |\ / \ / \ /|
+ * | *---*---* |
+ * |/ \ / \ / \|
+ * *---*---*---* 
+ * |\ / \ / \ /|
+ * | *---*---* |
+ * |/ \ / \ / \|
+ * *---*---*---* 
+ * </pre>
+ * 
+ * Each vertex is given as a PointMatch with p1 being the original point and p2
+ * being the transferred point.  Keep in mind that Points store local and world
+ * coordinates with local coordinates being constant and world coordinates
+ * being mutable.  That is typically p1.l = p1.w = p2.l while p2.w is the
+ * transferred location of the vertex.
+ * 
+ * Three adjacent vertices span a triangle.  All pixels inside a triangle will
+ * be transferred by a 2d affine transform that is defined by the three
+ * vertices.  Given the abovementioned definition of a vertex as PointMatch,
+ * this 2d affine transform is a forward transform (p1.l->p2.w). 
+ * 
+ * @version 0.2b
+ */
 public class TransformMesh
 {
 	final protected float width, height;
@@ -170,11 +219,31 @@ public class TransformMesh
 		}
 	}
 	
+	final static protected int numY(
+			final int numX,
+			final float width,
+			final float height )
+	{
+		final float dx = width / ( float )( numX - 1 );
+		final float dy = 2.0f * ( float )Math.sqrt(4.0f / 5.0f * dx * dx );
+		return ( int )Math.round( height / dy ) + 1;
+	}
+	
+	public TransformMesh(
+			final int numX,
+			final float width,
+			final float height )
+	{
+		this( numX, numY( numX, width, height ), width, height );
+	}
+	
 	/**
 	 * Add a triangle defined by 3 PointMatches that defines an
 	 * AffineTransform2D.
 	 * 
-	 * @param t 3 PointMatches (will not be copied, so do not reuse this list!)
+	 * @param t
+	 *            3 PointMatches (will not be copied, so do not reuse this
+	 *            list!)
 	 */
 	public void addTriangle( ArrayList< PointMatch > t )
 	{
