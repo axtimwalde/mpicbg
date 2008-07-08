@@ -207,7 +207,7 @@ public class Tile
 	 * Update average transfer error.
 	 *
 	 */
-	final public void updateByStrength()
+	final public void updateByStrength( float amount )
 	{
 		// tile center world coordinates
 		wc = model.apply( lc );
@@ -221,7 +221,7 @@ public class Tile
 			double sum_weight = 0.0;
 			for ( PointMatch match : matches )
 			{
-				match.applyByStrength( model );
+				match.applyByStrength( model, amount );
 				double dl = match.getDistance();
 				d += dl;
 				e += dl * dl * match.getWeight();
