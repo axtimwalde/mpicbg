@@ -186,10 +186,11 @@ public class PointMatch
 	 * location and the transferred one.
 	 * 
 	 * @param model
+	 * @param amount
 	 */
-	final public void applyByStrength( Model model )
+	final public void applyByStrength( Model model, float amount )
 	{
-		p1.apply( model, strength );
+		p1.apply( model, strength * amount );
 		distance = Point.distance( p1, p2 );
 	}
 	
