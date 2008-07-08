@@ -1,3 +1,22 @@
+/**
+ * License: GPL
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License 2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * 
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ *
+ */
 import ij.IJ;
 import ij.ImagePlus;
 import ij.WindowManager;
@@ -21,12 +40,18 @@ import java.util.Vector;
 
 public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotionListener, KeyListener
 {
-	// number of x-handles
+	// number of vertices in horizontal direction
 	private static int numX = 16;
-	// number of x-handles
-	private static int numY = 3;
 	// alpha [0 smooth, 1 less smooth ;)]
 	private static float alpha = 1.0f;
+	// local transformation model
+	final static String[] methods = new String[]{ "Translation", "Rigid", "Affine" };
+	final static Class< ? extends Model >[] modelClasses =
+		new Class[]{
+				TranslationModel2D.class,
+				RigidModel2D.class,
+				AffineModel2D.class };
+	private static int method = 1;
 	
 	ImagePlus imp;
 	ImageProcessor ip;
@@ -44,10 +69,11 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 	PointRoi handles;
 	Tile screen;
 	
-	protected ElasticMesh mesh;
+	protected ElasticMovingLeastSquaresMesh mesh;
 	
 	int targetIndex = -1;
 	
+	boolean pleaseOptimize;
 	boolean showMesh = false;
 	boolean showPointMatches = false;
 	boolean pleaseIllustrate = false;
@@ -58,16 +84,18 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 	{
 		public void run()
 		{
-			while ( !isInterrupted() && hooks.size() > 0 )
+			while ( !isInterrupted() )
 			{
 				try
 				{
 					//mesh.optimizeByWeight( Float.MAX_VALUE, 100 * mesh.numVertices(), mesh.numVertices() );
 					//mesh.optimize( Float.MAX_VALUE, 10000, 100 );
-					
-					mesh.optimizeByStrength( Float.MAX_VALUE, 10000, 100, ipPlot, impPlot );
-					pleaseIllustrate = false;
-					apply();
+					if ( pleaseOptimize && hooks.size() > 0 )
+					{
+						mesh.optimizeByStrength( Float.MAX_VALUE, 10000, 100, ipPlot, impPlot );
+						pleaseIllustrate = false;
+						apply();
+					}
 					synchronized ( this ){ wait(); }
 				}
 				catch ( NotEnoughDataPointsException ex ){ ex.printStackTrace( System.err ); }
@@ -111,10 +139,11 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 		ip = imp.getProcessor();
 		ipOrig = ip.duplicate();
 		
-		GenericDialog gd = new GenericDialog( "Grid Transform" );
-		gd.addNumericField( "handles_per_row :", numX, 0 );
+		GenericDialog gd = new GenericDialog( "Elastic Moving Least Squares Transform" );
+		gd.addNumericField( "Vertices_per_row :", numX, 0 );
 		//gd.addNumericField( "vertical_handles :", numY, 0 );
-		gd.addNumericField( "alpha :", alpha, 2 );
+		gd.addNumericField( "Alpha :", alpha, 2 );
+		gd.addChoice( "Local_transformation :", methods, methods[ 1 ] );
 		gd.showDialog();
 		
 		if (gd.wasCanceled()) return;
@@ -122,18 +151,13 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 		impPlot.show();
 		
 		numX = ( int )gd.getNextNumber();
-		//numY = ( int )gd.getNextNumber();
 		alpha = ( float )gd.getNextNumber();
-		float dx = ( float )imp.getWidth() / ( float )( numX - 1 );
-		float dy = 2.0f * ( float )Math.sqrt(4.0f / 5.0f * dx * dx );
-		//System.out.println( dy );
-		numY = Math.round( imp.getHeight() / dy ) + 1;
-		//System.out.println( numY );
+		
+		method = gd.getNextChoiceIndex();
+		Class< ? extends Model > modelClass = modelClasses[ method ];
 		
 		// intitialize the transform mesh
-		mesh = new ElasticMesh( numX, numY, imp.getWidth(), imp.getHeight() );		
-		
-		screen = new Tile( imp.getWidth(), imp.getHeight(), new RigidModel2D() );
+		mesh = new ElasticMovingLeastSquaresMesh( numX, imp.getWidth(), imp.getHeight(), modelClass, alpha );		
 		
 //		for ( int i = 0; i < 3; ++i )
 //		{
@@ -146,15 +170,15 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 			
 			hooks.add( new Point( new float[]{ ip.getWidth() / 4, ip.getHeight() / 4 } ) );
 			Point p2 = new Point( new float[]{ ip.getWidth() / 4, ip.getHeight() / 4 } ); // use the same local point for each handle (is this correct?)
-			mesh.addMatchWeightedByDistance( new PointMatch( p2, hooks.get( 0 ), 10f ), alpha );
+			mesh.addMatchWeightedByDistance( new PointMatch( p2, hooks.get( 0 ), 1f ), alpha );
 			
 			hooks.add( new Point( new float[]{ 3 * ip.getWidth() / 4, ip.getHeight() / 2 } ) );
 			p2 = new Point( new float[]{ 3 * ip.getWidth() / 4, ip.getHeight() / 2 } ); // use the same local point for each handle (is this correct?)
-			mesh.addMatchWeightedByDistance( new PointMatch( p2, hooks.get( 1 ), 10f ), alpha );
+			mesh.addMatchWeightedByDistance( new PointMatch( p2, hooks.get( 1 ), 1f ), alpha );
 			
 			hooks.add( new Point( new float[]{ ip.getWidth() / 4, 3 * ip.getHeight() / 4 } ) );
 			p2 = new Point( new float[]{ ip.getWidth() / 4, 3 * ip.getHeight() / 4 } ); // use the same local point for each handle (is this correct?)
-			mesh.addMatchWeightedByDistance( new PointMatch( p2, hooks.get( 2 ), 10f ), alpha );
+			mesh.addMatchWeightedByDistance( new PointMatch( p2, hooks.get( 2 ), 1f ), alpha );
 //		}
 		
 		handles = new PointRoi(
@@ -179,28 +203,31 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 	{
 		Shape shape;
 		Roi roi;
-		displayList.clear();
-		synchronized ( mesh )
+		synchronized ( displayList )
 		{
-			if ( showMesh )
+			displayList.clear();
+			synchronized ( mesh )
 			{
-				shape = mesh.illustrateMesh();
-				roi = new ShapeRoi( shape );
-				roi.setInstanceColor( Color.white );
-				displayList.addElement( roi );
+				if ( showMesh )
+				{
+					shape = mesh.illustrateMesh();
+					roi = new ShapeRoi( shape );
+					roi.setInstanceColor( Color.white );
+					displayList.addElement( roi );
+				}
+				if ( showPointMatches )
+				{
+					shape = mesh.illustratePointMatches();
+					roi = new ShapeRoi( shape );
+					roi.setInstanceColor( Color.green );
+					displayList.addElement( roi );
+					shape = mesh.illustratePointMatchDisplacements();
+					roi = new ShapeRoi( shape );
+					roi.setInstanceColor( Color.red );
+					displayList.addElement( roi );
+				}
+				imp.getCanvas().setDisplayList( displayList );
 			}
-			if ( showPointMatches )
-			{
-				shape = mesh.illustratePointMatches();
-				roi = new ShapeRoi( shape );
-				roi.setInstanceColor( Color.green );
-				displayList.addElement( roi );
-				shape = mesh.illustratePointMatchDisplacements();
-				roi = new ShapeRoi( shape );
-				roi.setInstanceColor( Color.red );
-				displayList.addElement( roi );
-			}
-			imp.getCanvas().setDisplayList( displayList );
 		}
 	}
 	
@@ -336,15 +363,17 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 				synchronized ( mesh )
 				{
 					Model m = mesh.findClosest( l ).getModel();
-					try { m.applyInverseInPlace( l ); }
+					try
+					{
+						m.applyInverseInPlace( l );
+						Point here = new Point( l );
+						Point there = new Point( l );
+						hooks.add( here );
+						here.apply( m );
+						mesh.addMatchWeightedByDistance( new PointMatch( there, here, 1f ), alpha );
+					}
 					catch ( NoninvertibleModelException x ){ x.printStackTrace(); }
-					Point hook = new Point( l );
-					hook.apply( m );
-					hooks.add( hook );
-				
-					mesh.addMatchWeightedByDistance( new PointMatch( new Point( new float[]{ xm, ym } ), hook, 10f ), alpha );
 				}
-				
 				updateRoi();
 			}
 		}
@@ -378,7 +407,11 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 					pleaseIllustrate = true;
 					ill.notify();
 				}
-			synchronized ( opt ){ opt.notify(); }
+			synchronized ( opt )
+			{
+				pleaseOptimize = true;
+				opt.notify();
+			}
 		}
 	}
 	
