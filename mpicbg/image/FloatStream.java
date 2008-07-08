@@ -11,27 +11,34 @@ package mpicbg.image;
  *   the Java programming language and we are full of hope to see that change
  *   in future versions of Java...
  *   
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Saalfeld <saalfeld@mpi-cbg.de>
  *
  */
-public class FloatStream extends Container
+public class FloatStream extends Stream
 {
-	float[] data;
+	final float[] data;
 	
-	FloatStream( PixelType type, int[] dim )
+	public FloatStream( final PixelType type, final int[] dim )
 	{
 		super( type, dim );
-		
-		int l = type.getNumChannels();
-		for ( int i = 0; i < dim.length; ++i )
-			l *= dim[ i ];
-		
-		data = new float[ l ];
+		data = new float[ numPixels ];
 	}
-	
-	FloatStream( PixelType type, int[] dim, double[] res )
+
+	public FloatStream( PixelType type, int[] dim, double[] res )
 	{
 		this( type, dim );
 		setRes( res );		
-	}	
+	}
+	
+	@Override
+	final public ConstantCursor createConstantCursor()
+	{
+		return new ConstantFloatCursor(dim.length);
+	}
+	
+	@Override
+	final public AccessStrategy createDirectAccessStrategy()
+	{
+		return new AccessStrategyFloatStream(this, null);
+	}
 }

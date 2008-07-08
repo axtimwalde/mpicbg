@@ -24,6 +24,8 @@ public abstract class Container
 	 */
 	Container( final PixelType type, final int[] dim )
 	{
+		assert dim.length > 0 : "Container(): Size of dim[] is " + dim.length;
+		
 		this.type = type;
 		this.dim = dim.clone();
 		res = new double[ dim.length ];
@@ -51,6 +53,22 @@ public abstract class Container
 		this( type, dim );
 		setRes( res );
 	}
+
+	/**
+	 * Creates a Constant Cursor of the same type and dimensionality as the container.
+	 * 
+	 * @return ConstantCursor
+	 */
+	abstract public ConstantCursor createConstantCursor();
+	
+	/**
+	 * Creates the Direct Access Strategy for this container. It is
+	 * used by iterators as default and can read and write into the Container.
+	 * 
+	 * 
+	 * @return - the Access Strategy
+	 */
+	abstract public AccessStrategy createDirectAccessStrategy();
 	
 	/**
 	 * Get the pixel type.
@@ -120,6 +138,8 @@ public abstract class Container
 	 */
 	final public void setRes( final double[] res )
 	{
+		assert res.length > 0 : "Container.setRes(): Size of res[] is " + dim.length;
+
 		final int l = Math.min( dim.length, res.length );
 		for ( int i = 0; i < l; ++i )
 		{

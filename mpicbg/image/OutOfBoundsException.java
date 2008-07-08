@@ -7,6 +7,11 @@ package mpicbg.image;
  */
 public class OutOfBoundsException extends RuntimeException
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -4888331272088044246L;
+
 	public OutOfBoundsException()
 	{
 		super( "Cursor is outside the PixelContainer." );
