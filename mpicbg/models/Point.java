@@ -1,17 +1,17 @@
 package mpicbg.models;
 
 /**
- * a generic n-dimensional point location
+ * A generic n-dimensional point.
  * 
- * keeps local coordinates final, application of a model changes the world
- * coordinates of the point
+ * Local coordinates are thought to be immutable, application of a model
+ * changes the world coordinates of the point.
  */
 public class Point
 {
 	/**
 	 * World coordinates
 	 */
-	private float[] w;
+	final private float[] w;
 	final public float[] getW() { return w; }
 	
 	/**
@@ -39,7 +39,6 @@ public class Point
 	 * 
 	 * Transfers the local coordinates to new world coordinates.
 	 */
-	
 	final public void apply( Model model )
 	{
 		System.arraycopy( l, 0, w, 0, l.length );
@@ -51,23 +50,32 @@ public class Point
 	 * 
 	 * transfers the local coordinates to new world coordinates
 	 */
-	final public void apply( Model model, float weight )
+	final public void apply( Model model, float amount )
 	{
-		weight = Math.max( 0.0f, Math.min( 1.0f, weight ) );
 		float[] a = model.apply( l );
-		float weight1 = 1.0f - weight;
 		for ( int i = 0; i < a.length; ++i )
-			w[ i ] = weight * a[ i ] + weight1 * w[ i ];
+			w[ i ] += amount * ( a[ i ] - w[ i ] );
 	}
 	
 	/**
-	 * estimate the Euclidean distance of two points in the world
+	 * Apply the inverse of a model to the point.
+	 * 
+	 * Transfers the local coordinates to new world coordinates.
+	 */
+	final public void applyInverse( Model model ) throws NoninvertibleModelException
+	{
+		System.arraycopy( l, 0, w, 0, l.length );
+		model.applyInverseInPlace( w );
+	}
+	
+	/**
+	 * Estimate the square distance of two points in the world
 	 *  
 	 * @param p1
 	 * @param p2
-	 * @return Euclidean distance
+	 * @return square distance
 	 */
-	final public static float distance( Point p1, Point p2 )
+	final static public float squareDistance( Point p1, Point p2 )
 	{
 		double sum = 0.0;
 		for ( int i = 0; i < p1.w.length; ++i )
@@ -75,7 +83,19 @@ public class Point
 			double d = p1.w[ i ] - p2.w[ i ];
 			sum += d * d;
 		}
-		return ( float )Math.sqrt( sum );
+		return ( float )sum;
+	}
+	
+	/**
+	 * Estimate the Euclidean distance of two points in the world
+	 *  
+	 * @param p1
+	 * @param p2
+	 * @return Euclidean distance
+	 */
+	final static public float distance( Point p1, Point p2 )
+	{
+		return ( float )Math.sqrt( squareDistance( p1, p2 ) );
 	}
 	
 	/**
@@ -84,7 +104,8 @@ public class Point
 	public Point clone()
 	{
 		Point p = new Point( l.clone() );
-		p.w = w.clone();
+		for ( int i = 0; i < w.length; ++i )
+			p.w[ i ] = w[ i ];
 		return p;
 	}
 }
