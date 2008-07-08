@@ -13,13 +13,36 @@ abstract public class Cursor
 {
 	final Container container;
 	final Interpolator interpolator;
+	final AccessStrategy accessStrategy;
 	
-	public Cursor( Container c, Interpolator ip )
+	/**
+	 * Constructs the cursor.
+	 * 
+	 * @param c - The Container to work on
+	 * @param ip - The Interpolator - still unused
+	 * @param as - A prototype for the AccessStrategy which is cloned in order to give this cursor as 
+	 * final instance to the AccessStrategy to be as fast as possible.
+	 */
+	public Cursor( Container c, Interpolator ip, AccessStrategy as )
 	{
 		container = c;
 		interpolator = ip;
+		
+		if ( as != null)
+			accessStrategy = as.clone(this);
+		else // for the ConstantCursor's
+			accessStrategy = null;
 	}
 	
+	/**
+	 * Returns the interpolator used by this Cursor
+	 * @return Interpolator
+	 */
+	public Interpolator getInterpolator()
+	{
+		return interpolator;
+	}
+		
 	/**
 	 * Returns if the cursor is inside the image
 	 * @return boolean

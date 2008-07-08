@@ -9,11 +9,11 @@ public interface LocalizableFactory< F extends Localizable >
 	 * Create a RandomAccessible cursor at the floor location of the
 	 * implementing cursor.
 	 */
-	public RandomAccessible toRandomAccessible();
+	public RandomAccess toRandomAccessible();
 	
 	/**
 	 * Create a IteratableByDimension cursor at the floor location of the
 	 * implementing cursor.
 	 */
-	public IteratableByDimension toIteratableByDimension();
+	public IteratorByDimension toIteratableByDimension();
 }
