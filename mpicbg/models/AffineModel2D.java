@@ -67,7 +67,7 @@ public class AffineModel2D extends Model
 	@Override
 	public void fit( Collection< PointMatch > matches ) throws NotEnoughDataPointsException
 	{
-		if ( matches.size() < MIN_SET_SIZE ) throw new NotEnoughDataPointsException( matches.size() + " correspondences are not enough to estimate a 2d affine model, at least " + MIN_SET_SIZE + " correspondences required." );
+		if ( matches.size() < MIN_SET_SIZE ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d affine model, at least " + MIN_SET_SIZE + " data points required." );
 		
 		// center of mass:
 		float pcx = 0, pcy = 0;
@@ -138,14 +138,14 @@ public class AffineModel2D extends Model
 	@Override
 	public String toString()
 	{
-		return ( "[3,3](" + affine + ") " + error );
+		return ( "[3,3](" + affine + ") " + cost );
 	}
 	
 	public AffineModel2D clone()
 	{
 		AffineModel2D trm = new AffineModel2D();
 		trm.affine.setTransform( affine );
-		trm.error = error;
+		trm.cost = cost;
 		return trm;
 	}
 

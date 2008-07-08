@@ -54,7 +54,7 @@ import java.util.Collection;
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  * 
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.1b
+ * @version 0.2b
  * 
  */
 public abstract class Model {
@@ -69,12 +69,23 @@ public abstract class Model {
 
 	
 	/**
-	 * error depends on what kind of algorithm is running
-	 * small error is better than large error
+	 * The cost depends on what kind of algorithm is running.  It is always
+	 * true that a smaller cost is better than large cost
 	 */
-	protected double error = Double.MAX_VALUE;
-	final public double getError(){ return error; }
-	final public void setError( double e ){ error = e; }
+	protected double cost = Double.MAX_VALUE;
+	final public double getCost(){ return cost; }
+	final public void setCost( double c ){ cost = c; }
+
+	/**
+	 * @deprecated The term Error may be missleading---use {@link #getCost()} instead
+	 */
+	@Deprecated
+	final public double getError(){ return getCost(); }
+	/**
+	 * @deprecated The term Error may be missleading---use {@link #getCost()} instead
+	 */
+	@Deprecated
+	final public void setError( double e ){ setCost( e ); }
 
 	/**
 	 * less than operater to make the models comparable, returns false for error < 0
@@ -84,8 +95,8 @@ public abstract class Model {
 	 */
 	public boolean betterThan( Model m )
 	{
-		if ( error < 0 ) return false;
-		return error < m.error;
+		if ( cost < 0 ) return false;
+		return cost < m.cost;
 	}
 
 	
@@ -183,7 +194,7 @@ public abstract class Model {
 		}
 		
 		float ir = ( float )inliers.size() / ( float )candidates.size();
-		model.error = Math.max( 0.0, Math.min( 1.0, 1.0 - ir ) );
+		model.cost = Math.max( 0.0, Math.min( 1.0, 1.0 - ir ) );
 		
 		return ( ir > min_inlier_ratio );
 	}
@@ -243,7 +254,7 @@ public abstract class Model {
 			//System.out.println( ( num_inliers - inliers.size() ) + " candidates with e > " + t + " removed by iterative robust regression." );
 			//System.out.println( inliers.size() + " inliers remaining." );
 			
-			model.error = observer.mean;
+			model.cost = observer.mean;
 		}
 		while ( num_inliers > inliers.size() );
 		

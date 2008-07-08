@@ -52,33 +52,39 @@ public class TranslationModel2D extends AffineModel2D {
 	@Override
 	public String toString()
 	{
-		return ( "[3,3](" + affine + ") " + error );
+		return ( "[3,3](" + affine + ") " + cost );
 	}
 
-	public void fit( Collection< PointMatch > matches )
+	final public void fit( Collection< PointMatch > matches ) throws NotEnoughDataPointsException
 	{
+		if ( matches.size() < MIN_SET_SIZE ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d translation model, at least " + MIN_SET_SIZE + " data points required." );
+		
 		// center of mass:
-		float xo1 = 0, yo1 = 0;
-		float xo2 = 0, yo2 = 0;
-		int length = matches.size();
+		float pcx = 0, pcy = 0;
+		float qcx = 0, qcy = 0;
+		
+		double ws = 0.0;
 		
 		for ( PointMatch m : matches )
 		{
-			float[] m_p1 = m.getP1().getL(); 
-			float[] m_p2 = m.getP2().getW(); 
+			float[] p = m.getP1().getL(); 
+			float[] q = m.getP2().getW(); 
 			
-			xo1 += m_p1[ 0 ];
-			yo1 += m_p1[ 1 ];
-			xo2 += m_p2[ 0 ];
-			yo2 += m_p2[ 1 ];
+			float w = m.getWeight();
+			ws += w;
+			
+			pcx += w * p[ 0 ];
+			pcy += w * p[ 1 ];
+			qcx += w * q[ 0 ];
+			qcy += w * q[ 1 ];
 		}
-		xo1 /= length;
-		yo1 /= length;
-		xo2 /= length;
-		yo2 /= length;
+		pcx /= ws;
+		pcy /= ws;
+		qcx /= ws;
+		qcy /= ws;
 
-		float dx = xo1 - xo2; // reversed, because the second will be moved relative to the first
-		float dy = yo1 - yo2;
+		float dx = pcx - qcx;
+		float dy = pcy - qcy;
 		
 		affine.setToIdentity();
 		affine.translate( -dx, -dy );
@@ -126,7 +132,7 @@ public class TranslationModel2D extends AffineModel2D {
 	{
 		TranslationModel2D tm = new TranslationModel2D();
 		tm.affine.setTransform( affine );
-		tm.error = error;
+		tm.cost = cost;
 		return tm;
 	}
 	
@@ -134,7 +140,7 @@ public class TranslationModel2D extends AffineModel2D {
 	{
 		RigidModel2D trm = new RigidModel2D();
 		trm.getAffine().setTransform( affine );
-		trm.error = error;
+		trm.cost = cost;
 		return trm;
 	}
 }

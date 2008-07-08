@@ -12,12 +12,12 @@ public class RigidModel2D extends AffineModel2D {
 	@Override
 	public String toString()
 	{
-		return ( "[3,3](" + affine + ") " + error );
+		return ( "[3,3](" + affine + ") " + cost );
 	}
 
-	public void fit( Collection< PointMatch > matches ) throws NotEnoughDataPointsException
+	final public void fit( Collection< PointMatch > matches ) throws NotEnoughDataPointsException
 	{
-		if ( matches.size() < MIN_SET_SIZE ) throw new NotEnoughDataPointsException( matches.size() + " correspondences are not enough to estimate a 2d rigid model, at least " + MIN_SET_SIZE + " correspondences required." );
+		if ( matches.size() < MIN_SET_SIZE ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d rigid model, at least " + MIN_SET_SIZE + " data points required." );
 		
 		// Implementing Johannes Schindelin's squared error minimization formula
 		// tan(angle) = Sum(x1*y1 + x2y2) / Sum(x1*y2 - x2*y1)
@@ -27,7 +27,6 @@ public class RigidModel2D extends AffineModel2D {
 		float qcx = 0, qcy = 0;
 		
 		double ws = 0.0;
-		//int length = matches.size();
 		
 		for ( PointMatch m : matches )
 		{
@@ -47,7 +46,7 @@ public class RigidModel2D extends AffineModel2D {
 		qcx /= ws;
 		qcy /= ws;
 
-		float dx = pcx - qcx; // reversed, because the second will be moved relative to the first
+		float dx = pcx - qcx;
 		float dy = pcy - qcy;
 		float sum1 = 0, sum2 = 0;
 		float x1, y1, x2, y2;
@@ -62,7 +61,7 @@ public class RigidModel2D extends AffineModel2D {
 			y1 = p[ 1 ] - pcy; // x2
 			x2 = q[ 0 ] - qcx + dx; // y1
 			y2 = q[ 1 ] - qcy + dy; // y2
-			sum1 += w * ( x1 * y2 - y1 * x2 ); //   x1 * y2 - x2 * y1 // assuming p1 is x1,x2, and p2 is y1,y2
+			sum1 += w * ( x1 * y2 - y1 * x2 ); //   x1 * y2 - x2 * y1 // assuming p1 is x1,x2 and p2 is y1,y2
 			sum2 += w * ( x1 * x2 + y1 * y2 ); //   x1 * y1 + x2 * y2
 		}
 		float angle = ( float )Math.atan2( -sum1, sum2 );
@@ -137,7 +136,7 @@ public class RigidModel2D extends AffineModel2D {
 	{
 		RigidModel2D trm = new RigidModel2D();
 		trm.affine.setTransform( affine );
-		trm.error = error;
+		trm.cost = cost;
 		return trm;
 	}
 

@@ -144,14 +144,14 @@ public class HomographyModel2D extends Model
 		HomographyModel2D trm = new HomographyModel2D();
 		trm.a = ( Matrix )a.clone();
 		trm.a_inverse = ( Matrix )a_inverse.clone();
-		trm.error = error;
+		trm.cost = cost;
 		return trm;
 	}
 
 	@Override
 	public void fit( Collection< PointMatch > matches ) throws NotEnoughDataPointsException
 	{
-		if ( matches.size() < MIN_SET_SIZE ) throw new NotEnoughDataPointsException( matches.size() + " correspondences are not enough to estimate a 2d homography model, at least " + MIN_SET_SIZE + " correspondences required." );
+		if ( matches.size() < MIN_SET_SIZE ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d homography model, at least " + MIN_SET_SIZE + " data points required." );
 		
 		// Having a minimal set of data points, the homography can be estimated
 		// exactly in a direct manner.
