@@ -2,7 +2,8 @@ package mpicbg.models;
 
 import java.util.Collection;
 
-public class TranslationModel2D extends AffineModel2D {
+public class TranslationModel2D extends AffineModel2D
+{
 
 	static final protected int MIN_SET_SIZE = 1;
 	

@@ -57,7 +57,8 @@ import java.util.Collection;
  * @version 0.2b
  * 
  */
-public abstract class Model {
+public abstract class Model
+{
 	
 	// minimal number of point correspondences required to solve the model
 	abstract public int getMinSetSize();
