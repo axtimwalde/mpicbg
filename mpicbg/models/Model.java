@@ -1,3 +1,22 @@
+/**
+ * License: GPL
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License 2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * 
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ *
+ */
 package mpicbg.models;
 
 import java.util.ArrayList;
@@ -7,7 +26,7 @@ import java.util.Collection;
 
 /**
  * Abstract class for arbitrary transformation models to be applied
- * to points in n-dimensional space.
+ * to {@link Point Points} in n-dimensional space.
  * 
  * Model: R^n --> R^n 
  * 
@@ -38,26 +57,10 @@ import java.util.Collection;
  * }
  * </pre>
  * 
- * License: GPL
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License 2
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.2b
  * 
  */
-public abstract class Model
+public abstract class Model implements CoordinateTransform
 {
 	
 	// minimal number of point correspondences required to solve the model
@@ -100,41 +103,6 @@ public abstract class Model
 		return cost < m.cost;
 	}
 
-	
-	/**
-	 * apply the model to a point location
-	 * 
-	 * @param point
-	 * @return transformed point
-	 */
-	abstract public float[] apply( float[] point );
-
-	
-	/**
-	 * apply the model to a point location
-	 * 
-	 * @param point
-	 */
-	abstract public void applyInPlace( float[] point );
-
-	
-	/**
-	 * apply the inverse of the model to a point location
-	 * 
-	 * @param point
-	 * @return transformed point
-	 */
-	abstract public float[] applyInverse( float[] point ) throws NoninvertibleModelException;
-
-	
-	/**
-	 * apply the inverse of the model to a point location
-	 * 
-	 * @param point
-	 */
-	abstract public void applyInverseInPlace( float[] point ) throws NoninvertibleModelException;
-	
-		
 	/**
 	 * randomly change the model a bit
 	 * 
@@ -152,7 +120,7 @@ public abstract class Model
 
 	
 	/**
-	 * Fit the model to a set of data points minimizing the global
+	 * Fit the {@link Model} to a set of data points minimizing the global
 	 * transfer error.  This is assumed to be implemented as a least squares
 	 * minimization.  Use
 	 * {@link #ransac(Class, List, Collection, int, double, double) ransac}
@@ -168,7 +136,7 @@ public abstract class Model
 
 	
 	/**
-	 * Test the model for a set of point correspondence candidates.
+	 * Test the {@link Model} for a set of point correspondence candidates.
 	 * Return true if the number of inliers / number of candidates is larger
 	 * than or equal to min_inlier_ratio, otherwise false.
 	 * 
@@ -202,26 +170,27 @@ public abstract class Model
 	
 	
 	/**
-	 * Estimate a model and filter potential outliers by robust iterative regression.
+	 * Estimate a {@link Model} and filter potential outliers by robust
+	 * iterative regression.
 	 * 
 	 * This method performs well on data sets with low amount of outliers.  If
 	 * you have many outliers, you can filter those with a `tolerant' RANSAC
 	 * first as done in {@link #filterRansac() filterRansac}.
 	 * 
-	 * @param modelType Class of the model to be estimated
+	 * @param modelClass Class of the model to be estimated
 	 * @param candidates Candidate data points eventually inluding some outliers
 	 * @param inliers Remaining after the robust regression filter
 	 * 
 	 */
 	final static public < M extends Model >M filter(
-			Class< M > modelType,
+			Class< M > modelClass,
 			Collection< PointMatch > candidates,
 			Collection< PointMatch > inliers ) throws NotEnoughDataPointsException
 	{
 		M model;
 		try
 		{
-			model = modelType.newInstance();
+			model = modelClass.newInstance();
 		}
 		catch ( Exception e )
 		{
@@ -266,8 +235,8 @@ public abstract class Model
 	
 	
 	/**
-	 * Estimate a model from a set with many outliers by first filtering the
-	 * worst outliers with
+	 * Estimate a {@link Model} from a set with many outliers by first
+	 * filtering the worst outliers with
 	 * {@link #ransac(Class, List, Collection, int, double, double) ransac}
 	 * \citet[{FischlerB81} tand filter potential outliers by robust iterative regression.
 	 * 
@@ -275,7 +244,7 @@ public abstract class Model
 	 * you have many outliers, you can filter those with a `tolerant' RANSAC
 	 * first as done in {@link #filterRansac() filterRansac}.
 	 * 
-	 * @param modelType Class of the model to be estimated
+	 * @param modelClass Class of the model to be estimated
 	 * @param candidates Candidate data points inluding (many) outliers
 	 * @param inliers Remaining candidates after RANSAC
 	 * @param iterations
@@ -283,9 +252,10 @@ public abstract class Model
 	 * @param min_inlier_ratio minimal number of inliers to number of
 	 *   candidates
 	 * 
+	 * @return an instance of 
 	 */
 	final static public < M extends Model >M ransac(
-			Class< M > modelType,
+			Class< M > modelClass,
 			List< PointMatch > candidates,
 			Collection< PointMatch > inliers,
 			int iterations,
@@ -295,7 +265,7 @@ public abstract class Model
 		M model;
 		try
 		{
-			model = modelType.newInstance();
+			model = modelClass.newInstance();
 		}
 		catch ( Exception e )
 		{
@@ -332,7 +302,7 @@ public abstract class Model
 			M m;
 			try
 			{
-				m = modelType.newInstance();
+				m = modelClass.newInstance();
 			}
 			catch ( Exception e )
 			{

@@ -83,14 +83,14 @@ public class Point
 	}
 	
 	/**
-	 * Apply the inverse of a {@link Model} to the {@link Point}.
+	 * Apply the inverse of a {@link InvertibleModel} to the {@link Point}.
 	 * 
 	 * Transfers the {@link #l local coordinates} to new
 	 * {@link #w world coordinates}.
 	 * 
 	 * @param model
 	 */
-	final public void applyInverse( Model model ) throws NoninvertibleModelException
+	final public void applyInverse( InvertibleModel model ) throws NoninvertibleModelException
 	{
 		System.arraycopy( l, 0, w, 0, l.length );
 		model.applyInverseInPlace( w );

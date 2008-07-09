@@ -371,7 +371,7 @@ A:		for ( Tile tile : tiles )
 	 */
 	final public boolean isInside( float[] point ) throws Exception
 	{
-		float[] local = model.applyInverse( point );
+		float[] local = ( ( InvertibleModel )model ).applyInverse( point );
 		return (
 				local[ 0 ] >= 0.0f && local[ 0 ] < width &&
 				local[ 1 ] >= 0.0f && local[ 1 ] < height );

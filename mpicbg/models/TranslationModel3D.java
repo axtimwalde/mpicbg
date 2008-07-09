@@ -21,7 +21,7 @@ package mpicbg.models;
 
 import java.util.Collection;
 
-public class TranslationModel3D extends Model
+public class TranslationModel3D extends InvertibleModel
 {
 	static final protected int MIN_SET_SIZE = 1;
 	final protected float[] translation = new float[ 3 ];
@@ -30,7 +30,7 @@ public class TranslationModel3D extends Model
 	@Override
 	final public int getMinSetSize(){ return MIN_SET_SIZE; }
 
-	@Override
+	//@Override
 	public float[] apply( float[] point )
 	{
 		assert point.length == 3 : "3d translations can be applied to 3d points only.";
@@ -41,7 +41,7 @@ public class TranslationModel3D extends Model
 			point[ 2 ] + translation[ 2 ] };
 	}
 	
-	@Override
+	//@Override
 	public void applyInPlace( float[] point )
 	{
 		assert point.length == 3 : "3d translations can be applied to 3d points only.";
@@ -51,7 +51,7 @@ public class TranslationModel3D extends Model
 		point[ 2 ] += translation[ 2 ];
 	}
 	
-	@Override
+	//@Override
 	public float[] applyInverse( float[] point )
 	{
 		assert point.length == 3 : "3d translations can be applied to 3d points only.";
@@ -62,7 +62,7 @@ public class TranslationModel3D extends Model
 				point[ 2 ] - translation[ 2 ] };
 	}
 
-	@Override
+	//@Override
 	public void applyInverseInPlace( float[] point )
 	{
 		assert point.length == 3 : "3d translations can be applied to 3d points only.";
