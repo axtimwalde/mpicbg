@@ -23,6 +23,8 @@ public class AffineModel2D extends Model
 	@Override
 	public float[] apply( float[] point )
 	{
+		assert point.length == 2 : "2d affine transformations can be applied to 2d points only.";
+		
 		float[] transformed = new float[ 2 ];
 		affine.transform( point, 0, transformed, 0, 1 );
 		return transformed;
@@ -32,6 +34,8 @@ public class AffineModel2D extends Model
 	@Override
 	public void applyInPlace( float[] point )
 	{
+		assert point.length == 2 : "2d affine transformations can be applied to 2d points only.";
+		
 		affine.transform( point, 0, point, 0, 1 );
 	}
 	
@@ -39,6 +43,8 @@ public class AffineModel2D extends Model
 	@Override
 	public float[] applyInverse( float[] point ) throws NoninvertibleModelException
 	{
+		assert point.length == 2 : "2d affine transformations can be applied to 2d points only.";
+		
 		// the brilliant java.awt.geom.AffineTransform implements transform for float[] but inverseTransform for double[] only...
 		double[] double_point = new double[]{ point[ 0 ], point[ 1 ] };
 		double[] transformed = new double[ 2 ];
@@ -59,6 +65,8 @@ public class AffineModel2D extends Model
 	@Override
 	public void applyInverseInPlace( float[] point ) throws NoninvertibleModelException
 	{
+		assert point.length == 2 : "2d affine transformations can be applied to 2d points only.";
+		
 		float[] temp_point = applyInverse( point );
 		point[ 0 ] = temp_point[ 0 ];
 		point[ 1 ] = temp_point[ 1 ];
@@ -132,7 +140,7 @@ public class AffineModel2D extends Model
 	@Override
 	public void shake( Collection< PointMatch > matches, float scale, float[] center )
 	{
-		// TODO Auto-generated method stub
+		// TODO If you ever need it, please implement it...
 	}
 
 	@Override

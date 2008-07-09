@@ -31,6 +31,8 @@ import java.text.DecimalFormatSymbols;
  * 
  * Add all tiles that build a common interconnectivity graph to one
  * configuration, fix at least one of the tiles and optimize the configuration.
+ * 
+ * @version 0.2b
  *
  */
 public class TileConfiguration

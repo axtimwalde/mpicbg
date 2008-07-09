@@ -15,10 +15,7 @@ public class HomographyModel2D extends Model
 	
 	private Matrix getInverse( Matrix m )
 	{
-		double[][] b = new double[][]{
-			new double[ 3 ],
-			new double[ 3 ],
-			new double[ 3 ]	};
+		double[][] b = new double[ 3 ][ 3 ];
 		
 		double[][] c = m.getArray();
 		
@@ -80,10 +77,7 @@ public class HomographyModel2D extends Model
 		
 		double s = ( x2 - x3 ) * ( y4 - y3 ) - ( x4 - x3 ) * ( y2 - y3 );
 		
-		double[][] b = new double[][]{
-				new double[ 3 ],
-				new double[ 3 ],
-				new double[ 3 ]	};
+		double[][] b = new double[ 3 ][ 3 ];
 
 		b[ 0 ][ 2 ] = ( ( x1 - x2 + x3 - x4 ) * ( y4 - y3 ) - ( y1 - y2 + y3 - y4 ) * ( x4 - x3 ) ) / s;
 		b[ 1 ][ 2 ] = ( ( y1 - y2 + y3 - y4 ) * ( x2 - x3 ) - ( x1 - x2 + x3 - x4 ) * ( y2 - y3 ) ) / s;
@@ -101,6 +95,8 @@ public class HomographyModel2D extends Model
 	@Override
 	public float[] apply( float[] point )
 	{
+		assert point.length == 2 : "2d homographies can be applied to 2d points only.";
+		
 		float[] t = point.clone();
 		applyInPlace( t );
 		return t;
@@ -109,6 +105,8 @@ public class HomographyModel2D extends Model
 	@Override
 	public void applyInPlace( float[] point )
 	{
+		assert point.length == 2 : "2d homographies can be applied to 2d points only.";
+		
 		double h[][] = a.getArray();
 		double s = h[ 0 ][ 2 ] * point[ 0 ] + h[ 1 ][ 2 ] * point[ 1 ] + h[ 2 ][ 2 ];
 		double t0 = h[ 0 ][ 0 ] * point[ 0 ] + h[ 1 ][ 0 ] * point[ 1 ] + h[ 2 ][ 0 ];
@@ -121,6 +119,8 @@ public class HomographyModel2D extends Model
 	@Override
 	public float[] applyInverse( float[] point ) throws NoninvertibleModelException
 	{
+		assert point.length == 2 : "2d homographies can be applied to 2d points only.";
+		
 		float[] t = point.clone();
 		applyInPlace( t );
 		return null;
@@ -129,6 +129,8 @@ public class HomographyModel2D extends Model
 	@Override
 	public void applyInverseInPlace( float[] point ) throws NoninvertibleModelException
 	{
+		assert point.length == 2 : "2d homographies can be applied to 2d points only.";
+		
 		double h[][] = a_inverse.getArray();
 		double s = h[ 0 ][ 2 ] * point[ 0 ] + h[ 1 ][ 2 ] * point[ 1 ] + h[ 2 ][ 2 ];
 		double t0 = h[ 0 ][ 0 ] * point[ 0 ] + h[ 1 ][ 0 ] * point[ 1 ] + h[ 2 ][ 0 ];
@@ -181,8 +183,7 @@ public class HomographyModel2D extends Model
 	@Override
 	public void shake( Collection< PointMatch > matches, float scale, float[] center )
 	{
-		// TODO Auto-generated method stub
-
+		// TODO If you ever need it, please implement it...
 	}
 
 	@Override

@@ -1,3 +1,22 @@
+/**
+ * License: GPL
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License 2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * 
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ *
+ */
 package mpicbg.models;
 
 import java.util.Collection;
@@ -6,6 +25,7 @@ public class TranslationModel3D extends Model
 {
 	static final protected int MIN_SET_SIZE = 1;
 	final protected float[] translation = new float[ 3 ];
+	public float[] getTranslation(){ return translation; }
 	
 	@Override
 	final public int getMinSetSize(){ return MIN_SET_SIZE; }
@@ -13,7 +33,7 @@ public class TranslationModel3D extends Model
 	@Override
 	public float[] apply( float[] point )
 	{
-		assert point.length == 3 : "3d translations can be applied to 3d points only";
+		assert point.length == 3 : "3d translations can be applied to 3d points only.";
 		
 		return new float[]{
 			point[ 0 ] + translation[ 0 ],
@@ -24,6 +44,8 @@ public class TranslationModel3D extends Model
 	@Override
 	public void applyInPlace( float[] point )
 	{
+		assert point.length == 3 : "3d translations can be applied to 3d points only.";
+		
 		point[ 0 ] += translation[ 0 ];
 		point[ 1 ] += translation[ 1 ];
 		point[ 2 ] += translation[ 2 ];
@@ -32,6 +54,8 @@ public class TranslationModel3D extends Model
 	@Override
 	public float[] applyInverse( float[] point )
 	{
+		assert point.length == 3 : "3d translations can be applied to 3d points only.";
+		
 		return new float[]{
 				point[ 0 ] - translation[ 0 ],
 				point[ 1 ] - translation[ 1 ],
@@ -41,6 +65,8 @@ public class TranslationModel3D extends Model
 	@Override
 	public void applyInverseInPlace( float[] point )
 	{
+		assert point.length == 3 : "3d translations can be applied to 3d points only.";
+		
 		point[ 0 ] -= translation[ 0 ];
 		point[ 1 ] -= translation[ 1 ];
 		point[ 2 ] -= translation[ 2 ];
@@ -105,7 +131,7 @@ public class TranslationModel3D extends Model
 			float scale,
 			float[] center )
 	{
-		// TODO If you ever need it, implement it...
+		// TODO If you ever need it, please implement it...
 	}
 
 	public TranslationModel3D clone()
