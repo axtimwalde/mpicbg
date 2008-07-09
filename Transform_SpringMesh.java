@@ -57,6 +57,7 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 	boolean pleaseOptimize = false;
 	boolean pleaseIllustrate = false;
 	boolean showMesh = false;
+	boolean showSprings = false;
 	
 	final Vector< Roi > displayList = new Vector< Roi >();
 	
@@ -68,7 +69,6 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 			{
 				try
 				{
-					//if ( pleaseOptimize && hooks.size() > 0 )
 					if ( pleaseOptimize )
 					{
 						mesh.optimize( Float.MAX_VALUE, 10000, 100, imp );
@@ -79,7 +79,6 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 				}
 				catch ( NotEnoughDataPointsException ex ){ ex.printStackTrace( System.err ); }
 				catch ( InterruptedException e){ Thread.currentThread().interrupt(); }
-				//catch ( Throwable t ){ t.printStackTrace(); }
 			}
 		}
 	}
@@ -173,10 +172,16 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 			displayList.clear();
 			synchronized ( mesh )
 			{
+				if ( showSprings )
+				{
+					shape = mesh.illustrateSprings();
+					roi = new ShapeRoi( shape );
+					roi.setInstanceColor( Color.red );
+					displayList.addElement( roi );
+				}
 				if ( showMesh )
 				{
 					shape = mesh.illustrateMesh();
-					//shape = mesh.illustrateSprings();
 					roi = new ShapeRoi( shape );
 					roi.setInstanceColor( Color.white );
 					displayList.addElement( roi );
@@ -231,10 +236,13 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 				imp.setProcessor( null, ipOrig );
 			}
 		}
-		else if ( e.getKeyCode() == KeyEvent.VK_Y )
+		else if (
+				e.getKeyCode() == KeyEvent.VK_Y ||
+				e.getKeyCode() == KeyEvent.VK_U )
 		{
-			showMesh = !showMesh;
-			if ( showMesh )
+			if ( e.getKeyCode() == KeyEvent.VK_Y ) showMesh = !showMesh;
+			if ( e.getKeyCode() == KeyEvent.VK_U ) showSprings = !showSprings;
+			if ( showMesh || showSprings )
 			{
 				synchronized ( ill )
 				{
@@ -294,31 +302,17 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 					Point p = new Point( l );
 					hooks.add( p );
 					//mesh.addVertex( new Vertex( p ), 1 );
-					mesh.addVertexWeightedByDistance( new Vertex( p ), 1, 1.0f );
+					mesh.addVertexWeightedByDistance( new Vertex( p ), 10, 1.0f );
 				}
 				updateRoi();
 			}
 		}
-		//IJ.log( "Mouse pressed: " + x + ", " + y + " " + modifiers( e.getModifiers() ) );
 	}
 
 	public void mouseExited( MouseEvent e ) {}
 	public void mouseClicked( MouseEvent e ) {}	
 	public void mouseEntered( MouseEvent e ) {}
-	
-	public void mouseReleased( MouseEvent e )
-	{
-//		for ( Vertex v : mesh.vertices )
-//		{
-//			v.getLocation().getW()[ 0 ] *= 0.9;
-//			v.getLocation().getW()[ 1 ] *= 0.9;
-//		}
-//		synchronized ( opt )
-//		{
-//			pleaseOptimize = true;
-//			opt.notify();
-//		}
-	}
+	public void mouseReleased( MouseEvent e ){}
 	
 	public void mouseDragged( MouseEvent e )
 	{
@@ -335,7 +329,7 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 			
 			updateRoi();
 			
-			if ( showMesh )
+			if ( showMesh || showSprings )
 				synchronized ( ill )
 				{
 					pleaseIllustrate = true;
