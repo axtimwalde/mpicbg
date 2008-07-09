@@ -279,32 +279,12 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 				imp.setProcessor( null, ipOrig );
 			}
 		}
-		else if ( e.getKeyCode() == KeyEvent.VK_Y )
+		else if (
+				e.getKeyCode() == KeyEvent.VK_Y ||
+				e.getKeyCode() == KeyEvent.VK_U )
 		{
-			showMesh = !showMesh;
-			if ( showMesh || showPointMatches )
-			{
-				synchronized ( ill )
-				{
-					if ( pleaseIllustrate == false )
-						illustrate();
-					else
-						ill.notify();
-				}
-			}
-			else
-			{
-				pleaseIllustrate = false;
-				synchronized ( ill )
-				{
-					ill.interrupt();
-					imp.getCanvas().setDisplayList( null );
-				}
-			}			
-		} 
-		else if ( e.getKeyCode() == KeyEvent.VK_U )
-		{
-			showPointMatches = !showPointMatches;
+			if ( e.getKeyCode() == KeyEvent.VK_Y ) showMesh = !showMesh;
+			if ( e.getKeyCode() == KeyEvent.VK_U ) showPointMatches = !showPointMatches;
 			if ( showMesh || showPointMatches )
 			{
 				synchronized ( ill )
@@ -362,7 +342,7 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 				float[] l = new float[]{ xm, ym };
 				synchronized ( mesh )
 				{
-					Model m = mesh.findClosest( l ).getModel();
+					InvertibleModel m = ( InvertibleModel )(mesh.findClosest( l ).getModel() );
 					try
 					{
 						m.applyInverseInPlace( l );
@@ -381,7 +361,7 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 	}
 
 	public void mouseExited( MouseEvent e ) {}
-	public void mouseClicked( MouseEvent e ) {}	
+	public void mouseClicked( MouseEvent e ) {}
 	public void mouseEntered( MouseEvent e ) {}
 	
 	public void mouseReleased( MouseEvent e ){}

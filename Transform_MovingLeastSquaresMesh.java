@@ -91,7 +91,7 @@ public class Transform_MovingLeastSquaresMesh implements PlugIn, MouseListener, 
 		
 		method = gd.getNextChoiceIndex();
 		// TODO Implement other models for choice
-		Class< ? extends Model > modelClass = null;
+		Class< ? extends InvertibleModel > modelClass = null;
 		switch ( method )
 		{
 		case 0:
@@ -208,7 +208,7 @@ public class Transform_MovingLeastSquaresMesh implements PlugIn, MouseListener, 
 				float[] l = new float[]{ xm, ym };
 				synchronized ( mesh )
 				{
-					Model m = mesh.findClosest( l ).getModel();
+					InvertibleModel m = ( InvertibleModel )mesh.findClosest( l ).getModel();
 					try
 					{
 						m.applyInverseInPlace( l );
