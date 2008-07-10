@@ -1,9 +1,48 @@
+/**
+ * License: GPL
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License 2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * 
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ *
+ */
 package mpicbg.models;
 
 import java.util.Collection;
 import Jama.Matrix;
 
-public class HomographyModel2D extends Model
+/**
+ * 2d-homography models to be applied to points in 2d-space.
+ * 
+ * @version 0.2b
+ * 
+ * This code is partially based on the following book:
+ * 
+ * BibTeX:
+ * <pre>
+ * &#64;book{BurgerB05,
+ *	 author    = {Wilhelm Burger and Mark James Burge},
+ *   title     = {Digital image processing: An algorithmic introduction using Java},
+ *   year      = {2008},
+ *   isbn      = {978-1-84628-379-6},
+ *   pages     = {560},
+ *   publisher = {Springer},
+ *   url       = {http://imagingbook.com/},
+ * }
+ * </pre>
+ */
+public class HomographyModel2D extends InvertibleModel
 {
 	static final protected int MIN_SET_SIZE = 4;
 	
@@ -15,10 +54,7 @@ public class HomographyModel2D extends Model
 	
 	private Matrix getInverse( Matrix m )
 	{
-		double[][] b = new double[][]{
-			new double[ 3 ],
-			new double[ 3 ],
-			new double[ 3 ]	};
+		double[][] b = new double[ 3 ][ 3 ];
 		
 		double[][] c = m.getArray();
 		
@@ -46,22 +82,6 @@ public class HomographyModel2D extends Model
 		//return m.inverse();
 	}
 	
-	/**
-	 * This code is based on the following book:
-	 * 
-	 * BibTeX:
-	 * <pre>
-	 * &#64;book{BurgerB05,
-	 *	 author    = {Wilhelm Burger and Mark James Burge},
-	 *   title     = {Digital image processing: An algorithmic introduction using Java},
-	 *   year      = {2008},
-	 *   isbn      = {978-1-84628-379-6},
-	 *   pages     = {560},
-	 *   publisher = {Springer},
-	 *   url       = {http://imagingbook.com/},
-	 * }
-	 * </pre>
-	 */
 	private Matrix fitToUnitSquare(
 		float[] p1,
 		float[] p2,
@@ -80,10 +100,7 @@ public class HomographyModel2D extends Model
 		
 		double s = ( x2 - x3 ) * ( y4 - y3 ) - ( x4 - x3 ) * ( y2 - y3 );
 		
-		double[][] b = new double[][]{
-				new double[ 3 ],
-				new double[ 3 ],
-				new double[ 3 ]	};
+		double[][] b = new double[ 3 ][ 3 ];
 
 		b[ 0 ][ 2 ] = ( ( x1 - x2 + x3 - x4 ) * ( y4 - y3 ) - ( y1 - y2 + y3 - y4 ) * ( x4 - x3 ) ) / s;
 		b[ 1 ][ 2 ] = ( ( y1 - y2 + y3 - y4 ) * ( x2 - x3 ) - ( x1 - x2 + x3 - x4 ) * ( y2 - y3 ) ) / s;
@@ -98,17 +115,21 @@ public class HomographyModel2D extends Model
 		return new Matrix( b );
 	}
 	
-	@Override
+	//@Override
 	public float[] apply( float[] point )
 	{
+		assert point.length == 2 : "2d homographies can be applied to 2d points only.";
+		
 		float[] t = point.clone();
 		applyInPlace( t );
 		return t;
 	}
 
-	@Override
+	//@Override
 	public void applyInPlace( float[] point )
 	{
+		assert point.length == 2 : "2d homographies can be applied to 2d points only.";
+		
 		double h[][] = a.getArray();
 		double s = h[ 0 ][ 2 ] * point[ 0 ] + h[ 1 ][ 2 ] * point[ 1 ] + h[ 2 ][ 2 ];
 		double t0 = h[ 0 ][ 0 ] * point[ 0 ] + h[ 1 ][ 0 ] * point[ 1 ] + h[ 2 ][ 0 ];
@@ -118,17 +139,21 @@ public class HomographyModel2D extends Model
 		point[ 1 ] = ( float )( t1 / s );
 	}
 
-	@Override
+	//@Override
 	public float[] applyInverse( float[] point ) throws NoninvertibleModelException
 	{
+		assert point.length == 2 : "2d homographies can be applied to 2d points only.";
+		
 		float[] t = point.clone();
 		applyInPlace( t );
 		return null;
 	}
 
-	@Override
+	//@Override
 	public void applyInverseInPlace( float[] point ) throws NoninvertibleModelException
 	{
+		assert point.length == 2 : "2d homographies can be applied to 2d points only.";
+		
 		double h[][] = a_inverse.getArray();
 		double s = h[ 0 ][ 2 ] * point[ 0 ] + h[ 1 ][ 2 ] * point[ 1 ] + h[ 2 ][ 2 ];
 		double t0 = h[ 0 ][ 0 ] * point[ 0 ] + h[ 1 ][ 0 ] * point[ 1 ] + h[ 2 ][ 0 ];
@@ -181,8 +206,7 @@ public class HomographyModel2D extends Model
 	@Override
 	public void shake( Collection< PointMatch > matches, float scale, float[] center )
 	{
-		// TODO Auto-generated method stub
-
+		// TODO If you ever need it, please implement it...
 	}
 
 	@Override

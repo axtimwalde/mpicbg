@@ -53,6 +53,11 @@ public class SpringMesh extends TransformMesh
 	final static private DecimalFormat decimalFormat = new DecimalFormat();
 	final static private DecimalFormatSymbols decimalFormatSymbols = new DecimalFormatSymbols();
 	
+	private double force = 0.0;
+	private double minForce = Double.MAX_VALUE;
+	private double maxForce = 0.0;
+	public double getForce(){ return force; }
+	
 	public SpringMesh(
 			final int numX,
 			final int numY,
@@ -70,8 +75,8 @@ public class SpringMesh extends TransformMesh
 		Set< PointMatch > s = va.keySet();
 		
 		float[] w = new float[ 2 ];
-		w[ 0 ] = 100.0f / s.size();
-		//w[ 0 ] = 0.1f;
+		//w[ 0 ] = 100.0f / s.size();
+		w[ 0 ] = 0.001f;
 		w[ 1 ] = 1.0f;
 		
 		for ( PointMatch p : s )
@@ -106,25 +111,52 @@ public class SpringMesh extends TransformMesh
 		}
 		
 		/**
-		 * For each vertex, find its connected vertices and add a Spring.
+		 * For each vertex, find the illlustrated connections and add a Spring.
+		 * 
+		 * <pre>
+		 *   *        *
+		 *  / \      /|\
+		 * *---* -> *-+-*
+		 *  \ /      \|/
+		 *   *        *
+		 * </pre>
 		 * 
 		 * Note that that
 		 * {@link Vertex#addSpring(Vertex, float)} links the same
 		 * {@link Spring} from both sides and thus interconnects both
 		 * {@link mpicbg.models.Vertex Vertices}.
 		 */
+		w[ 0 ] *= 2;
 		for ( Vertex vertex : vertices )
 		{
-			Set< Vertex > connectedVertices = vertex.getConnectedVertices();
-			for ( Vertex v : connectedVertices )
+			// Find direct neighbours
+			final HashSet< PointMatch > neighbours = new HashSet< PointMatch >();
+			for ( AffineModel2D ai : va.get( vp.get( vertex ) ) )
 			{
-				Set< Vertex > currentlyConnectedVertices = vertex.getConnectedVertices();
-				for ( AffineModel2D ai : va.get( vp.get( vertex ) ) )
+				for ( PointMatch m : av.get( ai ) )
+					neighbours.add( m );
+			}
+			
+			for ( PointMatch m : neighbours )
+			{
+				for ( AffineModel2D ai : va.get( m ) )
 				{
-					for ( PointMatch m : av.get( ai ) )
+					Set< Vertex > connectedVertices = vertex.getConnectedVertices();
+					Vertex toBeConnected = null;
+					
+					// Find out if the triangle shares exactly two vertices with connectedVertices
+					int numSharedVertices = 0;
+					for ( PointMatch p : av.get( ai ) )
 					{
-						// TODO cross-connect things
+						Vertex c = pv.get( p );
+						if ( connectedVertices.contains( c ) )
+							++numSharedVertices;
+						else
+							toBeConnected = c;
 					}
+					
+					if ( numSharedVertices == 2 && toBeConnected != null )
+						vertex.addSpring( toBeConnected, w );
 				}
 			}
 		}
@@ -177,6 +209,7 @@ public class SpringMesh extends TransformMesh
 		 * TODO This has to be changed, if we interconnect vertices
 		 *   differently.
 		 */
+		
 		for ( Vertex v : closest.getConnectedVertices() )
 		{
 			if ( vertices.contains( v ) )
@@ -228,21 +261,23 @@ public class SpringMesh extends TransformMesh
 	 */
 	void optimizeStep( ErrorStatistic observer ) throws NotEnoughDataPointsException
 	{
-		double force = 0;
 		float maxSpeed = Float.MIN_VALUE;
 		synchronized ( this )
 		{
+			minForce = Double.MAX_VALUE;
+			maxForce = 0.0;
 			for ( Vertex vertex : vertices )
 			{
-				vertex.update( 0.5f );
+				vertex.update( 0.6f );
 				force += vertex.getForce();
 				final float speed = vertex.getSpeed();
 				if ( speed > maxSpeed ) maxSpeed = speed;
-				//System.out.println( "force: " + force );
+				if ( force < minForce ) minForce = force;
+				if ( force > maxForce ) maxForce = force;
 			}
 			
 			for ( Vertex vertex : vertices )
-				vertex.move( 1.0f / maxSpeed );
+				vertex.move( Math.min( 1000.0f, 2.0f / maxSpeed ) );
 		}
 		observer.add( force );
 	}
@@ -272,9 +307,6 @@ public class SpringMesh extends TransformMesh
 		{
 			optimizeStep( observer );
 			
-			//imp.getCanvas().setDisplayList( illustrateMesh(), Color.white, null );
-			//imp.getCanvas().setDisplayList( illustrateSprings(), Color.white, null );
-			
 			if (
 					i >= maxPlateauwidth &&
 					observer.values.get( observer.values.size() - 1 ) < maxError &&
@@ -287,11 +319,10 @@ public class SpringMesh extends TransformMesh
 		
 		updateAffines();
 		
-		System.out.println( "Exiting at iteration " + i + " with error " + decimalFormat.format( observer.mean ) + " and slope " + observer.getWideSlope( maxPlateauwidth ) );
-		System.out.println( "Successfully optimized configuration of " + vertices.size() + " vertices:" );
-		System.out.println( "  average force: " + decimalFormat.format( observer.mean ) + "N" );
-		System.out.println( "  minimal force: " + decimalFormat.format( observer.min ) + "N" );
-		System.out.println( "  maximal force: " + decimalFormat.format( observer.max ) + "N" );
+		System.out.println( "Successfully optimized configuration of " + vertices.size() + " vertices after " + i + " iterations:" );
+		System.out.println( "  average force: " + decimalFormat.format( force ) + "N" );
+		System.out.println( "  minimal force: " + decimalFormat.format( minForce ) + "N" );
+		System.out.println( "  maximal force: " + decimalFormat.format( maxForce ) + "N" );
 	}
 	
 	/**
@@ -305,12 +336,12 @@ public class SpringMesh extends TransformMesh
 		
 		for ( Vertex vertex : vertices )
 		{
-			float[] l = vertex.getLocation().getW();
+			float[] v1 = vertex.getLocation().getW();
 			for ( Vertex v : vertex.getConnectedVertices() )
 			{
-				float[] d = v.getForces();
-				path.moveTo( l[ 0 ], l[ 1 ] );
-				path.lineTo( l[ 0 ] + d[ 0 ], l[ 1 ] + d[ 1 ] );
+				float[] v2 = v.getLocation().getW();
+				path.moveTo( v1[ 0 ], v1[ 1 ] );
+				path.lineTo( v2[ 0 ], v2[ 1 ] );
 			}
 		}
 		return path;

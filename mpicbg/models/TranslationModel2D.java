@@ -1,61 +1,38 @@
+/**
+ * License: GPL
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License 2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * 
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ *
+ */
 package mpicbg.models;
 
 import java.util.Collection;
 
+/**
+ * A 2d translation model.
+ * 
+ * @version 0.2b
+ */
 public class TranslationModel2D extends AffineModel2D
 {
-
 	static final protected int MIN_SET_SIZE = 1;
 	
 	@Override
 	final public int getMinSetSize(){ return MIN_SET_SIZE; }
-
-	@Override
-	public float[] apply( float[] point )
-	{
-		float[] transformed = new float[ 2 ];
-		affine.transform( point, 0, transformed, 0, 1 );
-		return transformed;
-	}
 	
-	@Override
-	public void applyInPlace( float[] point )
-	{
-		affine.transform( point, 0, point, 0, 1 );
-	}
-	
-	@Override
-	public float[] applyInverse( float[] point )
-	{
-		// the brilliant java.awt.geom.AffineTransform implements transform for float[] but inverseTransform for double[] only...
-		double[] double_point = new double[]{ point[ 0 ], point[ 1 ] };
-		double[] transformed = new double[ 2 ];
-		try
-		{
-			affine.inverseTransform( double_point, 0, transformed, 0, 1 );
-		}
-		catch ( Exception e )
-		{
-			System.err.println( "Noninvertible transformation." );
-		}
-		return new float[]{ ( float )transformed[ 0 ], ( float )transformed[ 1 ] };
-	}
-
-	@Override
-	public void applyInverseInPlace( float[] point )
-	{
-		float[] temp_point = applyInverse( point );
-		point[ 0 ] = temp_point[ 0 ];
-		point[ 1 ] = temp_point[ 1 ];
-	}
-
-	
-	@Override
-	public String toString()
-	{
-		return ( "[3,3](" + affine + ") " + cost );
-	}
-
 	final public void fit( Collection< PointMatch > matches ) throws NotEnoughDataPointsException
 	{
 		if ( matches.size() < MIN_SET_SIZE ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d translation model, at least " + MIN_SET_SIZE + " data points required." );
@@ -137,7 +114,7 @@ public class TranslationModel2D extends AffineModel2D
 		return tm;
 	}
 	
-	public RigidModel2D toTRModel2D()
+	public RigidModel2D toRigidModel2D()
 	{
 		RigidModel2D trm = new RigidModel2D();
 		trm.getAffine().setTransform( affine );

@@ -1,8 +1,34 @@
+/**
+ * License: GPL
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License 2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * 
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ *
+ */
 package mpicbg.models;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
+/**
+ * A link between two {@link Point Points} that are expected to be ideally at
+ * the same location in the world coordinate space.
+ * 
+ * The link is directed, such that each link touches only {@link #p1}.
+ *
+ */
 public class PointMatch
 {
 	final private Point p1;
@@ -42,16 +68,18 @@ public class PointMatch
 	/**
 	 * Constructor
 	 * 
-	 * Create a PointMatch with an Array of weights and a strength.
+	 * Create a {@link PointMatch} with an Array of weights and a strength.
 	 * The Array of weights will be copied.
-	 * Strength should be a value in [0-1] which gives the amount of
-	 * application.  strength = 0 means p1 will not be transferred,
-	 * strength = 1 means p1 will be fully transferred
+	 * 
+	 * Strength gives the amount of application:
+	 *   strength = 0 means {@link #p1} will not be transferred,
+	 *   strength = 1 means {@link #p1} will be fully transferred
 	 * 
 	 * @param p1 Point 1
 	 * @param p2 Point 2
 	 * @param weights Array of weights
-	 * @param strength how much should applyByStrength affect p1
+	 * @param strength how much should {@link #applyByStrength(Model, float)}
+	 *   affect {@link #p1}
 	 */
 	public PointMatch(
 			Point p1,
@@ -73,7 +101,7 @@ public class PointMatch
 	/**
 	 * Constructor
 	 * 
-	 * Create a PointMatch with an Array of weights.
+	 * Create a {@link PointMatch} with an Array of weights.
 	 * The Array of weights will be copied.
 	 * 
 	 * @param p1 Point 1
@@ -97,7 +125,7 @@ public class PointMatch
 	/**
 	 * Constructor
 	 * 
-	 * Create a PointMatch with one weight.
+	 * Create a {@link PointMatch} with one weight.
 	 * 
 	 * @param p1 Point 1
 	 * @param p2 Point 2
@@ -120,15 +148,17 @@ public class PointMatch
 	/**
 	 * Constructor
 	 * 
-	 * Create a PointMatch with one weight and strength.
-	 * Strength should be a value in [0-1] which gives the amount of
-	 * application.  strength = 0 means p1 will not be transferred,
-	 * strength = 1 means p1 will be fully transferred
+	 * Create a {@link PointMatch} with one weight and strength.
+	 * 
+	 * Strength gives the amount of application:
+	 *   strength = 0 means {@link #p1} will not be transferred,
+	 *   strength = 1 means {@link #p1} will be fully transferred
 	 * 
 	 * @param p1 Point 1
 	 * @param p2 Point 2
 	 * @param weight Weight
-	 * @param strength how much should applyByStrength affect p1
+	 *  @param strength how much should {@link #applyByStrength(Model, float)}
+	 *   affect {@link #p1}
 	 */
 	public PointMatch(
 			Point p1,
@@ -150,7 +180,7 @@ public class PointMatch
 	/**
 	 * Constructor
 	 * 
-	 * Create a PointMatch without weight.
+	 * Create a {@link PointMatch} without weight.
 	 * 
 	 * @param p1 Point 1
 	 * @param p2 Point 2
@@ -169,7 +199,7 @@ public class PointMatch
 	}
 	
 	/**
-	 * Apply a model to Point 1, update distance.
+	 * Apply a {@link Model} to {@link #p1}, update distance.
 	 * 
 	 * @param model
 	 */
@@ -180,10 +210,8 @@ public class PointMatch
 	}
 	
 	/**
-	 * Application of a model to Point 1, update distance.
-	 * Point 1 assures weight to be in the range [0,1].
-	 * That is, the resulting location ends up somewhere between its actual
-	 * location and the transferred one.
+	 * Apply a {@link Model} to {@link #p1} with a given amount, update
+	 * distance.
 	 * 
 	 * @param model
 	 * @param amount

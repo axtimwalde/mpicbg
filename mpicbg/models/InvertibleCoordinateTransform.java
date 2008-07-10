@@ -19,34 +19,22 @@
  */
 package mpicbg.models;
 
-import java.lang.Exception;
-
-/**
- * Signalizes that the {@link Model} is not invertible.
- * 
- */
-public class NoninvertibleModelException extends Exception
+public interface InvertibleCoordinateTransform extends CoordinateTransform
 {
-	public NoninvertibleModelException()
-	{
-		super( "Non invertible Model." );
-	}
-	
-
-	public NoninvertibleModelException( String message )
-	{
-		super( message );
-	}
+	/**
+	 * Apply the inverse of the model to a point location
+	 * 
+	 * @param point
+	 * @return transformed point
+	 */
+	abstract public float[] applyInverse( float[] point ) throws NoninvertibleModelException;
 
 	
-	public NoninvertibleModelException( Throwable cause )
-	{
-		super( cause );
-	}
-
+	/**
+	 * apply the inverse of the model to a point location
+	 * 
+	 * @param point
+	 */
+	abstract public void applyInverseInPlace( float[] point ) throws NoninvertibleModelException;
 	
-	public NoninvertibleModelException( String message, Throwable cause )
-	{
-		super( message, cause );
-	}
 }
