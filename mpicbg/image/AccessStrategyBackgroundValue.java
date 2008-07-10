@@ -15,7 +15,7 @@ public class AccessStrategyBackgroundValue extends AccessStrategyAbstract
 		{
 			if (cursor.isInside())
 			{
-				readCursor = (ReadableCursor)cursor;
+				//readCursor = (ReadableCursor)cursor;
 			}
 		}
 	}	
