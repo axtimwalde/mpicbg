@@ -9,8 +9,9 @@ package mpicbg.image;
  */
 public abstract class AccessStrategyAbstract extends AccessStrategy
 {
-	WritableCursor writeCursor;
-	ReadableCursor readCursor;
+	Operator operator;
+	Writable write;
+	Readable read;
 	
 	public AccessStrategyAbstract(Container container, Cursor cursor)
 	{
@@ -22,31 +23,31 @@ public abstract class AccessStrategyAbstract extends AccessStrategy
 	//
 	final public void read( final Object[] v )
 	{
-		readCursor.read(v);
+		read.read(v);
 	}
 	final public void read( final byte[] v )
 	{
-		readCursor.read(v);
+		read.read(v);
 	}
 	final public void read( final short[] v )
 	{
-		readCursor.read(v);
+		read.read(v);
 	}
 	final public void read( final int[] v )
 	{
-		readCursor.read(v);
+		read.read(v);
 	}
 	final public void read( final long[] v )
 	{
-		readCursor.read(v);
+		read.read(v);
 	}
 	final public void read(final float[] v)
 	{ 
-		readCursor.read(v);
+		read.read(v);
 	}
 	final public void read( final double[] v )
 	{
-		readCursor.read(v);
+		read.read(v);
 	}
 	
 	
@@ -95,31 +96,31 @@ public abstract class AccessStrategyAbstract extends AccessStrategy
 	
 	final public Object getChannel( final int c )
 	{
-		return readCursor.getChannel(c);
+		return read.getChannel(c);
 	}
 	final public byte getByteChannel( final int c )
 	{
-		return readCursor.getByteChannel(c);
+		return read.getByteChannel(c);
 	}
 	final public short getShortChannel( final int c )
 	{
-		return readCursor.getShortChannel(c);
+		return read.getShortChannel(c);
 	}
 	final public int getIntChannel( final int c )
 	{
-		return readCursor.getIntChannel(c);
+		return read.getIntChannel(c);
 	}
 	final public long getLongChannel( final int c )
 	{
-		return readCursor.getLongChannel(c);
+		return read.getLongChannel(c);
 	}
 	public final float getFloatChannel(final int c) 
 	{ 
-		return readCursor.getFloatChannel(c);
+		return read.getFloatChannel(c);
 	}
 	final public double getDoubleChannel( final int c )
 	{
-		return readCursor.getDoubleChannel(c);
+		return read.getDoubleChannel(c);
 	}
 	
 	//
@@ -127,176 +128,176 @@ public abstract class AccessStrategyAbstract extends AccessStrategy
 	// 
 	final public void add( final Readable c )
 	{		
-		writeCursor.add(c);
+		operator.add(c);
 	}
 	final public void add( final byte c )
 	{ 		
-		writeCursor.add(c);
+		operator.add(c);
 	}
 	final public void add( final short c ) 
 	{
-		writeCursor.add(c);		
+		operator.add(c);		
 	}
 	final public void add( final int c ) 
 	{ 
-		writeCursor.add(c);
+		operator.add(c);
 	}
 	final public void add( final long c ) 
 	{	
-		writeCursor.add(c);
+		operator.add(c);
 	}
 	final public void add( final float c )
 	{
-		writeCursor.add(c);
+		operator.add(c);
 	}
 	final public void add( final double c ) 
 	{ 
-		writeCursor.add(c);
+		operator.add(c);
 	}
 	
 	final public void sub( final Readable c )
 	{
-		writeCursor.sub(c);
+		operator.sub(c);
 	}
 	final public void sub( final byte c )
 	{
-		writeCursor.sub(c);
+		operator.sub(c);
 	}
 	final public void sub( final short c ) 
 	{ 
-		writeCursor.sub(c);		
+		operator.sub(c);		
 	}
 	final public void sub( final int c ) 
 	{ 
-		writeCursor.sub(c);		
+		operator.sub(c);		
 	}
 	final public void sub( final long c ) 
 	{
-		writeCursor.sub(c);		
+		operator.sub(c);		
 	}
 	final public void sub( final float c )
 	{
-		writeCursor.sub(c);
+		operator.sub(c);
 	}
 	final public void sub( final double c ) 
 	{
-		writeCursor.sub(c);		
+		operator.sub(c);		
 	}
 	
 	final public void mul( final Readable c )
 	{
-		writeCursor.mul(c);
+		operator.mul(c);
 	}
 	final public void mul( final byte c )
 	{ 
-		writeCursor.mul(c);		
+		operator.mul(c);		
 	}
 	final public void mul( final short c ) 
 	{ 
-		writeCursor.mul(c);		
+		operator.mul(c);		
 	}
 	final public void mul( final int c ) 
 	{
-		writeCursor.mul(c);
+		operator.mul(c);
 	}
 	final public void mul( final long c ) 
 	{
-		writeCursor.mul(c);
+		operator.mul(c);
 	}
 	final public void mul( final float c )
 	{
-		writeCursor.mul(c);
+		operator.mul(c);
 	}
 	final public void mul( final double c ) 
 	{
-		writeCursor.mul(c);
+		operator.mul(c);
 	}
 	
 	final public void div( final Readable c )
 	{
-		writeCursor.div(c);
+		operator.div(c);
 	}	
 	final public void div( final byte c )
 	{ 
-		writeCursor.div(c);		
+		operator.div(c);		
 	}
 	final public void div( final short c ) 
 	{
-		writeCursor.div(c);
+		operator.div(c);
 	}
 	final public void div( final int c )
 	{ 
-		writeCursor.div(c);		
+		operator.div(c);		
 	}
 	final public void div( final long c ) 
 	{
-		writeCursor.div(c);
+		operator.div(c);
 	}
 	final public void div( final float c )
 	{
-		writeCursor.div(c);
+		operator.div(c);
 	}		
 	 public void div( double c ) 
 	{ 
-		 writeCursor.div(c);		
+		 operator.div(c);		
 	}
 	
 	public void set( Object[] a )
 	{
-		writeCursor.set(a);
+		write.set(a);
 	}
 	public void set( byte[] a )
 	{
-		writeCursor.set(a);
+		write.set(a);
 	}
 	public void set( short[] a )
 	{
-		writeCursor.set(a);
+		write.set(a);
 	}
 	public void set( int[] a )
 	{
-		writeCursor.set(a);
+		write.set(a);
 	}
 	public void set( long[] a )
 	{
-		writeCursor.set(a);
+		write.set(a);
 	}
 	public final void set( final float[] v)	
 	{ 
-		writeCursor.set(v);
+		write.set(v);
 	}	
 	public void set( double[] a )
 	{
-		writeCursor.set(a);
+		write.set(a);
 	}
 
 	public void setChannel( Object v, int c )
 	{ 
-		writeCursor.setChannel(v, c); 
+		write.setChannel(v, c); 
 	}
 	public void setChannel( byte v, int c )
 	{
-		writeCursor.setChannel(v, c); 		
+		write.setChannel(v, c); 		
 	}
 	public void setChannel( short v, int c )
 	{
-		writeCursor.setChannel(v, c); 
+		write.setChannel(v, c); 
 	}
 	public void setChannel( int v, int c )
 	{
-		writeCursor.setChannel(v, c); 
+		write.setChannel(v, c); 
 	}
 	public void setChannel( long v, int c )
 	{
-		writeCursor.setChannel(v, c); 
+		write.setChannel(v, c); 
 	}
 	public void setChannel(final float v, final int channel) 
 	{ 
-		writeCursor.setChannel(v, channel);		
+		write.setChannel(v, channel);		
 	}	
 	public void setChannel( double v, int c )
 	{
-		writeCursor.setChannel(v, c); 
+		write.setChannel(v, c); 
 	}
 	
 }
