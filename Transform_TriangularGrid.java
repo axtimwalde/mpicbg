@@ -167,7 +167,7 @@ public class Transform_TriangularGrid implements PlugIn, MouseListener,  MouseMo
 			
 			mt.updateAffine( pq[ targetIndex ] );
 					
-			mt.apply( ipOrig, ip );
+			mt.paint( ipOrig, ip );
 		}
 	}
 	

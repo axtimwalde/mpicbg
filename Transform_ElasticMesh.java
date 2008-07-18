@@ -233,7 +233,7 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 	
 	public void apply()
 	{
-		mesh.apply( ipOrig, ip );
+		mesh.paint( ipOrig, ip );
 		imp.updateAndDraw();
 	}
 	

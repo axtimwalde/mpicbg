@@ -130,7 +130,7 @@ public class Transform_MovingLeastSquaresMesh implements PlugIn, MouseListener, 
 	
 	public void apply()
 	{
-		mesh.apply( ipOrig, ip );
+		mesh.paint( ipOrig, ip );
 		imp.updateAndDraw();
 	}
 	
@@ -250,7 +250,7 @@ public class Transform_MovingLeastSquaresMesh implements PlugIn, MouseListener, 
 			
 			try
 			{
-				mesh.updateTransform();
+				mesh.updateModels();
 			}
 			catch ( NotEnoughDataPointsException x ){ x.printStackTrace(); }
 			
