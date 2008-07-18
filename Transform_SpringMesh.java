@@ -129,7 +129,7 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 		numX = ( int )gd.getNextNumber();
 		
 		// intitialize the transform mesh
-		mesh = new SpringMesh( numX, imp.getWidth(), imp.getHeight() );		
+		mesh = new SpringMesh( numX, imp.getWidth(), imp.getHeight(), 32 );		
 		
 		
 //		Point p = new Point( new float[]{ ip.getWidth() / 4, ip.getHeight() / 4 } );
@@ -193,7 +193,7 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 	
 	public void apply()
 	{
-		mesh.apply( ipOrig, ip );
+		mesh.paint( ipOrig, ip );
 		imp.updateAndDraw();
 	}
 	
@@ -301,8 +301,8 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 				{
 					Point p = new Point( l );
 					hooks.add( p );
-					//mesh.addVertex( new Vertex( p ), 1 );
-					mesh.addVertexWeightedByDistance( new Vertex( p ), 10, 1.0f );
+					mesh.addVertex( new Vertex( p ), 1 );
+					//mesh.addVertexWeightedByDistance( new Vertex( p ), 10, 1.0f );
 				}
 				updateRoi();
 			}
