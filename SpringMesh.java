@@ -62,7 +62,8 @@ public class SpringMesh extends TransformMesh
 			final int numX,
 			final int numY,
 			final float width,
-			final float height )
+			final float height,
+			float maxStretch )
 	{
 		super( numX, numY, width, height );
 		
@@ -90,7 +91,7 @@ public class SpringMesh extends TransformMesh
 		/**
 		 * For each vertex, find its connected vertices and add a Spring.
 		 * 
-		 * Note that that
+		 * Note that
 		 * {@link Vertex#addSpring(Vertex, float)} links the same
 		 * {@link Spring} from both sides and thus interconnects both
 		 * {@link mpicbg.models.Vertex Vertices}.
@@ -105,7 +106,7 @@ public class SpringMesh extends TransformMesh
 				{
 					Vertex connectedVertex = pv.get( m );
 					if ( p != m && !connectedVertices.contains( connectedVertex ) )
-						vertex.addSpring( connectedVertex, w );
+						vertex.addSpring( connectedVertex, w, maxStretch );
 				}
 			}
 		}
@@ -156,15 +157,15 @@ public class SpringMesh extends TransformMesh
 					}
 					
 					if ( numSharedVertices == 2 && toBeConnected != null )
-						vertex.addSpring( toBeConnected, w );
+						vertex.addSpring( toBeConnected, w, maxStretch );
 				}
 			}
 		}
 	}
 	
-	public SpringMesh( int numX, float width, float height )
+	public SpringMesh( int numX, float width, float height, float maxStretch )
 	{
-		this( numX, numY( numX, width, height ), width, height );
+		this( numX, numY( numX, width, height ), width, height, maxStretch );
 	}
 	
 	final protected float weigh( final float d, final float alpha )
