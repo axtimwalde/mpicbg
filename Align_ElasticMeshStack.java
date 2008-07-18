@@ -9,46 +9,110 @@ import ij.gui.*;
 import mpicbg.imagefeatures.Feature;
 import mpicbg.imagefeatures.Filter;
 import mpicbg.imagefeatures.FloatArray2D;
+import mpicbg.imagefeatures.FloatArray2DMOPS;
 import mpicbg.imagefeatures.FloatArray2DSIFT;
 import mpicbg.imagefeatures.FloatArray2DScaleOctave;
 import mpicbg.imagefeatures.ImageArrayConverter;
 import mpicbg.models.*;
 
+import java.awt.Choice;
+import java.awt.Component;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Vector;
 
 
 public class Align_ElasticMeshStack implements PlugIn
 {
-	// steps
+	/**
+	 * Steps per Scale Octave 
+	 */
 	private static int steps = 3;
-	// initial sigma
-	private static float initial_sigma = 1.6f;
-//	 feature descriptor size
-	private static int fdsize = 8;
-	// feature descriptor orientation bins
-	private static int fdbins = 8;
-	// closest/next closest neighbour distance ratio
+	
+	/**
+	 * Initial sigma of each Scale Octave
+	 */
+	private static float initialSigma = 1.6f;
+	
+	/**
+	 * Feature descriptor size
+	 * 
+	 *   for SIFT: How many local histograms per row and column
+	 *   for MOPS: How many samples per row and column
+	 */
+	private static int fdSize = 8;
+	
+	/**
+	 * Feature descriptor orientation bins
+	 * 
+	 *   for SIFT: How many bins per local histogram
+	 */
+	private static int fdBins = 8;
+	
+	/**
+	 * Closest/next closest neighbour distance ratio
+	 */
 	private static float rod = 0.92f;
-	// size restrictions for scale octaves, use octaves < max_size and > min_size only
-	private static int min_size = 64;
-	private static int max_size = 1024;
-	// maximal allowed alignment error in px
-	private static float max_epsilon = 25.0f;
-	private static float min_inlier_ratio = 0.05f;
+	
+	/**
+	 * Size limits for scale octaves in px:
+	 * 
+	 * minOctaveSize < octave < maxOctaveSize
+	 */
+	private static int minOctaveSize = 64;
+	private static int maxOctaveSize = 1024;
+	
+	/**
+	 * Maximal allowed alignment error in px
+	 */
+	private static float maxEpsilon = 25.0f;
+	
+	/**
+	 * Inlier/candidates ratio
+	 */
+	private static float minInlierRatio = 0.05f;
+	
+	/**
+	 * Number of mesh vertices in horizontal direction.  A proper number for
+	 * vertical direction is estimated automatically such that triangles are as
+	 * equilateral as possible. 
+	 */
 	private static int numX = 32;
-	// alpha [0 smooth, 1 less smooth ;)]
+
+	/**
+	 * The exponent applied to the distance of a point to a landmark.
+	 * 
+	 * [0 smooth, 1 less smooth ]
+	 */
 	private static float alpha = 1.0f;
-	// transformation model
-	final static String[] methods = new String[]{ "Translation", "Rigid", "Affine" };
+	
+	/**
+	 * Implemeted transformation models for choice
+	 */
+	final static String[] modelStrings = new String[]{ "Translation", "Rigid", "Affine" };
 	final static Class< ? extends Model >[] modelClasses =
 		new Class[]{
 				TranslationModel2D.class,
 				RigidModel2D.class,
 				AffineModel2D.class };
-	private static int localMethod = 1;
-	private static int globalMethod = 1;
+	private static int localModelIndex = 1;
+	private static int globalModelIndex = 1;
+	private static Class< ? extends Model > localModelClass = modelClasses[ localModelIndex ];
+	private static Class< ? extends Model > globalModelClass = modelClasses[ globalModelIndex ];
+	
+	/**
+	 * Implemeted feature extraction methods for choice
+	 */
+	final static String[] featureMethodStrings = new String[]{ "SIFT", "MOPS" };
+	final static Class< ? >[] featureMethodClasses =
+		new Class[]{
+				FloatArray2DSIFT.class,
+				FloatArray2DMOPS.class };
+	private static int featureMethodIndex = 0;
+	private static Class< ? > featureMethodClass = featureMethodClasses[ featureMethodIndex ];
 	
 	/**
 	 * Set true to double the size of the image by linear interpolation to
@@ -64,9 +128,103 @@ public class Align_ElasticMeshStack implements PlugIn
 	boolean showMesh = false;
 	
 	final ElasticMeshStack meshes = new ElasticMeshStack();
+	final ArrayList< CoordinateTransform > models = new ArrayList< CoordinateTransform >();
 	
 	ImageStack stack, stackAligned;
 	ImagePlus imp, impAligned;
+	
+	private boolean showDialog()
+	{
+		final GenericDialog gd = new GenericDialog( "Elastic Stack Registration" );
+		
+		gd.addMessage( "Scale Invariant Interest Point Detector:" );
+		gd.addNumericField( "initial_gaussian_blur :", initialSigma, 2, 6, "px" );
+		gd.addNumericField( "steps_per_scale_octave :", steps, 0 );
+		gd.addNumericField( "minimum_image_size :", minOctaveSize, 0, 6, "px" );
+		gd.addNumericField( "maximum_image_size :", maxOctaveSize, 0, 6, "px" );
+		gd.addCheckbox( "upscale_image_first", upscale );
+		
+		gd.addMessage( "Feature Descriptor:" );
+		gd.addChoice( "method :", featureMethodStrings, featureMethodStrings[ featureMethodIndex ] );
+		gd.addNumericField( "feature_descriptor_size :", fdSize, 0 );
+		gd.addNumericField( "feature_descriptor_orientation_bins :", fdBins, 0 );
+		gd.addNumericField( "closest/next_closest_ratio :", rod, 2 );
+		
+		gd.addMessage( "Geometric Consensus Filter:" );
+		gd.addNumericField( "maximal_alignment_error :", ( imp.getWidth() + imp.getHeight() ) / 40, 2, 6, "px" );
+		gd.addNumericField( "inlier_ratio :", minInlierRatio, 2 );
+		gd.addChoice( "expected_global_transformation :", modelStrings, modelStrings[ globalModelIndex ] );
+		
+		gd.addMessage( "Mesh Tranformation:" );
+		gd.addNumericField( "horizontal_handles :", numX, 0 );
+		gd.addNumericField( "alpha :", alpha, 2 );
+		gd.addChoice( "desired_local_transformation :", modelStrings, modelStrings[ localModelIndex ] );
+		
+		final Vector numericFields = gd.getNumericFields();
+		final Component featureOrientationBinsField = ( Component )numericFields.get( 5 );
+		final Component featureOrientationBinsLabel = gd.getComponent( 15 );
+		final Choice featureMethodChoice = ( Choice )gd.getChoices().get( 0 );
+		
+		class FeatureMethodChoiceItemListener implements ItemListener
+		{
+			public void itemStateChanged( ItemEvent e )
+			{
+				updateFields( e.getItem().toString() );
+			}
+			
+			public void updateFields( String item )
+			{
+				if ( item == featureMethodStrings[ 1 ] )
+				{
+					featureOrientationBinsField.setEnabled( false );
+					featureOrientationBinsLabel.setEnabled( false );
+					//featureOrientationBinsField.setVisible( false );
+					//featureOrientationBinsLabel.setVisible( false );
+				}
+				else
+				{
+					featureOrientationBinsField.setEnabled( true );
+					featureOrientationBinsLabel.setEnabled( true );
+					//featureOrientationBinsField.setVisible( true );
+					//featureOrientationBinsLabel.setVisible( true );
+				}
+			}
+		}
+		
+		FeatureMethodChoiceItemListener featureMethodChoiceItemListener = new FeatureMethodChoiceItemListener();
+		featureMethodChoice.addItemListener( featureMethodChoiceItemListener );
+		featureMethodChoiceItemListener.updateFields( featureMethodChoice.getSelectedItem() ); 
+		
+		gd.showDialog();
+		
+		if (gd.wasCanceled()) return false;
+		
+		initialSigma = ( float )gd.getNextNumber();
+		steps = ( int )gd.getNextNumber();
+		minOctaveSize = ( int )gd.getNextNumber();
+		maxOctaveSize = ( int )gd.getNextNumber();
+		upscale = gd.getNextBoolean();
+		if ( upscale ) scale = 2.0f;
+		else scale = 1.0f;
+		
+		featureMethodIndex = gd.getNextChoiceIndex();
+		featureMethodClass = featureMethodClasses[ featureMethodIndex ];
+		fdSize = ( int )gd.getNextNumber();
+		fdBins = ( int )gd.getNextNumber();
+		rod = ( float )gd.getNextNumber();
+		
+		maxEpsilon = ( float )gd.getNextNumber();
+		minInlierRatio = ( float )gd.getNextNumber();
+		globalModelIndex = gd.getNextChoiceIndex();
+		globalModelClass = modelClasses[ globalModelIndex ];
+		
+		numX = ( int )gd.getNextNumber();
+		alpha = ( float )gd.getNextNumber();
+		localModelIndex = gd.getNextChoiceIndex();
+		localModelClass = modelClasses[ localModelIndex ];
+		
+		return true;
+	}
 	
 	public void run( String arg )
     {
@@ -85,47 +243,7 @@ public class Align_ElasticMeshStack implements PlugIn
 		imp = WindowManager.getCurrentImage();
 		if ( imp == null )  { System.err.println( "You should have a stack open" ); return; }
 		
-			
-		GenericDialog gd = new GenericDialog( "Elastic Stack Registration" );
-		gd.addMessage( "SIFT Parameters:" );
-		gd.addNumericField( "steps_per_scale_octave :", steps, 0 );
-		gd.addNumericField( "initial_gaussian_blur :", initial_sigma, 2 );
-		gd.addNumericField( "feature_descriptor_width :", fdsize, 0 );
-		gd.addNumericField( "feature_descriptor_orientation_bins :", fdbins, 0 );
-		gd.addNumericField( "minimum_image_size :", min_size, 0 );
-		gd.addNumericField( "maximum_image_size :", max_size, 0 );
-		gd.addNumericField( "closest/next_closest_ratio :", rod, 2 );
-		gd.addNumericField( "maximal_alignment_error :", ( imp.getWidth() + imp.getHeight() ) / 40, 2 );
-		gd.addNumericField( "inlier_ratio :", min_inlier_ratio, 2 );
-		gd.addCheckbox( "upscale_image_first", upscale );
-		gd.addChoice( "expected_global_transformation :", methods, methods[ globalMethod ] );
-		gd.addMessage( "Mesh Parameters:" );
-		gd.addNumericField( "horizontal_handles :", numX, 0 );
-		//gd.addNumericField( "vertical_handles :", numY, 0 );
-		gd.addNumericField( "alpha :", alpha, 2 );
-		gd.addChoice( "desired_local_transformation :", methods, methods[ localMethod ] );
-		gd.showDialog();
-		if (gd.wasCanceled()) return;
-			
-		steps = ( int )gd.getNextNumber();
-		initial_sigma = ( float )gd.getNextNumber();
-		fdsize = ( int )gd.getNextNumber();
-		fdbins = ( int )gd.getNextNumber();
-		min_size = ( int )gd.getNextNumber();
-		max_size = ( int )gd.getNextNumber();
-		rod = ( float )gd.getNextNumber();
-		max_epsilon = ( float )gd.getNextNumber();
-		min_inlier_ratio = ( float )gd.getNextNumber();
-		upscale = gd.getNextBoolean();
-		if ( upscale ) scale = 2.0f;
-		else scale = 1.0f;
-		globalMethod = gd.getNextChoiceIndex();
-		Class< ? extends Model > globalModelClass = modelClasses[ globalMethod ];
-		
-		numX = ( int )gd.getNextNumber();
-		alpha = ( float )gd.getNextNumber();
-		localMethod = gd.getNextChoiceIndex();
-		Class< ? extends Model > localModelClass = modelClasses[ localMethod ];
+		if ( !showDialog() ) return;		
 		
 		stack = imp.getStack();
 		stackAligned = new ImageStack( stack.getWidth(), stack.getHeight() );
@@ -139,7 +257,7 @@ public class Align_ElasticMeshStack implements PlugIn
 			
 		ip = stack.getProcessor( 1 ).convertToFloat();
 			
-		FloatArray2DSIFT sift = new FloatArray2DSIFT( fdsize, fdbins );
+		FloatArray2DSIFT sift = new FloatArray2DSIFT( fdSize, fdBins );
 			
 		FloatArray2D fa = ImageArrayConverter.ImageToFloatArray2D( ip );
 		Filter.enhance( fa, 1.0f );
@@ -151,17 +269,17 @@ public class Align_ElasticMeshStack implements PlugIn
 			FloatArray2D fat = new FloatArray2D( fa.width * 2 - 1, fa.height * 2 - 1 ); 
 			FloatArray2DScaleOctave.upsample( fa, fat );
 			fa = fat;
-			initial_kernel = Filter.createGaussianKernel( ( float )Math.sqrt( initial_sigma * initial_sigma - 1.0 ), true );
+			initial_kernel = Filter.createGaussianKernel( ( float )Math.sqrt( initialSigma * initialSigma - 1.0 ), true );
 		}
 		else
-			initial_kernel = Filter.createGaussianKernel( ( float )Math.sqrt( initial_sigma * initial_sigma - 0.25 ), true );
+			initial_kernel = Filter.createGaussianKernel( ( float )Math.sqrt( initialSigma * initialSigma - 0.25 ), true );
 			
 		fa = Filter.convolveSeparable( fa, initial_kernel, initial_kernel );
 				
 		long start_time = System.currentTimeMillis();
 		IJ.log( "processing SIFT ..." );
-		sift.init( fa, steps, initial_sigma, min_size, max_size );
-		features2 = sift.run( max_size ); 
+		sift.init( fa, steps, initialSigma, minOctaveSize, maxOctaveSize );
+		features2 = sift.run( maxOctaveSize ); 
 		Collections.sort( features2 );
 		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms" );
 			
@@ -191,8 +309,8 @@ public class Align_ElasticMeshStack implements PlugIn
 				
 			start_time = System.currentTimeMillis();
 			IJ.log( "processing SIFT ..." );
-			sift.init( fa, steps, initial_sigma, min_size, max_size );
-			features2 = sift.run( max_size);
+			sift.init( fa, steps, initialSigma, minOctaveSize, maxOctaveSize );
+			features2 = sift.run( maxOctaveSize);
 			Collections.sort( features2 );
 			IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms" );
 				
@@ -204,7 +322,7 @@ public class Align_ElasticMeshStack implements PlugIn
 			IJ.log( "identifying correspondences using brute force ..." );
 			List< PointMatch > candidates = 
 					//FloatArray2DSIFT.createMatches( features1, features2, rod );
-					FloatArray2DSIFT.createMatches( features1, features2, 1.33f, null, 1, rod );
+					FloatArray2DSIFT.createMatches( features2, features1, 1.33f, null, 1, rod );
 			IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms" );
 				
 			IJ.log( candidates.size() + " potentially corresponding features identified" );
@@ -237,8 +355,8 @@ public class Align_ElasticMeshStack implements PlugIn
 						candidates,
 						inliers,
 						1000,
-						max_epsilon,
-						min_inlier_ratio );
+						maxEpsilon,
+						minInlierRatio );
 			}
 			catch ( Exception e )
 			{
@@ -246,29 +364,42 @@ public class Align_ElasticMeshStack implements PlugIn
 			}
 			if ( model != null )
 			{
-				IJ.log( inliers.size() + " corresponding features with an average displacement of " + ElasticMeshStack.decimalFormat.format( model.getError() ) + "px identified." );
+				IJ.log( inliers.size() + " corresponding features with an average displacement of " + ElasticMeshStack.decimalFormat.format( model.getCost() ) + "px identified." );
 				IJ.log( "Estimated global transformation model: " + model );
 				
 				for ( PointMatch pm : inliers )
 				{
-					float[] here = pm.getP1().getL();
-					float[] there = pm.getP2().getL();
+					float[] here = pm.getP2().getL();
+					float[] there = pm.getP1().getL();
 					Tile t = m1.findClosest( here );
 					Tile o = m2.findClosest( there );
 					
-					m1.addMatchWeightedByDistance( new PointMatch( pm.getP1(), pm.getP2(), 0.1f ), alpha );
-					m2.addMatchWeightedByDistance( new PointMatch( pm.getP2(), pm.getP1(), 0.1f ), alpha );
+					m1.addMatchWeightedByDistance( new PointMatch( pm.getP2(), pm.getP1(), 0.1f ), alpha );
+					m2.addMatchWeightedByDistance( new PointMatch( pm.getP1(), pm.getP2(), 0.1f ), alpha );
 					
 					t.addConnectedTile( o );
 					o.addConnectedTile( t );
 				}
+				models.add( model );
 			}
-			
+			else
+			{
+				try
+				{
+					models.add( globalModelClass.newInstance() );
+				}
+				catch ( Exception e )
+				{
+					e.printStackTrace();
+					break;
+				}
+			}
+			m2.apply( models );
 			meshes.addMesh( m2 );
 		}
-		ArrayList< ElasticMovingLeastSquaresMesh > ms = meshes.meshes;
-		ElasticMovingLeastSquaresMesh mm = ms.get( stack.getSize() / 2 );
-		Tile tc = mm.findClosest( new float[]{ imp.getWidth() / 2, imp.getHeight() / 2 } );
+		//ArrayList< ElasticMovingLeastSquaresMesh > ms = meshes.meshes;
+		//ElasticMovingLeastSquaresMesh mm = ms.get( stack.getSize() / 2 );
+		//Tile tc = mm.findClosest( new float[]{ imp.getWidth() / 2, imp.getHeight() / 2 } );
 		//mm.fixTile( tc );
 		
 		IJ.log( "Optimizing..." );
@@ -281,7 +412,7 @@ public class Align_ElasticMeshStack implements PlugIn
 	{
 		try
 		{
-			meshes.optimize( Float.MAX_VALUE, 1000, 100, impAligned, stack, stackAligned );
+			meshes.optimize( Float.MAX_VALUE, 10000, 100, impAligned, stack, stackAligned );
 		}
 		catch ( NotEnoughDataPointsException ex )
 		{
@@ -295,7 +426,7 @@ public class Align_ElasticMeshStack implements PlugIn
 		for ( int i = 0; i < stack.getSize(); ++ i )
 		{
 			ElasticMovingLeastSquaresMesh mesh = meshStack.get( i );
-			mesh.apply( stack.getProcessor( i + 1 ), stackAligned.getProcessor( i + 1 ) );
+			mesh.paint( stack.getProcessor( i + 1 ), stackAligned.getProcessor( i + 1 ) );
 		}
 		impAligned.updateAndDraw();
 	}
