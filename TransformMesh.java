@@ -293,7 +293,7 @@ public class TransformMesh
 		return box;
 	}
 	
-	protected void apply( AffineModel2D ai, ImageProcessor src, ImageProcessor trg )
+	protected void paint( AffineModel2D ai, ImageProcessor src, ImageProcessor trg )
 	{
 		ArrayList< PointMatch > pm = av.get( ai );
 		float[][] box = getBoundingBox( pm );
@@ -329,13 +329,13 @@ X:			for ( int x = ( int )box[ 0 ][ 0 ]; x <= ( int )box[ 1 ][ 0 ]; ++x )
 		}
 	}
 	
-	public void apply( ImageProcessor src, ImageProcessor trg )
+	public void paint( ImageProcessor src, ImageProcessor trg )
 	{
 		trg.setColor( Color.black );
 		trg.fill();
 		Set< AffineModel2D > s = av.keySet();
 		for ( AffineModel2D ai : s )
-			apply( ai, src, trg );
+			paint( ai, src, trg );
 	}
 	
 	private void illustrateTriangle( AffineModel2D ai, GeneralPath path )
