@@ -101,8 +101,8 @@ public class ElasticMeshStack
 			update( 1f );
 			observer.add( error );
 			
-			paint( src, trg );
-			imp.updateAndDraw();
+			//paint( src, trg );
+			//imp.updateAndDraw();
 			
 			double wideSlope = 0;
 			
@@ -137,7 +137,7 @@ public class ElasticMeshStack
 			
 			mesh.updateAffines();
 			
-			mesh.apply( ipSrc, ipTrg );
+			mesh.paint( ipSrc, ipTrg );
 		}
 	}
 	
