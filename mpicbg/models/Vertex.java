@@ -71,6 +71,24 @@ public class Vertex
 	 * {@link Vertex}.  It puts the spring to the other {@link Vertex} as well.
 	 * 
 	 * @param v2 the other {@link Vertex}
+	 * @param weights weighting factors
+	 * @param maxStretch stretch limit
+	 */
+	final public void addSpring(
+			Vertex v2,
+			float[] weights,
+			float maxStretch )
+	{
+		Spring spring = new Spring( this, v2, weights, maxStretch );
+		springs.put( v2, spring );
+		v2.springs.put( this, spring );
+	}
+	
+	/**
+	 * Add a {@link Spring} connecting this {@link Vertex} with another
+	 * {@link Vertex}.  It puts the spring to the other {@link Vertex} as well.
+	 * 
+	 * @param v2 the other {@link Vertex}
 	 * @param weight weighting factor (spring constant)
 	 */
 	final public void addSpring(
@@ -80,7 +98,25 @@ public class Vertex
 		Spring spring = new Spring( this, v2, weight );
 		springs.put( v2, spring );
 		v2.springs.put( this, spring );
-	}	
+	}
+	
+	/**
+	 * Add a {@link Spring} connecting this {@link Vertex} with another
+	 * {@link Vertex}.  It puts the spring to the other {@link Vertex} as well.
+	 * 
+	 * @param v2 the other {@link Vertex}
+	 * @param weight weighting factor (spring constant)
+	 * @param maxStretch stretch limit
+	 */
+	final public void addSpring(
+			Vertex v2,
+			float weight,
+			float maxStretch )
+	{
+		Spring spring = new Spring( this, v2, weight, maxStretch );
+		springs.put( v2, spring );
+		v2.springs.put( this, spring );
+	}
 	
 	/**
 	 * The current moving direction of the {@link Vertex}.  The length of this

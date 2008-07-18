@@ -19,6 +19,8 @@
  */
 package mpicbg.models;
 
+import java.util.Random;
+
 /**
  * A simple spring model.  Instances represent the acyual spring only, not the
  * {@link Vertex Vertices} it may interconnect.
@@ -26,6 +28,7 @@ package mpicbg.models;
  */
 public class Spring
 {
+	final static protected Random rnd = new Random( 0 );
 	final protected float length;
 	final static protected float length(
 			float[] p1,
@@ -43,6 +46,8 @@ public class Spring
 		}
 		return ( float )Math.sqrt( l );			
 	}
+	
+	final protected float maxStretch;
 	
 	protected float[] weights;
 	protected float weight;
@@ -109,14 +114,18 @@ public class Spring
 		float lw = length( w1, w2 );
 		final float d = lw - length;
 		
-		//System.out.println( lw + " " + d + " " + weight );
-		
-		if ( lw == 0.0f )
+		/**
+		 * If stretched more than maxStretch then disrupt.
+		 */
+		if ( Math.abs( d ) > maxStretch )
+			for ( int i = 0; i < force.length; ++i )
+				force[ i ] = 0;
+		else if ( lw == 0.0f )
 		{
 			for ( int i = 0; i < force.length; ++i )
 				force[ i ] = 0;
 		
-			force[ ( int )( force.length * Math.random() ) ] = d * weight;
+			force[ ( int )( force.length * rnd.nextDouble() ) ] = d * weight;
 		}
 		else
 			for ( int i = 0; i < w1.length; ++i )
@@ -139,6 +148,28 @@ public class Spring
 		this.length = length;
 		this.weights = weights.clone();
 		calculateWeight();
+		this.maxStretch = Float.MAX_VALUE;
+	}
+	
+	/**
+	 * Constructor
+	 * 
+	 * Create a {@link Spring} with an Array of weights.
+	 * The Array of weights will be copied.
+	 * 
+	 * @param length
+	 * @param weights Array of weights
+	 * @param maxStretch stretch limit
+	 */
+	public Spring(
+			float length,
+			float[] weights,
+			float maxStretch )
+	{
+		this.length = length;
+		this.weights = weights.clone();
+		calculateWeight();
+		this.maxStretch = maxStretch;
 	}
 	
 	/**
@@ -154,9 +185,29 @@ public class Spring
 			float weight )
 	{
 		this.length = length;
-		
 		weights = new float[]{ weight };
 		this.weight = weight;
+		this.maxStretch = Float.MAX_VALUE;
+	}
+	
+	/**
+	 * Constructor
+	 * 
+	 * Create a {@link Spring} with one weight.
+	 * 
+	 * @param length
+	 * @param weight (spring constant)
+	 * @param maxStretch stretch limit
+	 */
+	public Spring(
+			float length,
+			float weight,
+			float maxStretch )
+	{
+		this.length = length;
+		weights = new float[]{ weight };
+		this.weight = weight;
+		this.maxStretch = maxStretch;
 	}
 	
 	/**
@@ -170,6 +221,7 @@ public class Spring
 	{
 		this.length = length;
 		weight = 1.0f;
+		this.maxStretch = Float.MAX_VALUE;
 	}
 	
 	/**
@@ -193,6 +245,27 @@ public class Spring
 	/**
 	 * Constructor
 	 * 
+	 * Create a {@link Spring} between two {@link Vertex Vertices} with an
+	 * Array of weights.  The Array of weights will be copied.
+	 * 
+	 * @param v1 Vertex 1
+	 * @param v2 Vertex 2
+	 * @param weights Array of weights
+	 * @param maxStretch stretch limit
+	 */
+	public Spring(
+			Vertex v1,
+			Vertex v2,
+			float[] weights,
+			float maxStretch )
+	{
+		this( length( v1.getLocation().getL(), v2.getLocation().getL() ), weights, maxStretch );
+	}
+	
+	
+	/**
+	 * Constructor
+	 * 
 	 * Create a {@link Spring} between two {@link Vertex Vertices} with one weight.
 	 * 
 	 * @param v1 Vertex 1
@@ -205,6 +278,25 @@ public class Spring
 			float weight )
 	{
 		this( length( v1.getLocation().getL(), v2.getLocation().getL() ), weight );
+	}
+	
+	/**
+	 * Constructor
+	 * 
+	 * Create a {@link Spring} between two {@link Vertex Vertices} with one weight.
+	 * 
+	 * @param v1 Vertex 1
+	 * @param v2 Vertex 2
+	 * @param weight Weight
+	 * @param maxStretch stretch limit
+	 */
+	public Spring(
+			Vertex v1,
+			Vertex v2,
+			float weight,
+			float maxStretch )
+	{
+		this( length( v1.getLocation().getL(), v2.getLocation().getL() ), weight, maxStretch );
 	}
 	
 	/**
