@@ -387,15 +387,16 @@ A:		for ( Tile tile : tiles )
 	 *   !!!!This is wrong:
 	 *   
 	 *      +-+     +-----+
-	 *      | |     |     |
+	 *      | |     |     |   
 	 *    +-+-+-+   | +-+ |
 	 *    | | | |   | | | |
 	 *    +-+-+-+   | +-+ |
 	 *      | |     |     |
 	 *      +-+     +-----+
 	 *      
-	 *   Test for edge intersections and points:  If only one single edge of
-	 *   this intersects with one of t both tiles intersect.
+	 *   Test for edge intersections and corners:  If only one corner of this
+	 *   is inside t or one single edge of this intersects with one of t then
+	 *   both tiles intersect.
 	 * 
 	 * @param t the other {@link Tile}
 	 */

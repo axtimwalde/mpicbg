@@ -211,18 +211,6 @@ public class PointMatch
 	}
 	
 	/**
-	 * Apply a {@link List} of {@link CoordinateTransform CoordinateTransforms}
-	 * to {@link #p1}, update distance.
-	 * 
-	 * @param l
-	 */
-	final public void apply( List< CoordinateTransform > l )
-	{
-		p1.apply( l );
-		distance = Point.distance( p1, p2 );
-	}
-	
-	/**
 	 * Apply a {@link CoordinateTransform} to {@link #p1} with a given amount,
 	 * update distance.
 	 * 
@@ -232,19 +220,6 @@ public class PointMatch
 	final public void apply( CoordinateTransform t, float amount )
 	{
 		p1.apply( t, strength * amount );
-		distance = Point.distance( p1, p2 );
-	}
-	
-	/**
-	 * Apply a {@link List} of {@link CoordinateTransform} to {@link #p1} with
-	 * a given amount, update distance.
-	 * 
-	 * @param l
-	 * @param amount
-	 */
-	final public void apply( List< CoordinateTransform > l, float amount )
-	{
-		p1.apply( l, strength * amount );
 		distance = Point.distance( p1, p2 );
 	}
 	

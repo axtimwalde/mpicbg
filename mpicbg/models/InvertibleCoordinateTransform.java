@@ -27,7 +27,7 @@ public interface InvertibleCoordinateTransform extends CoordinateTransform
 	 * @param point
 	 * @return transformed point
 	 */
-	abstract public float[] applyInverse( float[] point ) throws NoninvertibleModelException;
+	public float[] applyInverse( float[] point ) throws NoninvertibleModelException;
 
 	
 	/**
@@ -35,6 +35,6 @@ public interface InvertibleCoordinateTransform extends CoordinateTransform
 	 * 
 	 * @param point
 	 */
-	abstract public void applyInverseInPlace( float[] point ) throws NoninvertibleModelException;
+	public void applyInverseInPlace( float[] point ) throws NoninvertibleModelException;
 	
 }

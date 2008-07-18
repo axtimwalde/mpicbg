@@ -69,19 +69,6 @@ public class Point
 	}
 	
 	/**
-	 * Apply a {@link List} of {@link CoordinateTransform CoordinateTransforms}
-	 * to the {@link Point}.
-	 * 
-	 * @param l
-	 */
-	final public void apply( List< CoordinateTransform > l )
-	{
-		System.arraycopy( this.l, 0, w, 0, this.l.length );
-		for ( CoordinateTransform t : l )
-			t.applyInPlace( w );
-	}
-	
-	/**
 	 * Apply a {@link CoordinateTransform} to the {@link Point} by a given amount.
 	 * 
 	 * Transfers the {@link #l local coordinates} to new
@@ -93,26 +80,6 @@ public class Point
 	final public void apply( CoordinateTransform t, float amount )
 	{
 		float[] a = t.apply( l );
-		for ( int i = 0; i < a.length; ++i )
-			w[ i ] += amount * ( a[ i ] - w[ i ] );
-	}
-	
-	/**
-	 * Apply a {@link List} of {@link CoordinateTransform CoordinateTransforms}
-	 * to the {@link Point} by a given amount.
-	 * 
-	 * Transfers the {@link #l local coordinates} to new
-	 * {@link #w world coordinates}.
-	 * 
-	 * @param t
-	 * @param amount 0.0 -> no application, 1.0 -> full application
-	 */
-	final public void apply( List< CoordinateTransform > l, float amount )
-	{
-		float[] a = new float[ this.l.length ];
-		System.arraycopy( this.l, 0, a, 0, this.l.length );
-		for ( CoordinateTransform t : l )
-			t.applyInPlace( a );
 		for ( int i = 0; i < a.length; ++i )
 			w[ i ] += amount * ( a[ i ] - w[ i ] );
 	}

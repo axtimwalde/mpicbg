@@ -128,7 +128,7 @@ public class Align_ElasticMeshStack implements PlugIn
 	boolean showMesh = false;
 	
 	final ElasticMeshStack meshes = new ElasticMeshStack();
-	final ArrayList< CoordinateTransform > models = new ArrayList< CoordinateTransform >();
+	final CoordinateTransformList models = new CoordinateTransformList();
 	
 	ImageStack stack, stackAligned;
 	ImagePlus imp, impAligned;

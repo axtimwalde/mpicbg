@@ -233,36 +233,4 @@ public class MovingLeastSquaresMesh extends TransformMesh
 			updateAffine( m );
 		}
 	}
-	
-	/**
-	 * Apply a {@link List} of  arbitrary
-	 * {@link CoordinateTransform CoordinateTransforms} to each
-	 * {@link Tile Tile's} {@link PointMatche PointMatches}.  These
-	 * {@link CoordinateTransform CoordinateTransforms} are not supposed to be
-	 * compatible to {@link #modelClass}.
-	 * 
-	 * This method is intended to be used for initializing the
-	 * {@link MovingLeastSquaresMesh} in case that further operations estimate
-	 * a refined configuration.
-	 * 
-	 * @param l
-	 */
-	final public void apply( List< CoordinateTransform > l )
-	{
-		Set< PointMatch > s = va.keySet();
-		
-		for ( PointMatch m : s )
-		{
-			ArrayList< PointMatch > matches = pt.get( m ).getMatches();
-			for ( PointMatch match : matches )
-				match.apply( l );
-			
-			/**
-			 * Update the location of the vertex
-			 */
-			m.getP2().apply( l );
-			
-			updateAffine( m );
-		}
-	}
 }

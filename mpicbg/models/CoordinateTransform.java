@@ -36,5 +36,5 @@ public interface CoordinateTransform
 	 * @param location
 	 * @return transformed location
 	 */
-	abstract public void applyInPlace( float[] location );
+	public void applyInPlace( float[] location );
 }
