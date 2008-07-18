@@ -17,9 +17,12 @@
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  *
  */
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 
+import mpicbg.models.CoordinateTransform;
 import mpicbg.models.Model;
 import mpicbg.models.NotEnoughDataPointsException;
 import mpicbg.models.PointMatch;
@@ -66,11 +69,15 @@ public class MovingLeastSquaresMesh extends TransformMesh
 	final public int numVertices(){ return pt.size(); }
 	
 	protected double error = Double.MAX_VALUE;
-	public double getError(){ return error; }
+	final public double getError(){ return error; }
+	
+	final protected Class< ? extends Model > modelClass;
+	final public Class< ? extends Model > getModelClass(){ return modelClass; }
 	
 	public MovingLeastSquaresMesh( final int numX, final int numY, final float width, final float height, final Class< ? extends Model > modelClass )
 	{
 		super( numX, numY, width, height );
+		this.modelClass = modelClass; 
 		
 		Set< PointMatch > s = va.keySet();
 		for ( PointMatch vertex : s )
@@ -171,11 +178,12 @@ public class MovingLeastSquaresMesh extends TransformMesh
 	}
 	
 	/**
-	 * Updates each vertex' transformation by means of moving least squares.
+	 * Updates each vertex' transformation model by means of moving least
+	 * squares.
 	 * 
 	 * @throws NotEnoughDataPointsException
 	 */
-	final public void updateTransform() throws NotEnoughDataPointsException
+	final public void updateModels() throws NotEnoughDataPointsException
 	{
 		Set< PointMatch > s = va.keySet();
 		
@@ -195,5 +203,66 @@ public class MovingLeastSquaresMesh extends TransformMesh
 			updateAffine( m );
 		}
 		error /= s.size();
+	}
+	
+	/**
+	 * Apply an arbitrary coordinate transformation to each Tile's
+	 * PointMatches.  This coordinate transformation is not supposed to be
+	 * compatible to {@link #modelClass}.
+	 * 
+	 * This method is intended to be used for initializing the mesh in case
+	 * that further operations estimate a refined configuration.
+	 * 
+	 * @param t
+	 */
+	final public void apply( CoordinateTransform t )
+	{
+		Set< PointMatch > s = va.keySet();
+		
+		for ( PointMatch m : s )
+		{
+			ArrayList< PointMatch > matches = pt.get( m ).getMatches();
+			for ( PointMatch match : matches )
+				match.apply( t );
+			
+			/**
+			 * Update the location of the vertex
+			 */
+			m.getP2().apply( t );
+			
+			updateAffine( m );
+		}
+	}
+	
+	/**
+	 * Apply a {@link List} of  arbitrary
+	 * {@link CoordinateTransform CoordinateTransforms} to each
+	 * {@link Tile Tile's} {@link PointMatche PointMatches}.  These
+	 * {@link CoordinateTransform CoordinateTransforms} are not supposed to be
+	 * compatible to {@link #modelClass}.
+	 * 
+	 * This method is intended to be used for initializing the
+	 * {@link MovingLeastSquaresMesh} in case that further operations estimate
+	 * a refined configuration.
+	 * 
+	 * @param l
+	 */
+	final public void apply( List< CoordinateTransform > l )
+	{
+		Set< PointMatch > s = va.keySet();
+		
+		for ( PointMatch m : s )
+		{
+			ArrayList< PointMatch > matches = pt.get( m ).getMatches();
+			for ( PointMatch match : matches )
+				match.apply( l );
+			
+			/**
+			 * Update the location of the vertex
+			 */
+			m.getP2().apply( l );
+			
+			updateAffine( m );
+		}
 	}
 }
