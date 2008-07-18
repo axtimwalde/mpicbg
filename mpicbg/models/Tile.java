@@ -235,7 +235,7 @@ public class Tile
 			double sum_weight = 0.0;
 			for ( PointMatch match : matches )
 			{
-				match.applyByStrength( model, amount );
+				match.apply( model, amount );
 				double dl = match.getDistance();
 				d += dl;
 				e += dl * dl * match.getWeight();

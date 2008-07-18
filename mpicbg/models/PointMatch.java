@@ -21,6 +21,7 @@ package mpicbg.models;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * A link between two {@link Point Points} that are expected to be ideally at
@@ -78,7 +79,7 @@ public class PointMatch
 	 * @param p1 Point 1
 	 * @param p2 Point 2
 	 * @param weights Array of weights
-	 * @param strength how much should {@link #applyByStrength(Model, float)}
+	 * @param strength how much should {@link #apply(Model, float)}
 	 *   affect {@link #p1}
 	 */
 	public PointMatch(
@@ -157,7 +158,7 @@ public class PointMatch
 	 * @param p1 Point 1
 	 * @param p2 Point 2
 	 * @param weight Weight
-	 *  @param strength how much should {@link #applyByStrength(Model, float)}
+	 *  @param strength how much should {@link #apply(Model, float)}
 	 *   affect {@link #p1}
 	 */
 	public PointMatch(
@@ -199,26 +200,51 @@ public class PointMatch
 	}
 	
 	/**
-	 * Apply a {@link Model} to {@link #p1}, update distance.
+	 * Apply a {@link CoordinateTransform} to {@link #p1}, update distance.
 	 * 
-	 * @param model
+	 * @param t
 	 */
-	final public void apply( Model model )
+	final public void apply( CoordinateTransform t )
 	{
-		p1.apply( model );
+		p1.apply( t );
 		distance = Point.distance( p1, p2 );
 	}
 	
 	/**
-	 * Apply a {@link Model} to {@link #p1} with a given amount, update
-	 * distance.
+	 * Apply a {@link List} of {@link CoordinateTransform CoordinateTransforms}
+	 * to {@link #p1}, update distance.
 	 * 
-	 * @param model
+	 * @param l
+	 */
+	final public void apply( List< CoordinateTransform > l )
+	{
+		p1.apply( l );
+		distance = Point.distance( p1, p2 );
+	}
+	
+	/**
+	 * Apply a {@link CoordinateTransform} to {@link #p1} with a given amount,
+	 * update distance.
+	 * 
+	 * @param t
 	 * @param amount
 	 */
-	final public void applyByStrength( Model model, float amount )
+	final public void apply( CoordinateTransform t, float amount )
 	{
-		p1.apply( model, strength * amount );
+		p1.apply( t, strength * amount );
+		distance = Point.distance( p1, p2 );
+	}
+	
+	/**
+	 * Apply a {@link List} of {@link CoordinateTransform} to {@link #p1} with
+	 * a given amount, update distance.
+	 * 
+	 * @param l
+	 * @param amount
+	 */
+	final public void apply( List< CoordinateTransform > l, float amount )
+	{
+		p1.apply( l, strength * amount );
 		distance = Point.distance( p1, p2 );
 	}
 	

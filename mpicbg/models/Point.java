@@ -19,6 +19,8 @@
  */
 package mpicbg.models;
 
+import java.util.List;
+
 /**
  * An n-dimensional point.
  * 
@@ -53,31 +55,64 @@ public class Point
 	}
 	
 	/**
-	 * Apply a {@link Model} to the {@link Point}.
+	 * Apply a {@link CoordinateTransform} to the {@link Point}.
 	 * 
 	 * Transfers the {@link #l local coordinates} to new
 	 * {@link #w world coordinates}.
 	 * 
-	 * @param model
+	 * @param t
 	 */
-	final public void apply( Model model )
+	final public void apply( CoordinateTransform t )
 	{
 		System.arraycopy( l, 0, w, 0, l.length );
-		model.applyInPlace( w );
+		t.applyInPlace( w );
 	}
 	
 	/**
-	 * Apply a {@link Model} to the {@link Point} by a given amount.
+	 * Apply a {@link List} of {@link CoordinateTransform CoordinateTransforms}
+	 * to the {@link Point}.
+	 * 
+	 * @param l
+	 */
+	final public void apply( List< CoordinateTransform > l )
+	{
+		System.arraycopy( this.l, 0, w, 0, this.l.length );
+		for ( CoordinateTransform t : l )
+			t.applyInPlace( w );
+	}
+	
+	/**
+	 * Apply a {@link CoordinateTransform} to the {@link Point} by a given amount.
 	 * 
 	 * Transfers the {@link #l local coordinates} to new
 	 * {@link #w world coordinates}.
 	 * 
-	 * @param model
+	 * @param t
 	 * @param amount 0.0 -> no application, 1.0 -> full application
 	 */
-	final public void apply( Model model, float amount )
+	final public void apply( CoordinateTransform t, float amount )
 	{
-		float[] a = model.apply( l );
+		float[] a = t.apply( l );
+		for ( int i = 0; i < a.length; ++i )
+			w[ i ] += amount * ( a[ i ] - w[ i ] );
+	}
+	
+	/**
+	 * Apply a {@link List} of {@link CoordinateTransform CoordinateTransforms}
+	 * to the {@link Point} by a given amount.
+	 * 
+	 * Transfers the {@link #l local coordinates} to new
+	 * {@link #w world coordinates}.
+	 * 
+	 * @param t
+	 * @param amount 0.0 -> no application, 1.0 -> full application
+	 */
+	final public void apply( List< CoordinateTransform > l, float amount )
+	{
+		float[] a = new float[ this.l.length ];
+		System.arraycopy( this.l, 0, a, 0, this.l.length );
+		for ( CoordinateTransform t : l )
+			t.applyInPlace( a );
 		for ( int i = 0; i < a.length; ++i )
 			w[ i ] += amount * ( a[ i ] - w[ i ] );
 	}
@@ -90,10 +125,10 @@ public class Point
 	 * 
 	 * @param model
 	 */
-	final public void applyInverse( InvertibleModel model ) throws NoninvertibleModelException
+	final public void applyInverse( InvertibleCoordinateTransform t ) throws NoninvertibleModelException
 	{
 		System.arraycopy( l, 0, w, 0, l.length );
-		model.applyInverseInPlace( w );
+		t.applyInverseInPlace( w );
 	}
 	
 	/**
