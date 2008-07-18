@@ -23,7 +23,7 @@ abstract public class Cursor
 	 * @param as - A prototype for the AccessStrategy which is cloned in order to give this cursor as 
 	 * final instance to the AccessStrategy to be as fast as possible.
 	 */
-	public Cursor( Container c, Interpolator ip, AccessStrategy as )
+	public Cursor( Container c, Interpolator ip, final AccessStrategy as )
 	{
 		container = c;
 		interpolator = ip;

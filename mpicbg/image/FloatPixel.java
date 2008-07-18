@@ -51,5 +51,10 @@ public class FloatPixel implements PixelType
 	final public double[] getMinVisibleRange(){ return new double[]{min}; }
 
 	final public double[] getMaxVisibleRange(){ return new double[]{max}; }
-
+	
+	//@Override
+	final public ConstantCursor createConstantCursor()
+	{
+		return new ConstantFloatCursor( getNumChannels() );
+	}
 }

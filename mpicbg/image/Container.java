@@ -55,14 +55,7 @@ public abstract class Container
 	}
 
 	/**
-	 * Creates a Constant Cursor of the same type and dimensionality as the container.
-	 * 
-	 * @return ConstantCursor
-	 */
-	abstract public ConstantCursor createConstantCursor();
-	
-	/**
-	 * Creates the Direct Access Strategy for this container. It is
+	 * Creates the {@link DirectAccessStrategy} for this container. It is
 	 * used by iterators as default and can read and write into the Container.
 	 * 
 	 * 

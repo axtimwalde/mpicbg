@@ -17,12 +17,15 @@ public abstract class AccessStrategyAbstract extends AccessStrategy
 	{
 		super(container, cursor);
 	}
+	
+	abstract void update();
 
 	//
 	// Readable Methods
 	//
 	final public void read( final Object[] v )
 	{
+		update();
 		read.read(v);
 	}
 	final public void read( final byte[] v )

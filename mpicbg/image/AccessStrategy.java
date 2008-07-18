@@ -7,12 +7,12 @@ public abstract class AccessStrategy implements Readable, Writable, Operator
 	
 	public AccessStrategy( Container container, Cursor cursor )
 	{
-		assert container != null : "AccessStrategy(): Container is null";
-		
 		this.cursor = cursor;
 		this.container = container;
 	}
 	
+	//abstract public void move( final Cursor cursor );
+	
 	final public Cursor getCursor() { return cursor; }	
-	public abstract AccessStrategy clone(final Cursor c);
+	public abstract AccessStrategy clone( final Cursor c );
 }

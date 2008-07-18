@@ -1,11 +1,11 @@
 package mpicbg.image;
 
-public class AccessStrategyBackgroundValue extends AccessStrategyAbstract
+public class AccessStrategyMirror extends AccessStrategyAbstract
 {
 	final ConstantCursor backgroundValueCursor; 
 	final AccessStrategy directAccessStrategy;
 	
-	public AccessStrategyBackgroundValue(final Container container, final ConstantCursor backgroundValueCursor, final Cursor cursor)
+	public AccessStrategyMirror(final Container container, final ConstantCursor backgroundValueCursor, final Cursor cursor)
 	{
 		super(container, (Cursor)cursor);
 		this.backgroundValueCursor = backgroundValueCursor;
@@ -15,7 +15,7 @@ public class AccessStrategyBackgroundValue extends AccessStrategyAbstract
 			update();
 	}	
 	
-	public AccessStrategyBackgroundValue(final Container container, final ConstantCursor backgroundValueCursor)
+	public AccessStrategyMirror(final Container container, final ConstantCursor backgroundValueCursor)
 	{
 		this(container, backgroundValueCursor, null);
 	}
@@ -23,7 +23,7 @@ public class AccessStrategyBackgroundValue extends AccessStrategyAbstract
 	@Override
 	public AccessStrategy clone(final Cursor c)
 	{
-		return new AccessStrategyBackgroundValue(container, backgroundValueCursor, cursor);
+		return new AccessStrategyMirror(container, backgroundValueCursor, cursor);
 	}	
 	
 	@Override

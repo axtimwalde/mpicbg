@@ -14,26 +14,20 @@ package mpicbg.image;
  * @author Saalfeld <saalfeld@mpi-cbg.de>
  *
  */
-public class FloatStream extends Stream
+public class FloatStream< P extends FloatPixel > extends Stream
 {
 	final float[] data;
 	
-	public FloatStream( final PixelType type, final int[] dim )
+	public FloatStream( final P type, final int[] dim )
 	{
 		super( type, dim );
 		data = new float[ numPixels ];
 	}
 
-	public FloatStream( PixelType type, int[] dim, double[] res )
+	public FloatStream( P type, int[] dim, double[] res )
 	{
 		this( type, dim );
 		setRes( res );		
-	}
-	
-	@Override
-	final public ConstantCursor createConstantCursor()
-	{
-		return new ConstantFloatCursor(dim.length);
 	}
 	
 	@Override

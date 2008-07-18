@@ -41,19 +41,26 @@ interface PixelType
 	 * @param cursor pointer to the pixel instance
 	 * @return integer
 	 */
-	int toRGBA( Readable cursor );
+	public int toRGBA( Readable cursor );
 
 	/**
 	 * Computes the projection of a pixel instance to an 8bit grey value.
 	 * 
 	 * @return byte
 	 */
-	byte toByte( Readable cursor );
+	public byte toByte( Readable cursor );
 	
 	/**
 	 * Computes the projection of a pixel instance to an 8bit grey value.
 	 * 
 	 * @return byte
 	 */
-	float toFloat( Readable cursor );
+	public float toFloat( Readable cursor );
+	
+	/**
+	 * Creates a {@link ConstantCursor} of the same type and dimensionality as the container.
+	 * 
+	 * @return ConstantCursor
+	 */
+	public ConstantCursor createConstantCursor();
 }
