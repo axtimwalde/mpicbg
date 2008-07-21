@@ -107,11 +107,11 @@ public class StreamRandomAccess
 
 	final public IteratorByDimension toIteratableByDimension( )
 	{
-		return new StreamIteratorByDimension( ( Stream )container, iByDim, accessStrategy.clone(null) );
+		return new StreamIteratorByDimension( ( Stream )container, iByDim, accessStrategy );
 	}
 
 	final public RandomAccess toRandomAccessible( )
 	{
-		return new StreamRandomAccess( ( Stream )container, iByDim, accessStrategy.clone(null) );
+		return new StreamRandomAccess( ( Stream )container, iByDim, accessStrategy );
 	}
 }

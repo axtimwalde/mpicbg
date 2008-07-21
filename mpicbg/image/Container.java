@@ -7,12 +7,15 @@ package mpicbg.image;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de> and Stephan Preibisch <preibisch@mpi-cbg.de>
  *
  */
-public abstract class Container
+public abstract class Container< P extends PixelType, R extends ContainerRead, W extends ContainerWrite >
 {
 	final int[] dim;
 	final double[] res;
 	final double[] size;
-	final PixelType type;
+	final P type;
+	
+	abstract public R getReader();
+	abstract public W getWriter();
 	
 	/**
 	 * Create a new container specifying its size.
@@ -22,7 +25,7 @@ public abstract class Container
 	 * @param type
 	 * @param dim per dimension size in px
 	 */
-	Container( final PixelType type, final int[] dim )
+	Container( final P type, final int[] dim )
 	{
 		assert dim.length > 0 : "Container(): Size of dim[] is " + dim.length;
 		
@@ -48,21 +51,12 @@ public abstract class Container
 	 * @param dim per dimension size in px
 	 * @param res per dimension resolution in px/m
 	 */
-	Container( final PixelType type, final int[] dim, final double[] res )
+	Container( final P type, final int[] dim, final double[] res )
 	{
 		this( type, dim );
 		setRes( res );
 	}
 
-	/**
-	 * Creates the {@link DirectAccessStrategy} for this container. It is
-	 * used by iterators as default and can read and write into the Container.
-	 * 
-	 * 
-	 * @return - the Access Strategy
-	 */
-	abstract public AccessStrategy createDirectAccessStrategy();
-	
 	/**
 	 * Get the pixel type.
 	 * 

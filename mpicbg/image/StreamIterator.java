@@ -1,8 +1,8 @@
 package mpicbg.image;
 
 public class StreamIterator
-		extends ReadableAndWritableCursor
-		implements StreamCursor, Iterator, Localizable, LocalizableFactory< StreamIterator >
+		extends StreamCursor
+		implements Iterator, Localizable, LocalizableFactory< StreamIterator >
 {	
 	/**
 	 * A local pointer to the CoordinateInformationStream and the Stream to 
@@ -56,14 +56,14 @@ public class StreamIterator
 	{
 		int[] l = new int[ container.getNumDim() ];
 		localize( l );
-		return new StreamIteratorByDimension( stream, l, accessStrategy.clone(null) );
+		return new StreamIteratorByDimension( stream, l, accessStrategy );
 	}
 
 	public RandomAccess toRandomAccessible( )
 	{
 		int[] l = new int[ container.getNumDim() ];
 		localize( l );
-		return new StreamRandomAccess( stream, l, accessStrategy.clone(null) );
+		return new StreamRandomAccess( stream, l, accessStrategy );
 	}
 
 	public int getStreamIndex() { return i; }

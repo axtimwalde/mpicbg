@@ -1,6 +1,6 @@
 package mpicbg.image;
 
-public abstract class WritableCursor extends Cursor implements Writable, Operator
+public abstract class WritableCursor extends OldCursor implements Writable, Operator
 {
 	/**
 	 * Constructs a Float Cursor that can read

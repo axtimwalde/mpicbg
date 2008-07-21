@@ -1,6 +1,7 @@
 package mpicbg.image;
 
-public abstract class ReadableAndWritableCursor extends Cursor implements Readable, Writable, Operator
+abstract public class ReadableAndWritableCursor< I extends Container< ? extends PixelType, ? extends ContainerRead< C >, ? extends ContainerWrite< C > >, C extends OldCursor, T extends OldCursor >
+		extends OldCursor< I, C, T > implements Readable, Writable, Operator
 {
 	/**
 	 * Constructs a Float Cursor that can read
@@ -9,7 +10,7 @@ public abstract class ReadableAndWritableCursor extends Cursor implements Readab
 	 * @param as - The access strategy
 	 * @param ci - The coordinate information
 	 */
-	ReadableAndWritableCursor( final Container c, final AccessStrategy as )
+	ReadableAndWritableCursor( final I c, final AccessStrategy< I, T > as )
 	{
 		super( c, null, as );
 	}
@@ -17,7 +18,7 @@ public abstract class ReadableAndWritableCursor extends Cursor implements Readab
 	//
 	// Readable methods
 	//
-	final public byte[] getBytes() { return accessStrategy.getBytes(); }
+	final public byte[] getBytes() { return accessStrategy.getBytes( this ); }
 	final public short[] getShorts() { return accessStrategy.getShorts(); }
 	final public int[] getInts() { return accessStrategy.getInts(); }
 	final public long[] getLongs() { return accessStrategy.getLongs(); }
@@ -25,7 +26,7 @@ public abstract class ReadableAndWritableCursor extends Cursor implements Readab
 	final public double[] getDoubles() { return accessStrategy.getDoubles(); }
 	final public Object[] get() { return accessStrategy.get(); }
 
-	final public byte getByteChannel(final int c) { return accessStrategy.getByteChannel(c); }
+	final public byte getByteChannel(final int c) { return accessStrategy.getByteChannel( this, c ); }
 	final public short getShortChannel(final int c) { return accessStrategy.getShortChannel(c); }
 	final public int getIntChannel(final int c) { return accessStrategy.getIntChannel(c); }
 	final public long getLongChannel(final int c) { return accessStrategy.getLongChannel(c); }

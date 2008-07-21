@@ -83,7 +83,7 @@ public class StreamIteratorByDimension
 			i += iByDim[ d ] * step[ d ];
 		}
 	}
-
+	
 	final public boolean isInside(){ return i > -1 && i < stream.getNumPixels(); }
 	final public boolean isInside( int d ){ return iByDim[ d ] > -1 && iByDim[ d ] < container.getDim( d ); }
 	
@@ -119,11 +119,11 @@ public class StreamIteratorByDimension
 
 	final public IteratorByDimension toIteratableByDimension( )
 	{
-		return new StreamIteratorByDimension( ( Stream )container, iByDim, accessStrategy.clone(null) );
+		return new StreamIteratorByDimension( ( Stream )container, iByDim, accessStrategy );
 	}
 
 	final public RandomAccess toRandomAccessible( )
 	{
-		return new StreamRandomAccess( ( Stream )container, iByDim, accessStrategy.clone(null) );
+		return new StreamRandomAccess( ( Stream )container, iByDim, accessStrategy );
 	}
 }

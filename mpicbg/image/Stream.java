@@ -7,11 +7,13 @@ package mpicbg.image;
  * @author Stephan
  *
  */
-public abstract class Stream extends Container implements Iteratable, IteratableByDimension, RandomAccessible
+public abstract class Stream< P extends PixelType, R extends ContainerRead, W extends ContainerWrite >
+		extends Container< P, R, W >
+		implements Iteratable, IteratableByDimension, RandomAccessible
 {
 	final int numPixels;
 	
-	Stream(final PixelType type, final int[] dim )
+	Stream(final P type, final int[] dim )
 	{
 		super(type, dim);
 		

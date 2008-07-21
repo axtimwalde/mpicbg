@@ -1,18 +1,12 @@
 package mpicbg.image;
 
-public abstract class AccessStrategy implements Readable, Writable, Operator
+public abstract class AccessStrategy< I extends Container< ? extends PixelType, ? extends ContainerRead, ? extends ContainerWrite >, C extends Cursor >
+	implements ContainerRead< C >, ContainerWrite< C >
 {
-	final Container container;
-	final Cursor cursor;
+	final I container;
 	
-	public AccessStrategy( Container container, Cursor cursor )
+	public AccessStrategy( I container )
 	{
-		this.cursor = cursor;
 		this.container = container;
 	}
-	
-	//abstract public void move( final Cursor cursor );
-	
-	final public Cursor getCursor() { return cursor; }	
-	public abstract AccessStrategy clone( final Cursor c );
 }

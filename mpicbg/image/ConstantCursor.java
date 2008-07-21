@@ -1,6 +1,6 @@
 package mpicbg.image;
 
-public abstract class ConstantCursor extends Cursor implements Readable, Writable, Operator
+public abstract class ConstantCursor extends OldCursor implements Readable, Writable, Operator
 {
 	final int dim;
 

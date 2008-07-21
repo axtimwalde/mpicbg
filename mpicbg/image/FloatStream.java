@@ -14,25 +14,29 @@ package mpicbg.image;
  * @author Saalfeld <saalfeld@mpi-cbg.de>
  *
  */
-public class FloatStream< P extends FloatPixel > extends Stream
+public class FloatStream extends Stream< FloatPixel, FloatStreamRead, FloatStreamWrite >
 {
 	final float[] data;
+	final protected FloatStreamRead reader;
+	final protected FloatStreamWrite writer;
 	
-	public FloatStream( final P type, final int[] dim )
+	public FloatStream( final FloatPixel type, final int[] dim )
 	{
 		super( type, dim );
 		data = new float[ numPixels ];
+		reader = new FloatStreamRead( this );
+		writer = new FloatStreamWrite( this );
 	}
 
-	public FloatStream( P type, int[] dim, double[] res )
+	public FloatStream( FloatPixel type, int[] dim, double[] res )
 	{
 		this( type, dim );
 		setRes( res );		
 	}
 	
 	@Override
-	final public AccessStrategy createDirectAccessStrategy()
-	{
-		return new AccessStrategyFloatStream(this, null);
-	}
+	final public FloatStreamRead getReader(){ return reader; }
+	
+	@Override
+	final public FloatStreamWrite getWriter(){ return writer; }
 }

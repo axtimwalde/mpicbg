@@ -13,7 +13,7 @@ public abstract class AccessStrategyAbstract extends AccessStrategy
 	Writable write;
 	Readable read;
 	
-	public AccessStrategyAbstract(Container container, Cursor cursor)
+	public AccessStrategyAbstract(Container container, OldCursor cursor)
 	{
 		super(container, cursor);
 	}

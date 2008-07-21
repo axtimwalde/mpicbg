@@ -1,19 +1,18 @@
-/**
- * 
- */
 package mpicbg.image;
 
 import mpicbg.image.interpolation.Interpolator;
 
 /**
- * @author Saalfeld
+ * A Cursor that can read and write through its AccessStrategy
+ * 
+ * @author Saalfeld and Preibisch
  *
  */
-abstract public class Cursor
+public abstract class Cursor< I extends Container< ? extends PixelType, ? extends ContainerRead, ? extends ContainerWrite > >
 {
-	final Container container;
+	final I container;
 	final Interpolator interpolator;
-	final AccessStrategy accessStrategy;
+	final AccessStrategy< I, ? extends Cursor< ? > >  accessStrategy;
 	
 	/**
 	 * Constructs the cursor.
@@ -23,15 +22,11 @@ abstract public class Cursor
 	 * @param as - A prototype for the AccessStrategy which is cloned in order to give this cursor as 
 	 * final instance to the AccessStrategy to be as fast as possible.
 	 */
-	public Cursor( Container c, Interpolator ip, final AccessStrategy as )
+	public Cursor( I c, Interpolator ip, final AccessStrategy< I, ? extends Cursor< ? > > as )
 	{
 		container = c;
 		interpolator = ip;
-		
-		if ( as != null)
-			accessStrategy = as.clone(this);
-		else // for the ConstantCursor's
-			accessStrategy = null;
+		accessStrategy = as;
 	}
 	
 	/**
@@ -82,4 +77,30 @@ abstract public class Cursor
 	 * @return byte
 	 */
 	float toFloat( Readable cursor ){ return container.getPixelType().toFloat( ( Readable )this ); }
+	
+	
+
+//	final public byte[] getBytes() { return accessStrategy.getBytes(); }
+//	final public short[] getShorts() { return accessStrategy.getShorts(); }
+//	final public int[] getInts() { return accessStrategy.getInts(); }
+//	final public long[] getLongs() { return accessStrategy.getLongs(); }
+//	final public float[] getFloats() { return accessStrategy.getFloats(); }
+//	final public double[] getDoubles() { return accessStrategy.getDoubles(); }
+//	final public Object[] get() { return accessStrategy.get(); }
+
+	final public byte getByteChannel(final int c) { return accessStrategy.getByteChannel( this, c ); }
+	final public short getShortChannel(final int c) { return accessStrategy.getShortChannel( this, c ); }
+	final public int getIntChannel(final int c) { return accessStrategy.getIntChannel( this, c); }
+	final public long getLongChannel(final int c) { return accessStrategy.getLongChannel( this, c); }
+	final public float getFloatChannel(final int c) { return accessStrategy.getFloatChannel( this, c); }
+	final public double getDoubleChannel(final int c) { return accessStrategy.getDoubleChannel( this, c); }
+	final public Object getChannel(final int c) { return accessStrategy.getChannel( this, c); }
+
+	final public void read(final Object[] a) { accessStrategy.read( this, a); }
+	final public void read(final byte[] a) { accessStrategy.read( this, a); }
+	final public void read(final short[] a) { accessStrategy.read( this, a); }
+	final public void read(final int[] a) { accessStrategy.read( this, a); }
+	final public void read(final long[] a) { accessStrategy.read( this, a); }
+	final public void read(final float[] a ) { accessStrategy.read( this, a ); }
+	final public void read(final double[] a) { accessStrategy.read( this, a); }
 }
