@@ -1,0 +1,6 @@
+* Replace Iterator.toIteratableByDimension by copy constructors with
+  Localizable
+* Cursors can talk (fire events?)
+* Think about if PixelType instances could be instantiated with a "background
+  color".  This color defines how an empty pixel/ image looks like.
+  
