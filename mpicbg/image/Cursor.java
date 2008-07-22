@@ -8,11 +8,12 @@ import mpicbg.image.interpolation.Interpolator;
  * @author Saalfeld and Preibisch
  *
  */
-public abstract class Cursor< I extends Container< ? extends PixelType, ? extends ContainerRead, ? extends ContainerWrite > >
+public abstract class Cursor< I extends Container< ? extends PixelType, ? extends Cursor > >
+	implements Readable, Writable
 {
 	final I container;
 	final Interpolator interpolator;
-	final AccessStrategy< I, ? extends Cursor< ? > >  accessStrategy;
+	final Access  accessStrategy;
 	
 	/**
 	 * Constructs the cursor.
@@ -22,7 +23,7 @@ public abstract class Cursor< I extends Container< ? extends PixelType, ? extend
 	 * @param as - A prototype for the AccessStrategy which is cloned in order to give this cursor as 
 	 * final instance to the AccessStrategy to be as fast as possible.
 	 */
-	public Cursor( I c, Interpolator ip, final AccessStrategy< I, ? extends Cursor< ? > > as )
+	public Cursor( I c, Interpolator ip, final Access as )
 	{
 		container = c;
 		interpolator = ip;
@@ -78,29 +79,110 @@ public abstract class Cursor< I extends Container< ? extends PixelType, ? extend
 	 */
 	float toFloat( Readable cursor ){ return container.getPixelType().toFloat( ( Readable )this ); }
 	
+	abstract byte getByteChannelDirect( final int c);
+	abstract short getShortChannelDirect( final int c);
+	abstract int getIntChannelDirect( final int c);
+	abstract long getLongChannelDirect( final int c);
+	abstract float getFloatChannelDirect( final int c);
+	abstract double getDoubleChannelDirect( final int c);
+	abstract Object getChannelDirect( final int c);
+
+	abstract void readDirect( final Object[] a);
+	abstract void readDirect( final byte[] a);
+	abstract void readDirect( final short[] a);
+	abstract void readDirect( final int[] a);
+	abstract void readDirect( final long[] a);
+	abstract void readDirect( final float[] a );
+	abstract void readDirect( final double[] a);
+
+	abstract void setDirect( final Object[] f );
+	abstract void setDirect( final byte[] f );
+	abstract void setDirect( final short[] f );
+	abstract void setDirect( final int[] f );
+	abstract void setDirect( final long[] f );
+	abstract void setDirect( final float[] f );
+	abstract void setDirect( final double[] f );
+
+	abstract void setChannelDirect( final int i, final Object f ); 
+	abstract void setChannelDirect( final int i, final byte f );
+	abstract void setChannelDirect( final int i, final short f );
+	abstract void setChannelDirect( final int i, final int f );
+	abstract void setChannelDirect( final int i, final long f );
+	abstract void setChannelDirect( final int i, final float f );
+	abstract void setChannelDirect( final int i, final double f );
 	
-
-//	final public byte[] getBytes() { return accessStrategy.getBytes(); }
-//	final public short[] getShorts() { return accessStrategy.getShorts(); }
-//	final public int[] getInts() { return accessStrategy.getInts(); }
-//	final public long[] getLongs() { return accessStrategy.getLongs(); }
-//	final public float[] getFloats() { return accessStrategy.getFloats(); }
-//	final public double[] getDoubles() { return accessStrategy.getDoubles(); }
-//	final public Object[] get() { return accessStrategy.get(); }
-
-	final public byte getByteChannel(final int c) { return accessStrategy.getByteChannel( this, c ); }
-	final public short getShortChannel(final int c) { return accessStrategy.getShortChannel( this, c ); }
-	final public int getIntChannel(final int c) { return accessStrategy.getIntChannel( this, c); }
-	final public long getLongChannel(final int c) { return accessStrategy.getLongChannel( this, c); }
-	final public float getFloatChannel(final int c) { return accessStrategy.getFloatChannel( this, c); }
-	final public double getDoubleChannel(final int c) { return accessStrategy.getDoubleChannel( this, c); }
-	final public Object getChannel(final int c) { return accessStrategy.getChannel( this, c); }
-
-	final public void read(final Object[] a) { accessStrategy.read( this, a); }
-	final public void read(final byte[] a) { accessStrategy.read( this, a); }
-	final public void read(final short[] a) { accessStrategy.read( this, a); }
-	final public void read(final int[] a) { accessStrategy.read( this, a); }
-	final public void read(final long[] a) { accessStrategy.read( this, a); }
-	final public void read(final float[] a ) { accessStrategy.read( this, a ); }
-	final public void read(final double[] a) { accessStrategy.read( this, a); }
+	final public void read( final Object[] f ){ accessStrategy.read( this, f ); }
+	final public void read( final byte[] f ){ accessStrategy.read( this, f ); }
+	final public void read( final short[] f ){ accessStrategy.read( this, f ); }
+	final public void read( final int[] f ){ accessStrategy.read( this, f ); }
+	final public void read( final long[] f ){ accessStrategy.read( this, f ); }
+	final public void read( final float[] f ){ accessStrategy.read( this, f ); }
+	final public void read( final double[] f ){ accessStrategy.read( this, f ); }
+	
+	final public Object getChannel( final int i ){ return accessStrategy.getChannel( this, i ); }
+	final public byte getByteChannel( final int i ){ return accessStrategy.getByteChannel( this, i ); }
+	final public short getShortChannel( final int i ){ return accessStrategy.getShortChannel( this, i ); }
+	final public int getIntChannel( final int i ){ return accessStrategy.getIntChannel( this, i ); }
+	final public long getLongChannel( final int i ){ return accessStrategy.getLongChannel( this, i ); }
+	final public float getFloatChannel( final int i ){ return accessStrategy.getFloatChannel( this, i ); }
+	final public double getDoubleChannel( final int i ){ return accessStrategy.getDoubleChannel( this, i ); }
+	
+	final public void set( final Object[] f ){ accessStrategy.set( this, f ); }
+	final public void set( final byte[] f ){ accessStrategy.set( this, f ); }
+	final public void set( final short[] f ){ accessStrategy.set( this, f ); }
+	final public void set( final int[] f ){ accessStrategy.set( this, f ); }
+	final public void set( final long[] f ){ accessStrategy.set( this, f ); }
+	final public void set( final float[] f ){ accessStrategy.set( this, f ); }
+	final public void set( final double[] f ){ accessStrategy.set( this, f ); }
+	
+	final public void setChannel( final int i, final Object f ){ accessStrategy.setChannel( this, i, f ); }
+	final public void setChannel( final int i, final byte f ){ accessStrategy.setChannel( this, i, f ); }
+	final public void setChannel( final int i, final short f ){ accessStrategy.setChannel( this, i, f ); }
+	final public void setChannel( final int i, final int f ){ accessStrategy.setChannel( this, i, f ); }
+	final public void setChannel( final int i, final long f ){ accessStrategy.setChannel( this, i, f ); }
+	final public void setChannel( final int i, final float f ){ accessStrategy.setChannel( this, i, f ); }
+	final public void setChannel( final int i, final double f ){ accessStrategy.setChannel( this, i, f ); }
+	
+	final public Object[] get()
+	{
+		final Object[] a = new Object[ container.getPixelType().getNumChannels() ];
+		read( a );
+		return a;
+	}
+	final public byte[] getBytes()
+	{
+		final byte[] a = new byte[ container.getPixelType().getNumChannels() ];
+		read( a );
+		return a;
+	}
+	final public short[] getShorts()
+	{
+		final short[] a = new short[ container.getPixelType().getNumChannels() ];
+		read( a );
+		return a;
+	}
+	final public int[] getInts()
+	{
+		final int[] a = new int[ container.getPixelType().getNumChannels() ];
+		read( a );
+		return a;
+	}
+	final public long[] getLongs()
+	{
+		final long[] a = new long[ container.getPixelType().getNumChannels() ];
+		read( a );
+		return a;
+	}
+	final public float[] getFloats()
+	{
+		final float[] a = new float[ container.getPixelType().getNumChannels() ];
+		read( a );
+		return a;
+	}
+	final public double[] getDoubles()
+	{
+		final double[] a = new double[ container.getPixelType().getNumChannels() ];
+		read( a );
+		return a;
+	}
 }

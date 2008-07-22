@@ -3,7 +3,7 @@ package mpicbg.image;
 public class AccessStrategyBackgroundValue extends AccessStrategyAbstract
 {
 	final ConstantCursor backgroundValueCursor; 
-	final AccessStrategy directAccessStrategy;
+	final Access directAccessStrategy;
 	
 	public AccessStrategyBackgroundValue(final Container container, final ConstantCursor backgroundValueCursor, final OldCursor cursor)
 	{
@@ -21,7 +21,7 @@ public class AccessStrategyBackgroundValue extends AccessStrategyAbstract
 	}
 
 	@Override
-	public AccessStrategy clone(final OldCursor c)
+	public Access clone(final OldCursor c)
 	{
 		return new AccessStrategyBackgroundValue(container, backgroundValueCursor, cursor);
 	}	

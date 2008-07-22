@@ -14,13 +14,13 @@ interface Readable
 	 * short[], int[], long[], float[], double[] or Object[].
 	 * 
 	 */
-	void read( Object[] a );
-	void read( byte[] a );
-	void read( short[] a );
-	void read( int[] a );
-	void read( long[] a );
-	void read( float[] a );
-	void read( double[] a );
+	void read( Object[] f );
+	void read( byte[] f );
+	void read( short[] f );
+	void read( int[] f );
+	void read( long[] f );
+	void read( float[] f );
+	void read( double[] f );
 	
 	/**
 	 * Get the pixel values.
@@ -62,41 +62,41 @@ interface Readable
 	 * Get the pixel channel value.
 	 * @param c channel
 	 */
-	Object getChannel( int c );
+	Object getChannel( int i );
 	
 	/**
-	 * Basic type version of {@link #getChannel( int c )}
+	 * Basic type version of {@link #getChannel( int i )}
 	 * @param c channel
 	 */
-	byte getByteChannel( int c );
+	byte getByteChannel( int i );
 	
 	/**
-	 * Basic type version of {@link #getChannel( int c )}
+	 * Basic type version of {@link #getChannel( int i )}
 	 * @param c channel
 	 */
-	short getShortChannel( int c );
+	short getShortChannel( int i );
 	
 	/**
-	 * Basic type version of {@link #getChannel( int c )}
+	 * Basic type version of {@link #getChannel( int i )}
 	 * @param c channel
 	 */
-	int getIntChannel( int c );
+	int getIntChannel( int i );
 	
 	/**
-	 * Basic type version of {@link #getChannel( int c )}
+	 * Basic type version of {@link #getChannel( int i )}
 	 * @param c channel
 	 */
-	long getLongChannel( int c );
+	long getLongChannel( int i );
 	
 	/**
-	 * Basic type version of {@link #getChannel( int c )}
+	 * Basic type version of {@link #getChannel( int i )}
 	 * @param c channel
 	 */
-	float getFloatChannel( int c );
+	float getFloatChannel( int i );
 	
 	/**
-	 * Basic type version of {@link #getChannel( int c )}
+	 * Basic type version of {@link #getChannel( int i )}
 	 * @param c channel
 	 */
-	double getDoubleChannel( int c );
+	double getDoubleChannel( int i );
 }

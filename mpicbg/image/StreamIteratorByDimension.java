@@ -9,37 +9,28 @@ package mpicbg.image;
  *   move the cursor.  We are still not clear how to specify the strategy for
  *   out of bounds bouncing.
  */
-public class StreamIteratorByDimension 
-		extends ReadableAndWritableCursor 
-		implements StreamCursor, IteratorByDimension, Localizable, LocalizableFactory< StreamIteratorByDimension >
+public class StreamIteratorByDimension< I extends Stream< ? extends PixelType > >
+		extends StreamCursor < I >
+		implements IteratorByDimension< I >, Localizable, LocalizableFactory< StreamIteratorByDimension >
 {
-	/**
-	 * A local pointer to the CoordinateInformationStream and the Stream to 
-	 * prevent continious casting 
-	 */
-	final Stream stream;
-
 	final protected int[] step;
 	final protected int[] iByDim;
 	protected int i = 0;
 
-	StreamIteratorByDimension( final Stream stream, final AccessStrategy accessStrategy )
+	StreamIteratorByDimension( final I stream, final Access accessStrategy )
 	{
-		super( stream, accessStrategy );
+		super( stream, null, accessStrategy );
 		int nd = stream.getNumDim();
 		iByDim = new int[nd];
 		step = new int[ nd ];
 		step[ 0 ] = stream.getPixelType().getNumChannels();
 		for ( int d = 1; d < nd; ++d )
 			step[ d ] = step[ d - 1 ] * container.getDim( d - 1 );
-
-		// Local pointers to prevent continious casting 
-		this.stream = (Stream)container;
 	}
 
-	StreamIteratorByDimension( final Stream stream )
+	StreamIteratorByDimension( final I stream )
 	{
-		this( stream, stream.createDirectAccessStrategy() );
+		this( stream, new AccessDirect() );
 	}
 
 	/**
@@ -48,7 +39,7 @@ public class StreamIteratorByDimension
 	 * @param stream
 	 * @param l initial location
 	 */
-	StreamIteratorByDimension( final Stream stream, int[] l, final AccessStrategy accessStrategy )
+	StreamIteratorByDimension( final I stream, int[] l, final Access accessStrategy )
 	{
 		this( stream, accessStrategy );
 		System.arraycopy( l, 0, iByDim, 0, iByDim.length );
@@ -61,9 +52,9 @@ public class StreamIteratorByDimension
 		}
 	}
 
-	StreamIteratorByDimension( final FloatStream stream, final float[] l )
+	StreamIteratorByDimension( final I stream, final float[] l )
 	{
-		this(stream, l, stream.createDirectAccessStrategy());
+		this( stream, l, new AccessDirect() );
 	}
 	
 	/**
@@ -72,7 +63,7 @@ public class StreamIteratorByDimension
 	 * @param stream
 	 * @param l initial location
 	 */
-	StreamIteratorByDimension( final Stream stream, final float[] l, final AccessStrategy accessStrategy )
+	StreamIteratorByDimension( final I stream, final float[] l, final Access accessStrategy )
 	{
 		this( stream, accessStrategy );
 		iByDim[ 0 ] = l[ 0 ] > 0 ? ( int )l[ 0 ] : ( int )l[ 0 ] - 1;
@@ -84,8 +75,18 @@ public class StreamIteratorByDimension
 		}
 	}
 	
-	final public boolean isInside(){ return i > -1 && i < stream.getNumPixels(); }
-	final public boolean isInside( int d ){ return iByDim[ d ] > -1 && iByDim[ d ] < container.getDim( d ); }
+	final public boolean isInside()
+	{
+		boolean a = true;
+		for ( int i = 0; a && i < iByDim.length; ++i )
+		{
+			a &= iByDim[ i ] >= 0;
+			a &= iByDim[ i ] < container.getDim( i );
+		}
+		return a;
+	}
+	
+	final public boolean isInside( int d ){ return iByDim[ d ] >= 0 && iByDim[ d ] < container.getDim( d ); }
 	
 	final public void next( final int d )
 	{
@@ -119,11 +120,11 @@ public class StreamIteratorByDimension
 
 	final public IteratorByDimension toIteratableByDimension( )
 	{
-		return new StreamIteratorByDimension( ( Stream )container, iByDim, accessStrategy );
+		return new StreamIteratorByDimension< I >( container, iByDim, accessStrategy );
 	}
 
 	final public RandomAccess toRandomAccessible( )
 	{
-		return new StreamRandomAccess( ( Stream )container, iByDim, accessStrategy );
+		return new StreamRandomAccess< I >( container, iByDim, accessStrategy );
 	}
 }

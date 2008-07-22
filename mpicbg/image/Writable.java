@@ -14,24 +14,25 @@ public interface Writable
 	 * short[], int[], long[], float[], double[] or Object[].
 	 * 
 	 */
-	void set( Object[] a );
-	void set( byte[] a );
-	void set( short[] a );
-	void set( int[] a );
-	void set( long[] a );
-	void set( float[] a );
-	void set( double[] a );
+	void set( Object[] f );
+	void set( byte[] f );
+	void set( short[] f );
+	void set( int[] f );
+	void set( long[] f );
+	void set( float[] f );
+	void set( double[] f );
 	
 	/**
 	 * Set one channel
 	 * @param v value
 	 * @param c channel
 	 */
-	void setChannel( Object v, int c );
-	void setChannel( byte v, int c );
-	void setChannel( short v, int c );
-	void setChannel( int v, int c );
-	void setChannel( long v, int c );
-	void setChannel( float v, int c );
-	void setChannel( double v, int c );
+	void setChannel( int i, Object f );
+	void setChannel( int i, byte f );
+	void setChannel( int i, short f );
+	void setChannel( int i, int f );
+	void setChannel( int i, long f );
+	void setChannel( int i, float f );
+	void setChannel( int i, double f );
+	
 }

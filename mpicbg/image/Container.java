@@ -7,15 +7,15 @@ package mpicbg.image;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de> and Stephan Preibisch <preibisch@mpi-cbg.de>
  *
  */
-public abstract class Container< P extends PixelType, R extends ContainerRead, W extends ContainerWrite >
+public abstract class Container< P extends PixelType, C extends Cursor >
 {
 	final int[] dim;
 	final double[] res;
 	final double[] size;
 	final P type;
 	
-	abstract public R getReader();
-	abstract public W getWriter();
+	abstract public ContainerRead< C > getReader();
+	abstract public ContainerWrite< C > getWriter();
 	
 	/**
 	 * Create a new container specifying its size.

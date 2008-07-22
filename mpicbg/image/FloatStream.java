@@ -14,13 +14,13 @@ package mpicbg.image;
  * @author Saalfeld <saalfeld@mpi-cbg.de>
  *
  */
-public class FloatStream extends Stream< FloatPixel, FloatStreamRead, FloatStreamWrite >
+public class FloatStream< P extends PixelType > extends Stream< P >
 {
 	final float[] data;
 	final protected FloatStreamRead reader;
 	final protected FloatStreamWrite writer;
 	
-	public FloatStream( final FloatPixel type, final int[] dim )
+	public FloatStream( final P type, final int[] dim )
 	{
 		super( type, dim );
 		data = new float[ numPixels ];
@@ -28,7 +28,7 @@ public class FloatStream extends Stream< FloatPixel, FloatStreamRead, FloatStrea
 		writer = new FloatStreamWrite( this );
 	}
 
-	public FloatStream( FloatPixel type, int[] dim, double[] res )
+	public FloatStream( P type, int[] dim, double[] res )
 	{
 		this( type, dim );
 		setRes( res );		

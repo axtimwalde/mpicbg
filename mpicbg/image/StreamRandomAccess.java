@@ -1,48 +1,39 @@
 package mpicbg.image;
 
-public class StreamRandomAccess
-		extends ReadableAndWritableCursor
-		implements StreamCursor, RandomAccess, Localizable, LocalizableFactory< StreamRandomAccess >
+public class StreamRandomAccess< I extends Stream< ? extends PixelType > >
+		extends StreamCursor< I >
+		implements RandomAccess< I >, Localizable, LocalizableFactory< StreamRandomAccess >
 {
-	/**
-	 * A local pointer to the CoordinateInformationStream and the Stream to 
-	 * prevent continious casting 
-	 */
-	final Stream stream;	
-	
 	final protected int[] step;
 	final protected int[] iByDim;
 	protected int i = 0;
 	
-	StreamRandomAccess( Stream stream, AccessStrategy accessStrategy )
+	StreamRandomAccess( I stream, Access accessStrategy )
 	{
-		super( stream, accessStrategy );
+		super( stream, null, accessStrategy );
 		int nd = stream.getNumDim();
 		iByDim = new int[nd];		
 		step = new int[ nd ];
 		step[ 0 ] = stream.getPixelType().getNumChannels();
 		for ( int d = 1; d < nd; ++d )
-			step[ d ] = step[ d - 1 ] * container.getDim( d - 1 );
-		
-		// Local pointers to prevent continious casting 
-		this.stream = (Stream)container;		
+			step[ d ] = step[ d - 1 ] * container.getDim( d - 1 );		
 	}
 
-	StreamRandomAccess( Stream stream )
+	StreamRandomAccess( I stream )
 	{
-		this(stream, stream.createDirectAccessStrategy());
+		this( stream, new AccessDirect() );
 	}
 
 
-	StreamRandomAccess( Stream stream, int[] l, AccessStrategy accessStrategy )
+	StreamRandomAccess( I stream, int[] l, Access accessStrategy )
 	{
 		this( stream, accessStrategy );
 		to( l );
 	}
 
-	StreamRandomAccess( Stream stream, int[] l )
+	StreamRandomAccess( I stream, int[] l )
 	{
-		this(stream, l, stream.createDirectAccessStrategy());
+		this( stream, l, new AccessDirect() );
 	}
 	
 	/**
@@ -51,18 +42,27 @@ public class StreamRandomAccess
 	 * @param stream
 	 * @param l initial location
 	 */
-	StreamRandomAccess( Stream stream, float[] l, AccessStrategy accessStrategy )
+	StreamRandomAccess( I stream, float[] l, Access accessStrategy )
 	{
 		this( stream, accessStrategy );
 		to( l );
 	}
 
-	StreamRandomAccess( Stream stream, float[] l )
+	StreamRandomAccess( I stream, float[] l )
 	{
-		this(stream, l, stream.createDirectAccessStrategy());
+		this( stream, l, new AccessDirect() );
 	}
 
-	final public boolean isInside(){ return i > -1 && i < stream.getNumPixels(); }
+	final public boolean isInside()
+	{
+		boolean a = true;
+		for ( int i = 0; a && i < iByDim.length; ++i )
+		{
+			a &= iByDim[ i ] >= 0;
+			a &= iByDim[ i ] < container.getDim( i );
+		}
+		return a;
+	}
 
 	final public void to( final int[] l )
 	{
@@ -107,11 +107,11 @@ public class StreamRandomAccess
 
 	final public IteratorByDimension toIteratableByDimension( )
 	{
-		return new StreamIteratorByDimension( ( Stream )container, iByDim, accessStrategy );
+		return new StreamIteratorByDimension< I >( container, iByDim, accessStrategy );
 	}
 
 	final public RandomAccess toRandomAccessible( )
 	{
-		return new StreamRandomAccess( ( Stream )container, iByDim, accessStrategy );
+		return new StreamRandomAccess< I >( container, iByDim, accessStrategy );
 	}
 }

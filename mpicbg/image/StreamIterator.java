@@ -1,30 +1,20 @@
 package mpicbg.image;
 
-public class StreamIterator
-		extends StreamCursor
-		implements Iterator, Localizable, LocalizableFactory< StreamIterator >
+public class StreamIterator< I extends Stream< ? extends PixelType > >
+		extends StreamCursor< I >
+		implements Iterator< I >, Localizable, LocalizableFactory< StreamIterator >
 {	
-	/**
-	 * A local pointer to the CoordinateInformationStream and the Stream to 
-	 * prevent continious casting 
-	 */
-	final protected Stream stream;
-	final protected int numChannels;
 	protected int i = 0;
 	
-	StreamIterator( Stream stream )
+	StreamIterator( I stream )
 	{
-		super( stream, stream.createDirectAccessStrategy() );
-		
-		// Local pointers to prevent continious casting 
-		this.stream = (Stream)container;
-		numChannels = stream.getPixelType().getNumChannels();
+		super( stream, null, new AccessDirect() );
 	}
 	
-	final public boolean isInside(){ return i > -1 && i < stream.getNumPixels(); }
+	final public boolean isInside(){ return i > -1 && i < container.getNumPixels(); }
 	
-	public void next(){ i += numChannels; }
-	public void prev(){ i -= numChannels; }
+	public void next(){ i += container.getPixelType().getNumChannels(); }
+	public void prev(){ i -= container.getPixelType().getNumChannels(); }
 	
 	public float[] localize()
 	{
@@ -34,7 +24,7 @@ public class StreamIterator
 	}
 	public void localize( float[] l )
 	{
-		int r = i / numChannels;
+		int r = i / container.getPixelType().getNumChannels();
 		for ( int d = 0; d < l.length; ++d )
 		{
 			l[ d ] = r % container.getDim( d );
@@ -43,7 +33,7 @@ public class StreamIterator
 	}
 	public void localize( int[] l )
 	{
-		int r = i / numChannels;
+		int r = i / container.getPixelType().getNumChannels();
 		
 		for ( int d = 0; d < l.length; ++d )
 		{
@@ -56,14 +46,14 @@ public class StreamIterator
 	{
 		int[] l = new int[ container.getNumDim() ];
 		localize( l );
-		return new StreamIteratorByDimension( stream, l, accessStrategy );
+		return new StreamIteratorByDimension< I >( container, l, accessStrategy );
 	}
 
 	public RandomAccess toRandomAccessible( )
 	{
 		int[] l = new int[ container.getNumDim() ];
 		localize( l );
-		return new StreamRandomAccess( stream, l, accessStrategy );
+		return new StreamRandomAccess< I >( container, l, accessStrategy );
 	}
 
 	public int getStreamIndex() { return i; }

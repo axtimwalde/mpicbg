@@ -7,7 +7,7 @@ package mpicbg.image;
  * @author Stephan
  *
  */
-public abstract class AccessStrategyAbstract extends AccessStrategy
+public abstract class AccessStrategyAbstract extends Access
 {
 	Operator operator;
 	Writable write;

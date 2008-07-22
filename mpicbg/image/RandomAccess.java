@@ -7,7 +7,7 @@ package mpicbg.image;
  * @author Preibisch and Saalfeld
  *
  */
-public interface RandomAccess
+public interface RandomAccess< I extends Container< ? extends PixelType, ? extends Cursor > >
 {
 	/**
 	 * Go to a random location.

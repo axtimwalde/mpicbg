@@ -29,17 +29,17 @@ public class Test
 		// Define the Container to work with
 		int[] dim = new int[]{10, 11};		
 		//int[] dim = new int[]{2, 2};
-		FloatStream container = new FloatStream(pixelType, dim);
+		FloatStream< FloatPixel > stream = new FloatStream< FloatPixel >(pixelType, dim);
 		
 		// Create some iterators for this container
-		StreamIterator i = null;
-		StreamIteratorByDimension iDim = null;
-		StreamRandomAccess iRnd = null;
+		StreamIterator< Stream< FloatPixel > >  i = null;
+		StreamIteratorByDimension< Stream< FloatPixel > > iDim = null;
+		StreamRandomAccess< Stream< FloatPixel > > iRnd = null;
 		try
 		{
-			i = new StreamIterator(container);
-			iDim = new StreamIteratorByDimension(container);
-			iRnd = new StreamRandomAccess(container);
+			i = stream.createIterator();
+			iDim = stream.createIteratorByDimension();
+			iRnd = stream.createRandomAccess();
 		}
 		catch (Exception e)
 		{
@@ -54,7 +54,7 @@ public class Test
 			for (pos[0] = 0; pos[0] < dim[0]; pos[0]++)
 			{
 				iRnd.to(pos);				
-				iRnd.setChannel(val, 0);
+				iRnd.setChannel(0, val);
 				val += 1;
 			}
 		

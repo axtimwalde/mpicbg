@@ -7,9 +7,9 @@ package mpicbg.image;
  * @author Stephan
  *
  */
-public abstract class Stream< P extends PixelType, R extends ContainerRead, W extends ContainerWrite >
-		extends Container< P, R, W >
-		implements Iteratable, IteratableByDimension, RandomAccessible
+public abstract class Stream< P extends PixelType >
+		extends Container< P, StreamCursor >
+		implements Iteratable< Stream< P > >, IteratableByDimension< Stream< P > >, RandomAccessible< Stream< P > >
 {
 	final int numPixels;
 	
@@ -29,8 +29,8 @@ public abstract class Stream< P extends PixelType, R extends ContainerRead, W ex
 		return numPixels;
 	}
 	
-	public Iterator createIterator() { return new StreamIterator(this); }
-	public IteratorByDimension createIteratorByDimension() { return new StreamIteratorByDimension(this); }
-	public RandomAccess createRandomAccess() { return new StreamRandomAccess(this); }	
+	public StreamIterator< Stream< P > > createIterator() { return new StreamIterator< Stream< P > >( this ); }
+	public StreamIteratorByDimension< Stream< P > > createIteratorByDimension() { return new StreamIteratorByDimension< Stream< P > >( this ); }
+	public StreamRandomAccess< Stream< P > > createRandomAccess() { return new StreamRandomAccess< Stream< P > >( this ); }	
 	
 }

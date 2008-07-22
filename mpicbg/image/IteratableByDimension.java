@@ -1,6 +1,6 @@
 package mpicbg.image;
 
-public interface IteratableByDimension
+public interface IteratableByDimension< I extends Container< ? extends PixelType, ? extends Cursor > >
 {
-	public IteratorByDimension createIteratorByDimension();
+	public IteratorByDimension< I > createIteratorByDimension();
 }
