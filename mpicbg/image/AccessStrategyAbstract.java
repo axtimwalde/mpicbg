@@ -9,298 +9,156 @@ package mpicbg.image;
  */
 public abstract class AccessStrategyAbstract extends Access
 {
-	Operator operator;
-	Writable write;
-	Readable read;
-	
-	public AccessStrategyAbstract(Container container, OldCursor cursor)
-	{
-		super(container, cursor);
-	}
-	
-	abstract void update();
+	Cursor write;
+	Cursor read;
+		
+	abstract void update(Cursor cursor);
 
 	//
 	// Readable Methods
 	//
-	final public void read( final Object[] v )
+	final public void read( final Cursor c, final Object[] v )
 	{
-		update();
-		read.read(v);
+		update( c );
+		read.read( v );
 	}
-	final public void read( final byte[] v )
+	final public void read( final Cursor c, final byte[] v )
 	{
-		read.read(v);
+		update( c );
+		read.read( v );
 	}
-	final public void read( final short[] v )
+	final public void read( final Cursor c, final short[] v )
 	{
-		read.read(v);
+		update( c );
+		read.read( v );
 	}
-	final public void read( final int[] v )
+	final public void read( final Cursor c, final int[] v )
 	{
-		read.read(v);
+		update( c );
+		read.read( v );
 	}
-	final public void read( final long[] v )
+	final public void read( final Cursor c, final long[] v )
 	{
-		read.read(v);
+		update( c );
+		read.read( v );
 	}
-	final public void read(final float[] v)
+	final public void read( final Cursor c, final float[] v)
 	{ 
-		read.read(v);
+		update( c );
+		read.read( v );
 	}
-	final public void read( final double[] v )
+	final public void read( final Cursor c, final double[] v )
 	{
-		read.read(v);
+		update( c );
+		read.read( v );
+	}
+		
+	final public Object getChannel( final Cursor c, final int v )
+	{
+		update( c );
+		return read.getChannel( v );
+	}
+	final public byte getByteChannel( final Cursor c, final int v )
+	{
+		update( c );
+		return read.getByteChannel( v );
+	}
+	final public short getShortChannel( final Cursor c, final int v )
+	{
+		update( c );
+		return read.getShortChannel( v );
+	}
+	final public int getIntChannel( final Cursor c, final int v )
+	{
+		update( c );
+		return read.getIntChannel( v );
+	}
+	final public long getLongChannel( final Cursor c, final int v )
+	{
+		update( c );
+		return read.getLongChannel( v );
+	}
+	public final float getFloatChannel( final Cursor c, final int v ) 
+	{ 
+		update( c );
+		return read.getFloatChannel( v );
+	}
+	final public double getDoubleChannel( final Cursor c, final int v )
+	{
+		update( c );
+		return read.getDoubleChannel( v );
 	}
 	
-	
-	final public Object[] get()
+	public void set( final Cursor c, final Object[] v )
 	{
-		Object[] c = new Object[ container.getPixelType().getNumChannels() ];
-		read( c );
-		return c;
+		update( c );
+		write.set( v );
 	}
-	final public byte[] getBytes()
+	public void set( final Cursor c, final byte[] v )
 	{
-		byte[] c = new byte[ container.getPixelType().getNumChannels() ];
-		read( c );
-		return c;
+		update( c );
+		write.set( v );
 	}
-	final public short[] getShorts()
+	public void set( final Cursor c, final short[] v )
 	{
-		short[] c = new short[ container.getPixelType().getNumChannels() ];
-		read( c );
-		return c;
+		update( c );
+		write.set( v );
 	}
-	final public int[] getInts()
+	public void set( final Cursor c, final int[] v )
 	{
-		int[] c = new int[ container.getPixelType().getNumChannels() ];
-		read( c );
-		return c;
+		update( c );
+		write.set( v );
 	}
-	final public long[] getLongs()
+	public void set( final Cursor c, final long[] v )
 	{
-		long[] c = new long[ container.getPixelType().getNumChannels() ];
-		read( c );
-		return c;
+		update( c );
+		write.set( v );
 	}
-	final public float[] getFloats()
-	{
-		final float[] f = new float[ container.getNumDim() ];
-		read( f );
-		return f;
-	}
-	final public double[] getDoubles()
-	{
-		double[] c = new double[ container.getPixelType().getNumChannels() ];
-		read( c );
-		return c;
-	}
-	
-	final public Object getChannel( final int c )
-	{
-		return read.getChannel(c);
-	}
-	final public byte getByteChannel( final int c )
-	{
-		return read.getByteChannel(c);
-	}
-	final public short getShortChannel( final int c )
-	{
-		return read.getShortChannel(c);
-	}
-	final public int getIntChannel( final int c )
-	{
-		return read.getIntChannel(c);
-	}
-	final public long getLongChannel( final int c )
-	{
-		return read.getLongChannel(c);
-	}
-	public final float getFloatChannel(final int c) 
+	public final void set( final Cursor c, final float[] v)	
 	{ 
-		return read.getFloatChannel(c);
-	}
-	final public double getDoubleChannel( final int c )
-	{
-		return read.getDoubleChannel(c);
-	}
-	
-	//
-	// operator methods
-	// 
-	final public void add( final Readable c )
-	{		
-		operator.add(c);
-	}
-	final public void add( final byte c )
-	{ 		
-		operator.add(c);
-	}
-	final public void add( final short c ) 
-	{
-		operator.add(c);		
-	}
-	final public void add( final int c ) 
-	{ 
-		operator.add(c);
-	}
-	final public void add( final long c ) 
-	{	
-		operator.add(c);
-	}
-	final public void add( final float c )
-	{
-		operator.add(c);
-	}
-	final public void add( final double c ) 
-	{ 
-		operator.add(c);
-	}
-	
-	final public void sub( final Readable c )
-	{
-		operator.sub(c);
-	}
-	final public void sub( final byte c )
-	{
-		operator.sub(c);
-	}
-	final public void sub( final short c ) 
-	{ 
-		operator.sub(c);		
-	}
-	final public void sub( final int c ) 
-	{ 
-		operator.sub(c);		
-	}
-	final public void sub( final long c ) 
-	{
-		operator.sub(c);		
-	}
-	final public void sub( final float c )
-	{
-		operator.sub(c);
-	}
-	final public void sub( final double c ) 
-	{
-		operator.sub(c);		
-	}
-	
-	final public void mul( final Readable c )
-	{
-		operator.mul(c);
-	}
-	final public void mul( final byte c )
-	{ 
-		operator.mul(c);		
-	}
-	final public void mul( final short c ) 
-	{ 
-		operator.mul(c);		
-	}
-	final public void mul( final int c ) 
-	{
-		operator.mul(c);
-	}
-	final public void mul( final long c ) 
-	{
-		operator.mul(c);
-	}
-	final public void mul( final float c )
-	{
-		operator.mul(c);
-	}
-	final public void mul( final double c ) 
-	{
-		operator.mul(c);
-	}
-	
-	final public void div( final Readable c )
-	{
-		operator.div(c);
+		update( c );
+		write.set( v );
 	}	
-	final public void div( final byte c )
-	{ 
-		operator.div(c);		
-	}
-	final public void div( final short c ) 
+	public void set( final Cursor c, final double[] v )
 	{
-		operator.div(c);
-	}
-	final public void div( final int c )
-	{ 
-		operator.div(c);		
-	}
-	final public void div( final long c ) 
-	{
-		operator.div(c);
-	}
-	final public void div( final float c )
-	{
-		operator.div(c);
-	}		
-	 public void div( double c ) 
-	{ 
-		 operator.div(c);		
-	}
-	
-	public void set( Object[] a )
-	{
-		write.set(a);
-	}
-	public void set( byte[] a )
-	{
-		write.set(a);
-	}
-	public void set( short[] a )
-	{
-		write.set(a);
-	}
-	public void set( int[] a )
-	{
-		write.set(a);
-	}
-	public void set( long[] a )
-	{
-		write.set(a);
-	}
-	public final void set( final float[] v)	
-	{ 
-		write.set(v);
-	}	
-	public void set( double[] a )
-	{
-		write.set(a);
+		update( c );
+		write.set( v );
 	}
 
-	public void setChannel( Object v, int c )
+	public void setChannel( final Cursor c, final int i, final Object v )
 	{ 
-		write.setChannel(v, c); 
+		update( c );
+		write.setChannel( i, v ); 
 	}
-	public void setChannel( byte v, int c )
+	public void setChannel( final Cursor c, final int i, final byte v )
 	{
-		write.setChannel(v, c); 		
+		update( c );
+		write.setChannel( i, v ); 		
 	}
-	public void setChannel( short v, int c )
+	public void setChannel( final Cursor c, final int i, final short v )
 	{
-		write.setChannel(v, c); 
+		update( c );
+		write.setChannel( i, v ); 
 	}
-	public void setChannel( int v, int c )
+	public void setChannel( final Cursor c, final int i, final int v )
 	{
-		write.setChannel(v, c); 
+		update( c );
+		write.setChannel( i, v ); 
 	}
-	public void setChannel( long v, int c )
+	public void setChannel( final Cursor c, final int i, final long v )
 	{
-		write.setChannel(v, c); 
+		update( c );
+		write.setChannel( i, v ); 
 	}
-	public void setChannel(final float v, final int channel) 
+	public void setChannel( final Cursor c, final int i, final float v ) 
 	{ 
-		write.setChannel(v, channel);		
+		update( c );
+		write.setChannel( i, v );		
 	}	
-	public void setChannel( double v, int c )
+	public void setChannel( final Cursor c, final int i, final double v )
 	{
-		write.setChannel(v, c); 
+		update( c );
+		write.setChannel( i, v ); 
 	}
 	
 }
