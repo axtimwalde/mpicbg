@@ -88,7 +88,7 @@ public class MovingLeastSquaresMesh extends TransformMesh
 			try
 			{
 				Model model = modelClass.newInstance();
-				Tile t = new Tile( width, height, model );
+				Tile t = new Tile( model );
 				pt.put( vertex, t );
 			}
 			catch ( Exception e ){ e.printStackTrace(); }
@@ -221,7 +221,7 @@ public class MovingLeastSquaresMesh extends TransformMesh
 		
 		for ( PointMatch m : s )
 		{
-			ArrayList< PointMatch > matches = pt.get( m ).getMatches();
+			Set< PointMatch > matches = pt.get( m ).getMatches();
 			for ( PointMatch match : matches )
 				match.apply( t );
 			
