@@ -186,7 +186,7 @@ public class ElasticMovingLeastSquaresMesh extends MovingLeastSquaresMesh
 			/**
 			 * Update the tile
 			 */
-			t.updateByStrength( amount );
+			t.update( amount );
 		}
 		
 		double cd = 0.0;

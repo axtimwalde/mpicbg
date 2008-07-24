@@ -31,10 +31,10 @@ import java.util.Collection;
  */
 public class AffineModel2D extends InvertibleModel
 {
-	static final protected int MIN_SET_SIZE = 3;
+	static final protected int MIN_NUM_MATCHES = 3;
 	
 	@Override
-	public int getMinSetSize(){ return MIN_SET_SIZE; }
+	public int getMinNumMatches(){ return MIN_NUM_MATCHES; }
 	
 	final protected AffineTransform affine = new AffineTransform();
 	public AffineTransform getAffine(){	return affine; }
@@ -94,7 +94,7 @@ public class AffineModel2D extends InvertibleModel
 	@Override
 	public void fit( Collection< PointMatch > matches ) throws NotEnoughDataPointsException
 	{
-		if ( matches.size() < MIN_SET_SIZE ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d affine model, at least " + MIN_SET_SIZE + " data points required." );
+		if ( matches.size() < MIN_NUM_MATCHES ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
 		
 		// center of mass:
 		float pcx = 0, pcy = 0;
@@ -156,8 +156,11 @@ public class AffineModel2D extends InvertibleModel
 	}
 
 	
+	/**
+	 * TODO Not yet implemented ...
+	 */
 	@Override
-	public void shake( Collection< PointMatch > matches, float scale, float[] center )
+	public void shake( float amount )
 	{
 		// TODO If you ever need it, please implement it...
 	}
@@ -168,12 +171,35 @@ public class AffineModel2D extends InvertibleModel
 		return ( "[3,3](" + affine + ") " + cost );
 	}
 	
+	final public void set( AffineModel2D m )
+	{
+		this.affine.setTransform( m.getAffine() );
+		this.cost = m.getCost();
+	}
+	
+	@Override
+	public void set( Model m )
+	{
+		set( ( AffineModel2D )m );
+	}
+	
+	@Override
 	public AffineModel2D clone()
 	{
-		AffineModel2D trm = new AffineModel2D();
-		trm.affine.setTransform( affine );
-		trm.cost = cost;
-		return trm;
+		AffineModel2D m = new AffineModel2D();
+		m.affine.setTransform( affine );
+		m.cost = cost;
+		return m;
+	}
+	
+	public void preConcatenate( AffineModel2D model )
+	{
+		affine.preConcatenate( model.getAffine() );
+	}
+	
+	public void concatenate( AffineModel2D model )
+	{
+		affine.concatenate( model.getAffine() );
 	}
 
 }

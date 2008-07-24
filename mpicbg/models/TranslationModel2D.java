@@ -28,14 +28,15 @@ import java.util.Collection;
  */
 public class TranslationModel2D extends AffineModel2D
 {
-	static final protected int MIN_SET_SIZE = 1;
+	static final protected int MIN_NUM_MATCHES = 1;
 	
 	@Override
-	final public int getMinSetSize(){ return MIN_SET_SIZE; }
+	final public int getMinNumMatches(){ return MIN_NUM_MATCHES; }
 	
+	@Override
 	final public void fit( Collection< PointMatch > matches ) throws NotEnoughDataPointsException
 	{
-		if ( matches.size() < MIN_SET_SIZE ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d translation model, at least " + MIN_SET_SIZE + " data points required." );
+		if ( matches.size() < MIN_NUM_MATCHES ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d translation model, at least " + MIN_NUM_MATCHES + " data points required." );
 		
 		// center of mass:
 		float pcx = 0, pcy = 0;
@@ -68,44 +69,16 @@ public class TranslationModel2D extends AffineModel2D
 		affine.translate( -dx, -dy );
 	}
 	
-	/**
-	 * change the model a bit
-	 * 
-	 * estimates the necessary amount of shaking for each single dimensional
-	 * distance in the set of matches
-	 * 
-	 * @param matches point matches
-	 * @param scale gives a multiplicative factor to each dimensional distance (scales the amount of shaking)
-	 * @param center local pivot point for centered shakes (e.g. rotation)
-	 */
+	@Override
 	final public void shake(
-			Collection< PointMatch > matches,
-			float scale,
-			float[] center )
+			float amount )
 	{
-		double xd = 0.0;
-		double yd = 0.0;
-		
-		int num_matches = matches.size();
-		if ( num_matches > 0 )
-		{
-			for ( PointMatch m : matches )
-			{
-				float[] m_p1 = m.getP1().getW(); 
-				float[] m_p2 = m.getP2().getW(); 
-				
-				xd += Math.abs( m_p1[ 0 ] - m_p2[ 0 ] );;
-				yd += Math.abs( m_p1[ 1 ] - m_p2[ 1 ] );;
-			}
-			xd /= matches.size();
-			yd /= matches.size();			
-		}
-		
 		affine.translate(
-				rnd.nextGaussian() * ( float )xd * scale,
-				rnd.nextGaussian() * ( float )yd );
+				rnd.nextGaussian() * amount,
+				rnd.nextGaussian() * amount );
 	}
 
+	@Override
 	public TranslationModel2D clone()
 	{
 		TranslationModel2D tm = new TranslationModel2D();

@@ -21,58 +21,76 @@ package mpicbg.models;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Tile
 {
-	final private float width;
-	final public float getWidth(){ return width; }
-	
-	final private float height;
-	final public float getHeight(){ return height; }
-	
-
 	/**
-	 * Local center coordinates of the {@link Tile}.
+	 * The transformation {@link Model} of the {@link Tile}.  All local
+	 * {@link Point Points} in the {@link Tile} share (and thus determine)
+	 * this common {@link Model}.
 	 */
-	private float[] lc;
-	
-	
-	/**
-	 * World center coordinates of the {@link Tile}.
-	 */
-	private float[] wc;
-	public float[] getWC() { return wc; }
-
-	
-	/**
-	 * The transformation {@link Model} of the {@link Tile}.  All local points
-	 * in the {@link Tile} share (and thus determine) this common
-	 * {@link Model}.
-	 */
-	private Model model;
+	final protected Model model;
 	final public Model getModel() { return model; }
 	
-	
 	/**
-	 * A set of point correspondences with {@link PointMatch.getP1 p1} being a
-	 * local point in this {@link Tile} and {@link PointMatch.getP2 p2} being
-	 * the corresponding  local point in another {@link Tile}.  {@link Tile}s
-	 * are perfectly registered if both {@link PointMatch.getP1 p1} and
-	 * {@link PointMatch.getP1 p1} have the same world coordinates.
+	 * A set of point correspondences with {@link PointMatch#getP1() p1} being
+	 * a local point in this {@link Tile} and {@link PointMatch#getP2() p2}
+	 * being the corresponding  local point in another {@link Tile}.
+	 * {@link Tile Tiles} are perfectly registered if both
+	 * {@link PointMatch#getP1() p1} and {@link PointMatch#getP1() p1} have the
+	 * same world coordinates for all {@link PointMatch PointMatches}.
 	 */
-	final private ArrayList< PointMatch > matches = new ArrayList< PointMatch >();
-	final public ArrayList< PointMatch > getMatches() { return matches; }
+	final protected Set< PointMatch > matches = new HashSet< PointMatch >();
+	final public Set< PointMatch > getMatches() { return matches; }
+	
+	/**
+	 * Add more {@link PointMatch PointMatches}.
+	 *  
+	 * @param more the {@link PointMatch PointMatches} to be added
+	 * 
+	 * @return true if this set changed as a result of the call
+	 */
+	final public boolean addMatches( Collection< PointMatch > more )
+	{
+		return matches.addAll( more );
+	}
+	
+	/**
+	 * Add one {@link PointMatch}.
+	 *  
+	 * @param match the {@link PointMatch} to be added
+	 * 
+	 * @return true if this set did not already contain the specified element
+	 */
+	final public boolean addMatch( PointMatch match )
+	{
+		return matches.add( match );
+	}
+	
+	/**
+	 * Remove a {@link PointMatch}.
+	 * 
+	 * @param match the {@link PointMatch} to be removed
+	 * 
+	 * @return true if this set contained the specified element
+	 */
+	final public boolean removeMatch( PointMatch match )
+	{
+		return matches.remove( match );
+	}
 	
 	
 	/**
-	 * A set of {@link Tile}s that share point correpondences with this
+	 * A set of {@link Tile Tiles} that share point correpondences with this
 	 * {@link Tile}.
 	 * 
 	 * Note that point correspondences do not know about the tiles they belong
 	 * to.
 	 */
-	final private ArrayList< Tile > connectedTiles = new ArrayList< Tile >();
-	final public ArrayList< Tile > getConnectedTiles() { return connectedTiles; }
+	final private Set< Tile > connectedTiles = new HashSet< Tile >();
+	final public Set< Tile > getConnectedTiles() { return connectedTiles; }
 	
 	
 	/**
@@ -84,8 +102,7 @@ public class Tile
 	 */
 	final public boolean addConnectedTile( Tile t )
 	{
-		if ( connectedTiles.contains( t ) ) return true;
-		else return connectedTiles.add( t );
+		return connectedTiles.add( t );
 	}
 	
 	
@@ -102,15 +119,15 @@ public class Tile
 	
 	
 	/**
-	 * The transfer error of this {@link Tile}'s {@link Model} as estimated
-	 * from weighted square point correspondence displacement.
+	 * The transfer error of this {@link Tile Tile's} {@link Model} as
+	 * estimated from weighted square point correspondence displacement.
 	 */
-	private double error;
-	final public double getError() { return error; }
+	protected double cost;
+	final public double getCost() { return cost; }
 	
 	
 	/**
-	 * The average point correpondence displacement.
+	 * The average {@link PointMatch} displacement.
 	 */
 	private double distance;
 	final public double getDistance() { return distance; }
@@ -118,83 +135,22 @@ public class Tile
 	/**
 	 * Constructor
 	 * 
-	 * @param width width of the {@link Tile} in world unit dimension
-	 *   (e.g. pixels).
-	 * @param height height of the {@link Tile} in world unit dimension
-	 *   (e.g. pixels).
 	 * @param model the transformation {@link Model} of the {@link Tile}.
 	 */
-	public Tile(
-			float width,
-			float height,
-			Model model )
+	public Tile( Model model )
 	{
-		this.width = width;
-		this.height = height;
 		this.model = model;
-		
-		lc = new float[]{ width / 2.0f - 1.0f, height / 2.0f - 1.0f };
-		wc = new float[]{ lc[ 0 ], lc[ 1 ] };
 	}
-	
-	
-	/**
-	 * Constructor
-	 * 
-	 * @param width width of the {@link Tile} in world unit dimension
-	 *   (e.g. pixels).
-	 * @param height height of the {@link Tile} in world unit dimension
-	 *   (e.g. pixels).
-	 * @param model the transformation {@link Model} of the {@link Tile}.
-	 */
-	public Tile(
-			double width,
-			double height,
-			Model model )
-	{
-		this.width = ( float )width;
-		this.height = ( float )height;
-		this.model = model;
-		
-		lc = new float[]{ this.width / 2.0f - 1.0f, this.height / 2.0f - 1.0f };
-		wc = new float[]{ lc[ 0 ], lc[ 1 ] };
-	}
-	
-	/**
-	 * Add more {@link PointMatch}es.
-	 *  
-	 * @param more the {@link PointMatch}es to be added.
-	 * @return True if the list changed as a result of the call.
-	 */
-	final public boolean addMatches( Collection< PointMatch > more )
-	{
-		return matches.addAll( more );
-	}
-	
-	/**
-	 * Add one match.
-	 *  
-	 * @param match the {@link PointMatch} to be added.
-	 * @return True if the list changed as a result of the call.
-	 */
-	final public boolean addMatch( PointMatch match )
-	{
-		return matches.add( match );
-	}
-	
 	
 	/**
 	 * Apply the current {@link Model} to all local point coordinates.
-	 * Update average transfer error.
+	 * Update {@link #cost} and {@link #distance}.
 	 *
 	 */
 	final public void update()
 	{
-		// tile center world coordinates
-		wc = model.apply( lc );
-		
 		double d = 0.0;
-		double e = 0.0;
+		double c = 0.0;
 		
 		int num_matches = matches.size();
 		if ( num_matches > 0 )
@@ -205,29 +161,26 @@ public class Tile
 				match.apply( model );
 				double dl = match.getDistance();
 				d += dl;
-				e += dl * dl * match.getWeight();
+				c += dl * dl * match.getWeight();
 				sum_weight += match.getWeight();
 			}
 			d /= num_matches;
-			e /= sum_weight;
+			c /= sum_weight;
 		}
 		distance = ( float )d;
-		error = ( float )e;
-		model.setError( e );
+		cost = ( float )c;
+		model.setCost( c );
 	}
 	
 	/**
 	 * Apply the current {@link Model} to all local point coordinates by weight.
-	 * Update average transfer error.
+	 * Update {@link #cost} and {@link #distance}.
 	 *
 	 */
-	final public void updateByStrength( float amount )
+	final public void update( float amount )
 	{
-		// tile center world coordinates
-		wc = model.apply( lc );
-		
 		double d = 0.0;
-		double e = 0.0;
+		double c = 0.0;
 		
 		int num_matches = matches.size();
 		if ( num_matches > 0 )
@@ -238,39 +191,38 @@ public class Tile
 				match.apply( model, amount );
 				double dl = match.getDistance();
 				d += dl;
-				e += dl * dl * match.getWeight();
+				c += dl * dl * match.getWeight();
 				sum_weight += match.getWeight();
 			}
 			d /= num_matches;
-			e /= sum_weight;
+			c /= sum_weight;
 		}
 		distance = ( float )d;
-		error = ( float )e;
-		model.setError( e );
+		cost = ( float )c;
+		model.setCost( c );
 	}
 	
 	/**
-	 * randomly dice new model until the error is smaller than the old one
+	 * Randomly dice new model until the cost is smaller than the old one
 	 * 
-	 * @param max_num_tries maximal number of tries before returning false (which means "no better model found")
-	 * @param scale strength of shaking
+	 * @param maxNumTries maximal number of tries before returning false (which means "no better model found")
+	 * @param amount strength of shaking
 	 * @return true if a better model was found
 	 */
-	final public boolean diceBetterModel( int max_num_tries, float scale )
+	final public boolean diceBetterModel( int maxNumTries, float amount )
 	{
 		// store old model
-		Model old_model = model;
+		Model oldModel = model.clone();
 		
-		for ( int t = 0; t < max_num_tries; ++t )
+		for ( int t = 0; t < maxNumTries; ++t )
 		{
-			model = model.clone();
-			model.shake( matches, scale, lc );
+			model.shake( amount );
 			update();
-			if ( model.betterThan( old_model ) )
+			if ( model.betterThan( oldModel ) )
 			{
 				return true;
 			}
-			else model = old_model;
+			else model.set( oldModel );
 		}
 		// no better model found, so roll back
 		update();
@@ -294,7 +246,7 @@ public class Tile
 	 * @param graph
 	 * @return the number of connected tiles in the graph
 	 */
-	final private int traceConnectedGraph( ArrayList< Tile > graph )
+	final private int traceConnectedGraph( Set< Tile > graph )
 	{
 		graph.add( this );
 		for ( Tile t : connectedTiles )
@@ -327,10 +279,6 @@ public class Tile
 			Tile o,
 			Collection< PointMatch > matches )
 	{
-//		float num_matches = ( float )matches.size();
-//		for ( PointMatch m : matches )
-//			m.setWeight( 1.0f / num_matches );
-		
 		this.addMatches( matches );
 		o.addMatches( PointMatch.flip( matches ) );
 		
@@ -344,98 +292,20 @@ public class Tile
 	 * @param tiles
 	 * @return
 	 */
-	final static public ArrayList< ArrayList< Tile > > identifyConnectedGraphs(
+	final static public ArrayList< Set< Tile > > identifyConnectedGraphs(
 			Collection< Tile > tiles )
 	{
-		ArrayList< ArrayList< Tile > > graphs = new ArrayList< ArrayList< Tile > >();
+		ArrayList< Set< Tile > > graphs = new ArrayList< Set< Tile > >();
 		int numInspectedTiles = 0;
 A:		for ( Tile tile : tiles )
 		{
-			for ( ArrayList< Tile > knownGraph : graphs )
+			for ( Set< Tile > knownGraph : graphs )
 				if ( knownGraph.contains( tile ) ) continue A; 
-			ArrayList< Tile > current_graph = new ArrayList< Tile >();
+			Set< Tile > current_graph = new HashSet< Tile >();
 			numInspectedTiles += tile.traceConnectedGraph( current_graph );
 			graphs.add( current_graph );
 			if ( numInspectedTiles == tiles.size() ) break;
 		}
 		return graphs;
-	}
-	
-	/**
-	 * Check if a point that is given in world coordinates is inside the tile.
-	 * 
-	 * TODO: This implies, that the transformation is linear and invertable.
-	 * 
-	 * @param point
-	 * @return True is the point is inside the 
-	 */
-	final public boolean isInside( float[] point ) throws Exception
-	{
-		float[] local = ( ( InvertibleModel )model ).applyInverse( point );
-		return (
-				local[ 0 ] >= 0.0f && local[ 0 ] < width &&
-				local[ 1 ] >= 0.0f && local[ 1 ] < height );
-	}
-	
-	
-	/**
-	 * Check if the {@link Tile} intersects another.
-	 * 
-	 * TODO: The intersection test checks for the eight corners of both tiles
-	 *   only.  This implies, that the transformation is linear and invertable.
-	 *   
-	 *   !!!!This is wrong:
-	 *   
-	 *      +-+     +-----+
-	 *      | |     |     |   
-	 *    +-+-+-+   | +-+ |
-	 *    | | | |   | | | |
-	 *    +-+-+-+   | +-+ |
-	 *      | |     |     |
-	 *      +-+     +-----+
-	 *      
-	 *   Test for edge intersections and corners:  If only one corner of this
-	 *   is inside t or one single edge of this intersects with one of t then
-	 *   both tiles intersect.
-	 * 
-	 * @param t the other {@link Tile}
-	 */
-	final public boolean intersects( Tile t ) throws Exception
-	{
-		float[] p = new float[]{ 0.0f, 0.0f };
-		model.applyInPlace( p );
-		if ( t.isInside( p ) ) return true;
-		
-		p = new float[]{ width, 0.0f };
-		model.applyInPlace( p );
-		if ( t.isInside( p ) ) return true;
-		
-		p = new float[]{ width, height };
-		model.applyInPlace( p );
-		if ( t.isInside( p ) ) return true;
-		
-		p = new float[]{ 0.0f, height };
-		model.applyInPlace( p );
-		if ( t.isInside( p ) ) return true;
-		
-		Model m = t.getModel();
-		
-		p = new float[]{ 0.0f, 0.0f };
-		m.applyInPlace( p );
-		if ( isInside( p ) ) return true;
-		
-		p = new float[]{ t.width, 0.0f };
-		m.applyInPlace( p );
-		if ( isInside( p ) ) return true;
-		
-		p = new float[]{ t.width, t.height };
-		m.applyInPlace( p );
-		if ( isInside( p ) ) return true;
-		
-		p = new float[]{ 0.0f, t.height };
-		m.applyInPlace( p );
-		if ( isInside( p ) ) return true;
-		
-		return false;
 	}
 }

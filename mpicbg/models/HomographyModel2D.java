@@ -44,10 +44,10 @@ import Jama.Matrix;
  */
 public class HomographyModel2D extends InvertibleModel
 {
-	static final protected int MIN_SET_SIZE = 4;
+	static final protected int MIN_NUM_MATCHES = 4;
 	
 	@Override
-	public int getMinSetSize(){ return MIN_SET_SIZE; }
+	public int getMinNumMatches(){ return MIN_NUM_MATCHES; }
 
 	Matrix a = new Matrix( 3, 3 );
 	Matrix a_inverse = new Matrix( 3, 3 );
@@ -162,27 +162,40 @@ public class HomographyModel2D extends InvertibleModel
 		point[ 0 ] = ( float )( t0 / s );
 		point[ 1 ] = ( float )( t1 / s);
 	}
+	
+	final public void set( HomographyModel2D m )
+	{
+		a = ( Matrix )m.a.clone();
+		a_inverse = ( Matrix )m.a_inverse.clone();
+		cost = m.getCost();
+	}
+	
+	@Override
+	public void set( Model m )
+	{
+		set( ( HomographyModel2D )m );
+	}
 
 	@Override
 	public HomographyModel2D clone()
 	{
-		HomographyModel2D trm = new HomographyModel2D();
-		trm.a = ( Matrix )a.clone();
-		trm.a_inverse = ( Matrix )a_inverse.clone();
-		trm.cost = cost;
-		return trm;
+		HomographyModel2D m = new HomographyModel2D();
+		m.a = ( Matrix )a.clone();
+		m.a_inverse = ( Matrix )a_inverse.clone();
+		m.cost = cost;
+		return m;
 	}
 
 	@Override
 	public void fit( Collection< PointMatch > matches ) throws NotEnoughDataPointsException
 	{
-		if ( matches.size() < MIN_SET_SIZE ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d homography model, at least " + MIN_SET_SIZE + " data points required." );
+		if ( matches.size() < MIN_NUM_MATCHES ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d homography model, at least " + MIN_NUM_MATCHES + " data points required." );
 		
 		// Having a minimal set of data points, the homography can be estimated
 		// exactly in a direct manner.
-		if ( matches.size() == MIN_SET_SIZE )
+		if ( matches.size() == MIN_NUM_MATCHES )
 		{
-			PointMatch[] p = new PointMatch[ MIN_SET_SIZE ];
+			PointMatch[] p = new PointMatch[ MIN_NUM_MATCHES ];
 			matches.toArray( p );
 			
 			Matrix h1 = fitToUnitSquare(
@@ -203,8 +216,11 @@ public class HomographyModel2D extends InvertibleModel
 		else throw new NotEnoughDataPointsException( "Sorry---we did not implement an optimal homography solver for more than four correspondences.  If you have time, sit down and do it ;)" );
 	}
 
+	/**
+	 * TODO Not yet implemented ...
+	 */
 	@Override
-	public void shake( Collection< PointMatch > matches, float scale, float[] center )
+	public void shake( float amount )
 	{
 		// TODO If you ever need it, please implement it...
 	}

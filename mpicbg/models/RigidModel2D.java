@@ -23,10 +23,10 @@ import java.util.Collection;
 
 public class RigidModel2D extends AffineModel2D
 {
-	static final protected int MIN_SET_SIZE = 2;
+	static final protected int MIN_NUM_MATCHES = 2;
 	
 	@Override
-	public int getMinSetSize(){ return MIN_SET_SIZE; }
+	public int getMinNumMatches(){ return MIN_NUM_MATCHES; }
 
 	@Override
 	public String toString()
@@ -36,7 +36,7 @@ public class RigidModel2D extends AffineModel2D
 
 	final public void fit( Collection< PointMatch > matches ) throws NotEnoughDataPointsException
 	{
-		if ( matches.size() < MIN_SET_SIZE ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d rigid model, at least " + MIN_SET_SIZE + " data points required." );
+		if ( matches.size() < MIN_NUM_MATCHES ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d rigid model, at least " + MIN_NUM_MATCHES + " data points required." );
 		
 		// Implementing Johannes Schindelin's squared error minimization formula
 		// tan(angle) = Sum(x1*y1 + x2y2) / Sum(x1*y2 - x2*y1)
@@ -91,79 +91,31 @@ public class RigidModel2D extends AffineModel2D
 	}
 	
 	/**
-	 * change the model a bit
-	 * 
-	 * estimates the necessary amount of shaking for each single dimensional
-	 * distance in the set of matches
-	 *
-	 * @param matches point matches
-	 * @param scale gives a multiplicative factor to each dimensional distance (increases the amount of shaking)
-	 * @param center local pivot point
+	 * TODO Not yet implemented ...
 	 */
+	@Override
 	final public void shake(
-			Collection< PointMatch > matches,
-			float scale,
-			float[] center )
+			float amount )
 	{
-		double xd = 0.0;
-		double yd = 0.0;
-		double rd = 0.0;
-		
-		int num_matches = matches.size();
-		if ( num_matches > 0 )
-		{
-			for ( PointMatch m : matches )
-			{
-				float[] m_p1 = m.getP1().getW(); 
-				float[] m_p2 = m.getP2().getW(); 
-				
-				xd += Math.abs( m_p1[ 0 ] - m_p2[ 0 ] );;
-				yd += Math.abs( m_p1[ 1 ] - m_p2[ 1 ] );;
-				
-				// shift relative to the center
-				float x1 = m_p1[ 0 ] - center[ 0 ];
-				float y1 = m_p1[ 1 ] - center[ 1 ];
-				float x2 = m_p2[ 0 ] - center[ 0 ];
-				float y2 = m_p2[ 1 ] - center[ 1 ];
-				
-				float l1 = ( float )Math.sqrt( x1 * x1 + y1 * y1 );
-				float l2 = ( float )Math.sqrt( x2 * x2 + y2 * y2 );
-
-				x1 /= l1;
-				x2 /= l2;
-				y1 /= l1;
-				y2 /= l2;
-
-				//! unrotate (x1,y1)^T to (x2,y2)^T = (1,0)^T getting the sinus and cosinus of the rotation angle
-				float cos = x1 * x2 + y1 * y2;
-				float sin = y1 * x2 - x1 * y2;
-
-				rd += Math.abs( Math.atan2( sin, cos ) );
-			}
-			xd /= matches.size();
-			yd /= matches.size();
-			rd /= matches.size();
-			
-			//System.out.println( rd );
-		}
-		
-		affine.rotate( rnd.nextGaussian() * ( float )rd * scale, center[ 0 ], center[ 1 ] );
+		// TODO If you ever need it, please implement it...
 	}
-
 	
+	@Override
 	public RigidModel2D clone()
 	{
-		RigidModel2D trm = new RigidModel2D();
-		trm.affine.setTransform( affine );
-		trm.cost = cost;
-		return trm;
+		RigidModel2D m = new RigidModel2D();
+		m.affine.setTransform( affine );
+		m.cost = cost;
+		return m;
 	}
 
-	public void preConcatenate(RigidModel2D model) {
+	public void preConcatenate( RigidModel2D model )
+	{
 		this.affine.preConcatenate(model.affine);
 	}
 	
-	public void concatenate(RigidModel2D model) {
+	public void concatenate( RigidModel2D model )
+	{
 		this.affine.concatenate(model.affine);
 	}
 }

@@ -63,8 +63,18 @@ import java.util.Collection;
 public abstract class Model implements CoordinateTransform
 {
 	
-	// minimal number of point correspondences required to solve the model
-	abstract public int getMinSetSize();
+	/**
+	 * @returns the minimal number of {@link PointMatch PointMatches} required
+	 *   to solve the model.
+	 */
+	abstract public int getMinNumMatches();
+	
+	/**
+	 * @deprecated "getMinSetSize" doesn't mean anything---use the more
+	 *   speaking {@link #getMinNumMatches()} instead.  
+	 */
+	@Deprecated
+	final public int getMinSetSize(){ return getMinNumMatches(); }
 	
 	// real random
 	//final Random random = new Random( System.currentTimeMillis() );
@@ -92,10 +102,11 @@ public abstract class Model implements CoordinateTransform
 	final public void setError( double e ){ setCost( e ); }
 
 	/**
-	 * less than operater to make the models comparable, returns false for error < 0
+	 * "Less than" operater to make {@link Model Models} comparable.
 	 * 
 	 * @param m
-	 * @return false for error < 0, otherwise true if this.error is smaller than m.error
+	 * @return false for {@link #cost} < 0.0, otherwise true if
+	 *   {@link #cost this.cost} is smaller than {@link #cost m.cost}
 	 */
 	public boolean betterThan( Model m )
 	{
@@ -104,20 +115,11 @@ public abstract class Model implements CoordinateTransform
 	}
 
 	/**
-	 * randomly change the model a bit
+	 * Randomly change the {@link Model} for some amount.
 	 * 
-	 * estimates the necessary amount of shaking for each single dimensional
-	 * distance in the set of matches
-	 *
-	 * @param matches point matches
-	 * @param scale gives a multiplicative factor to each dimensional distance (scales the amount of shaking)
-	 * @param center local pivot point for centered shakes (e.g. rotation)
+	 * @param amount
 	 */
-	abstract public void shake(
-			Collection< PointMatch > matches,
-			float scale,
-			float[] center );
-
+	abstract public void shake( float amount );
 	
 	/**
 	 * Fit the {@link Model} to a set of data points minimizing the global
@@ -134,9 +136,8 @@ public abstract class Model implements CoordinateTransform
 	 */
 	abstract public void fit( Collection< PointMatch > matches ) throws NotEnoughDataPointsException;
 
-	
 	/**
-	 * Test the {@link Model} for a set of point correspondence candidates.
+	 * Test the {@link Model} for a set of {@link PointMatch} candidates.
 	 * Return true if the number of inliers / number of candidates is larger
 	 * than or equal to min_inlier_ratio, otherwise false.
 	 * 
@@ -145,14 +146,14 @@ public abstract class Model implements CoordinateTransform
 	 * @param candidates set of point correspondence candidates
 	 * @param inliers set of point correspondences that fit the model
 	 * @param epsilon maximal allowed transfer error
-	 * @param min_inliers minimal ratio of inliers (0.0 => 0%, 1.0 => 100%)
+	 * @param minInlierRatio minimal ratio of inliers (0.0 => 0%, 1.0 => 100%)
 	 */
 	final static public boolean test(
 			Model model,
 			Collection< PointMatch > candidates,
 			Collection< PointMatch > inliers,
 			double epsilon,
-			double min_inlier_ratio )
+			double minInlierRatio )
 	{
 		inliers.clear();
 		
@@ -165,10 +166,9 @@ public abstract class Model implements CoordinateTransform
 		float ir = ( float )inliers.size() / ( float )candidates.size();
 		model.cost = Math.max( 0.0, Math.min( 1.0, 1.0 - ir ) );
 		
-		return ( ir > min_inlier_ratio );
+		return ( ir > minInlierRatio );
 	}
-	
-	
+		
 	/**
 	 * Estimate a {@link Model} and filter potential outliers by robust
 	 * iterative regression.
@@ -201,12 +201,12 @@ public abstract class Model implements CoordinateTransform
 		inliers.clear();
 		inliers.addAll( candidates );
 		final ArrayList< PointMatch > temp = new ArrayList< PointMatch >();
-		int num_inliers;
+		int numInliers;
 		do
 		{
 			temp.clear();
 			temp.addAll( inliers );
-			num_inliers = inliers.size(); 
+			numInliers = inliers.size(); 
 			model.fit( inliers );
 			ErrorStatistic observer = new ErrorStatistic();
 			for ( PointMatch m : temp )
@@ -221,38 +221,32 @@ public abstract class Model implements CoordinateTransform
 				if ( m.getDistance() < t )
 					inliers.add( m );
 			}
-			//System.out.println( ( num_inliers - inliers.size() ) + " candidates with e > " + t + " removed by iterative robust regression." );
-			//System.out.println( inliers.size() + " inliers remaining." );
 			
 			model.cost = observer.mean;
 		}
-		while ( num_inliers > inliers.size() );
+		while ( numInliers > inliers.size() );
 		
-		if ( num_inliers < model.getMinSetSize() )
+		if ( numInliers < model.getMinNumMatches() )
 			return null;
+		
 		return model;
 	}
 	
-	
 	/**
-	 * Estimate a {@link Model} from a set with many outliers by first
-	 * filtering the worst outliers with
-	 * {@link #ransac(Class, List, Collection, int, double, double) ransac}
-	 * \citet[{FischlerB81} tand filter potential outliers by robust iterative regression.
+	 * Find the {@link Model} of a set of {@link PointMatch} candidates
+	 * containing a high number of outliers using
+	 * {@link #ransac(Class, List, Collection, int, double, double) RANSAC}
+	 * \citet[{FischlerB81}.
 	 * 
-	 * This method performs well on data sets with low amount of outliers.  If
-	 * you have many outliers, you can filter those with a `tolerant' RANSAC
-	 * first as done in {@link #filterRansac() filterRansac}.
-	 * 
-	 * @param modelClass Class of the model to be estimated
-	 * @param candidates Candidate data points inluding (many) outliers
-	 * @param inliers Remaining candidates after RANSAC
-	 * @param iterations
-	 * @param epsilon
-	 * @param min_inlier_ratio minimal number of inliers to number of
+	 * @param modelClass class of the model to be estimated
+	 * @param candidates candidate data points inluding (many) outliers
+	 * @param inliers remaining candidates after RANSAC
+	 * @param iterations number of iterations
+	 * @param epsilon maximal allowed transfer error
+	 * @param minInlierRatio minimal number of inliers to number of
 	 *   candidates
 	 * 
-	 * @return an instance of 
+	 * @return an instance of modelClass
 	 */
 	final static public < M extends Model >M ransac(
 			Class< M > modelClass,
@@ -260,7 +254,7 @@ public abstract class Model implements CoordinateTransform
 			Collection< PointMatch > inliers,
 			int iterations,
 			double epsilon,
-			double min_inlier_ratio ) throws NotEnoughDataPointsException
+			double minInlierRatio ) throws NotEnoughDataPointsException
 	{
 		M model;
 		try
@@ -273,13 +267,13 @@ public abstract class Model implements CoordinateTransform
 			return null;
 		}
 		
-		final int MIN_SET_SIZE = model.getMinSetSize();
+		final int MIN_NUM_MATCHES = model.getMinNumMatches();
 		
 		inliers.clear();
 		
-		if ( candidates.size() < MIN_SET_SIZE )
+		if ( candidates.size() < MIN_NUM_MATCHES )
 		{
-			throw new NotEnoughDataPointsException( candidates.size() + " correspondences are not enough to estimate a model, at least " + MIN_SET_SIZE + " correspondences required." );
+			throw new NotEnoughDataPointsException( candidates.size() + " correspondences are not enough to estimate a model, at least " + MIN_NUM_MATCHES + " correspondences required." );
 		}
 		
 		int i = 0;
@@ -289,7 +283,7 @@ public abstract class Model implements CoordinateTransform
 		{
 			// choose model.MIN_SET_SIZE disjunctive matches randomly
 			min_matches.clear();
-			for ( int j = 0; j < MIN_SET_SIZE; ++j )
+			for ( int j = 0; j < MIN_NUM_MATCHES; ++j )
 			{
 				PointMatch p;
 				do
@@ -312,17 +306,17 @@ public abstract class Model implements CoordinateTransform
 			final ArrayList< PointMatch > temp_inliers = new ArrayList< PointMatch >();
 			m.fit( min_matches );
 			int num_inliers = 0;
-			boolean is_good = test( m, candidates, temp_inliers, epsilon, min_inlier_ratio );
+			boolean is_good = test( m, candidates, temp_inliers, epsilon, minInlierRatio );
 			while ( is_good && num_inliers < temp_inliers.size() )
 			{
 				num_inliers = temp_inliers.size();
 				m.fit( temp_inliers );
-				is_good = test( m, candidates, temp_inliers, epsilon, min_inlier_ratio );
+				is_good = test( m, candidates, temp_inliers, epsilon, minInlierRatio );
 			}
 			if (
 					is_good &&
 					m.betterThan( model ) &&
-					temp_inliers.size() >= 3 * MIN_SET_SIZE )
+					temp_inliers.size() >= 3 * MIN_NUM_MATCHES )
 			{
 				model = m;
 				inliers.clear();
@@ -335,37 +329,40 @@ public abstract class Model implements CoordinateTransform
 		return model;
 	}
 	
-	
 	/**
-	 * Estimate the best model for a set of feature correspondence candidates.
+	 * Estimate a {@link Model} from a set with many outliers by first
+	 * filtering the worst outliers with
+	 * {@link #ransac(Class, List, Collection, int, double, double) RANSAC}
+	 * \citet[{FischlerB81} and filter potential outliers by robust iterative
+	 * regression.
 	 * 
-	 * Increase the error as long as not more inliers apear.
+	 * @param modelClass class of the model to be estimated
+	 * @param candidates candidate data points inluding (many) outliers
+	 * @param inliers remaining candidates after RANSAC
+	 * @param iterations number of iterations
+	 * @param maxEpsilon maximal allowed transfer error
+	 * @param minInlierRatio minimal number of inliers to number of
+	 *   candidates
 	 * 
-	 * TODO: This is a very crappy way of identifying the minimal max_epsilon
-	 *   and maximal number of inliers at the same time.  We suggest a more
-	 *   elaborate technique as follows:
-	 *   1. Run RANSAC with large max_epsilon resulting in many outliers
-	 *      included.
-	 *   2. Get rid of the outliers using the robust regression method of
-	 *      Dutter and Huber
+	 * @return an instance of modelClass
 	 */
-	static public  < M extends Model >M filterRansac(
-			Class< M > modelType,
+	final static public  < M extends Model >M filterRansac(
+			Class< M > modelClass,
 			List< PointMatch > candidates,
 			Collection< PointMatch > inliers,
 			int iterations,
-			float max_epsilon,
-			float min_inlier_ratio ) throws NotEnoughDataPointsException
+			float maxEpsilon,
+			float maxInlierRatio ) throws NotEnoughDataPointsException
 	{
 		final ArrayList< PointMatch > temp = new ArrayList< PointMatch >();
 		ransac(
-				modelType,
+				modelClass,
 				candidates,
 				temp,
 				iterations,
-				max_epsilon,
-				min_inlier_ratio );		
-		return filter( modelType, temp, inliers );
+				maxEpsilon,
+				maxInlierRatio );		
+		return filter( modelClass, temp, inliers );
 	}
 	
 	/**
@@ -373,8 +370,13 @@ public abstract class Model implements CoordinateTransform
 	 * text-files or display on terminals.
 	 */
 	abstract public String toString();
-
 	
+	/**
+	 * Set the model to m
+	 * @param m
+	 */
+	abstract public void set( Model m );
+
 	/**
 	 * Clone the model.
 	 */

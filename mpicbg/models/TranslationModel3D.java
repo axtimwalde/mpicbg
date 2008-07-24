@@ -21,14 +21,16 @@ package mpicbg.models;
 
 import java.util.Collection;
 
+import Jama.Matrix;
+
 public class TranslationModel3D extends InvertibleModel
 {
-	static final protected int MIN_SET_SIZE = 1;
+	static final protected int MIN_NUM_MATCHES = 1;
 	final protected float[] translation = new float[ 3 ];
 	public float[] getTranslation(){ return translation; }
 	
 	@Override
-	final public int getMinSetSize(){ return MIN_SET_SIZE; }
+	final public int getMinNumMatches(){ return MIN_NUM_MATCHES; }
 
 	//@Override
 	public float[] apply( float[] point )
@@ -79,9 +81,10 @@ public class TranslationModel3D extends InvertibleModel
 		return ( "[1,3](" + translation[ 0 ] + "," + translation[ 1 ] + "," + translation[ 2 ] + ") " + cost );
 	}
 
+	@Override
 	final public void fit( Collection< PointMatch > matches ) throws NotEnoughDataPointsException
 	{
-		if ( matches.size() < MIN_SET_SIZE ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d translation model, at least " + MIN_SET_SIZE + " data points required." );
+		if ( matches.size() < MIN_NUM_MATCHES ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d translation model, at least " + MIN_NUM_MATCHES + " data points required." );
 		
 		// center of mass:
 		float pcx = 0, pcy = 0, pcz = 0;
@@ -117,30 +120,35 @@ public class TranslationModel3D extends InvertibleModel
 	}
 	
 	/**
-	 * change the model a bit
-	 * 
-	 * estimates the necessary amount of shaking for each single dimensional
-	 * distance in the set of matches
-	 * 
-	 * @param matches point matches
-	 * @param scale gives a multiplicative factor to each dimensional distance (scales the amount of shaking)
-	 * @param center local pivot point for centered shakes (e.g. rotation)
+	 * TODO Not yet implemented ...
 	 */
-	final public void shake(
-			Collection< PointMatch > matches,
-			float scale,
-			float[] center )
+	@Override
+	final public void shake( float amount )
 	{
 		// TODO If you ever need it, please implement it...
+	}
+	
+	final public void set( TranslationModel3D m )
+	{
+		translation[ 0 ] = m.translation[ 0 ];
+		translation[ 1 ] = m.translation[ 1 ];
+		translation[ 2 ] = m.translation[ 2 ];
+		cost = m.getCost();
+	}
+	
+	@Override
+	public void set( Model m )
+	{
+		set( ( TranslationModel3D )m );
 	}
 
 	public TranslationModel3D clone()
 	{
-		TranslationModel3D tm = new TranslationModel3D();
-		tm.translation[ 0 ] = translation[ 0 ];
-		tm.translation[ 1 ] = translation[ 1 ];
-		tm.translation[ 2 ] = translation[ 2 ];
-		tm.cost = cost;
-		return tm;
+		TranslationModel3D m = new TranslationModel3D();
+		m.translation[ 0 ] = translation[ 0 ];
+		m.translation[ 1 ] = translation[ 1 ];
+		m.translation[ 2 ] = translation[ 2 ];
+		m.cost = cost;
+		return m;
 	}
 }
