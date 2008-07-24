@@ -17,31 +17,31 @@ public class StreamIteratorByDimension
 	final protected int[] iByDim;
 	protected int i = 0;
 
-	StreamIteratorByDimension( final Stream stream, final Access accessStrategy )
+	StreamIteratorByDimension( final Stream container, final Access accessStrategy )
 	{
-		super( stream, null, accessStrategy );
-		int nd = stream.getNumDim();
+		super( container, null, accessStrategy );
+		int nd = container.getNumDim();
 		iByDim = new int[nd];
 		step = new int[ nd ];
-		step[ 0 ] = stream.getPixelType().getNumChannels();
+		step[ 0 ] = container.getPixelType().getNumChannels();
 		for ( int d = 1; d < nd; ++d )
 			step[ d ] = step[ d - 1 ] * container.getDim( d - 1 );
 	}
 
-	StreamIteratorByDimension( final Stream stream )
+	StreamIteratorByDimension( final Stream container )
 	{
-		this( stream, new AccessDirect() );
+		this( container, new AccessDirect() );
 	}
 
 	/**
 	 * Constructor at a given initial location.
 	 * 
-	 * @param stream
+	 * @param container
 	 * @param l initial location
 	 */
-	StreamIteratorByDimension( final Stream stream, int[] l, final Access accessStrategy )
+	StreamIteratorByDimension( final Stream container, int[] l, final Access accessStrategy )
 	{
-		this( stream, accessStrategy );
+		this( container, accessStrategy );
 		System.arraycopy( l, 0, iByDim, 0, iByDim.length );
 		i = l[ 0 ] * step[ 0 ];
 		iByDim[ 0 ] = l[ 0 ];
@@ -52,20 +52,20 @@ public class StreamIteratorByDimension
 		}
 	}
 
-	StreamIteratorByDimension( final Stream stream, final float[] l )
+	StreamIteratorByDimension( final Stream container, final float[] l )
 	{
-		this( stream, l, new AccessDirect() );
+		this( container, l, new AccessDirect() );
 	}
 	
 	/**
 	 * Constructor at the floor of a given initial location.
 	 * 
-	 * @param stream
+	 * @param container
 	 * @param l initial location
 	 */
-	StreamIteratorByDimension( final Stream stream, final float[] l, final Access accessStrategy )
+	StreamIteratorByDimension( final Stream container, final float[] l, final Access accessStrategy )
 	{
-		this( stream, accessStrategy );
+		this( container, accessStrategy );
 		iByDim[ 0 ] = l[ 0 ] > 0 ? ( int )l[ 0 ] : ( int )l[ 0 ] - 1;
 		i = iByDim[ 0 ] * step[ 0 ];
 		for ( int d = 1; d < l.length; ++d )
@@ -120,11 +120,11 @@ public class StreamIteratorByDimension
 
 	final public IteratorByDimension toIteratableByDimension( )
 	{
-		return new StreamIteratorByDimension( stream, iByDim, accessStrategy );
+		return new StreamIteratorByDimension( container, iByDim, accessStrategy );
 	}
 
 	final public RandomAccess toRandomAccessible( )
 	{
-		return new StreamRandomAccess( stream, iByDim, accessStrategy );
+		return new StreamRandomAccess( container, iByDim, accessStrategy );
 	}
 }

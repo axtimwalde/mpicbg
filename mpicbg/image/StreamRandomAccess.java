@@ -8,49 +8,49 @@ public class StreamRandomAccess
 	final protected int[] iByDim;
 	protected int i = 0;
 	
-	StreamRandomAccess( Stream stream, Access accessStrategy )
+	StreamRandomAccess( Stream container, Access accessStrategy )
 	{
-		super( stream, null, accessStrategy );
-		int nd = stream.getNumDim();
+		super( container, null, accessStrategy );
+		int nd = container.getNumDim();
 		iByDim = new int[nd];		
 		step = new int[ nd ];
-		step[ 0 ] = stream.getPixelType().getNumChannels();
+		step[ 0 ] = container.getPixelType().getNumChannels();
 		for ( int d = 1; d < nd; ++d )
 			step[ d ] = step[ d - 1 ] * container.getDim( d - 1 );		
 	}
 
-	StreamRandomAccess( Stream stream )
+	StreamRandomAccess( Stream container )
 	{
-		this( stream, new AccessDirect() );
+		this( container, new AccessDirect() );
 	}
 
 
-	StreamRandomAccess( Stream stream, int[] l, Access accessStrategy )
+	StreamRandomAccess( Stream container, int[] l, Access accessStrategy )
 	{
-		this( stream, accessStrategy );
+		this( container, accessStrategy );
 		to( l );
 	}
 
-	StreamRandomAccess( Stream stream, int[] l )
+	StreamRandomAccess( Stream container, int[] l )
 	{
-		this( stream, l, new AccessDirect() );
+		this( container, l, new AccessDirect() );
 	}
 	
 	/**
 	 * Constructor at the floor of a given initial location.
 	 * 
-	 * @param stream
+	 * @param container
 	 * @param l initial location
 	 */
-	StreamRandomAccess( Stream stream, float[] l, Access accessStrategy )
+	StreamRandomAccess( Stream container, float[] l, Access accessStrategy )
 	{
-		this( stream, accessStrategy );
+		this( container, accessStrategy );
 		to( l );
 	}
 
-	StreamRandomAccess( Stream stream, float[] l )
+	StreamRandomAccess( Stream container, float[] l )
 	{
-		this( stream, l, new AccessDirect() );
+		this( container, l, new AccessDirect() );
 	}
 
 	final public boolean isInside()
@@ -107,11 +107,11 @@ public class StreamRandomAccess
 
 	final public IteratorByDimension toIteratableByDimension( )
 	{
-		return new StreamIteratorByDimension( stream, iByDim, accessStrategy );
+		return new StreamIteratorByDimension( container, iByDim, accessStrategy );
 	}
 
 	final public RandomAccess toRandomAccessible( )
 	{
-		return new StreamRandomAccess( stream, iByDim, accessStrategy );
+		return new StreamRandomAccess( container, iByDim, accessStrategy );
 	}
 }
