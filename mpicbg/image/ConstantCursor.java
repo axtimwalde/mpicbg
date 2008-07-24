@@ -1,19 +1,18 @@
 package mpicbg.image;
 
-public abstract class ConstantCursor< P extends PixelType > extends Cursor< Container< P, ConstantCursor > >
-	implements Readable, Writable, Operator
+public abstract class ConstantCursor extends Cursor implements Readable, Writable, Operator
 {
-	final P type;
+	final PixelType type;
 
-	ConstantCursor( P type )
+	ConstantCursor( PixelType type )
 	{
 		super( null, null, null );
 		this.type = type;
 	}
-	
+
 	@Override
 	final public boolean isInside() { return true; }
-	
+
 	final byte getByteChannelDirect( final int c) { return getByteChannel( c ); }
 	final short getShortChannelDirect( final int c) { return getShortChannel( c ); }
 	final int getIntChannelDirect( final int c) { return getIntChannel( c); }
@@ -29,7 +28,7 @@ public abstract class ConstantCursor< P extends PixelType > extends Cursor< Cont
 	final void readDirect( final long[] a) { read( a ); }
 	final void readDirect( final float[] a ) { read( a ); }
 	final void readDirect( final double[] a) { read( a ); }
-	
+
 	final void setDirect( final Object[] f ){ set( f ); }
 	final void setDirect( final byte[] f ){ set( f ); }
 	final void setDirect( final short[] f ){ set( f ); }
@@ -37,8 +36,7 @@ public abstract class ConstantCursor< P extends PixelType > extends Cursor< Cont
 	final void setDirect( final long[] f ){ set( f ); }
 	final void setDirect( final float[] f ){ set( f ); }
 	final void setDirect( final double[] f ){ set( f ); }
-	
-	final void setChannelDirect( final int i, final Object f ){ setChannel( i, f ); } 
+	final void setChannelDirect( final int i, final Object f ){ setChannel( i, f ); }
 	final void setChannelDirect( final int i, final byte f ){ setChannel( i, f ); }
 	final void setChannelDirect( final int i, final short f ){ setChannel( i, f ); }
 	final void setChannelDirect( final int i, final int f ){ setChannel( i, f ); }

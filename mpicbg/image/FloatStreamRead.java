@@ -23,17 +23,20 @@ package mpicbg.image;
  * @author Preibisch & saalfeld
  *
  */
-public class FloatStreamRead extends FloatRead< FloatStream, StreamCursor >
+public class FloatStreamRead extends FloatRead<StreamCursor>
 {
+	final FloatStream stream;
+
 	public FloatStreamRead( final FloatStream stream )
 	{
 		super( stream );
+		this.stream = stream;
 	}
 
 	@Override
 	final public float getFloatChannel( final StreamCursor c, final int i )
 	{
-		return container.data[ c.getStreamIndex() + i ];
+		return stream.data[ c.getStreamIndex() + i ];
 	}
 
 	@Override

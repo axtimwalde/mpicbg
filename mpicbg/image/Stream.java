@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package mpicbg.image;
 
@@ -7,20 +7,20 @@ package mpicbg.image;
  * @author Stephan
  *
  */
-public abstract class Stream< P extends PixelType >
-		extends Container< P, StreamCursor >
-		implements Iteratable< Stream< P > >, IteratableByDimension< Stream< P > >, RandomAccessible< Stream< P > >
+public abstract class Stream
+		extends Container
+		implements Iteratable, IteratableByDimension, RandomAccessible
 {
 	final int numPixels;
-	
-	Stream(final P type, final int[] dim )
+
+	Stream(final PixelType type, final int[] dim )
 	{
 		super(type, dim);
-		
+
 		int l = type.getNumChannels();
 		for ( int i = 0; i < dim.length; ++i )
 			l *= dim[ i ];
-		
+
 		numPixels = l;
 	}
 
@@ -28,9 +28,12 @@ public abstract class Stream< P extends PixelType >
 	{
 		return numPixels;
 	}
-	
-	public StreamIterator< Stream< P > > createIterator() { return new StreamIterator< Stream< P > >( this ); }
-	public StreamIteratorByDimension< Stream< P > > createIteratorByDimension() { return new StreamIteratorByDimension< Stream< P > >( this ); }
-	public StreamRandomAccess< Stream< P > > createRandomAccess() { return new StreamRandomAccess< Stream< P > >( this ); }	
-	
+
+	abstract public ContainerRead<StreamCursor> getReader();
+	abstract public ContainerWrite<StreamCursor> getWriter();
+
+	public StreamIterator createIterator() { return new StreamIterator( this ); }
+	public StreamIteratorByDimension createIteratorByDimension() { return new StreamIteratorByDimension( this ); }
+	public StreamRandomAccess createRandomAccess() { return new StreamRandomAccess( this ); }
+
 }

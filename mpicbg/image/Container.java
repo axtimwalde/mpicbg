@@ -7,15 +7,15 @@ package mpicbg.image;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de> and Stephan Preibisch <preibisch@mpi-cbg.de>
  *
  */
-public abstract class Container< P extends PixelType, C extends Cursor >
+public abstract class Container
 {
 	final int[] dim;
 	final double[] res;
 	final double[] size;
-	final P type;
+	final PixelType type;
 	
-	abstract public ContainerRead< C > getReader();
-	abstract public ContainerWrite< C > getWriter();
+	abstract public ContainerRead<? extends Cursor> getReader();
+	abstract public ContainerWrite<? extends Cursor> getWriter();
 	
 	/**
 	 * Create a new container specifying its size.
@@ -25,7 +25,7 @@ public abstract class Container< P extends PixelType, C extends Cursor >
 	 * @param type
 	 * @param dim per dimension size in px
 	 */
-	Container( final P type, final int[] dim )
+	Container( final PixelType type, final int[] dim )
 	{
 		assert dim.length > 0 : "Container(): Size of dim[] is " + dim.length;
 		
@@ -51,7 +51,7 @@ public abstract class Container< P extends PixelType, C extends Cursor >
 	 * @param dim per dimension size in px
 	 * @param res per dimension resolution in px/m
 	 */
-	Container( final P type, final int[] dim, final double[] res )
+	Container( final PixelType type, final int[] dim, final double[] res )
 	{
 		this( type, dim );
 		setRes( res );

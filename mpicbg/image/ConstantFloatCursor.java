@@ -1,27 +1,27 @@
 package mpicbg.image;
 
-public class ConstantFloatCursor< P extends PixelType > extends ConstantCursor< P >
+public class ConstantFloatCursor extends ConstantCursor
 {
 	final float[] data;
 	final float[] a;
-		
-	public ConstantFloatCursor( P type )
+
+	public ConstantFloatCursor( PixelType type )
 	{
 		super( type );
 		data = new float[ type.getNumChannels() ];
 		a = new float[ type.getNumChannels() ];
 	}
 
-	public ConstantFloatCursor( P type, float[] init )
+	public ConstantFloatCursor( PixelType type, float[] init )
 	{
 		this( type );
 		for ( int j = 0; j < init.length; ++j )
 			data[ j ] = init[ j ];
 	}
-	
+
 	//
 	// "native" operator methods
-	// 
+	//
 	public void add( final Readable c )
 	{
 		for ( int j = 0; j < a.length; ++j )
@@ -32,7 +32,7 @@ public class ConstantFloatCursor< P extends PixelType > extends ConstantCursor< 
 		for ( int j = 0; j < a.length; ++j )
 			setChannel(j, getFloatChannel(j) + c);
 	}
-	
+
 	public void sub( final Readable c )
 	{
 		for ( int j = 0; j < a.length; ++j )
@@ -43,7 +43,7 @@ public class ConstantFloatCursor< P extends PixelType > extends ConstantCursor< 
 		for ( int j = 0; j < a.length; ++j )
 			setChannel(j, getFloatChannel(j) - c);
 	}
-	
+
 	public void mul( final Readable c )
 	{
 		for ( int j = 0; j < a.length; ++j )
@@ -54,18 +54,18 @@ public class ConstantFloatCursor< P extends PixelType > extends ConstantCursor< 
 		for ( int j = 0; j < a.length; ++j )
 			setChannel(j, getFloatChannel(j) * c);
 	}
-	
+
 	public void div( final Readable c )
 	{
 		for ( int j = 0; j < a.length; ++j )
 			setChannel(j, getFloatChannel(j) / c.getFloatChannel(j));
-	}	
+	}
 	public void div( final float c )
 	{
 		for ( int j = 0; j < a.length; ++j )
 			setChannel(j, getFloatChannel(j) / c);
-	}	
-	
+	}
+
 	//
 	// Writable Methods
 	//

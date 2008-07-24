@@ -1,6 +1,6 @@
 package mpicbg.image;
 
-public interface Iteratable< I extends Container< ? extends PixelType, ? extends Cursor > >
+public interface Iteratable
 {
-	public abstract Iterator< I > createIterator();
+	public abstract Iterator createIterator();
 }

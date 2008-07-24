@@ -23,17 +23,17 @@ package mpicbg.image;
  * @author saalfeld
  *
  */
-abstract public class FloatWrite< I extends Container, C extends Cursor > implements ContainerWrite< C >
+abstract public class FloatWrite< C extends Cursor > implements ContainerWrite< C >
 {
 	final protected float[] a;
-	final protected I container;
+	final protected Container container;
 	
 	/**
 	 * Create a {@link FloatWrite FloatWriter} for a specific {@link Container}.
 	 * 
 	 * @param container
 	 */
-	public FloatWrite( final I container )
+	public FloatWrite( final Container container )
 	{
 		this.container = container;
 		a = new float[ container.getPixelType().getNumChannels() ];

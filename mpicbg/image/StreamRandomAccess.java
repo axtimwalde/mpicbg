@@ -1,14 +1,14 @@
 package mpicbg.image;
 
-public class StreamRandomAccess< I extends Stream< ? extends PixelType > >
-		extends StreamCursor< I >
-		implements RandomAccess< I >, Localizable, LocalizableFactory< StreamRandomAccess >
+public class StreamRandomAccess
+		extends StreamCursor
+		implements RandomAccess, Localizable, LocalizableFactory< StreamRandomAccess >
 {
 	final protected int[] step;
 	final protected int[] iByDim;
 	protected int i = 0;
 	
-	StreamRandomAccess( I stream, Access accessStrategy )
+	StreamRandomAccess( Stream stream, Access accessStrategy )
 	{
 		super( stream, null, accessStrategy );
 		int nd = stream.getNumDim();
@@ -19,19 +19,19 @@ public class StreamRandomAccess< I extends Stream< ? extends PixelType > >
 			step[ d ] = step[ d - 1 ] * container.getDim( d - 1 );		
 	}
 
-	StreamRandomAccess( I stream )
+	StreamRandomAccess( Stream stream )
 	{
 		this( stream, new AccessDirect() );
 	}
 
 
-	StreamRandomAccess( I stream, int[] l, Access accessStrategy )
+	StreamRandomAccess( Stream stream, int[] l, Access accessStrategy )
 	{
 		this( stream, accessStrategy );
 		to( l );
 	}
 
-	StreamRandomAccess( I stream, int[] l )
+	StreamRandomAccess( Stream stream, int[] l )
 	{
 		this( stream, l, new AccessDirect() );
 	}
@@ -42,13 +42,13 @@ public class StreamRandomAccess< I extends Stream< ? extends PixelType > >
 	 * @param stream
 	 * @param l initial location
 	 */
-	StreamRandomAccess( I stream, float[] l, Access accessStrategy )
+	StreamRandomAccess( Stream stream, float[] l, Access accessStrategy )
 	{
 		this( stream, accessStrategy );
 		to( l );
 	}
 
-	StreamRandomAccess( I stream, float[] l )
+	StreamRandomAccess( Stream stream, float[] l )
 	{
 		this( stream, l, new AccessDirect() );
 	}
@@ -107,11 +107,11 @@ public class StreamRandomAccess< I extends Stream< ? extends PixelType > >
 
 	final public IteratorByDimension toIteratableByDimension( )
 	{
-		return new StreamIteratorByDimension< I >( container, iByDim, accessStrategy );
+		return new StreamIteratorByDimension( stream, iByDim, accessStrategy );
 	}
 
 	final public RandomAccess toRandomAccessible( )
 	{
-		return new StreamRandomAccess< I >( container, iByDim, accessStrategy );
+		return new StreamRandomAccess( stream, iByDim, accessStrategy );
 	}
 }

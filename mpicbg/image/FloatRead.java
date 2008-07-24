@@ -4,32 +4,32 @@ package mpicbg.image;
  * @author Preibisch & Saalfeld
  *
  */
-public abstract class FloatRead< I extends Container, C extends Cursor > implements ContainerRead< C >
+public abstract class FloatRead<C extends Cursor> implements ContainerRead<C>
 {
 	final protected float[] a;
-	final protected I container;
-	
+	final protected Container container;
+
 	/**
 	 * Create a {@link FloatRead FloatReader} for a specific {@link Container}.
-	 * 
+	 *
 	 * @param container
 	 */
-	public FloatRead( final I container )
+	public FloatRead( final Container container )
 	{
 		this.container = container;
 		a = new float[ container.getPixelType().getNumChannels() ];
 	}
-	
+
 	abstract public void read( final C c, final float[] f );
 	abstract public float getFloatChannel( final C c, final int i );
-	
+
 	final public void read( final C c, final Object[] f )
 	{
 		read( c, a );
 		for ( int i = 0; i < f.length; ++i )
 			f[ i ] = a[ i ];
 	}
-	
+
 	final public void read( final C c, final byte[] f )
 	{
 		read( c, a );
@@ -60,7 +60,7 @@ public abstract class FloatRead< I extends Container, C extends Cursor > impleme
 		for ( int i = 0; i < f.length; ++i )
 			f[ i ] = ( double )a[ i ];
 	}
-	
+
 	final public Object getChannel( final C c, final int i )
 	{
 		return getFloatChannel( c, i );

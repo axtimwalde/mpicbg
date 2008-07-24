@@ -1,7 +1,7 @@
 package mpicbg.image;
 
-interface ContainerRead< C extends Cursor >
-{	
+interface ContainerRead<C extends Cursor>
+{
 	public void read( final C c, final Object[] f );
 	public void read( final C c, final byte[] f );
 	public void read( final C c, final short[] f );
@@ -9,7 +9,7 @@ interface ContainerRead< C extends Cursor >
 	public void read( final C c, final long[] f );
 	public void read( final C c, final float[] f );
 	public void read( final C c, final double[] f );
-	
+
 	public Object getChannel( final C c, final int i );
 	public byte getByteChannel( final C c, final int i );
 	public short getShortChannel( final C c, final int i );

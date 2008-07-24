@@ -9,15 +9,15 @@ package mpicbg.image;
  *   move the cursor.  We are still not clear how to specify the strategy for
  *   out of bounds bouncing.
  */
-public class StreamIteratorByDimension< I extends Stream< ? extends PixelType > >
-		extends StreamCursor < I >
-		implements IteratorByDimension< I >, Localizable, LocalizableFactory< StreamIteratorByDimension >
+public class StreamIteratorByDimension
+		extends StreamCursor
+		implements IteratorByDimension, Localizable, LocalizableFactory< StreamIteratorByDimension >
 {
 	final protected int[] step;
 	final protected int[] iByDim;
 	protected int i = 0;
 
-	StreamIteratorByDimension( final I stream, final Access accessStrategy )
+	StreamIteratorByDimension( final Stream stream, final Access accessStrategy )
 	{
 		super( stream, null, accessStrategy );
 		int nd = stream.getNumDim();
@@ -28,7 +28,7 @@ public class StreamIteratorByDimension< I extends Stream< ? extends PixelType > 
 			step[ d ] = step[ d - 1 ] * container.getDim( d - 1 );
 	}
 
-	StreamIteratorByDimension( final I stream )
+	StreamIteratorByDimension( final Stream stream )
 	{
 		this( stream, new AccessDirect() );
 	}
@@ -39,7 +39,7 @@ public class StreamIteratorByDimension< I extends Stream< ? extends PixelType > 
 	 * @param stream
 	 * @param l initial location
 	 */
-	StreamIteratorByDimension( final I stream, int[] l, final Access accessStrategy )
+	StreamIteratorByDimension( final Stream stream, int[] l, final Access accessStrategy )
 	{
 		this( stream, accessStrategy );
 		System.arraycopy( l, 0, iByDim, 0, iByDim.length );
@@ -52,7 +52,7 @@ public class StreamIteratorByDimension< I extends Stream< ? extends PixelType > 
 		}
 	}
 
-	StreamIteratorByDimension( final I stream, final float[] l )
+	StreamIteratorByDimension( final Stream stream, final float[] l )
 	{
 		this( stream, l, new AccessDirect() );
 	}
@@ -63,7 +63,7 @@ public class StreamIteratorByDimension< I extends Stream< ? extends PixelType > 
 	 * @param stream
 	 * @param l initial location
 	 */
-	StreamIteratorByDimension( final I stream, final float[] l, final Access accessStrategy )
+	StreamIteratorByDimension( final Stream stream, final float[] l, final Access accessStrategy )
 	{
 		this( stream, accessStrategy );
 		iByDim[ 0 ] = l[ 0 ] > 0 ? ( int )l[ 0 ] : ( int )l[ 0 ] - 1;
@@ -120,11 +120,11 @@ public class StreamIteratorByDimension< I extends Stream< ? extends PixelType > 
 
 	final public IteratorByDimension toIteratableByDimension( )
 	{
-		return new StreamIteratorByDimension< I >( container, iByDim, accessStrategy );
+		return new StreamIteratorByDimension( stream, iByDim, accessStrategy );
 	}
 
 	final public RandomAccess toRandomAccessible( )
 	{
-		return new StreamRandomAccess< I >( container, iByDim, accessStrategy );
+		return new StreamRandomAccess( stream, iByDim, accessStrategy );
 	}
 }

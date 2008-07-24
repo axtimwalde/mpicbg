@@ -8,10 +8,10 @@ import mpicbg.image.interpolation.Interpolator;
  * @author Saalfeld and Preibisch
  *
  */
-public abstract class Cursor< I extends Container< ? extends PixelType, ? extends Cursor > >
+public abstract class Cursor
 	implements Readable, Writable
 {
-	final I container;
+	final Container container;
 	final Interpolator interpolator;
 	final Access  accessStrategy;
 	
@@ -23,7 +23,7 @@ public abstract class Cursor< I extends Container< ? extends PixelType, ? extend
 	 * @param as - A prototype for the AccessStrategy which is cloned in order to give this cursor as 
 	 * final instance to the AccessStrategy to be as fast as possible.
 	 */
-	public Cursor( I c, Interpolator ip, final Access as )
+	public Cursor( Container c, Interpolator ip, final Access as )
 	{
 		container = c;
 		interpolator = ip;

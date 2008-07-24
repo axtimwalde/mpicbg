@@ -1,6 +1,6 @@
 package mpicbg.image;
 
-public interface RandomAccessible< I extends Container< ? extends PixelType, ? extends Cursor > >
+public interface RandomAccessible
 {
-	public abstract RandomAccess< I > createRandomAccess();
+	public abstract RandomAccess createRandomAccess();
 }
