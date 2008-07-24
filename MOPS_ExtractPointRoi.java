@@ -332,7 +332,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 			imp1.setRoi( pr1 );
 			imp2.setRoi( pr2 );
 			
-			IJ.log( inliers.size() + " corresponding features with a maximal displacement of " + decimalFormat.format( model.getError() ) + "px identified." );
+			IJ.log( inliers.size() + " corresponding features with a maximal displacement of " + decimalFormat.format( model.getCost() ) + "px identified." );
 			IJ.log( "Estimated transformation model: " + model );
 			
 			imp1.getCanvas().addMouseListener( this );
