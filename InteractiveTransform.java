@@ -18,7 +18,7 @@ import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public abstract class InteractiveTransform implements PlugIn, MouseListener,  MouseMotionListener, KeyListener, ImageListener
+public abstract class InteractiveTransform< M extends InvertibleModel< M > > implements PlugIn, MouseListener, MouseMotionListener, KeyListener, ImageListener
 {
 	protected ImagePlus imp;
 	protected ImageProcessor target;
@@ -34,7 +34,7 @@ public abstract class InteractiveTransform implements PlugIn, MouseListener,  Mo
 	
 	int targetIndex = -1;
 	
-	abstract protected InvertibleModel myModel();
+	abstract protected M myModel();
 	abstract protected void setHandles();
 	abstract protected void updateHandles( int x, int y );
 	

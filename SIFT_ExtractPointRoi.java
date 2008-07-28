@@ -71,7 +71,7 @@ import java.awt.event.KeyListener;
  * is required.
  *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.1b
+ * @version 0.3b
  */
 public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 {
@@ -231,45 +231,43 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 			
 		start_time = System.currentTimeMillis();
 		IJ.log( "Filtering correspondence candidates by geometric consensus ..." );
-		// filter false positives
 		Vector< PointMatch > inliers = new Vector< PointMatch >();
 		
 		// TODO Implement other models for choice
-		Model model = null;
-		Class< ? extends Model > modelClass = null;
+		Model< ? > model;
 		switch ( method )
 		{
 		case 0:
-			modelClass = TranslationModel2D.class;
+			model = new TranslationModel2D();
 			break;
 		case 1:
-			modelClass = RigidModel2D.class;
+			model = new RigidModel2D();
 			break;
 		case 2:
-			modelClass = AffineModel2D.class;
+			model = new AffineModel2D();
 			break;
+		default:
+			return;
 		}
 		
-		//IJ.showMessage( modelClass.getCanonicalName() );
-		
+		boolean modelFound;
 		try
 		{
-			model = Model.filterRansac(
-					modelClass,
+			modelFound = model.filterRansac(
 					candidates,
 					inliers,
 					1000,
 					max_epsilon,
 					min_inlier_ratio );
 		}
-		catch ( Exception e )
+		catch ( NotEnoughDataPointsException e )
 		{
-			IJ.error( e.getMessage() );
+			modelFound = false;
 		}
 			
 		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );	
 		
-		if ( model != null )
+		if ( modelFound )
 		{
 			int x1[] = new int[ inliers.size() ];
 			int y1[] = new int[ inliers.size() ];
@@ -297,7 +295,7 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 			imp1.setRoi( pr1 );
 			imp2.setRoi( pr2 );
 			
-			IJ.log( inliers.size() + " corresponding features with an average displacement of " + decimalFormat.format( model.getError() ) + "px identified." );
+			IJ.log( inliers.size() + " corresponding features with an average displacement of " + decimalFormat.format( model.getCost() ) + "px identified." );
 			IJ.log( "Estimated transformation model: " + model );
 		}
 		else

@@ -397,11 +397,11 @@ public class SIFT_Align implements PlugIn, KeyListener
 
 			Vector< PointMatch > inliers = new Vector< PointMatch >();
 			
-			RigidModel2D model = null;
+			RigidModel2D model = new RigidModel2D();
+			boolean modelFound;
 			try
 			{
-				model = Model.filterRansac(
-						RigidModel2D.class,
+				modelFound = model.filterRansac(
 						candidates,
 						inliers,
 						1000,
@@ -410,9 +410,10 @@ public class SIFT_Align implements PlugIn, KeyListener
 			}
 			catch ( Exception e )
 			{
+				modelFound = false;
 				System.err.println( e.getMessage() );
 			}
-			if ( model != null )
+			if ( modelFound )
 			{
 				if ( show_info )
 				{

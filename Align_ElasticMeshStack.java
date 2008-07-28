@@ -237,8 +237,8 @@ public class Align_ElasticMeshStack implements PlugIn
 		
 		List< Feature > features1;
 		List< Feature > features2;
-		ElasticMovingLeastSquaresMesh m1;
-		ElasticMovingLeastSquaresMesh m2;
+		ElasticMovingLeastSquaresMesh< ? > m1;
+		ElasticMovingLeastSquaresMesh< ? > m2;
 		
 		imp = WindowManager.getCurrentImage();
 		if ( imp == null )  { System.err.println( "You should have a stack open" ); return; }
@@ -285,7 +285,7 @@ public class Align_ElasticMeshStack implements PlugIn
 			
 		IJ.log( features2.size() + " features identified and processed" );
 		
-		m2 = new ElasticMovingLeastSquaresMesh( numX, imp.getWidth(), imp.getHeight(), localModelClass, alpha );
+		m2 = new ElasticMovingLeastSquaresMesh( localModelClass, numX, imp.getWidth(), imp.getHeight(), alpha );
 		
 		meshes.addMesh( m2 );
 			
@@ -316,7 +316,7 @@ public class Align_ElasticMeshStack implements PlugIn
 				
 			IJ.log( features2.size() + " features identified and processed");
 				
-			m2 = new ElasticMovingLeastSquaresMesh( numX, imp.getWidth(), imp.getHeight(), localModelClass, alpha );
+			m2 = new ElasticMovingLeastSquaresMesh( localModelClass, numX, imp.getWidth(), imp.getHeight(), alpha );
 			
 			start_time = System.currentTimeMillis();
 			IJ.log( "identifying correspondences using brute force ..." );
@@ -347,11 +347,21 @@ public class Align_ElasticMeshStack implements PlugIn
 				candidates = scaledCandidates;
 			}
 			
-			Model model = null;
+			Model< ? > model;
 			try
 			{
-				model = Model.filterRansac(
-						globalModelClass,
+				model = globalModelClass.newInstance();
+			}
+			catch ( Exception e )
+			{
+				e.printStackTrace();
+				return;
+			}
+			
+			boolean modelFound;
+			try
+			{
+				modelFound = model.filterRansac(
 						candidates,
 						inliers,
 						1000,
@@ -360,19 +370,20 @@ public class Align_ElasticMeshStack implements PlugIn
 			}
 			catch ( Exception e )
 			{
-				System.err.println( e.getMessage() );
+				modelFound = false;
 			}
-			if ( model != null )
+			
+			if ( modelFound )
 			{
 				IJ.log( inliers.size() + " corresponding features with an average displacement of " + ElasticMeshStack.decimalFormat.format( model.getCost() ) + "px identified." );
 				IJ.log( "Estimated global transformation model: " + model );
 				
-				for ( PointMatch pm : inliers )
+				for ( final PointMatch pm : inliers )
 				{
-					float[] here = pm.getP2().getL();
-					float[] there = pm.getP1().getL();
-					Tile t = m1.findClosest( here );
-					Tile o = m2.findClosest( there );
+					final float[] here = pm.getP2().getL();
+					final float[] there = pm.getP1().getL();
+					Tile< ? > t = m1.findClosest( here );
+					Tile< ? > o = m2.findClosest( there );
 					
 					m1.addMatchWeightedByDistance( new PointMatch( pm.getP2(), pm.getP1(), 0.1f ), alpha );
 					m2.addMatchWeightedByDistance( new PointMatch( pm.getP1(), pm.getP2(), 0.1f ), alpha );
@@ -422,7 +433,7 @@ public class Align_ElasticMeshStack implements PlugIn
 	
 	public void apply()
 	{
-		ArrayList< ElasticMovingLeastSquaresMesh > meshStack = meshes.meshes;
+		final ArrayList< ElasticMovingLeastSquaresMesh< ? > > meshStack = meshes.meshes;
 		for ( int i = 0; i < stack.getSize(); ++ i )
 		{
 			ElasticMovingLeastSquaresMesh mesh = meshStack.get( i );

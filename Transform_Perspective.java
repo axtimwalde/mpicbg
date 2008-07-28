@@ -2,10 +2,12 @@ import ij.gui.*;
 
 import mpicbg.models.*;
 
-public class Transform_Perspective extends InteractiveTransform
+public class Transform_Perspective extends InteractiveTransform< HomographyModel2D >
 {
 	final protected HomographyModel2D model = new HomographyModel2D();
-	final protected InvertibleModel myModel(){ return model; }
+	
+	@Override
+	final protected HomographyModel2D myModel(){ return model; }
 	
 	@Override
 	final protected void setHandles()

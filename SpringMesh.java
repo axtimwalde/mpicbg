@@ -19,12 +19,10 @@
  */
 import ij.ImagePlus;
 
-import java.awt.Color;
 import java.awt.Shape;
 import java.awt.geom.GeneralPath;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -33,8 +31,6 @@ import mpicbg.models.AffineModel2D;
 import mpicbg.models.ErrorStatistic;
 import mpicbg.models.NotEnoughDataPointsException;
 import mpicbg.models.PointMatch;
-import mpicbg.models.Spring;
-import mpicbg.models.Tile;
 import mpicbg.models.Vertex;
 
 /**
@@ -121,6 +117,8 @@ public class SpringMesh extends TransformMesh
 		 *  \ /      \|/
 		 *   *        *
 		 * </pre>
+		 * 
+		 * TODO This is not really necessary---isn't it?!
 		 * 
 		 * Note that that
 		 * {@link Vertex#addSpring(Vertex, float)} links the same

@@ -46,11 +46,6 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 	private static float alpha = 1.0f;
 	// local transformation model
 	final static String[] methods = new String[]{ "Translation", "Rigid", "Affine" };
-	final static Class< ? extends Model >[] modelClasses =
-		new Class[]{
-				TranslationModel2D.class,
-				RigidModel2D.class,
-				AffineModel2D.class };
 	private static int method = 1;
 	
 	ImagePlus imp;
@@ -69,7 +64,7 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 	PointRoi handles;
 	Tile screen;
 	
-	protected ElasticMovingLeastSquaresMesh mesh;
+	protected ElasticMovingLeastSquaresMesh< ? extends AbstractAffineModel2D > mesh;
 	
 	int targetIndex = -1;
 	
@@ -130,7 +125,7 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 	private Thread opt;
 	private Thread ill;
 	
-	public void run( String arg )
+	final public void run( final String arg )
     {
 		hooks.clear();
 		//pq.clear();
@@ -139,14 +134,14 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 		ip = imp.getProcessor();
 		ipOrig = ip.duplicate();
 		
-		GenericDialog gd = new GenericDialog( "Elastic Moving Least Squares Transform" );
+		final GenericDialog gd = new GenericDialog( "Elastic Moving Least Squares Transform" );
 		gd.addNumericField( "Vertices_per_row :", numX, 0 );
 		//gd.addNumericField( "vertical_handles :", numY, 0 );
 		gd.addNumericField( "Alpha :", alpha, 2 );
 		gd.addChoice( "Local_transformation :", methods, methods[ 1 ] );
 		gd.showDialog();
 		
-		if (gd.wasCanceled()) return;
+		if ( gd.wasCanceled() ) return;
 		
 		impPlot.show();
 		
@@ -154,10 +149,23 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 		alpha = ( float )gd.getNextNumber();
 		
 		method = gd.getNextChoiceIndex();
-		Class< ? extends Model > modelClass = modelClasses[ method ];
 		
 		// intitialize the transform mesh
-		mesh = new ElasticMovingLeastSquaresMesh( numX, imp.getWidth(), imp.getHeight(), modelClass, alpha );		
+		// TODO Implement other models for choice
+		switch ( method )
+		{
+		case 0:
+			mesh = new ElasticMovingLeastSquaresMesh< TranslationModel2D >( TranslationModel2D.class, numX, imp.getWidth(), imp.getHeight(), alpha );
+			break;
+		case 1:
+			mesh = new ElasticMovingLeastSquaresMesh< RigidModel2D >( RigidModel2D.class, numX, imp.getWidth(), imp.getHeight(), alpha );
+			break;
+		case 2:
+			mesh = new ElasticMovingLeastSquaresMesh< AffineModel2D >( AffineModel2D.class, numX, imp.getWidth(), imp.getHeight(), alpha );
+			break;
+		default:
+			return;
+		}
 		
 //		for ( int i = 0; i < 3; ++i )
 //		{

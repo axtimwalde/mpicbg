@@ -14,7 +14,6 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseListener;
-import java.util.ArrayList;
 import java.util.Set;
 
 public class Transform_TriangularGrid implements PlugIn, MouseListener,  MouseMotionListener, KeyListener

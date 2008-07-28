@@ -17,9 +17,7 @@
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  *
  */
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Set;
 
 import mpicbg.models.CoordinateTransform;
@@ -50,7 +48,7 @@ import mpicbg.models.Tile;
  * }
  * </pre>
  */
-public class MovingLeastSquaresMesh extends TransformMesh
+public class MovingLeastSquaresMesh< M extends Model< M > > extends TransformMesh
 {
 	/**
 	 * Tiles are a collection of PointMatches that share a common
@@ -65,39 +63,48 @@ public class MovingLeastSquaresMesh extends TransformMesh
 	 *  2. Being actual point correspondences that define the local rigid
 	 *     transformations of each "tile".
 	 */
-	final protected HashMap< PointMatch, Tile > pt = new HashMap< PointMatch, Tile >();
+	final protected HashMap< PointMatch, Tile< M > > pt = new HashMap< PointMatch, Tile< M > >();
 	final public int numVertices(){ return pt.size(); }
 	
 	protected double error = Double.MAX_VALUE;
 	final public double getError(){ return error; }
 	
-	final protected Class< ? extends Model > modelClass;
-	final public Class< ? extends Model > getModelClass(){ return modelClass; }
+	final protected Class< M > modelClass;
+	final public Class< M > getModelClass(){ return modelClass; }
 	
-	public MovingLeastSquaresMesh( final int numX, final int numY, final float width, final float height, final Class< ? extends Model > modelClass )
+	public MovingLeastSquaresMesh(
+			final Class< M > modelClass,
+			final int numX,
+			final int numY,
+			final float width,
+			final float height )
 	{
 		super( numX, numY, width, height );
 		this.modelClass = modelClass; 
 		
-		Set< PointMatch > s = va.keySet();
-		for ( PointMatch vertex : s )
+		final Set< PointMatch > s = va.keySet();
+		for ( final PointMatch vertex : s )
 		{
 			/**
 			 * Create a tile for each vertex.
 			 */
 			try
 			{
-				Model model = modelClass.newInstance();
-				Tile t = new Tile( model );
+				final M model = modelClass.newInstance();
+				final Tile< M > t = new Tile< M >( model );
 				pt.put( vertex, t );
 			}
 			catch ( Exception e ){ e.printStackTrace(); }
 		}
 	}
 	
-	public MovingLeastSquaresMesh( final int numX, final float width, final float height, final Class< ? extends Model > modelClass )
+	public MovingLeastSquaresMesh(
+			final Class< M > modelClass,
+			final int numX,
+			final float width,
+			final float height )
 	{
-		this( numX, numY( numX, width, height ), width, height, modelClass );
+		this( modelClass, numX, numY( numX, width, height ), width, height );
 	}
 	
 	final protected float weigh( final float d, final float alpha )
@@ -117,18 +124,18 @@ public class MovingLeastSquaresMesh extends TransformMesh
 	 * 
 	 * Then say t.addMatch(PointMatch) and o.add(PointMatch.flip())
 	 */
-	final public Tile findClosest( final float[] there )
+	final public Tile< M > findClosest( final float[] there )
 	{
-		Set< PointMatch > s = pt.keySet();
+		final Set< PointMatch > s = pt.keySet();
 		
 		PointMatch closest = null;
 		float cd = Float.MAX_VALUE;
-		for ( PointMatch vertex : s )
+		for ( final PointMatch vertex : s )
 		{
-			float[] here = vertex.getP2().getW();
-			float dx = here[ 0 ] - there[ 0 ];
-			float dy = here[ 1 ] - there[ 1 ];
-			float d = dx * dx + dy * dy;
+			final float[] here = vertex.getP2().getW();
+			final float dx = here[ 0 ] - there[ 0 ];
+			final float dy = here[ 1 ] - there[ 1 ];
+			final float d = dx * dx + dy * dy;
 			if ( d < cd )
 			{
 				cd = d;
@@ -148,28 +155,27 @@ public class MovingLeastSquaresMesh extends TransformMesh
 	 */
 	final public void addMatchWeightedByDistance( final PointMatch pm, final float alpha )
 	{
-		Set< PointMatch > s = va.keySet();
-		float[] there = pm.getP1().getW();
-		Tile c = findClosest( there );
+		final Set< PointMatch > s = va.keySet();
+		final Tile< M > c = findClosest( pm.getP1().getW() );
 		
-		there = pm.getP1().getL();
+		final float[] there = pm.getP1().getL();
 		
-		float[] oldWeights = pm.getWeights();
-		float[] weights = new float[ oldWeights.length + 1 ];
+		final float[] oldWeights = pm.getWeights();
+		final float[] weights = new float[ oldWeights.length + 1 ];
 		System.arraycopy( oldWeights, 0, weights, 0, oldWeights.length );
-		for ( PointMatch m : s )
+		for ( final PointMatch m : s )
 		{
 			// this is the original location of the vertex
-			float[] here = m.getP1().getW();
-			float dx = here[ 0 ] - there[ 0 ];
-			float dy = here[ 1 ] - there[ 1 ];
+			final float[] here = m.getP1().getW();
+			final float dx = here[ 0 ] - there[ 0 ];
+			final float dy = here[ 1 ] - there[ 1 ];
 			
 			// add a new weight to the existing weights
 			//weights[ oldWeights.length ] = 1.0f / ( float )Math.pow( dx * dx + dy * dy, alpha );
 			weights[ oldWeights.length ] = weigh( 1f + dx * dx + dy * dy, alpha );
 			
 			// add a new PointMatch using the same Points as pm
-			Tile t = pt.get( m );
+			final Tile< M > t = pt.get( m );
 			if ( t == c )
 				t.addMatch( new PointMatch( pm.getP1(), pm.getP2(), weights, 1.0f ) );
 			else
@@ -185,12 +191,12 @@ public class MovingLeastSquaresMesh extends TransformMesh
 	 */
 	final public void updateModels() throws NotEnoughDataPointsException
 	{
-		Set< PointMatch > s = va.keySet();
+		final Set< PointMatch > s = va.keySet();
 		
 		error = 0.0;
-		for ( PointMatch m : s )
+		for ( final PointMatch m : s )
 		{
-			Tile t = pt.get( m );
+			final Tile< M > t = pt.get( m );
 			t.fitModel();
 			t.update();
 			
@@ -215,14 +221,14 @@ public class MovingLeastSquaresMesh extends TransformMesh
 	 * 
 	 * @param t
 	 */
-	final public void apply( CoordinateTransform t )
+	final public void apply( final CoordinateTransform t )
 	{
-		Set< PointMatch > s = va.keySet();
+		final Set< PointMatch > s = va.keySet();
 		
-		for ( PointMatch m : s )
+		for ( final PointMatch m : s )
 		{
-			Set< PointMatch > matches = pt.get( m ).getMatches();
-			for ( PointMatch match : matches )
+			final Set< PointMatch > matches = pt.get( m ).getMatches();
+			for ( final PointMatch match : matches )
 				match.apply( t );
 			
 			/**

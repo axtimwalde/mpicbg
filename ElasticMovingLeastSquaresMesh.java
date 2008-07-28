@@ -17,7 +17,6 @@
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  *
  */
-import ij.IJ;
 import ij.ImagePlus;
 import ij.process.ByteProcessor;
 
@@ -26,17 +25,15 @@ import java.awt.Shape;
 import java.awt.geom.GeneralPath;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
+import mpicbg.models.Model;
 import mpicbg.models.AffineModel2D;
 import mpicbg.models.ErrorStatistic;
-import mpicbg.models.Model;
 import mpicbg.models.NotEnoughDataPointsException;
 import mpicbg.models.Point;
 import mpicbg.models.PointMatch;
-import mpicbg.models.RigidModel2D;
 import mpicbg.models.Tile;
 
 /**
@@ -44,24 +41,24 @@ import mpicbg.models.Tile;
  * 
  *
  */
-public class ElasticMovingLeastSquaresMesh extends MovingLeastSquaresMesh
+public class ElasticMovingLeastSquaresMesh< M extends Model< M > > extends MovingLeastSquaresMesh< M >
 {
-	final protected HashSet< Tile > fixedTiles = new HashSet< Tile >();
+	final protected HashSet< Tile< M > > fixedTiles = new HashSet< Tile< M > >();
 	
 	final static private DecimalFormat decimalFormat = new DecimalFormat();
 	final static private DecimalFormatSymbols decimalFormatSymbols = new DecimalFormatSymbols();
 	
-	protected float alpha;
+	final protected float alpha;
 	
 	public ElasticMovingLeastSquaresMesh(
+			final Class< M > modelClass,
 			final int numX,
 			final int numY,
 			final float width,
 			final float height,
-			final Class< ? extends Model > modelClass,
 			final float alpha )
 	{
-		super( numX, numY, width, height, modelClass );
+		super( modelClass, numX, numY, width, height );
 		
 		decimalFormatSymbols.setGroupingSeparator( ',' );
 		decimalFormatSymbols.setDecimalSeparator( '.' );
@@ -71,22 +68,21 @@ public class ElasticMovingLeastSquaresMesh extends MovingLeastSquaresMesh
 		
 		this.alpha = alpha;
 		
-		Set< PointMatch > s = va.keySet();
+		final Set< PointMatch > s = va.keySet();
 		
-		//float w = 1.0f / s.size();
 		// temporary weights for inter-vertex PointMatches
-		float[] w = new float[ 2 ];
-		w[ 0 ] = 100.0f / s.size();
+		final float[] w = new float[ 2 ];
+		w[ 0 ] = 1.0f / s.size();
 		
-		for ( PointMatch vertex : s )
+		for ( final PointMatch vertex : s )
 		{
 			/**
 			 * For each vertex, collect its connected vertices.
 			 */
-			HashSet< PointMatch > connectedVertices = new HashSet< PointMatch >();
-			for ( AffineModel2D ai : va.get( vertex ) )
+			final HashSet< PointMatch > connectedVertices = new HashSet< PointMatch >();
+			for ( final AffineModel2D ai : va.get( vertex ) )
 			{
-				for ( PointMatch m : av.get( ai ) )
+				for ( final PointMatch m : av.get( ai ) )
 				{
 					if ( vertex != m ) connectedVertices.add( m );
 				}
@@ -113,12 +109,12 @@ public class ElasticMovingLeastSquaresMesh extends MovingLeastSquaresMesh
 			 *   Should we use min( number of vertical, number of horizontal)^2
 			 *   instead?
 			 */
-			Tile t = pt.get( vertex );
-			for ( PointMatch m : connectedVertices )
+			Tile< M > t = pt.get( vertex );
+			for ( final PointMatch m : connectedVertices )
 			{
-				Tile o = pt.get( m );
-				Point p2 = m.getP2();
-				Point p1 = new Point( p2.getW().clone() );
+				final Tile< M > o = pt.get( m );
+				final Point p2 = m.getP2();
+				final Point p1 = new Point( p2.getW().clone() );
 				
 				w[ 1 ] = weigh( Point.squareDistance( vertex.getP1(), p2 ), alpha );
 				
@@ -136,47 +132,27 @@ public class ElasticMovingLeastSquaresMesh extends MovingLeastSquaresMesh
 		}
 	}
 	
-	public ElasticMovingLeastSquaresMesh( int numX, float width, float height, Class< ? extends Model > modelClass, float alpha )
+	public ElasticMovingLeastSquaresMesh(
+			final Class< M > modelClass, 
+			final int numX,
+			final float width,
+			final float height,
+			final float alpha )
 	{
-		this( numX, numY( numX, width, height ), width, height, modelClass, alpha );
-	}
-	
-	
-	/**
-	 * Update all PointMatches in all tiles and estimate the average
-	 * displacement. 
-	 */
-	final private void update( float amount )
-	{
-		Set< PointMatch > s = va.keySet();
-		double cd = 0.0;
-		double min_d = Double.MAX_VALUE;
-		double max_d = Double.MIN_VALUE;
-		for ( PointMatch m : s )
-		{
-			Tile t = pt.get( m );
-			t.update();
-
-			double d = t.getDistance();
-			if ( d < min_d ) min_d = d;
-			if ( d > max_d ) max_d = d;
-			cd += d;
-		}
-		cd /= pt.size();
-		error = cd;
+		this( modelClass, numX, numY( numX, width, height ), width, height, alpha );
 	}
 	
 	/**
 	 * Update all PointMatches in all tiles and estimate the average
 	 * displacement by weight of the PointMatch. 
 	 */
-	final public void updateByStrength( float amount )
+	final public void update( final float amount )
 	{
-		Set< PointMatch > s = va.keySet();
+		final Set< PointMatch > s = va.keySet();
 		
-		for ( PointMatch m : s )
+		for ( final PointMatch m : s )
 		{
-			Tile t = pt.get( m );
+			final Tile< M > t = pt.get( m );
 			
 			/**
 			 * Update the location of the vertex
@@ -192,9 +168,9 @@ public class ElasticMovingLeastSquaresMesh extends MovingLeastSquaresMesh
 		double cd = 0.0;
 		double min_d = Double.MAX_VALUE;
 		double max_d = Double.MIN_VALUE;
-		for ( PointMatch m : s )
+		for ( final PointMatch m : s )
 		{
-			double d = pt.get( m ).getDistance();
+			final double d = pt.get( m ).getDistance();
 			if ( d < min_d ) min_d = d;
 			if ( d > max_d ) max_d = d;
 			cd += d;
@@ -209,14 +185,15 @@ public class ElasticMovingLeastSquaresMesh extends MovingLeastSquaresMesh
 	 * @param observer collecting the error after update
 	 * @throws NotEnoughDataPointsException
 	 */
-	public final void optimizeIteration( ErrorStatistic observer ) throws NotEnoughDataPointsException
+	public final void optimizeIteration(
+			final ErrorStatistic observer ) throws NotEnoughDataPointsException
 	{
-		Set< PointMatch > s = va.keySet();
+		final Set< PointMatch > s = va.keySet();
 		
 		error = 0.0;
-		for ( PointMatch m : s )
+		for ( final PointMatch m : s )
 		{
-			Tile t = pt.get( m );
+			final Tile< M > t = pt.get( m );
 			
 			//System.out.println( t.getMatches().size() );
 			if ( fixedTiles.contains( t ) ) continue;
@@ -243,18 +220,18 @@ public class ElasticMovingLeastSquaresMesh extends MovingLeastSquaresMesh
 	 */
 	final public void optimizeIteration() throws NotEnoughDataPointsException
 	{
-		Set< PointMatch > s = va.keySet();
+		final Set< PointMatch > s = va.keySet();
 		
-		for ( PointMatch m : s )
+		for ( final PointMatch m : s )
 		{
-			Tile t = pt.get( m );
+			final Tile< M > t = pt.get( m );
 			if ( fixedTiles.contains( t ) ) continue;
 			
 			t.fitModel();
 		}
 	}
 	
-	public void fixTile( Tile t )
+	public void fixTile( final Tile< M > t )
 	{
 		fixedTiles.add( t );
 	}
@@ -268,18 +245,13 @@ public class ElasticMovingLeastSquaresMesh extends MovingLeastSquaresMesh
 	 * @param maxPlateauwidth convergence is reached if the average slope in
 	 *   an interval of this size is 0.0 (in double accuracy).  This prevents
 	 *   the algorithm from stopping at plateaus smaller than this value.
-	 * 
-	 * TODO  Johannes Schindelin suggested to start from a good guess, which is
-	 *   e.g. the propagated unoptimized pose of a tile relative to its
-	 *   connected tile that was already identified during RANSAC
-	 *   correspondence check.  Thank you, Johannes, great hint!
 	 */
-	public void optimize(
-			float maxError,
-			int maxIterations,
-			int maxPlateauwidth ) throws NotEnoughDataPointsException 
+	final public void optimize(
+			final float maxError,
+			final int maxIterations,
+			final int maxPlateauwidth ) throws NotEnoughDataPointsException 
 	{
-		ErrorStatistic observer = new ErrorStatistic();
+		final ErrorStatistic observer = new ErrorStatistic();
 		
 		int i = 0;
 		
@@ -309,20 +281,15 @@ public class ElasticMovingLeastSquaresMesh extends MovingLeastSquaresMesh
 	 * @param maxPlateauwidth convergence is reached if the average slope in
 	 *   an interval of this size is 0.0 (in double accuracy).  This prevents
 	 *   the algorithm from stopping at plateaus smaller than this value.
-	 * 
-	 * TODO  Johannes Schindelin suggested to start from a good guess, which is
-	 *   e.g. the propagated unoptimized pose of a tile relative to its
-	 *   connected tile that was already identified during RANSAC
-	 *   correspondence check.  Thank you, Johannes, great hint!
 	 */
-	public void optimizeByStrength(
-			float maxError,
-			int maxIterations,
-			int maxPlateauwidth,
-			ByteProcessor ipPlot,
-			ImagePlus impPlot ) throws NotEnoughDataPointsException 
+	final public void optimizeByStrength(
+			final float maxError,
+			final int maxIterations,
+			final int maxPlateauwidth,
+			final ByteProcessor ipPlot,
+			final ImagePlus impPlot ) throws NotEnoughDataPointsException 
 	{
-		ErrorStatistic observer = new ErrorStatistic();
+		final ErrorStatistic observer = new ErrorStatistic();
 		
 		int i = 0;
 		
@@ -333,7 +300,7 @@ public class ElasticMovingLeastSquaresMesh extends MovingLeastSquaresMesh
 		while ( i < maxIterations )  // do not run forever
 		{
 			optimizeIteration();
-			updateByStrength( 0.75f );
+			update( 0.75f );
 			observer.add( error );
 			
 			ipPlot.set(
@@ -366,18 +333,18 @@ public class ElasticMovingLeastSquaresMesh extends MovingLeastSquaresMesh
 	 * 
 	 * @return the illustration
 	 */
-	public Shape illustratePointMatches()
+	final public Shape illustratePointMatches()
 	{
-		Set< PointMatch > s = va.keySet();
+		final Set< PointMatch > s = va.keySet();
 		
-		GeneralPath path = new GeneralPath();
+		final GeneralPath path = new GeneralPath();
 		
-		for ( PointMatch m : s )
+		for ( final PointMatch m : s )
 		{
-			Tile t = pt.get( m );
+			final Tile< M > t = pt.get( m );
 			for ( PointMatch ma : t.getMatches() )
 			{
-				float[] l = ma.getP1().getW();
+				final float[] l = ma.getP1().getW();
 				
 				path.moveTo( l[ 0 ] - 1, l[ 1 ] - 1 );
 				path.lineTo( l[ 0 ] + 1, l[ 1 ] - 1 );
@@ -394,19 +361,19 @@ public class ElasticMovingLeastSquaresMesh extends MovingLeastSquaresMesh
 	 * 
 	 * @return the illustration
 	 */
-	public Shape illustratePointMatchDisplacements()
+	final public Shape illustratePointMatchDisplacements()
 	{
-		Set< PointMatch > s = va.keySet();
+		final Set< PointMatch > s = va.keySet();
 		
-		GeneralPath path = new GeneralPath();
+		final GeneralPath path = new GeneralPath();
 		
-		for ( PointMatch m : s )
+		for ( final PointMatch m : s )
 		{
-			Tile t = pt.get( m );
-			for ( PointMatch ma : t.getMatches() )
+			final Tile< M > t = pt.get( m );
+			for ( final PointMatch ma : t.getMatches() )
 			{
-				float[] l = ma.getP1().getW();
-				float[] k = ma.getP2().getW();
+				final float[] l = ma.getP1().getW();
+				final float[] k = ma.getP2().getW();
 				
 				path.moveTo( l[ 0 ], l[ 1 ] );
 				path.lineTo( k[ 0 ], k[ 1 ] );

@@ -62,7 +62,7 @@ public class Transform_MovingLeastSquaresMesh implements PlugIn, MouseListener, 
 	final ArrayList< Point > hooks = new ArrayList< Point >();
 	PointRoi handles;
 	
-	protected MovingLeastSquaresMesh mesh;
+	protected MovingLeastSquaresMesh< ? extends AbstractAffineModel2D > mesh;
 	
 	int targetIndex = -1;
 	
@@ -76,7 +76,7 @@ public class Transform_MovingLeastSquaresMesh implements PlugIn, MouseListener, 
 		ip = imp.getProcessor();
 		ipOrig = ip.duplicate();
 		
-		GenericDialog gd = new GenericDialog( "Moving Least Squares Transform" );
+		final GenericDialog gd = new GenericDialog( "Moving Least Squares Transform" );
 		gd.addNumericField( "Vertices_per_row :", numX, 0 );
 		//gd.addNumericField( "vertical_handles :", numY, 0 );
 		gd.addNumericField( "Alpha :", alpha, 2 );
@@ -90,23 +90,22 @@ public class Transform_MovingLeastSquaresMesh implements PlugIn, MouseListener, 
 		alpha = ( float )gd.getNextNumber();
 		
 		method = gd.getNextChoiceIndex();
+		
 		// TODO Implement other models for choice
-		Class< ? extends InvertibleModel > modelClass = null;
 		switch ( method )
 		{
 		case 0:
-			modelClass = TranslationModel2D.class;
+			mesh = new MovingLeastSquaresMesh< TranslationModel2D >( TranslationModel2D.class, numX, imp.getWidth(), imp.getHeight() );
 			break;
 		case 1:
-			modelClass = RigidModel2D.class;
+			mesh = new MovingLeastSquaresMesh< RigidModel2D >( RigidModel2D.class, numX, imp.getWidth(), imp.getHeight() );
 			break;
 		case 2:
-			modelClass = AffineModel2D.class;
+			mesh = new MovingLeastSquaresMesh< AffineModel2D >( AffineModel2D.class, numX, imp.getWidth(), imp.getHeight() );
 			break;
+		default:
+			return;
 		}
-		
-		// intitialize the transform mesh
-		mesh = new MovingLeastSquaresMesh( numX, imp.getWidth(), imp.getHeight(), modelClass );		
 		
 		handles = new PointRoi(
 				new int[]{ ip.getWidth() / 4, 3 * ip.getWidth() / 4, ip.getWidth() / 4 },

@@ -7,20 +7,20 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 
+import mpicbg.models.AbstractAffineModel2D;
 import mpicbg.models.ErrorStatistic;
 import mpicbg.models.NotEnoughDataPointsException;
-import mpicbg.models.PointMatch;
 
 /**
  * @author saalfeld
  *
  */
-public class ElasticMeshStack
+public class ElasticMeshStack< M extends AbstractAffineModel2D< M > >
 {
 	private double error = Double.MAX_VALUE;
 	public double getError(){ return error; }
 	
-	final public ArrayList< ElasticMovingLeastSquaresMesh > meshes = new ArrayList< ElasticMovingLeastSquaresMesh >();
+	final public ArrayList< ElasticMovingLeastSquaresMesh< M > > meshes = new ArrayList< ElasticMovingLeastSquaresMesh< M > >();
 	
 	final static public DecimalFormat decimalFormat = new DecimalFormat();
 	final static public DecimalFormatSymbols decimalFormatSymbols = new DecimalFormatSymbols();
@@ -35,26 +35,26 @@ public class ElasticMeshStack
 	}
 	
 	
-	public void addMesh( ElasticMovingLeastSquaresMesh mesh )
+	final public void addMesh( final ElasticMovingLeastSquaresMesh< M > mesh )
 	{
 		meshes.add( mesh );
 	}
 	
-	public void update( float amount )
+	final public void update( final float amount )
 	{
 		double cd = 0.0;
-		for ( ElasticMovingLeastSquaresMesh m : meshes )
+		for ( final ElasticMovingLeastSquaresMesh m : meshes )
 		{
-			m.updateByStrength( amount );
+			m.update( amount );
 			cd += m.getError();
 		}
 		cd /= meshes.size();
 		error = cd;
 	}
 	
-	public void updateAffines()
+	final public void updateAffines()
 	{
-		for ( ElasticMovingLeastSquaresMesh m : meshes )
+		for ( final ElasticMovingLeastSquaresMesh< M > m : meshes )
 			m.updateAffines();
 	}
 	
@@ -63,9 +63,9 @@ public class ElasticMeshStack
 	 * 
 	 * @throws NotEnoughDataPointsException
 	 */
-	public void optimizeIteration() throws NotEnoughDataPointsException
+	final public void optimizeIteration() throws NotEnoughDataPointsException
 	{
-		for ( ElasticMovingLeastSquaresMesh m : meshes )
+		for ( final ElasticMovingLeastSquaresMesh< M > m : meshes )
 			m.optimizeIteration();
 	}
 	
@@ -84,15 +84,15 @@ public class ElasticMeshStack
 	 *   connected tile that was already identified during RANSAC
 	 *   correspondence check.  Thank you, Johannes, great hint!
 	 */
-	public void optimize(
-			float maxError,
-			int maxIterations,
-			int maxPlateauwidth,
-			ImagePlus imp,
-			ImageStack src,
-			ImageStack trg ) throws NotEnoughDataPointsException 
+	final public void optimize(
+			final float maxError,
+			final int maxIterations,
+			final int maxPlateauwidth,
+			final ImagePlus imp,
+			final ImageStack src,
+			final ImageStack trg ) throws NotEnoughDataPointsException 
 	{
-		ErrorStatistic observer = new ErrorStatistic();
+		final ErrorStatistic observer = new ErrorStatistic();
 		int i = 0;
 		
 		while ( i < maxIterations )  // do not run forever
@@ -109,7 +109,7 @@ public class ElasticMeshStack
 			if ( i >= maxPlateauwidth )
 			{
 				wideSlope = observer.getWideSlope( maxPlateauwidth );
-				if ( i >= maxPlateauwidth && error < maxError && Math.abs( wideSlope ) <= 0.001 )
+				if ( i >= maxPlateauwidth && error < maxError && Math.abs( wideSlope ) <= 0.0001 )
 					break;
 			}
 			
@@ -127,13 +127,13 @@ public class ElasticMeshStack
 		System.out.println( "  maximal displacement: " + decimalFormat.format( observer.max ) + "px" );
 	}
 	
-	public void paint( ImageStack src, ImageStack trg )
+	final public void paint( final ImageStack src, final ImageStack trg )
 	{
 		for ( int i = 0; i < meshes.size(); ++i )
 		{
-			ElasticMovingLeastSquaresMesh mesh = meshes.get( i );
-			ImageProcessor ipSrc = src.getProcessor( i + 1 );
-			ImageProcessor ipTrg = trg.getProcessor( i + 1 );
+			final ElasticMovingLeastSquaresMesh< M > mesh = meshes.get( i );
+			final ImageProcessor ipSrc = src.getProcessor( i + 1 );
+			final ImageProcessor ipTrg = trg.getProcessor( i + 1 );
 			
 			mesh.updateAffines();
 			

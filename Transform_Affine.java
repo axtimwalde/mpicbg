@@ -2,11 +2,12 @@ import ij.gui.*;
 
 import mpicbg.models.*;
 
-public class Transform_Affine extends InteractiveTransform
+public class Transform_Affine extends InteractiveTransform< AffineModel2D >
 {
 	final protected AffineModel2D model = new AffineModel2D();
+	
 	@Override
-	final protected InvertibleModel myModel() { return model; }
+	final protected AffineModel2D myModel() { return model; }
 	
 	@Override
 	final protected void setHandles()
