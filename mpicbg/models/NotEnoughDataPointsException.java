@@ -28,6 +28,8 @@ import java.lang.Exception;
  */
 public class NotEnoughDataPointsException extends Exception
 {
+	private static final long serialVersionUID = 492656623783477968L;
+
 	public NotEnoughDataPointsException()
 	{
 		super( "Not enough data points to solve the Model." );

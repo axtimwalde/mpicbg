@@ -19,22 +19,81 @@
  */
 package mpicbg.models;
 
+import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
 import java.util.Collection;
 
-public class RigidModel2D extends AffineModel2D
+/**
+ * 2d-rigid transformation models to be applied to points in 2d-space.
+ * 
+ * @version 0.3b
+ * 
+ * TODO Create {@link AffineTransform AffineTransforms} on the fly and replace
+ *   it with the simpler rigid-specific operations.
+ */
+public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 {
 	static final protected int MIN_NUM_MATCHES = 2;
 	
 	@Override
-	public int getMinNumMatches(){ return MIN_NUM_MATCHES; }
-
-	@Override
-	public String toString()
+	final public int getMinNumMatches(){ return MIN_NUM_MATCHES; }
+	
+	final protected AffineTransform affine = new AffineTransform();
+	final protected AffineTransform inverseAffine = new AffineTransform();
+	final public AffineTransform getAffine(){ return affine; }
+	final public AffineTransform getInverseAffine(){ return inverseAffine; }
+	
+	//@Override
+	final public float[] apply( final float[] point )
 	{
-		return ( "[3,3](" + affine + ") " + cost );
+		assert point.length == 2 : "2d rigid transformations can be applied to 2d points only.";
+		
+		final float[] transformed = new float[ 2 ];
+		affine.transform( point, 0, transformed, 0, 1 );
+		return transformed;
+	}
+	
+	//@Override
+	final public void applyInPlace( final float[] point )
+	{
+		assert point.length == 2 : "2d rigid transformations can be applied to 2d points only.";
+		
+		affine.transform( point, 0, point, 0, 1 );
+	}
+	
+	//@Override
+	final public float[] applyInverse( final float[] point ) throws NoninvertibleModelException
+	{
+		assert point.length == 2 : "2d rigid transformations can be applied to 2d points only.";
+		
+		final float[] transformed = new float[ 2 ];
+		try
+		{
+			inverseAffine.transform( point, 0, transformed, 0, 1 );
+		}
+		catch ( NullPointerException e )
+		{
+			throw new NoninvertibleModelException( e );
+		}
+		return transformed;
 	}
 
-	final public void fit( Collection< PointMatch > matches ) throws NotEnoughDataPointsException
+	//@Override
+	final public void applyInverseInPlace( final float[] point ) throws NoninvertibleModelException
+	{
+		assert point.length == 2 : "2d rigid transformations can be applied to 2d points only.";
+		
+		try
+		{
+			inverseAffine.transform( point, 0, point, 0, 1 );
+		}
+		catch ( NullPointerException e )
+		{
+			throw new NoninvertibleModelException( e );
+		}
+	}
+
+	final public void fit( final Collection< PointMatch > matches ) throws NotEnoughDataPointsException
 	{
 		if ( matches.size() < MIN_NUM_MATCHES ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d rigid model, at least " + MIN_NUM_MATCHES + " data points required." );
 		
@@ -47,12 +106,12 @@ public class RigidModel2D extends AffineModel2D
 		
 		double ws = 0.0;
 		
-		for ( PointMatch m : matches )
+		for ( final PointMatch m : matches )
 		{
-			float[] p = m.getP1().getL(); 
-			float[] q = m.getP2().getW();
+			final float[] p = m.getP1().getL(); 
+			final float[] q = m.getP2().getW();
 			
-			float w = m.getWeight();
+			final float w = m.getWeight();
 			ws += w;
 			
 			pcx += w * p[ 0 ];
@@ -65,15 +124,16 @@ public class RigidModel2D extends AffineModel2D
 		qcx /= ws;
 		qcy /= ws;
 
-		float dx = pcx - qcx;
-		float dy = pcy - qcy;
+		final float dx = pcx - qcx;
+		final float dy = pcy - qcy;
+		
 		float sum1 = 0, sum2 = 0;
 		float x1, y1, x2, y2;
-		for ( PointMatch m : matches )
+		for ( final PointMatch m : matches )
 		{
-			float[] p = m.getP1().getL(); 
-			float[] q = m.getP2().getW();
-			float w = m.getWeight();
+			final float[] p = m.getP1().getL(); 
+			final float[] q = m.getP2().getW();
+			final float w = m.getWeight();
 			
 			// make points local to the center of mass of the first landmark set
 			x1 = p[ 0 ] - pcx; // x1
@@ -83,39 +143,58 @@ public class RigidModel2D extends AffineModel2D
 			sum1 += w * ( x1 * y2 - y1 * x2 ); //   x1 * y2 - x2 * y1 // assuming p1 is x1,x2 and p2 is y1,y2
 			sum2 += w * ( x1 * x2 + y1 * y2 ); //   x1 * y1 + x2 * y2
 		}
-		float angle = ( float )Math.atan2( -sum1, sum2 );
+		final float angle = ( float )Math.atan2( -sum1, sum2 );
 		
 		affine.setToIdentity();
 		affine.rotate( -angle, qcx, qcy );
 		affine.translate( -dx, -dy );
+		invert();
 	}
 	
 	/**
 	 * TODO Not yet implemented ...
 	 */
 	@Override
-	final public void shake(
-			float amount )
+	final public void shake( final float amount )
 	{
 		// TODO If you ever need it, please implement it...
 	}
 	
 	@Override
-	public RigidModel2D clone()
+	final public RigidModel2D clone()
 	{
-		RigidModel2D m = new RigidModel2D();
+		final RigidModel2D m = new RigidModel2D();
 		m.affine.setTransform( affine );
 		m.cost = cost;
 		return m;
 	}
-
-	public void preConcatenate( RigidModel2D model )
+	
+	@Override
+	final public void set( final RigidModel2D m )
 	{
-		this.affine.preConcatenate(model.affine);
+		this.affine.setTransform( m.getAffine() );
+		this.cost = m.getCost();
+	}
+
+	final private void invert()
+	{
+		try
+		{
+			inverseAffine.setTransform( affine );
+			inverseAffine.invert();
+		}
+		catch ( NoninvertibleTransformException e ){}
 	}
 	
-	public void concatenate( RigidModel2D model )
+	@Override
+	final public void preConcatenate( final RigidModel2D model )
 	{
-		this.affine.concatenate(model.affine);
+		affine.preConcatenate( model.getAffine() );
+	}
+	
+	@Override
+	final public void concatenate( final RigidModel2D model )
+	{
+		affine.concatenate( model.getAffine() );
 	}
 }

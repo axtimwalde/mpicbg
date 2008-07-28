@@ -19,8 +19,25 @@
  */
 package mpicbg.models;
 
-public abstract class InvertibleModel< M extends InvertibleModel< M > > extends Model< M > implements InvertibleCoordinateTransform
+import java.awt.geom.AffineTransform;
+
+/**
+ * Abstract 
+ * 
+ * @version 0.2b
+ * 
+ */
+public abstract class AbstractAffineModel2D< M extends AbstractAffineModel2D< M > > extends InvertibleModel< M >
 {
+	abstract public AffineTransform getAffine();
+	abstract public AffineTransform getInverseAffine();
+	
 	@Override
-	abstract public M clone(); 
+	public String toString()
+	{
+		return ( "[3,3](" + getAffine() + ") " + cost );
+	}
+	
+	abstract public void preConcatenate( final M model );
+	abstract public void concatenate( final M model );
 }

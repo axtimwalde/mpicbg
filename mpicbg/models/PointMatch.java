@@ -21,7 +21,6 @@ package mpicbg.models;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 
 /**
  * A link between two {@link Point Points} that are expected to be ideally at

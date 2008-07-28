@@ -24,15 +24,15 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-public class Tile
+public class Tile< M extends Model< M > >
 {
 	/**
 	 * The transformation {@link Model} of the {@link Tile}.  All local
 	 * {@link Point Points} in the {@link Tile} share (and thus determine)
 	 * this common {@link Model}.
 	 */
-	final protected Model model;
-	final public Model getModel() { return model; }
+	final protected M model;
+	final public M getModel() { return model; }
 	
 	/**
 	 * A set of point correspondences with {@link PointMatch#getP1() p1} being
@@ -43,7 +43,7 @@ public class Tile
 	 * same world coordinates for all {@link PointMatch PointMatches}.
 	 */
 	final protected Set< PointMatch > matches = new HashSet< PointMatch >();
-	final public Set< PointMatch > getMatches() { return matches; }
+	final public Set< PointMatch > getMatches(){ return matches; }
 	
 	/**
 	 * Add more {@link PointMatch PointMatches}.
@@ -52,7 +52,7 @@ public class Tile
 	 * 
 	 * @return true if this set changed as a result of the call
 	 */
-	final public boolean addMatches( Collection< PointMatch > more )
+	final public boolean addMatches( final Collection< PointMatch > more )
 	{
 		return matches.addAll( more );
 	}
@@ -64,7 +64,7 @@ public class Tile
 	 * 
 	 * @return true if this set did not already contain the specified element
 	 */
-	final public boolean addMatch( PointMatch match )
+	final public boolean addMatch( final PointMatch match )
 	{
 		return matches.add( match );
 	}
@@ -76,11 +76,10 @@ public class Tile
 	 * 
 	 * @return true if this set contained the specified element
 	 */
-	final public boolean removeMatch( PointMatch match )
+	final public boolean removeMatch( final PointMatch match )
 	{
 		return matches.remove( match );
 	}
-	
 	
 	/**
 	 * A set of {@link Tile Tiles} that share point correpondences with this
@@ -89,8 +88,8 @@ public class Tile
 	 * Note that point correspondences do not know about the tiles they belong
 	 * to.
 	 */
-	final private Set< Tile > connectedTiles = new HashSet< Tile >();
-	final public Set< Tile > getConnectedTiles() { return connectedTiles; }
+	final private Set< Tile< ? extends Model > > connectedTiles = new HashSet< Tile< ? extends Model > >();
+	final public Set< Tile< ? extends Model > > getConnectedTiles() { return connectedTiles; }
 	
 	
 	/**
@@ -100,7 +99,7 @@ public class Tile
 	 * @param t the new {@link Tile}.
 	 * @return Success of the operation.
 	 */
-	final public boolean addConnectedTile( Tile t )
+	final public boolean addConnectedTile( final Tile< ? extends Model > t )
 	{
 		return connectedTiles.add( t );
 	}
@@ -112,7 +111,7 @@ public class Tile
 	 * @param t the {@link Tile} to be removed.
 	 * @return Success of the operation.
 	 */
-	final public boolean removeConnectedTile( Tile t )
+	final public boolean removeConnectedTile( final Tile< ? extends Model > t )
 	{
 		return connectedTiles.remove( t );
 	}
@@ -137,7 +136,7 @@ public class Tile
 	 * 
 	 * @param model the transformation {@link Model} of the {@link Tile}.
 	 */
-	public Tile( Model model )
+	public Tile( final M model )
 	{
 		this.model = model;
 	}
@@ -152,20 +151,20 @@ public class Tile
 		double d = 0.0;
 		double c = 0.0;
 		
-		int num_matches = matches.size();
-		if ( num_matches > 0 )
+		final int numMatches = matches.size();
+		if ( numMatches > 0 )
 		{
-			double sum_weight = 0.0;
-			for ( PointMatch match : matches )
+			double sumWeight = 0.0;
+			for ( final PointMatch match : matches )
 			{
 				match.apply( model );
-				double dl = match.getDistance();
+				final double dl = match.getDistance();
 				d += dl;
 				c += dl * dl * match.getWeight();
-				sum_weight += match.getWeight();
+				sumWeight += match.getWeight();
 			}
-			d /= num_matches;
-			c /= sum_weight;
+			d /= numMatches;
+			c /= sumWeight;
 		}
 		distance = ( float )d;
 		cost = ( float )c;
@@ -177,25 +176,25 @@ public class Tile
 	 * Update {@link #cost} and {@link #distance}.
 	 *
 	 */
-	final public void update( float amount )
+	final public void update( final float amount )
 	{
 		double d = 0.0;
 		double c = 0.0;
 		
-		int num_matches = matches.size();
-		if ( num_matches > 0 )
+		final int numMatches = matches.size();
+		if ( numMatches > 0 )
 		{
-			double sum_weight = 0.0;
-			for ( PointMatch match : matches )
+			double sumWeight = 0.0;
+			for ( final PointMatch match : matches )
 			{
 				match.apply( model, amount );
-				double dl = match.getDistance();
+				final double dl = match.getDistance();
 				d += dl;
 				c += dl * dl * match.getWeight();
-				sum_weight += match.getWeight();
+				sumWeight += match.getWeight();
 			}
-			d /= num_matches;
-			c /= sum_weight;
+			d /= numMatches;
+			c /= sumWeight;
 		}
 		distance = ( float )d;
 		cost = ( float )c;
@@ -209,10 +208,10 @@ public class Tile
 	 * @param amount strength of shaking
 	 * @return true if a better model was found
 	 */
-	final public boolean diceBetterModel( int maxNumTries, float amount )
+	final public boolean diceBetterModel( final int maxNumTries, final float amount )
 	{
 		// store old model
-		Model oldModel = model.clone();
+		final M oldModel = model.clone();
 		
 		for ( int t = 0; t < maxNumTries; ++t )
 		{
@@ -246,10 +245,10 @@ public class Tile
 	 * @param graph
 	 * @return the number of connected tiles in the graph
 	 */
-	final private int traceConnectedGraph( Set< Tile > graph )
+	final private int traceConnectedGraph( final Set< Tile< ? extends Model > > graph )
 	{
 		graph.add( this );
-		for ( Tile t : connectedTiles )
+		for ( final Tile< ? extends Model > t : connectedTiles )
 		{
 			if ( !graph.contains( t ) )
 				t.traceConnectedGraph( graph );
@@ -276,8 +275,8 @@ public class Tile
 	 * @param matches
 	 */
 	final public void connect(
-			Tile o,
-			Collection< PointMatch > matches )
+			final Tile< ? extends Model > o,
+			final Collection< PointMatch > matches )
 	{
 		this.addMatches( matches );
 		o.addMatches( PointMatch.flip( matches ) );
@@ -292,16 +291,16 @@ public class Tile
 	 * @param tiles
 	 * @return
 	 */
-	final static public ArrayList< Set< Tile > > identifyConnectedGraphs(
-			Collection< Tile > tiles )
+	final static public ArrayList< Set< Tile< ? extends Model > > > identifyConnectedGraphs(
+			Collection< Tile< ? extends Model > > tiles )
 	{
-		ArrayList< Set< Tile > > graphs = new ArrayList< Set< Tile > >();
+		ArrayList< Set< Tile< ? extends Model > > > graphs = new ArrayList< Set< Tile< ? extends Model > > >();
 		int numInspectedTiles = 0;
-A:		for ( Tile tile : tiles )
+A:		for ( final Tile< ? extends Model > tile : tiles )
 		{
-			for ( Set< Tile > knownGraph : graphs )
+			for ( final Set< Tile< ? extends Model > > knownGraph : graphs )
 				if ( knownGraph.contains( tile ) ) continue A; 
-			Set< Tile > current_graph = new HashSet< Tile >();
+			Set< Tile< ? extends Model > > current_graph = new HashSet< Tile< ? extends Model > >();
 			numInspectedTiles += tile.traceConnectedGraph( current_graph );
 			graphs.add( current_graph );
 			if ( numInspectedTiles == tiles.size() ) break;

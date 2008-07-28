@@ -21,19 +21,18 @@ package mpicbg.models;
 
 import java.util.Collection;
 
-import Jama.Matrix;
-
-public class TranslationModel3D extends InvertibleModel
+public class TranslationModel3D extends InvertibleModel< TranslationModel3D >
 {
 	static final protected int MIN_NUM_MATCHES = 1;
-	final protected float[] translation = new float[ 3 ];
-	public float[] getTranslation(){ return translation; }
 	
 	@Override
 	final public int getMinNumMatches(){ return MIN_NUM_MATCHES; }
 
+	final protected float[] translation = new float[ 3 ];
+	final public float[] getTranslation(){ return translation; }
+	
 	//@Override
-	public float[] apply( float[] point )
+	final public float[] apply( final float[] point )
 	{
 		assert point.length == 3 : "3d translations can be applied to 3d points only.";
 		
@@ -44,7 +43,7 @@ public class TranslationModel3D extends InvertibleModel
 	}
 	
 	//@Override
-	public void applyInPlace( float[] point )
+	final public void applyInPlace( final float[] point )
 	{
 		assert point.length == 3 : "3d translations can be applied to 3d points only.";
 		
@@ -54,7 +53,7 @@ public class TranslationModel3D extends InvertibleModel
 	}
 	
 	//@Override
-	public float[] applyInverse( float[] point )
+	final public float[] applyInverse( final float[] point )
 	{
 		assert point.length == 3 : "3d translations can be applied to 3d points only.";
 		
@@ -65,7 +64,7 @@ public class TranslationModel3D extends InvertibleModel
 	}
 
 	//@Override
-	public void applyInverseInPlace( float[] point )
+	final public void applyInverseInPlace( final float[] point )
 	{
 		assert point.length == 3 : "3d translations can be applied to 3d points only.";
 		
@@ -76,15 +75,15 @@ public class TranslationModel3D extends InvertibleModel
 
 	
 	@Override
-	public String toString()
+	final public String toString()
 	{
 		return ( "[1,3](" + translation[ 0 ] + "," + translation[ 1 ] + "," + translation[ 2 ] + ") " + cost );
 	}
 
 	@Override
-	final public void fit( Collection< PointMatch > matches ) throws NotEnoughDataPointsException
+	final public void fit( final Collection< PointMatch > matches ) throws NotEnoughDataPointsException
 	{
-		if ( matches.size() < MIN_NUM_MATCHES ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d translation model, at least " + MIN_NUM_MATCHES + " data points required." );
+		if ( matches.size() < MIN_NUM_MATCHES ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 3d translation model, at least " + MIN_NUM_MATCHES + " data points required." );
 		
 		// center of mass:
 		float pcx = 0, pcy = 0, pcz = 0;
@@ -92,12 +91,12 @@ public class TranslationModel3D extends InvertibleModel
 		
 		double ws = 0.0;
 		
-		for ( PointMatch m : matches )
+		for ( final PointMatch m : matches )
 		{
-			float[] p = m.getP1().getL(); 
-			float[] q = m.getP2().getW(); 
+			final float[] p = m.getP1().getL(); 
+			final float[] q = m.getP2().getW(); 
 			
-			float w = m.getWeight();
+			final float w = m.getWeight();
 			ws += w;
 			
 			pcx += w * p[ 0 ];
@@ -123,12 +122,13 @@ public class TranslationModel3D extends InvertibleModel
 	 * TODO Not yet implemented ...
 	 */
 	@Override
-	final public void shake( float amount )
+	final public void shake( final float amount )
 	{
 		// TODO If you ever need it, please implement it...
 	}
 	
-	final public void set( TranslationModel3D m )
+	@Override
+	final public void set( final TranslationModel3D m )
 	{
 		translation[ 0 ] = m.translation[ 0 ];
 		translation[ 1 ] = m.translation[ 1 ];
@@ -136,15 +136,9 @@ public class TranslationModel3D extends InvertibleModel
 		cost = m.getCost();
 	}
 	
-	@Override
-	public void set( Model m )
+	final public TranslationModel3D clone()
 	{
-		set( ( TranslationModel3D )m );
-	}
-
-	public TranslationModel3D clone()
-	{
-		TranslationModel3D m = new TranslationModel3D();
+		final TranslationModel3D m = new TranslationModel3D();
 		m.translation[ 0 ] = translation[ 0 ];
 		m.translation[ 1 ] = translation[ 1 ];
 		m.translation[ 2 ] = translation[ 2 ];

@@ -19,8 +19,6 @@
  */
 package mpicbg.models;
 
-import java.util.List;
-
 /**
  * An n-dimensional point.
  * 

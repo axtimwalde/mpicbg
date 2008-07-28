@@ -26,73 +26,76 @@ import java.util.Collection;
 /**
  * 2d-affine transformation models to be applied to points in 2d-space.
  * 
- * @version 0.2b
+ * @version 0.3b
  * 
  */
-public class AffineModel2D extends InvertibleModel
+public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 {
 	static final protected int MIN_NUM_MATCHES = 3;
 	
 	@Override
-	public int getMinNumMatches(){ return MIN_NUM_MATCHES; }
+	final public int getMinNumMatches(){ return MIN_NUM_MATCHES; }
 	
 	final protected AffineTransform affine = new AffineTransform();
-	public AffineTransform getAffine(){	return affine; }
+	final protected AffineTransform inverseAffine = new AffineTransform();
+	final public AffineTransform getAffine(){ return affine; }
+	final public AffineTransform getInverseAffine(){ return inverseAffine; }
+	
+	private AffineTransform inverseAffineRef = inverseAffine;
 	
 	//@Override
-	public float[] apply( float[] point )
+	final public float[] apply( final float[] point )
 	{
 		assert point.length == 2 : "2d affine transformations can be applied to 2d points only.";
 		
-		float[] transformed = new float[ 2 ];
+		final float[] transformed = new float[ 2 ];
 		affine.transform( point, 0, transformed, 0, 1 );
 		return transformed;
 	}
 	
-	
 	//@Override
-	public void applyInPlace( float[] point )
+	final public void applyInPlace( final float[] point )
 	{
 		assert point.length == 2 : "2d affine transformations can be applied to 2d points only.";
 		
 		affine.transform( point, 0, point, 0, 1 );
 	}
 	
-	
 	//@Override
-	public float[] applyInverse( float[] point ) throws NoninvertibleModelException
+	final public float[] applyInverse( final float[] point ) throws NoninvertibleModelException
 	{
 		assert point.length == 2 : "2d affine transformations can be applied to 2d points only.";
 		
-		// the brilliant java.awt.geom.AffineTransform implements transform for float[] but inverseTransform for double[] only...
-		double[] double_point = new double[]{ point[ 0 ], point[ 1 ] };
-		double[] transformed = new double[ 2 ];
-		
+		final float[] transformed = new float[ 2 ];
 		try
 		{
-			affine.inverseTransform( double_point, 0, transformed, 0, 1 );
+			inverseAffineRef.transform( point, 0, transformed, 0, 1 );
 		}
-		catch ( NoninvertibleTransformException e )
+		catch ( NullPointerException e )
 		{
 			throw new NoninvertibleModelException( e );
 		}
-		
-		return new float[]{ ( float )transformed[ 0 ], ( float )transformed[ 1 ] };
+		return transformed;
 	}
 
 
 	//@Override
-	public void applyInverseInPlace( float[] point ) throws NoninvertibleModelException
+	final public void applyInverseInPlace( final float[] point ) throws NoninvertibleModelException
 	{
 		assert point.length == 2 : "2d affine transformations can be applied to 2d points only.";
 		
-		float[] temp_point = applyInverse( point );
-		point[ 0 ] = temp_point[ 0 ];
-		point[ 1 ] = temp_point[ 1 ];
+		try
+		{
+			inverseAffineRef.transform( point, 0, point, 0, 1 );
+		}
+		catch ( NullPointerException e )
+		{
+			throw new NoninvertibleModelException( e );
+		}
 	}
 	
 	@Override
-	public void fit( Collection< PointMatch > matches ) throws NotEnoughDataPointsException
+	final public void fit( final Collection< PointMatch > matches ) throws NotEnoughDataPointsException
 	{
 		if ( matches.size() < MIN_NUM_MATCHES ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
 		
@@ -103,12 +106,12 @@ public class AffineModel2D extends InvertibleModel
 		double ws = 0.0;
 		//int length = matches.size();
 		
-		for ( PointMatch m : matches )
+		for ( final PointMatch m : matches )
 		{
-			float[] p = m.getP1().getL(); 
-			float[] q = m.getP2().getW(); 
+			final float[] p = m.getP1().getL(); 
+			final float[] q = m.getP2().getW(); 
 			
-			float w = m.getWeight();
+			final float w = m.getWeight();
 			ws += w;
 			
 			pcx += w * p[ 0 ];
@@ -125,14 +128,14 @@ public class AffineModel2D extends InvertibleModel
 		double a11, a12, a22;
 		double b11, b12, b21, b22;
 		a11 = a12 = a22 = b11 = b12 = b21 = b22 = 0;
-		for ( PointMatch m : matches )
+		for ( final PointMatch m : matches )
 		{
-			float[] p = m.getP1().getL();
-			float[] q = m.getP2().getW();
-			float w = m.getWeight();
+			final float[] p = m.getP1().getL();
+			final float[] q = m.getP2().getW();
+			final float w = m.getWeight();
 			
-			float px = p[ 0 ] - pcx, py = p[ 1 ] - pcy;
-			float qx = q[ 0 ] - qcx, qy = q[ 1 ] - qcy;
+			final float px = p[ 0 ] - pcx, py = p[ 1 ] - pcy;
+			final float qx = q[ 0 ] - qcx, qy = q[ 1 ] - qcy;
 			a11 += w * px * px;
 			a12 += w * px * py;
 			a22 += w * py * py;
@@ -143,48 +146,37 @@ public class AffineModel2D extends InvertibleModel
 		}
 		
 		// invert M
-		float det = ( float )( a11 * a22 - a12 * a12 );
-		float m11 = ( float )( a22 * b11 - a12 * b21 ) / det;
-		float m12 = ( float )( a11 * b21 - a12 * b11 ) / det;
-		float m21 = ( float )( a22 * b12 - a12 * b22 ) / det;
-		float m22 = ( float )( a11 * b22 - a12 * b12 ) / det;
+		final float det = ( float )( a11 * a22 - a12 * a12 );
+		final float m11 = ( float )( a22 * b11 - a12 * b21 ) / det;
+		final float m12 = ( float )( a11 * b21 - a12 * b11 ) / det;
+		final float m21 = ( float )( a22 * b12 - a12 * b22 ) / det;
+		final float m22 = ( float )( a11 * b22 - a12 * b12 ) / det;
 		
-		float tx = qcx - m11 * pcx - m12 * pcy;
-		float ty = qcy - m21 * pcx - m22 * pcy;
+		final float tx = qcx - m11 * pcx - m12 * pcy;
+		final float ty = qcy - m21 * pcx - m22 * pcy;
 		
 		affine.setTransform( m11, m21, m12, m22, tx, ty );
+		invert();
 	}
 
-	
 	/**
 	 * TODO Not yet implemented ...
 	 */
 	@Override
-	public void shake( float amount )
+	final public void shake( final float amount )
 	{
 		// TODO If you ever need it, please implement it...
 	}
 
 	@Override
-	public String toString()
-	{
-		return ( "[3,3](" + affine + ") " + cost );
-	}
-	
-	final public void set( AffineModel2D m )
+	final public void set( final AffineModel2D m )
 	{
 		this.affine.setTransform( m.getAffine() );
 		this.cost = m.getCost();
 	}
-	
+
 	@Override
-	public void set( Model m )
-	{
-		set( ( AffineModel2D )m );
-	}
-	
-	@Override
-	public AffineModel2D clone()
+	final public AffineModel2D clone()
 	{
 		AffineModel2D m = new AffineModel2D();
 		m.affine.setTransform( affine );
@@ -192,14 +184,29 @@ public class AffineModel2D extends InvertibleModel
 		return m;
 	}
 	
-	public void preConcatenate( AffineModel2D model )
+	final private void invert()
+	{
+		try
+		{
+			inverseAffine.setTransform( affine );
+			inverseAffine.invert();
+			inverseAffineRef = inverseAffine;
+		}
+		catch ( NoninvertibleTransformException e )
+		{
+			inverseAffineRef = null;
+		}
+	}
+	
+	@Override
+	final public void preConcatenate( final AffineModel2D model )
 	{
 		affine.preConcatenate( model.getAffine() );
 	}
 	
-	public void concatenate( AffineModel2D model )
+	@Override
+	final public void concatenate( final AffineModel2D model )
 	{
 		affine.concatenate( model.getAffine() );
 	}
-
 }
