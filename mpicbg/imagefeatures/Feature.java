@@ -3,11 +3,24 @@ package mpicbg.imagefeatures;
 
 import java.io.Serializable;
 
+import mpicbg.models.InvertibleCoordinateTransform;
+
 /**
- * SIFT feature container
+ * Local image feature
+ * 
+ * TODO Replace the {@link InvertibleCoordinateTransform Transformation}
+ *   descriptors by a {@link InvertibleCoordinateTransform}.  Think about by
+ *   hwich means to compare then!
+ * 
+ * @version 0.3b
  */
 public class Feature implements Comparable< Feature >, Serializable
 {
+	/**
+	 * v0.3b
+	 */
+	private static final long serialVersionUID = -6425872941323995891L;
+	
 	public float scale;
 	public float orientation;
 	public float[] location;
@@ -16,7 +29,7 @@ public class Feature implements Comparable< Feature >, Serializable
 	/** Dummy constructor for Serialization to work properly. */
 	public Feature() {}
 	
-	public Feature( float s, float o, float[] l, float[] d )
+	public Feature( final float s, final float o, final float[] l, final float[] d )
 	{
 		scale = s;
 		orientation = o;
@@ -25,21 +38,23 @@ public class Feature implements Comparable< Feature >, Serializable
 	}
 
 	/**
-	 * comparator for making Features sortable
-	 * please note, that the comparator returns -1 for
-	 * this.scale &gt; o.scale, to sort the features in a descending order  
+	 * Comparator for making {@link Feature Features} sortable.
+	 * 
+	 * Please note, that the comparator returns -1 for
+	 * {@link #scale this.scale} &gt; {@link #scale o.scale} to sort the
+	 * features in a <em>descending</em> order.
 	 */
-	public int compareTo( Feature f )
+	public int compareTo( final Feature f )
 	{
 		return scale < f.scale ? 1 : scale == f.scale ? 0 : -1;
 	}
 	
-	public float descriptorDistance( Feature f )
+	public float descriptorDistance( final Feature f )
 	{
 		float d = 0;
 		for ( int i = 0; i < descriptor.length; ++i )
 		{
-			float a = descriptor[ i ] - f.descriptor[ i ];
+			final float a = descriptor[ i ] - f.descriptor[ i ];
 			d += a * a;
 		}
 		return ( float )Math.sqrt( d );
