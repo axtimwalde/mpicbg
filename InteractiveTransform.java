@@ -147,6 +147,7 @@ public abstract class InteractiveTransform< M extends InvertibleModel< M > > imp
 				}
 			}
 			catch ( NotEnoughDataPointsException ex ) { ex.printStackTrace(); }
+			catch ( IllDefinedDataPointsException ex ) { ex.printStackTrace(); }
 		}
 	}
 	

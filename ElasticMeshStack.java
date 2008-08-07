@@ -9,6 +9,7 @@ import java.util.ArrayList;
 
 import mpicbg.models.AbstractAffineModel2D;
 import mpicbg.models.ErrorStatistic;
+import mpicbg.models.IllDefinedDataPointsException;
 import mpicbg.models.NotEnoughDataPointsException;
 
 /**
@@ -63,7 +64,8 @@ public class ElasticMeshStack< M extends AbstractAffineModel2D< M > >
 	 * 
 	 * @throws NotEnoughDataPointsException
 	 */
-	final public void optimizeIteration() throws NotEnoughDataPointsException
+	final public void optimizeIteration()
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
 		for ( final ElasticMovingLeastSquaresMesh< M > m : meshes )
 			m.optimizeIteration();
@@ -90,7 +92,8 @@ public class ElasticMeshStack< M extends AbstractAffineModel2D< M > >
 			final int maxPlateauwidth,
 			final ImagePlus imp,
 			final ImageStack src,
-			final ImageStack trg ) throws NotEnoughDataPointsException 
+			final ImageStack trg )
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException 
 	{
 		final ErrorStatistic observer = new ErrorStatistic();
 		int i = 0;

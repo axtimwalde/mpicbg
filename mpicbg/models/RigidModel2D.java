@@ -93,7 +93,8 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 		}
 	}
 
-	final public void fit( final Collection< PointMatch > matches ) throws NotEnoughDataPointsException
+	final public void fit( final Collection< PointMatch > matches )
+		throws NotEnoughDataPointsException
 	{
 		if ( matches.size() < MIN_NUM_MATCHES ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d rigid model, at least " + MIN_NUM_MATCHES + " data points required." );
 		

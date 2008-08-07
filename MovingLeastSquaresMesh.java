@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.Set;
 
 import mpicbg.models.CoordinateTransform;
+import mpicbg.models.IllDefinedDataPointsException;
 import mpicbg.models.Model;
 import mpicbg.models.NotEnoughDataPointsException;
 import mpicbg.models.PointMatch;
@@ -189,7 +190,8 @@ public class MovingLeastSquaresMesh< M extends Model< M > > extends TransformMes
 	 * 
 	 * @throws NotEnoughDataPointsException
 	 */
-	final public void updateModels() throws NotEnoughDataPointsException
+	final public void updateModels()
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
 		final Set< PointMatch > s = va.keySet();
 		

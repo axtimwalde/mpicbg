@@ -230,12 +230,11 @@ public class Tile< M extends Model< M > >
 	
 	/**
 	 * Update the transformation {@link Model}.  That is, fit it to the
-	 * current set of {@link PointMatch}es.
+	 * current set of {@link PointMatch PointMatches}.
 	 */
-	final public void fitModel() throws NotEnoughDataPointsException
+	final public void fitModel() throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
 		model.fit( matches );
-		//update(); // Do not update!  The user wants to decide about the update strategy (weighted or unweighted)
 	}
 	
 	/**

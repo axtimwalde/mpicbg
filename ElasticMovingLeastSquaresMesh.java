@@ -28,6 +28,7 @@ import java.text.DecimalFormatSymbols;
 import java.util.HashSet;
 import java.util.Set;
 
+import mpicbg.models.IllDefinedDataPointsException;
 import mpicbg.models.Model;
 import mpicbg.models.AffineModel2D;
 import mpicbg.models.ErrorStatistic;
@@ -186,7 +187,8 @@ public class ElasticMovingLeastSquaresMesh< M extends Model< M > > extends Movin
 	 * @throws NotEnoughDataPointsException
 	 */
 	public final void optimizeIteration(
-			final ErrorStatistic observer ) throws NotEnoughDataPointsException
+			final ErrorStatistic observer )
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
 		final Set< PointMatch > s = va.keySet();
 		
@@ -218,7 +220,8 @@ public class ElasticMovingLeastSquaresMesh< M extends Model< M > > extends Movin
 	 * 
 	 * @throws NotEnoughDataPointsException
 	 */
-	final public void optimizeIteration() throws NotEnoughDataPointsException
+	final public void optimizeIteration()
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
 		final Set< PointMatch > s = va.keySet();
 		
@@ -249,7 +252,8 @@ public class ElasticMovingLeastSquaresMesh< M extends Model< M > > extends Movin
 	final public void optimize(
 			final float maxError,
 			final int maxIterations,
-			final int maxPlateauwidth ) throws NotEnoughDataPointsException 
+			final int maxPlateauwidth )
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException 
 	{
 		final ErrorStatistic observer = new ErrorStatistic();
 		
@@ -287,7 +291,8 @@ public class ElasticMovingLeastSquaresMesh< M extends Model< M > > extends Movin
 			final int maxIterations,
 			final int maxPlateauwidth,
 			final ByteProcessor ipPlot,
-			final ImagePlus impPlot ) throws NotEnoughDataPointsException 
+			final ImagePlus impPlot )
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException 
 	{
 		final ErrorStatistic observer = new ErrorStatistic();
 		

@@ -429,6 +429,10 @@ public class Align_ElasticMeshStack implements PlugIn
 		{
 			ex.printStackTrace( System.err );
 		}
+		catch ( IllDefinedDataPointsException ex )
+		{
+			ex.printStackTrace( System.err );
+		}
 	}
 	
 	public void apply()

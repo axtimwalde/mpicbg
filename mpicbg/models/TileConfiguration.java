@@ -107,14 +107,15 @@ public class TileConfiguration
 	 * @param maxError do not accept convergence if error is > max_error
 	 * @param maxIterations stop after that many iterations even if there was
 	 *   no minimum found
-	 * @param maxPlateauwidth convergence is reached if the average slope in
-	 *   an interval of this size is 0.0 (in double accuracy).  This prevents
-	 *   the algorithm from stopping at plateaus smaller than this value.
+	 * @param maxPlateauwidth convergence is reached if the average absolute
+	 *   slope in an interval of this size and half this size is smaller than
+	 *   0.0001 (in double accuracy).  This is assumed to prevent the algorithm
+	 *   from stopping at plateaus smaller than this value.
 	 */
 	public void optimize(
 			float maxError,
 			int maxIterations,
-			int maxPlateauwidth ) throws NotEnoughDataPointsException 
+			int maxPlateauwidth ) throws NotEnoughDataPointsException, IllDefinedDataPointsException 
 	{
 		ErrorStatistic observer = new ErrorStatistic();
 		

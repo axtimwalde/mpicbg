@@ -252,6 +252,7 @@ public class Transform_MovingLeastSquaresMesh implements PlugIn, MouseListener, 
 				mesh.updateModels();
 			}
 			catch ( NotEnoughDataPointsException x ){ x.printStackTrace(); }
+			catch ( IllDefinedDataPointsException x ){ x.printStackTrace(); }
 			
 			updateRoi();
 			updateIllustration();

@@ -20,6 +20,7 @@
 package mpicbg.models;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Random;
 import java.util.List;
 import java.util.Collection;
@@ -123,8 +124,8 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 	
 	/**
 	 * Fit the {@link Model} to a set of data points minimizing the global
-	 * transfer error.  This is assumed to be implemented as a least squares
-	 * minimization.  Use
+	 * transfer error.  This is assumed to be implemented as a weighted least
+	 * squares minimization.  Use
 	 * {@link #ransac(Class, List, Collection, int, double, double) ransac}
 	 * and/ or {@link #filter(Class, Collection, Collection)} to remove
 	 * outliers from your data points
@@ -132,9 +133,13 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 	 * The estimated model transfers match.p2.local to match.p1.world.
 	 * 
 	 * @param matches set of point correpondences
-	 * @throws an exception if matches does not contain enough data points
+	 * @throws {@link NotEnoughDataPointsException} if matches does not contain
+	 *   enough data points
+	 *   {@link IllDefinedDataPointsException} if the set of data points is
+	 *   inappropriate to solve the Model
 	 */
-	abstract public void fit( final Collection< PointMatch > matches ) throws NotEnoughDataPointsException;
+	abstract public void fit( final Collection< PointMatch > matches )
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException;
 
 	/**
 	 * Test the {@link Model} for a set of {@link PointMatch} candidates.
@@ -185,8 +190,12 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 	 */
 	final public boolean filter(
 			final Collection< PointMatch > candidates,
-			final Collection< PointMatch > inliers ) throws NotEnoughDataPointsException
+			final Collection< PointMatch > inliers )
+		throws NotEnoughDataPointsException
 	{
+		if ( candidates.size() < getMinNumMatches() )
+			throw new NotEnoughDataPointsException( candidates.size() + " data points are not enough to solve the Model, at least " + getMinNumMatches() + " data points required." );
+		
 		final M copy = clone();
 		
 		inliers.clear();
@@ -198,7 +207,18 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 			temp.clear();
 			temp.addAll( inliers );
 			numInliers = inliers.size(); 
-			copy.fit( inliers );
+			try
+			{
+				copy.fit( inliers );
+			}
+			catch ( NotEnoughDataPointsException e )
+			{
+				return false;
+			}
+			catch ( IllDefinedDataPointsException e )
+			{
+				return false;
+			}
 			final ErrorStatistic observer = new ErrorStatistic();
 			for ( final PointMatch m : temp )
 			{
@@ -246,55 +266,64 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 			final Collection< PointMatch > inliers,
 			final int iterations,
 			final double epsilon,
-			final double minInlierRatio ) throws NotEnoughDataPointsException
+			final double minInlierRatio )
+		throws NotEnoughDataPointsException
 	{
+		if ( candidates.size() < getMinNumMatches() )
+			throw new NotEnoughDataPointsException( candidates.size() + " data points are not enough to solve the Model, at least " + getMinNumMatches() + " data points required." );
+		
 		final M copy = clone();
 		final M m = clone();
 		
-		final int MIN_NUM_MATCHES = copy.getMinNumMatches();
-		
 		inliers.clear();
 		
-		if ( candidates.size() < copy.getMinNumMatches() )
-		{
-			throw new NotEnoughDataPointsException( candidates.size() + " correspondences are not enough to estimate a model, at least " + MIN_NUM_MATCHES + " correspondences required." );
-		}
-		
 		int i = 0;
-		final ArrayList< PointMatch > min_matches = new ArrayList< PointMatch >();
+		final HashSet< PointMatch > minMatches = new HashSet< PointMatch >();
 		
 		while ( i < iterations )
 		{
 			// choose model.MIN_SET_SIZE disjunctive matches randomly
-			min_matches.clear();
-			for ( int j = 0; j < MIN_NUM_MATCHES; ++j )
+			minMatches.clear();
+			for ( int j = 0; j < getMinNumMatches(); ++j )
 			{
 				PointMatch p;
 				do
 				{
 					p = candidates.get( ( int )( rnd.nextDouble() * candidates.size() ) );
 				}
-				while ( min_matches.contains( p ) );
-				min_matches.add( p );
+				while ( minMatches.contains( p ) );
+				minMatches.add( p );
 			}
-			final ArrayList< PointMatch > temp_inliers = new ArrayList< PointMatch >();
-			m.fit( min_matches );
-			int num_inliers = 0;
-			boolean is_good = m.test( candidates, temp_inliers, epsilon, minInlierRatio );
-			while ( is_good && num_inliers < temp_inliers.size() )
+			try { m.fit( minMatches ); }
+			catch ( IllDefinedDataPointsException e )
 			{
-				num_inliers = temp_inliers.size();
-				m.fit( temp_inliers );
-				is_good = m.test( candidates, temp_inliers, epsilon, minInlierRatio );
+				++i;
+				continue;
+			}
+			
+			final ArrayList< PointMatch > tempInliers = new ArrayList< PointMatch >();
+			
+			int numInliers = 0;
+			boolean isGood = m.test( candidates, tempInliers, epsilon, minInlierRatio );
+			while ( isGood && numInliers < tempInliers.size() )
+			{
+				numInliers = tempInliers.size();
+				try { m.fit( tempInliers ); }
+				catch ( IllDefinedDataPointsException e )
+				{
+					++i;
+					continue;
+				}
+				isGood = m.test( candidates, tempInliers, epsilon, minInlierRatio );
 			}
 			if (
-					is_good &&
+					isGood &&
 					m.betterThan( copy ) &&
-					temp_inliers.size() >= 3 * MIN_NUM_MATCHES )
+					tempInliers.size() >= getMinNumMatches() )
 			{
 				copy.set( m );
 				inliers.clear();
-				inliers.addAll( temp_inliers );
+				inliers.addAll( tempInliers );
 			}
 			++i;
 		}

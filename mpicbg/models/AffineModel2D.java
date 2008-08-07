@@ -95,9 +95,11 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	}
 	
 	@Override
-	final public void fit( final Collection< PointMatch > matches ) throws NotEnoughDataPointsException
+	final public void fit( final Collection< PointMatch > matches )
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
-		if ( matches.size() < MIN_NUM_MATCHES ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
+		if ( matches.size() < MIN_NUM_MATCHES )
+			throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
 		
 		// center of mass:
 		float pcx = 0, pcy = 0;
@@ -147,6 +149,10 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		
 		// invert M
 		final float det = ( float )( a11 * a22 - a12 * a12 );
+		
+		if ( det == 0 )
+			throw new IllDefinedDataPointsException();
+		
 		final float m11 = ( float )( a22 * b11 - a12 * b21 ) / det;
 		final float m12 = ( float )( a11 * b21 - a12 * b11 ) / det;
 		final float m21 = ( float )( a22 * b12 - a12 * b22 ) / det;
