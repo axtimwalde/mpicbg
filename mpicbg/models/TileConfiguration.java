@@ -40,16 +40,20 @@ public class TileConfiguration
 	final static private DecimalFormat decimalFormat = new DecimalFormat();
 	final static private DecimalFormatSymbols decimalFormatSymbols = new DecimalFormatSymbols();
 
-	final private ArrayList< Tile > tiles = new ArrayList< Tile >();
-	final public ArrayList< Tile > getTiles(){ return tiles; }
+	final private ArrayList< Tile< ? > > tiles = new ArrayList< Tile< ? > >();
+	final public ArrayList< Tile< ? > > getTiles(){ return tiles; }
 	
-	final private ArrayList< Tile > fixedTiles = new ArrayList< Tile >();
-	final public ArrayList< Tile > getFixedTiles(){ return fixedTiles; }
+	final private ArrayList< Tile< ? > > fixedTiles = new ArrayList< Tile< ? > >();
+	final public ArrayList< Tile< ? > > getFixedTiles(){ return fixedTiles; }
 	
 	private double minError = Double.MAX_VALUE;
 	private double maxError = 0.0;
 	private double error = Double.MAX_VALUE;
-	
+
+	final public double getMinError() {	return minError; }
+	final public double getMaxError() {	return maxError; }
+	final public double getAvgError() {	return error; }
+
 	public TileConfiguration()
 	{
 		decimalFormatSymbols.setGroupingSeparator( ',' );
@@ -64,21 +68,21 @@ public class TileConfiguration
 	 * 
 	 * @param t
 	 */
-	final public void addTile( Tile t ){ tiles.add( t ); }
+	final public void addTile( Tile< ? > t ){ tiles.add( t ); }
 	
 	/**
 	 * Add a collection of tiles.
 	 * 
 	 * @param t
 	 */
-	final public void addTiles( Collection< Tile > t ){ tiles.addAll( t ); }
+	final public void addTiles( Collection< Tile< ? > > t ){ tiles.addAll( t ); }
 	
 	/**
 	 * Fix a single tile.
 	 * 
 	 * @param t
 	 */
-	final public void fixTile( Tile t ){ fixedTiles.add( t ); }
+	final public void fixTile( Tile< ? > t ){ fixedTiles.add( t ); }
 	
 	/**
 	 * Update all correspondences in all tiles and estimate the average
@@ -89,7 +93,7 @@ public class TileConfiguration
 		double cd = 0.0;
 		minError = Double.MAX_VALUE;
 		maxError = 0.0;
-		for ( Tile t : tiles )
+		for ( Tile< ? > t : tiles )
 		{
 			t.update();
 			double d = t.getDistance();
@@ -123,7 +127,7 @@ public class TileConfiguration
 		
 		while ( i < maxIterations )  // do not run forever
 		{
-			for ( Tile tile : tiles )
+			for ( Tile< ? > tile : tiles )
 			{
 				if ( fixedTiles.contains( tile ) ) continue;
 				tile.update();
