@@ -88,8 +88,8 @@ public class Tile< M extends Model< M > >
 	 * Note that point correspondences do not know about the tiles they belong
 	 * to.
 	 */
-	final private Set< Tile< ? extends Model > > connectedTiles = new HashSet< Tile< ? extends Model > >();
-	final public Set< Tile< ? extends Model > > getConnectedTiles() { return connectedTiles; }
+	final private Set< Tile< ? > > connectedTiles = new HashSet< Tile< ? > >();
+	final public Set< Tile< ? > > getConnectedTiles() { return connectedTiles; }
 	
 	
 	/**
@@ -99,7 +99,7 @@ public class Tile< M extends Model< M > >
 	 * @param t the new {@link Tile}.
 	 * @return Success of the operation.
 	 */
-	final public boolean addConnectedTile( final Tile< ? extends Model > t )
+	final public boolean addConnectedTile( final Tile< ? > t )
 	{
 		return connectedTiles.add( t );
 	}
@@ -111,7 +111,7 @@ public class Tile< M extends Model< M > >
 	 * @param t the {@link Tile} to be removed.
 	 * @return Success of the operation.
 	 */
-	final public boolean removeConnectedTile( final Tile< ? extends Model > t )
+	final public boolean removeConnectedTile( final Tile< ? > t )
 	{
 		return connectedTiles.remove( t );
 	}
@@ -244,10 +244,10 @@ public class Tile< M extends Model< M > >
 	 * @param graph
 	 * @return the number of connected tiles in the graph
 	 */
-	final private int traceConnectedGraph( final Set< Tile< ? extends Model > > graph )
+	final private int traceConnectedGraph( final Set< Tile< ? > > graph )
 	{
 		graph.add( this );
-		for ( final Tile< ? extends Model > t : connectedTiles )
+		for ( final Tile< ? > t : connectedTiles )
 		{
 			if ( !graph.contains( t ) )
 				t.traceConnectedGraph( graph );
@@ -274,7 +274,7 @@ public class Tile< M extends Model< M > >
 	 * @param matches
 	 */
 	final public void connect(
-			final Tile< ? extends Model > o,
+			final Tile< ? > o,
 			final Collection< PointMatch > matches )
 	{
 		this.addMatches( matches );
@@ -290,16 +290,16 @@ public class Tile< M extends Model< M > >
 	 * @param tiles
 	 * @return
 	 */
-	final static public ArrayList< Set< Tile< ? extends Model > > > identifyConnectedGraphs(
-			Collection< Tile< ? extends Model > > tiles )
+	final static public ArrayList< Set< Tile< ?  > > > identifyConnectedGraphs(
+			Collection< Tile< ? > > tiles )
 	{
-		ArrayList< Set< Tile< ? extends Model > > > graphs = new ArrayList< Set< Tile< ? extends Model > > >();
+		ArrayList< Set< Tile< ? > > > graphs = new ArrayList< Set< Tile< ? > > >();
 		int numInspectedTiles = 0;
-A:		for ( final Tile< ? extends Model > tile : tiles )
+A:		for ( final Tile< ? > tile : tiles )
 		{
-			for ( final Set< Tile< ? extends Model > > knownGraph : graphs )
+			for ( final Set< Tile< ? > > knownGraph : graphs )
 				if ( knownGraph.contains( tile ) ) continue A; 
-			Set< Tile< ? extends Model > > current_graph = new HashSet< Tile< ? extends Model > >();
+			Set< Tile< ? > > current_graph = new HashSet< Tile< ? > >();
 			numInspectedTiles += tile.traceConnectedGraph( current_graph );
 			graphs.add( current_graph );
 			if ( numInspectedTiles == tiles.size() ) break;
