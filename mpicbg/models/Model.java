@@ -109,7 +109,7 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 	 * @return false for {@link #cost} < 0.0, otherwise true if
 	 *   {@link #cost this.cost} is smaller than {@link #cost m.cost}
 	 */
-	final public boolean betterThan( final Model m )
+	final public boolean betterThan( final Model< M > m )
 	{
 		if ( cost < 0 ) return false;
 		return cost < m.cost;
