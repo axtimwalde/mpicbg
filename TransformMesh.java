@@ -31,6 +31,7 @@ import mpicbg.models.AffineModel2D;
 import mpicbg.models.Point;
 import mpicbg.models.PointMatch;
 import mpicbg.models.NotEnoughDataPointsException;
+import mpicbg.models.IllDefinedDataPointsException;
 
 /**
  * Trianguar transformation mesh.
@@ -257,6 +258,11 @@ public class TransformMesh
 			IJ.error( e.getMessage() );
 			e.printStackTrace( System.err );
 		}
+		catch ( IllDefinedDataPointsException e )
+		{
+			IJ.error( e.getMessage() );
+			e.printStackTrace( System.err );
+		}
 		av.put( m, t );
 		
 		for ( PointMatch pm : t )
@@ -382,6 +388,11 @@ X:			for ( int x = ( int )box[ 0 ][ 0 ]; x <= ( int )box[ 1 ][ 0 ]; ++x )
 				IJ.error( e.getMessage() );
 				e.printStackTrace( System.err );
 			}
+			catch ( IllDefinedDataPointsException e )
+			{
+				IJ.error( e.getMessage() );
+				e.printStackTrace( System.err );
+			}
 		}
 	}
 	
@@ -395,6 +406,11 @@ X:			for ( int x = ( int )box[ 0 ][ 0 ]; x <= ( int )box[ 1 ][ 0 ]; ++x )
 				ai.fit( av.get( ai ) );
 			}
 			catch ( NotEnoughDataPointsException e )
+			{
+				IJ.error( e.getMessage() );
+				e.printStackTrace( System.err );
+			}
+			catch ( IllDefinedDataPointsException e )
 			{
 				IJ.error( e.getMessage() );
 				e.printStackTrace( System.err );
