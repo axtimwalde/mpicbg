@@ -47,12 +47,13 @@ public class TileConfiguration
 	final public ArrayList< Tile< ? > > getFixedTiles(){ return fixedTiles; }
 	
 	private double minError = Double.MAX_VALUE;
-	private double maxError = 0.0;
-	private double error = Double.MAX_VALUE;
-
 	final public double getMinError() {	return minError; }
+	
+	private double maxError = 0.0;
 	final public double getMaxError() {	return maxError; }
-	final public double getAvgError() {	return error; }
+	
+	private double error = Double.MAX_VALUE;
+	final public double getError() {	return error; }
 
 	public TileConfiguration()
 	{
@@ -108,7 +109,7 @@ public class TileConfiguration
 	/**
 	 * Minimize the displacement of all correspondence pairs of all tiles.
 	 * 
-	 * @param maxError do not accept convergence if error is > max_error
+	 * @param maxAllowedError do not accept convergence if error is > max_error
 	 * @param maxIterations stop after that many iterations even if there was
 	 *   no minimum found
 	 * @param maxPlateauwidth convergence is reached if the average absolute
@@ -117,7 +118,7 @@ public class TileConfiguration
 	 *   from stopping at plateaus smaller than this value.
 	 */
 	public void optimize(
-			float maxError,
+			float maxAllowedError,
 			int maxIterations,
 			int maxPlateauwidth ) throws NotEnoughDataPointsException, IllDefinedDataPointsException 
 	{
@@ -139,7 +140,7 @@ public class TileConfiguration
 			
 			if (
 					i >= maxPlateauwidth &&
-					error < maxError &&
+					error < maxAllowedError &&
 					Math.abs( observer.getWideSlope( maxPlateauwidth ) ) <= 0.0001 &&
 					Math.abs( observer.getWideSlope( maxPlateauwidth / 2 ) ) <= 0.0001 )
 			{
