@@ -30,7 +30,6 @@ import java.util.Set;
 
 import mpicbg.models.IllDefinedDataPointsException;
 import mpicbg.models.Model;
-import mpicbg.models.AffineModel2D;
 import mpicbg.models.ErrorStatistic;
 import mpicbg.models.NotEnoughDataPointsException;
 import mpicbg.models.Point;
@@ -78,17 +77,23 @@ public class ElasticMovingLeastSquaresMesh< M extends Model< M > > extends Movin
 		for ( final PointMatch vertex : s )
 		{
 			/**
-			 * For each vertex, collect its connected vertices.
+			 * For each vertex, collect its connected vertices ...
+			 * ... which are those connected by a triangle edge to it
+			 */
+//			final HashSet< PointMatch > connectedVertices = new HashSet< PointMatch >();
+//			for ( final AffineModel2D ai : va.get( vertex ) )
+//			{
+//				for ( final PointMatch m : av.get( ai ) )
+//				{
+//					if ( vertex != m ) connectedVertices.add( m );
+//				}
+//			}
+			/**
+			 * ... which are all vertices instead this one itself
 			 */
 			final HashSet< PointMatch > connectedVertices = new HashSet< PointMatch >();
-			for ( final AffineModel2D ai : va.get( vertex ) )
-			{
-				for ( final PointMatch m : av.get( ai ) )
-				{
-					if ( vertex != m ) connectedVertices.add( m );
-				}
-			}
-			
+			connectedVertices.addAll( s );
+			connectedVertices.remove( vertex );
 			/**
 			 * Add PointMatches for each connectedVertex.
 			 * These PointMatches work as "regularizers" for the mesh, that is
