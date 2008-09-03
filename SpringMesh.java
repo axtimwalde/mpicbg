@@ -31,6 +31,7 @@ import mpicbg.models.AffineModel2D;
 import mpicbg.models.ErrorStatistic;
 import mpicbg.models.NotEnoughDataPointsException;
 import mpicbg.models.PointMatch;
+import mpicbg.models.Tile;
 import mpicbg.models.Vertex;
 
 /**
@@ -170,6 +171,34 @@ public class SpringMesh extends TransformMesh
 	{
 		return 1.0f / ( float )Math.pow( d, alpha );
 	}
+	
+	/**
+	 * Find the closest {@link Vertex} to a given coordinate.
+	 *  
+	 * @param there
+	 * @return closest {@link Vertex}
+	 */
+	final public Vertex findClosestVertex( final float[] there )
+	{
+		Set< Vertex > vertices = vp.keySet();
+		
+		Vertex closest = null;
+		float cd = Float.MAX_VALUE;
+		for ( Vertex v : vertices )
+		{
+			float[] here = v.getLocation().getW();
+			float dx = here[ 0 ] - there[ 0 ];
+			float dy = here[ 1 ] - there[ 1 ];
+			float d = dx * dx + dy * dy;
+			if ( d < cd )
+			{
+				cd = d;
+				closest = v;
+			}
+		}
+		return closest;
+	}
+	
 	
 	/**
 	 * Add a {@link Vertex} to the mesh.  Connect it to its next three vertices

@@ -301,6 +301,7 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 				{
 					Point p = new Point( l );
 					hooks.add( p );
+					
 					mesh.addVertex( new Vertex( p ), 1 );
 					//mesh.addVertexWeightedByDistance( new Vertex( p ), 10, 1.0f );
 				}

@@ -408,10 +408,11 @@ public class Align_ElasticMeshStack implements PlugIn
 			m2.apply( models );
 			meshes.addMesh( m2 );
 		}
-		//ArrayList< ElasticMovingLeastSquaresMesh > ms = meshes.meshes;
+		ArrayList< ElasticMovingLeastSquaresMesh< ? > > ms = meshes.meshes;
 		//ElasticMovingLeastSquaresMesh mm = ms.get( stack.getSize() / 2 );
-		//Tile tc = mm.findClosest( new float[]{ imp.getWidth() / 2, imp.getHeight() / 2 } );
-		//mm.fixTile( tc );
+		ElasticMovingLeastSquaresMesh mm = ms.get( 0 );
+		Tile< ? > tc = mm.findClosest( new float[]{ imp.getWidth() / 2, imp.getHeight() / 2 } );
+		mm.fixTile( tc );
 		
 		IJ.log( "Optimizing..." );
 		optimize();
@@ -424,6 +425,7 @@ public class Align_ElasticMeshStack implements PlugIn
 		try
 		{
 			meshes.optimize( Float.MAX_VALUE, 10000, 100, impAligned, stack, stackAligned );
+			//meshes.optimizeAndFilter( Float.MAX_VALUE, 10000, 100, 2, impAligned, stack, stackAligned );
 		}
 		catch ( NotEnoughDataPointsException ex )
 		{

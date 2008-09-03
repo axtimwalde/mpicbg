@@ -6,11 +6,14 @@ import ij.process.ImageProcessor;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
+import java.util.Set;
 
 import mpicbg.models.AbstractAffineModel2D;
 import mpicbg.models.ErrorStatistic;
 import mpicbg.models.IllDefinedDataPointsException;
 import mpicbg.models.NotEnoughDataPointsException;
+import mpicbg.models.PointMatch;
+import mpicbg.models.Tile;
 
 /**
  * @author saalfeld
@@ -87,7 +90,7 @@ public class ElasticMeshStack< M extends AbstractAffineModel2D< M > >
 	 *   correspondence check.  Thank you, Johannes, great hint!
 	 */
 	final public void optimize(
-			final float maxError,
+			final float maxAllowedError,
 			final int maxIterations,
 			final int maxPlateauwidth,
 			final ImagePlus imp,
@@ -101,18 +104,22 @@ public class ElasticMeshStack< M extends AbstractAffineModel2D< M > >
 		while ( i < maxIterations )  // do not run forever
 		{
 			optimizeIteration();
-			update( 1f );
+			update( 0.5f );
+			//update( 1f );
 			observer.add( error );
 			
 			//paint( src, trg );
 			//imp.updateAndDraw();
 			
-			double wideSlope = 0;
+			double wideSlope = 0;			
 			
 			if ( i >= maxPlateauwidth )
 			{
 				wideSlope = observer.getWideSlope( maxPlateauwidth );
-				if ( i >= maxPlateauwidth && error < maxError && Math.abs( wideSlope ) <= 0.0001 )
+				if (
+						error < maxAllowedError &&
+						Math.abs( wideSlope ) <= 0.0001 &&
+						Math.abs( observer.getWideSlope( maxPlateauwidth / 2 ) ) <= 0.0001 )
 					break;
 			}
 			
@@ -128,6 +135,85 @@ public class ElasticMeshStack< M extends AbstractAffineModel2D< M > >
 		System.out.println( "  average displacement: " + decimalFormat.format( observer.mean ) + "px" );
 		System.out.println( "  minimal displacement: " + decimalFormat.format( observer.min ) + "px" );
 		System.out.println( "  maximal displacement: " + decimalFormat.format( observer.max ) + "px" );
+	}
+	
+	/**
+	 * Minimize the displacement of all PointMatches of all tiles.
+	 * 
+	 * @param maxError do not accept convergence if error is > max_error
+	 * @param maxIterations stop after that many iterations even if there was
+	 *   no minimum found
+	 * @param maxPlateauwidth convergence is reached if the average slope in
+	 *   an interval of this size is 0.0 (in double accuracy).  This prevents
+	 *   the algorithm from stopping at plateaus smaller than this value.
+	 * @param maxTrust reject PointMatches with an error > median * maxTrust
+	 * 
+	 * TODO  Johannes Schindelin suggested to start from a good guess, which is
+	 *   e.g. the propagated unoptimized pose of a tile relative to its
+	 *   connected tile that was already identified during RANSAC
+	 *   correspondence check.  Thank you, Johannes, great hint!
+	 */
+	final public void optimizeAndFilter(
+			final float maxAllowedError,
+			final int maxIterations,
+			final int maxPlateauwidth,
+			final float maxTrust,
+			final ImagePlus imp,
+			final ImageStack src,
+			final ImageStack trg )
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException 
+	{
+		int numMatches = Integer.MAX_VALUE;
+		int lastNumMatches = Integer.MAX_VALUE;
+		final ArrayList< PointMatch > badMatches = new ArrayList< PointMatch >();
+		do
+		{
+			lastNumMatches = numMatches;
+			optimize(
+					maxAllowedError,
+					maxIterations,
+					maxPlateauwidth,
+					imp,
+					src,
+					trg );
+			numMatches = 0;
+			final ErrorStatistic observer = new ErrorStatistic();
+			for ( final ElasticMovingLeastSquaresMesh< ? > m : meshes )
+			{
+				Set< PointMatch > tiles = m.pt.keySet();
+				for ( final PointMatch pm : tiles )
+				{
+					final Tile< ? > t = m.pt.get( pm );
+					for ( final PointMatch p : t.getMatches() )
+					{
+						observer.add( p.getDistance() );
+					}
+				}
+			}
+			
+			final double max = observer.getMedian() * maxTrust;
+			
+			for ( final ElasticMovingLeastSquaresMesh< ? > m : meshes )
+			{
+				Set< PointMatch > tiles = m.pt.keySet();
+				for ( final PointMatch pm : tiles )
+				{
+					final Tile< ? > t = m.pt.get( pm );
+					badMatches.clear();
+					for ( final PointMatch p : t.getMatches() )
+					{
+						if ( p.getDistance() > max )
+							badMatches.add( p );
+						else
+							++numMatches;
+					}
+					t.getMatches().removeAll( badMatches );
+				}
+			}
+			IJ.log( ( lastNumMatches - numMatches ) + " matches removed." );
+			IJ.log( "Re-optimizing ..." );
+		}
+		while ( numMatches < lastNumMatches );
 	}
 	
 	final public void paint( final ImageStack src, final ImageStack trg )

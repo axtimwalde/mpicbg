@@ -181,16 +181,18 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 	 * you have many outliers, you can filter those with a `tolerant' RANSAC
 	 * first as done in {@link #filterRansac() filterRansac}.
 	 * 
-	 * @param modelClass Class of the model to be estimated
 	 * @param candidates Candidate data points eventually inluding some outliers
 	 * @param inliers Remaining after the robust regression filter
+	 * @param maxTrust reject candidates with a cost larger than
+	 *   maxTrust * median cost
 	 * 
 	 * @return true if {@link Model} could be estimated and inliers is not
 	 *   empty, false otherwise.  If false, {@link Model} remains unchanged.
 	 */
 	final public boolean filter(
 			final Collection< PointMatch > candidates,
-			final Collection< PointMatch > inliers )
+			final Collection< PointMatch > inliers,
+			final float maxTrust )
 		throws NotEnoughDataPointsException
 	{
 		if ( candidates.size() < getMinNumMatches() )
@@ -226,7 +228,7 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 				observer.add( m.getDistance() );
 			}
 			inliers.clear();
-			final double t = observer.median * 4;
+			final double t = observer.getMedian() * maxTrust;
 			for ( final PointMatch m : temp )
 			{
 				if ( m.getDistance() < t )
@@ -243,6 +245,19 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 		set( copy );
 		return true;
 	}
+	
+	
+	/**
+	 * Call {@link #filter(Collection, Collection, float)} with maxTrust = 4.
+	 */
+	final public boolean filter(
+			final Collection< PointMatch > candidates,
+			final Collection< PointMatch > inliers )
+		throws NotEnoughDataPointsException
+	{
+		return filter( candidates, inliers, 4f );
+	}
+	
 	
 	/**
 	 * Find the {@link Model} of a set of {@link PointMatch} candidates
@@ -334,6 +349,7 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 		return true;
 	}
 	
+	
 	/**
 	 * Estimate a {@link Model} from a set with many outliers by first
 	 * filtering the worst outliers with
@@ -348,6 +364,8 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 	 * @param maxEpsilon maximal allowed transfer error
 	 * @param minInlierRatio minimal number of inliers to number of
 	 *   candidates
+	 * @param maxTrust reject candidates with a cost larger than
+	 *   maxTrust * median cost
 	 * 
 	 * @return true if {@link Model} could be estimated and inliers is not
 	 *   empty, false otherwise.  If false, {@link Model} remains unchanged.
@@ -357,7 +375,9 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 			final Collection< PointMatch > inliers,
 			final int iterations,
 			final float maxEpsilon,
-			final float maxInlierRatio ) throws NotEnoughDataPointsException
+			final float maxInlierRatio,
+			final float maxTrust )
+		throws NotEnoughDataPointsException
 	{
 		final ArrayList< PointMatch > temp = new ArrayList< PointMatch >();
 		if (
@@ -367,16 +387,40 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 						iterations,
 						maxEpsilon,
 						maxInlierRatio ) &&
-				filter( temp, inliers ) )
+				filter( temp, inliers, maxTrust ) )
 			return true;
 		return false;
 	}
 	
+	
+	/**
+	 * Call {@link #filterRansac(List, Collection, int, float, float, float)}
+	 * with maxTrust = 4.
+	 */
+	final public boolean filterRansac(
+			final List< PointMatch > candidates,
+			final Collection< PointMatch > inliers,
+			final int iterations,
+			final float maxEpsilon,
+			final float maxInlierRatio )
+		throws NotEnoughDataPointsException
+	{
+		return filterRansac(
+			candidates,
+			inliers,
+			iterations,
+			maxEpsilon,
+			maxInlierRatio,
+			4f );
+	}
+	
+		
 	/**
 	 * Create a meaningful string representation of the model for save into
 	 * text-files or display on terminals.
 	 */
 	abstract public String toString();
+	
 	
 	/**
 	 * Set the model to m
@@ -384,6 +428,7 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 	 */
 	abstract public void set( final M m );
 
+	
 	/**
 	 * Clone the model.
 	 */

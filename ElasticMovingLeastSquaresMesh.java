@@ -35,6 +35,7 @@ import mpicbg.models.NotEnoughDataPointsException;
 import mpicbg.models.Point;
 import mpicbg.models.PointMatch;
 import mpicbg.models.Tile;
+import mpicbg.models.AffineModel2D;
 
 /**
  * 
@@ -72,7 +73,7 @@ public class ElasticMovingLeastSquaresMesh< M extends Model< M > > extends Movin
 		
 		// temporary weights for inter-vertex PointMatches
 		final float[] w = new float[ 2 ];
-		w[ 0 ] = 1.0f / s.size();
+		w[ 0 ] = 100.0f / s.size();
 		
 		for ( final PointMatch vertex : s )
 		{
@@ -80,20 +81,20 @@ public class ElasticMovingLeastSquaresMesh< M extends Model< M > > extends Movin
 			 * For each vertex, collect its connected vertices ...
 			 * ... which are those connected by a triangle edge to it
 			 */
-//			final HashSet< PointMatch > connectedVertices = new HashSet< PointMatch >();
-//			for ( final AffineModel2D ai : va.get( vertex ) )
-//			{
-//				for ( final PointMatch m : av.get( ai ) )
-//				{
-//					if ( vertex != m ) connectedVertices.add( m );
-//				}
-//			}
+			final HashSet< PointMatch > connectedVertices = new HashSet< PointMatch >();
+			for ( final AffineModel2D ai : va.get( vertex ) )
+			{
+				for ( final PointMatch m : av.get( ai ) )
+				{
+					if ( vertex != m ) connectedVertices.add( m );
+				}
+			}
 			/**
 			 * ... which are all vertices instead this one itself
 			 */
-			final HashSet< PointMatch > connectedVertices = new HashSet< PointMatch >();
-			connectedVertices.addAll( s );
-			connectedVertices.remove( vertex );
+//			final HashSet< PointMatch > connectedVertices = new HashSet< PointMatch >();
+//			connectedVertices.addAll( s );
+//			connectedVertices.remove( vertex );
 			/**
 			 * Add PointMatches for each connectedVertex.
 			 * These PointMatches work as "regularizers" for the mesh, that is
