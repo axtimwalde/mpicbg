@@ -23,7 +23,9 @@ import ij.WindowManager;
 import ij.plugin.PlugIn;
 import ij.process.*;
 import ij.gui.*;
+import ij.io.SaveDialog;
 
+import mpicbg.ij.TransformMeshMapping;
 import mpicbg.models.*;
 
 import java.awt.Color;
@@ -35,6 +37,8 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseListener;
+import java.io.InputStream;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Vector;
 
@@ -43,9 +47,13 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 	// number of vertices in horizontal direction
 	private static int numX = 32;
 	
+	private static String rawFileName = "figure";
+	
 	ImagePlus imp;
 	ImageProcessor ip;
 	ImageProcessor ipOrig;
+	
+	protected TransformMeshMapping mapping; 
 	
 	final ArrayList< Point > hooks = new ArrayList< Point >();
 	PointRoi handles;
@@ -129,7 +137,9 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 		numX = ( int )gd.getNextNumber();
 		
 		// intitialize the transform mesh
-		mesh = new SpringMesh( numX, imp.getWidth(), imp.getHeight(), 32 );		
+		mesh = new SpringMesh( numX, imp.getWidth(), imp.getHeight(), Float.MAX_VALUE );
+		
+		mapping = new TransformMeshMapping( mesh );
 		
 		
 //		Point p = new Point( new float[]{ ip.getWidth() / 4, ip.getHeight() / 4 } );
@@ -193,7 +203,7 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 	
 	public void apply()
 	{
-		mesh.paint( ipOrig, ip );
+		mapping.mapInterpolated( ipOrig, ip );
 		imp.updateAndDraw();
 	}
 	
@@ -219,6 +229,7 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 			opt.interrupt();
 			
 			showMesh = false;
+			showSprings = false;
 			ill.interrupt();
 			
 			pleaseIllustrate = false;
@@ -261,7 +272,44 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 					imp.getCanvas().setDisplayList( null );
 				}
 			}			
-		} 
+		}
+		else if (
+				e.getKeyCode() == KeyEvent.VK_G )
+		{
+			SaveDialog sd = new SaveDialog( "Save as ...", rawFileName, ".svg" );
+			String directory = sd.getDirectory();
+			String name = sd.getFileName();
+			rawFileName = name.replaceAll( "\\.svg$", "" );
+
+			if ( name == null || name == "" ) 
+			{
+				IJ.error( "No filename selected." );
+				return;
+			}
+					
+			String fileName = directory + name;
+			
+			String g = mesh.illustrateMeshSVG();
+			
+			try
+			{
+				InputStream is = getClass().getResourceAsStream( "template.svg" );
+				byte[] bytes = new byte[ is.available() ];
+				is.read( bytes );
+				String svg = new String( bytes );
+				svg = svg.replaceAll( "<!--g-->", g );
+				
+				IJ.log( svg );
+				
+				PrintStream ps = new PrintStream( fileName ); 
+				ps.print( svg );
+				ps.close();
+			}
+			catch ( Exception ex )
+			{
+				IJ.error( "Error writing svg-file '" + fileName + "'.\n" + ex.getMessage() );
+			}
+		}
 		else if (
 				( e.getKeyCode() == KeyEvent.VK_F1 ) &&
 				( e.getSource() instanceof TextField ) ){}
@@ -279,6 +327,7 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 			int xm = win.getCanvas().offScreenX( e.getX() );
 			int ym = win.getCanvas().offScreenY( e.getY() );
 			
+			// find the closest handle to drag it
 			double target_d = Double.MAX_VALUE;
 			for ( int i = 0; i < hooks.size(); ++i )
 			{
@@ -294,9 +343,12 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 				}
 			}
 			
+			// no handle next to the mouse so create a new one
 			if ( targetIndex == -1 )
 			{
 				float[] l = new float[]{ xm, ym };
+				l = mesh.findClosestVertex( l ).getLocation().getW(); 
+				
 				synchronized ( mesh )
 				{
 					Point p = new Point( l );

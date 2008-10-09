@@ -39,6 +39,11 @@ public class Transform_Roi implements PlugIn
 	
 	final protected ArrayList< PointMatch > matches = new ArrayList< PointMatch >();
 	
+	final static private String[] methods = new String[]{ "Translation", "Rigid", "Affine" };
+	static private int method = 1;
+	
+	static private boolean interpolate = true;
+	
 	public Transform_Roi()
 	{
 		decimalFormatSymbols.setGroupingSeparator( ',' );
@@ -64,6 +69,22 @@ public class Transform_Roi implements PlugIn
 		}	
 	}
 	
+	final static protected void transformInterpolated(
+			final CoordinateTransform transform,
+			final ImageProcessor source,
+			final ImageProcessor target )
+	{
+		for ( int y = 0; y < target.getHeight(); ++y )
+		{
+			for ( int x = 0; x < target.getWidth(); ++x )
+			{
+				float[] t = new float[]{ x, y };
+				transform.applyInPlace( t );
+				target.putPixel( x, y, source.getPixelInterpolated( t[ 0 ], t[ 1 ] ) );
+			}
+		}	
+	}
+	
 	final public void run( String args )
 	{
 		matches.clear();
@@ -77,7 +98,7 @@ public class Transform_Roi implements PlugIn
 			return;
 		}
 		
-		String[] titles = new String[ ids.length ];
+		ArrayList< String > titlesList = new ArrayList< String >();
 		String currentTitle = null;
 		for ( int i = 0; i < ids.length; ++i )
 		{
@@ -85,35 +106,37 @@ public class Transform_Roi implements PlugIn
 			Roi roi = imp.getRoi();
 			if ( roi != null && roi.getType() == Roi.POINT )
 			{
-				titles[ i ] = imp.getTitle();
+				titlesList.add( imp.getTitle() );
 				if ( imp == WindowManager.getCurrentImage() )
 					currentTitle = imp.getTitle();
 			}	
 		}
 		
-		if ( titles.length < 2 )
+		if ( titlesList.size() < 2 )
 		{
-			IJ.showMessage( "You should have at least two images with selected landmarks open." );
+			IJ.showMessage( "You should have at least two images with selected landmark correspondences open." );
 			return;
 		}
+		String[] titles = new String[ titlesList.size() ];
+		titlesList.toArray( titles );
 		
 		if ( currentTitle == null )
 			currentTitle = titles[ 0 ];
-		
-		String[] methods = new String[]{ "Translation", "Rigid", "Affine" };
 		
 		GenericDialog gd = new GenericDialog( "Transform" );
 		
 		gd.addChoice( "source_image", titles, currentTitle );
 		gd.addChoice( "template_image", titles, currentTitle.equals( titles[ 0 ] ) ? titles[ 1 ] : titles[ 0 ] );
-		gd.addChoice( "transformation_class", methods, methods[ 1 ] );
+		gd.addChoice( "transformation_class", methods, methods[ method ] );
+		gd.addCheckbox( "interpolate", interpolate );
 		gd.showDialog();
 		
 		if ( gd.wasCanceled() ) return;
 		
 		ImagePlus source = WindowManager.getImage( ids[ gd.getNextChoiceIndex() ] );
 		ImagePlus template = WindowManager.getImage( ids[ gd.getNextChoiceIndex() ] );
-		final int method = gd.getNextChoiceIndex();
+		method = gd.getNextChoiceIndex();
+		interpolate = gd.getNextBoolean();
 		
 		ImagePlus target = template.createImagePlus();
 		
@@ -171,11 +194,15 @@ public class Transform_Roi implements PlugIn
 		}
 		catch ( IllDefinedDataPointsException e )
 		{
-			IJ.showMessage( "The set of landmarks is ill-defined in terms of solving the transformation." );
+			IJ.showMessage( "The set of landmarks is ill-defined in terms of the desired transformation." );
 			return;
 		}
 		
-		transform( model, ipSource, ipTarget );
+		if ( interpolate )
+			transformInterpolated( model, ipSource, ipTarget );
+		else
+			transform( model, ipSource, ipTarget );
+		
 		target.setProcessor( "Transformed" + source.getTitle(), ipTarget );
 		target.show();
 	}

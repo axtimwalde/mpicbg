@@ -277,7 +277,8 @@ public class Spring
 			Vertex v2,
 			float weight )
 	{
-		this( length( v1.getLocation().getL(), v2.getLocation().getL() ), weight );
+		//this( length( v1.getLocation().getL(), v2.getLocation().getL() ), weight );
+		this( length( v1.getLocation().getW(), v2.getLocation().getW() ), weight );
 	}
 	
 	/**

@@ -19,7 +19,7 @@
  */
 package mpicbg.models;
 
-public interface InvertibleCoordinateTransform extends CoordinateTransform
+public interface InvertibleCoordinateTransform
 {
 	/**
 	 * Apply the inverse of the model to a point location

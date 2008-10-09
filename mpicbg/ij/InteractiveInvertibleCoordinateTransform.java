@@ -1,3 +1,6 @@
+package mpicbg.ij;
+
+
 import ij.IJ;
 import ij.ImageListener;
 import ij.ImagePlus;
@@ -18,8 +21,15 @@ import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public abstract class InteractiveTransform< M extends InvertibleModel< M > > implements PlugIn, MouseListener, MouseMotionListener, KeyListener, ImageListener
+/**
+ * 
+ * An interactive parent class for point based image deformation.
+ *
+ * @param <M> the transformation model to be used
+ */
+public abstract class InteractiveInvertibleCoordinateTransform< M extends InvertibleModel< M > > implements PlugIn, MouseListener, MouseMotionListener, KeyListener, ImageListener
 {
+	protected TransformMapping mapping;
 	protected ImagePlus imp;
 	protected ImageProcessor target;
 	protected ImageProcessor source;
@@ -27,12 +37,12 @@ public abstract class InteractiveTransform< M extends InvertibleModel< M > > imp
 	
 	protected Point[] p;
 	protected Point[] q;
-	final ArrayList< PointMatch > m = new ArrayList< PointMatch >();
-	PointRoi handles;
+	final protected ArrayList< PointMatch > m = new ArrayList< PointMatch >();
+	protected PointRoi handles;
 	
 	protected PaintInvertibleCoordinateTransformThread painter;
 	
-	int targetIndex = -1;
+	protected int targetIndex = -1;
 	
 	abstract protected M myModel();
 	abstract protected void setHandles();
@@ -46,6 +56,8 @@ public abstract class InteractiveTransform< M extends InvertibleModel< M > > imp
 		imp = IJ.getImage();
 		target = imp.getProcessor();
 		source = target.duplicate();
+		
+		mapping = new TransformMapping( myModel() );
 		
 		painter = new PaintInvertibleCoordinateTransformThread(
 				imp,
@@ -88,6 +100,11 @@ public abstract class InteractiveTransform< M extends InvertibleModel< M > > imp
 			if ( e.getKeyCode() == KeyEvent.VK_ESCAPE )
 			{
 				imp.setProcessor( null, source );
+			}
+			else
+			{
+				mapping.mapInterpolated( source, target );
+				imp.updateAndDraw();
 			}
 		}
 		else if (

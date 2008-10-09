@@ -5,6 +5,7 @@ import ij.plugin.PlugIn;
 import ij.process.*;
 import ij.gui.*;
 
+import mpicbg.ij.TransformMeshMapping;
 import mpicbg.models.*;
 
 import java.awt.Event;
@@ -26,6 +27,8 @@ public class Transform_TriangularGrid implements PlugIn, MouseListener,  MouseMo
 	ImagePlus imp;
 	ImageProcessor ip;
 	ImageProcessor ipOrig;
+	
+	protected TransformMeshMapping mapping; 
 	
 	PointMatch[] pq;
 	int[] x;
@@ -55,9 +58,12 @@ public class Transform_TriangularGrid implements PlugIn, MouseListener,  MouseMo
 		
 		// intitialize the transform mesh
 		mt = new TransformMesh( numX, numY, imp.getWidth(), imp.getHeight() );
-		Set< PointMatch > pqs = mt.va.keySet();
+		
+		mapping = new TransformMeshMapping( mt );
+		
+		Set< PointMatch > pqs = mt.getVA().keySet();
 		pq = new PointMatch[ pqs.size() ];
-		mt.va.keySet().toArray( pq );
+		pqs.toArray( pq );
 		
 		System.out.println( pq.length );
 		
@@ -166,7 +172,7 @@ public class Transform_TriangularGrid implements PlugIn, MouseListener,  MouseMo
 			
 			mt.updateAffine( pq[ targetIndex ] );
 					
-			mt.paint( ipOrig, ip );
+			mapping.mapInterpolated( ipOrig, ip );
 		}
 	}
 	

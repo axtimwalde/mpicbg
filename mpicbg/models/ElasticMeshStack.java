@@ -1,22 +1,36 @@
+/**
+ * License: GPL
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License 2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * 
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ *
+ */
+package mpicbg.models;
+
+
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
-import ij.process.ImageProcessor;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Set;
 
-import mpicbg.models.AbstractAffineModel2D;
-import mpicbg.models.ErrorStatistic;
-import mpicbg.models.IllDefinedDataPointsException;
-import mpicbg.models.NotEnoughDataPointsException;
-import mpicbg.models.PointMatch;
-import mpicbg.models.Tile;
-
 /**
- * @author saalfeld
+ * 
  *
  */
 public class ElasticMeshStack< M extends AbstractAffineModel2D< M > >
@@ -180,10 +194,10 @@ public class ElasticMeshStack< M extends AbstractAffineModel2D< M > >
 			final ErrorStatistic observer = new ErrorStatistic();
 			for ( final ElasticMovingLeastSquaresMesh< ? > m : meshes )
 			{
-				Set< PointMatch > tiles = m.pt.keySet();
+				Set< PointMatch > tiles = m.getVertices();
 				for ( final PointMatch pm : tiles )
 				{
-					final Tile< ? > t = m.pt.get( pm );
+					final Tile< ? > t = m.getVerticeModelMap().get( pm );
 					for ( final PointMatch p : t.getMatches() )
 					{
 						observer.add( p.getDistance() );
@@ -195,10 +209,10 @@ public class ElasticMeshStack< M extends AbstractAffineModel2D< M > >
 			
 			for ( final ElasticMovingLeastSquaresMesh< ? > m : meshes )
 			{
-				Set< PointMatch > tiles = m.pt.keySet();
+				Set< PointMatch > tiles = m.getVertices();
 				for ( final PointMatch pm : tiles )
 				{
-					final Tile< ? > t = m.pt.get( pm );
+					final Tile< ? > t = m.getVerticeModelMap().get( pm );
 					badMatches.clear();
 					for ( final PointMatch p : t.getMatches() )
 					{
@@ -214,20 +228,6 @@ public class ElasticMeshStack< M extends AbstractAffineModel2D< M > >
 			IJ.log( "Re-optimizing ..." );
 		}
 		while ( numMatches < lastNumMatches );
-	}
-	
-	final public void paint( final ImageStack src, final ImageStack trg )
-	{
-		for ( int i = 0; i < meshes.size(); ++i )
-		{
-			final ElasticMovingLeastSquaresMesh< M > mesh = meshes.get( i );
-			final ImageProcessor ipSrc = src.getProcessor( i + 1 );
-			final ImageProcessor ipTrg = trg.getProcessor( i + 1 );
-			
-			mesh.updateAffines();
-			
-			mesh.paint( ipSrc, ipTrg );
-		}
 	}
 	
 	public void clear()

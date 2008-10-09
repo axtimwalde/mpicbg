@@ -1,36 +1,34 @@
-/**
- * 
- */
-package mpicbg.models;
+package mpicbg.ij;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import ij.ImagePlus;
 import ij.process.ImageProcessor;
 
-public class PaintInvertibleCoordinateTransformThread extends Thread
+public class MappingThread extends Thread
 {
 	final protected ImagePlus imp;
 	final protected ImageProcessor source;
 	final protected ImageProcessor target;
 	final protected AtomicBoolean pleaseRepaint;
-	final protected InvertibleCoordinateTransform transform;
+	final protected Mapping mapping;
 	
-	public PaintInvertibleCoordinateTransformThread(
+	public MappingThread(
 			ImagePlus imp,
 			ImageProcessor source,
 			ImageProcessor target,
 			AtomicBoolean pleaseRepaint,
-			InvertibleCoordinateTransform transform )
+			Mapping mapping )
 	{
 		this.imp = imp;
 		this.source = source;
 		this.target = target;
 		this.pleaseRepaint = pleaseRepaint;
-		this.transform = transform;
+		this.mapping = mapping;
 		this.setName( "PaintInvertibleCoordinateTransformThread" );
 	}
 	
+	@Override
 	public void run()
 	{
 		while ( !isInterrupted() )
@@ -39,20 +37,8 @@ public class PaintInvertibleCoordinateTransformThread extends Thread
 			{
 				if ( pleaseRepaint.compareAndSet( true, false ) )
 				{
-					for ( int y = 0; y < target.getHeight(); ++y )
-					{
-						for ( int x = 0; x < target.getWidth(); ++x )
-						{
-							float[] t = new float[]{ x, y };
-							try
-							{
-								transform.applyInverseInPlace( t );
-								target.putPixel( x, y, source.getPixel( ( int )t[ 0 ], ( int )t[ 1 ] ) );
-							}
-							catch ( NoninvertibleModelException e ){ e.printStackTrace(); }
-						}
-						imp.updateAndDraw();
-					}
+					mapping.map( source, target );
+					imp.updateAndDraw();
 				}
 				else
 					synchronized ( this ){ wait(); }

@@ -1,0 +1,21 @@
+dir = getDirectory( "Choose a Directory " );
+i = 0;
+runDeform( dir ); 
+
+function runDeform( dir )
+{
+	list = getFileList( dir );
+	for ( i = 0; i < list.length; i++ )
+	{
+		if ( endsWith( list[ i ], "png" ) )
+		{
+			open( dir + list[ i ] );
+			tifFile = replace( list[ i ], "\.[^.]+$", ".tif" );
+//			run( "Generate Deformation", "save=" + dir + tifFile + " tile_size=2048 tile_columns=4 tile_rows=4 tile_overlap=0.10 odometry_error=0.05 vertices_per_row=64 visual_vertices_per_row=8 alpha=1 global_pseudo_random_seed=" + ( i * 10000 ) + " local_pseudo_random_seed=" + ( i * 10000 ) + " maximum_global_deformation=256 maximum_local_deformation=128 local_transformation=Affine");
+			close();
+			
+			print( ( i ) + ": " + dir + tifFile );
+			i++;
+		}
+	}
+}

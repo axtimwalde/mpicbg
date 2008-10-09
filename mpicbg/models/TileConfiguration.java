@@ -65,29 +65,49 @@ public class TileConfiguration
 	}
 	
 	/**
-	 * Add a single tile.
+	 * Cleanup.
+	 */
+	public void clear()
+	{
+		tiles.clear();
+		fixedTiles.clear();
+		
+		minError = Double.MAX_VALUE;
+		maxError = 0.0;
+		error = Double.MAX_VALUE;
+	}
+	
+	/**
+	 * Add a single {@link Tile}.
 	 * 
 	 * @param t
 	 */
-	final public void addTile( Tile< ? > t ){ tiles.add( t ); }
+	final public void addTile( final Tile< ? > t ){ tiles.add( t ); }
 	
 	/**
-	 * Add a collection of tiles.
+	 * Add a {@link Collection} of {@link Tile Tiles}.
 	 * 
 	 * @param t
 	 */
-	final public void addTiles( Collection< Tile< ? > > t ){ tiles.addAll( t ); }
+	final public void addTiles( final Collection< Tile< ? > > t ){ tiles.addAll( t ); }
 	
 	/**
-	 * Fix a single tile.
+	 * Add all {@link Tile Tiles} of another {@link TileConfiguration}.
 	 * 
 	 * @param t
 	 */
-	final public void fixTile( Tile< ? > t ){ fixedTiles.add( t ); }
+	final public void addTiles( final TileConfiguration t ){ tiles.addAll( t.tiles ); }
 	
 	/**
-	 * Update all correspondences in all tiles and estimate the average
-	 * displacement. 
+	 * Fix a single {@link Tile}.
+	 * 
+	 * @param t
+	 */
+	final public void fixTile( final Tile< ? > t ){ fixedTiles.add( t ); }
+	
+	/**
+	 * Update all {@link PointMatch Correspondences} in all {@link Tile Tiles}
+	 * and estimate the average displacement. 
 	 */
 	final private void update()
 	{
@@ -107,7 +127,8 @@ public class TileConfiguration
 	}
 	
 	/**
-	 * Minimize the displacement of all correspondence pairs of all tiles.
+	 * Minimize the displacement of all {@link PointMatch Correspondence pairs}
+	 * of all {@link Tile Tiles}
 	 * 
 	 * @param maxAllowedError do not accept convergence if error is > max_error
 	 * @param maxIterations stop after that many iterations even if there was
@@ -118,11 +139,11 @@ public class TileConfiguration
 	 *   from stopping at plateaus smaller than this value.
 	 */
 	public void optimize(
-			float maxAllowedError,
-			int maxIterations,
-			int maxPlateauwidth ) throws NotEnoughDataPointsException, IllDefinedDataPointsException 
+			final float maxAllowedError,
+			final int maxIterations,
+			final int maxPlateauwidth ) throws NotEnoughDataPointsException, IllDefinedDataPointsException 
 	{
-		ErrorStatistic observer = new ErrorStatistic();
+		final ErrorStatistic observer = new ErrorStatistic();
 		
 		int i = 0;
 		
@@ -154,5 +175,4 @@ public class TileConfiguration
 		System.out.println( "  minimal displacement: " + decimalFormat.format( minError ) + "px" );
 		System.out.println( "  maximal displacement: " + decimalFormat.format( maxError ) + "px" );
 	}
-
 }

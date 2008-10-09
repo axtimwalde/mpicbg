@@ -1,3 +1,6 @@
+package mpicbg.models;
+
+
 /**
  * License: GPL
  *
@@ -28,14 +31,8 @@ import java.text.DecimalFormatSymbols;
 import java.util.HashSet;
 import java.util.Set;
 
-import mpicbg.models.IllDefinedDataPointsException;
-import mpicbg.models.Model;
-import mpicbg.models.ErrorStatistic;
-import mpicbg.models.NotEnoughDataPointsException;
-import mpicbg.models.Point;
-import mpicbg.models.PointMatch;
-import mpicbg.models.Tile;
-import mpicbg.models.AffineModel2D;
+
+
 
 /**
  * 
@@ -73,7 +70,7 @@ public class ElasticMovingLeastSquaresMesh< M extends Model< M > > extends Movin
 		
 		// temporary weights for inter-vertex PointMatches
 		final float[] w = new float[ 2 ];
-		w[ 0 ] = 100.0f / s.size();
+		w[ 0 ] = 1.0f / s.size();
 		
 		for ( final PointMatch vertex : s )
 		{
@@ -267,13 +264,19 @@ public class ElasticMovingLeastSquaresMesh< M extends Model< M > > extends Movin
 		
 		while ( i < maxIterations )  // do not run forever
 		{
-			optimizeIteration( observer );			
+			optimizeIteration();
+			update( 0.75f );
+			observer.add( error );
 			
-			if ( i >= maxPlateauwidth && error < maxError &&  Math.abs( observer.getWideSlope( maxPlateauwidth ) ) <= 0.0001 )
+			if ( i >= maxPlateauwidth && error < maxError &&
+					Math.abs( observer.getWideSlope( maxPlateauwidth ) ) <= 0.00001 &&
+					Math.abs( observer.getWideSlope( maxPlateauwidth / 2 ) ) <= 0.00001 )
 				break;
 			
 			++i;
 		}
+		
+		updateAffines();
 		
 		System.out.println( "Exiting at iteration " + i + " with error " + decimalFormat.format( observer.mean ) + " and slope " + observer.getWideSlope( maxPlateauwidth ) );
 		System.out.println( "Successfully optimized configuration of " + pt.size() + " tiles:" );

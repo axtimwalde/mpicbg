@@ -36,6 +36,7 @@ public abstract class AbstractAffineModel2D< M extends AbstractAffineModel2D< M 
 	public String toString()
 	{
 		return ( "[3,3](" + getAffine() + ") " + cost );
+		//return "";
 	}
 	
 	abstract public void preConcatenate( final M model );

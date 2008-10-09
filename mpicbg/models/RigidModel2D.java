@@ -40,7 +40,11 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	
 	final protected AffineTransform affine = new AffineTransform();
 	final protected AffineTransform inverseAffine = new AffineTransform();
+	
+	@Override
 	final public AffineTransform getAffine(){ return affine; }
+	
+	@Override
 	final public AffineTransform getInverseAffine(){ return inverseAffine; }
 	
 	//@Override

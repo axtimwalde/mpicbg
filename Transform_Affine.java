@@ -1,8 +1,9 @@
 import ij.gui.*;
 
+import mpicbg.ij.InteractiveInvertibleCoordinateTransform;
 import mpicbg.models.*;
 
-public class Transform_Affine extends InteractiveTransform< AffineModel2D >
+public class Transform_Affine extends InteractiveInvertibleCoordinateTransform< AffineModel2D >
 {
 	final protected AffineModel2D model = new AffineModel2D();
 	

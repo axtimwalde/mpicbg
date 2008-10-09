@@ -37,19 +37,6 @@ public class InvertibleCoordinateTransformList implements InvertibleCoordinateTr
 	final public InvertibleCoordinateTransform get( int i ){ return l.get( i ); }
 	final public void clear(){ l.clear(); }
 	
-	final public float[] apply( float[] location )
-	{
-		float[] a = location.clone();
-		applyInPlace( a );
-		return a;
-	}
-
-	final public void applyInPlace( float[] location )
-	{
-		for ( CoordinateTransform t : l )
-			t.applyInPlace( location );
-	}
-	
 	final public float[] applyInverse( float[] location ) throws NoninvertibleModelException
 	{
 		float[] a = location.clone();

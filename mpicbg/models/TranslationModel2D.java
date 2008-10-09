@@ -172,12 +172,4 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 	{
 		affine.concatenate( model.getAffine() );
 	}
-	
-	public RigidModel2D toRigidModel2D()
-	{
-		RigidModel2D trm = new RigidModel2D();
-		trm.getAffine().setTransform( affine );
-		trm.cost = cost;
-		return trm;
-	}
 }

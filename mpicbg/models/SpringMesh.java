@@ -1,3 +1,5 @@
+package mpicbg.models;
+
 /**
  * License: GPL
  *
@@ -27,12 +29,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
-import mpicbg.models.AffineModel2D;
-import mpicbg.models.ErrorStatistic;
-import mpicbg.models.NotEnoughDataPointsException;
-import mpicbg.models.PointMatch;
-import mpicbg.models.Tile;
-import mpicbg.models.Vertex;
+
 
 /**
  * A {@link TransformMesh} with all Vertices being interconnected by springs.
@@ -108,58 +105,58 @@ public class SpringMesh extends TransformMesh
 			}
 		}
 		
-		/**
-		 * For each vertex, find the illlustrated connections and add a Spring.
-		 * 
-		 * <pre>
-		 *   *        *
-		 *  / \      /|\
-		 * *---* -> *-+-*
-		 *  \ /      \|/
-		 *   *        *
-		 * </pre>
-		 * 
-		 * TODO This is not really necessary---isn't it?!
-		 * 
-		 * Note that that
-		 * {@link Vertex#addSpring(Vertex, float)} links the same
-		 * {@link Spring} from both sides and thus interconnects both
-		 * {@link mpicbg.models.Vertex Vertices}.
-		 */
-		w[ 0 ] *= 2;
-		for ( Vertex vertex : vertices )
-		{
-			// Find direct neighbours
-			final HashSet< PointMatch > neighbours = new HashSet< PointMatch >();
-			for ( AffineModel2D ai : va.get( vp.get( vertex ) ) )
-			{
-				for ( PointMatch m : av.get( ai ) )
-					neighbours.add( m );
-			}
-			
-			for ( PointMatch m : neighbours )
-			{
-				for ( AffineModel2D ai : va.get( m ) )
-				{
-					Set< Vertex > connectedVertices = vertex.getConnectedVertices();
-					Vertex toBeConnected = null;
-					
-					// Find out if the triangle shares exactly two vertices with connectedVertices
-					int numSharedVertices = 0;
-					for ( PointMatch p : av.get( ai ) )
-					{
-						Vertex c = pv.get( p );
-						if ( connectedVertices.contains( c ) )
-							++numSharedVertices;
-						else
-							toBeConnected = c;
-					}
-					
-					if ( numSharedVertices == 2 && toBeConnected != null )
-						vertex.addSpring( toBeConnected, w, maxStretch );
-				}
-			}
-		}
+//		/**
+//		 * For each vertex, find the illlustrated connections and add a Spring.
+//		 * 
+//		 * <pre>
+//		 *   *        *
+//		 *  / \      /|\
+//		 * *---* -> *-+-*
+//		 *  \ /      \|/
+//		 *   *        *
+//		 * </pre>
+//		 * 
+//		 * TODO This is not really necessary---isn't it?!
+//		 * 
+//		 * Note that that
+//		 * {@link Vertex#addSpring(Vertex, float)} links the same
+//		 * {@link Spring} from both sides and thus interconnects both
+//		 * {@link mpicbg.models.Vertex Vertices}.
+//		 */
+//		w[ 0 ] *= 2;
+//		for ( Vertex vertex : vertices )
+//		{
+//			// Find direct neighbours
+//			final HashSet< PointMatch > neighbours = new HashSet< PointMatch >();
+//			for ( AffineModel2D ai : va.get( vp.get( vertex ) ) )
+//			{
+//				for ( PointMatch m : av.get( ai ) )
+//					neighbours.add( m );
+//			}
+//			
+//			for ( PointMatch m : neighbours )
+//			{
+//				for ( AffineModel2D ai : va.get( m ) )
+//				{
+//					Set< Vertex > connectedVertices = vertex.getConnectedVertices();
+//					Vertex toBeConnected = null;
+//					
+//					// Find out if the triangle shares exactly two vertices with connectedVertices
+//					int numSharedVertices = 0;
+//					for ( PointMatch p : av.get( ai ) )
+//					{
+//						Vertex c = pv.get( p );
+//						if ( connectedVertices.contains( c ) )
+//							++numSharedVertices;
+//						else
+//							toBeConnected = c;
+//					}
+//					
+//					if ( numSharedVertices == 2 && toBeConnected != null )
+//						vertex.addSpring( toBeConnected, w, maxStretch );
+//				}
+//			}
+//		}
 	}
 	
 	public SpringMesh( int numX, float width, float height, float maxStretch )
@@ -231,21 +228,20 @@ public class SpringMesh extends TransformMesh
 		}
 		vertex.addSpring( closest, weight );
 		
-		/**
-		 * The three closest vertices are connected to the closest.
-		 * 
-		 * TODO This has to be changed, if we interconnect vertices
-		 *   differently.
-		 */
-		
-		for ( Vertex v : closest.getConnectedVertices() )
-		{
-			if ( vertices.contains( v ) )
-			{
-				//System.out.println( "Adding hook vertex." );
-				vertex.addSpring( v, weight );
-			}
-		}
+//		/**
+//		 * The three closest vertices are connected to the closest.
+//		 * 
+//		 * TODO This has to be changed, if we interconnect vertices
+//		 *   differently.
+//		 */
+//		for ( Vertex v : closest.getConnectedVertices() )
+//		{
+//			if ( vertices.contains( v ) )
+//			{
+//				//System.out.println( "Adding hook vertex." );
+//				vertex.addSpring( v, weight );
+//			}
+//		}
 	}
 	
 	/**

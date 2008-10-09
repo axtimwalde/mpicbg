@@ -36,8 +36,12 @@ package mpicbg.imagefeatures;
  * @version 0.1b
  */
 
-import Jama.Matrix;
 import java.util.*;
+
+import Jama.Matrix;
+
+import mpicbg.models.NoninvertibleModelException;
+import mpicbg.util.Matrix3x3;
 
 
 
@@ -294,6 +298,17 @@ public class FloatArray2DScaleOctaveDoGDetector
 					    	continue X;
 					    }
 					    double[][] h_inv = H_inv.getArray();
+//					    float[][] h_inv;
+//					    try
+//					    {
+//					    	h_inv = Matrix3x3.createInverse( dxx, dxy, dxi, dxy, dyy, dyi, dxi, dyi, dii );
+//					    }
+//					    catch ( NoninvertibleModelException e )
+//					    {
+//					    	continue X;
+//					    }
+					    
+					    
 					    
 					    // estimate the location of zero crossing being the offset of the extremum
 					    

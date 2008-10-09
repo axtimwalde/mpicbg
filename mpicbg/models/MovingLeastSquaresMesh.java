@@ -1,31 +1,13 @@
-/**
- * License: GPL
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License 2
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- *
- */
+package mpicbg.models;
+
+
+
+
 import java.util.HashMap;
 import java.util.Set;
 
-import mpicbg.models.CoordinateTransform;
-import mpicbg.models.IllDefinedDataPointsException;
-import mpicbg.models.Model;
-import mpicbg.models.NotEnoughDataPointsException;
-import mpicbg.models.PointMatch;
-import mpicbg.models.Tile;
+
+
 
 /**
  * A transformation mesh that implements a landmark based deformation by means
@@ -65,6 +47,8 @@ public class MovingLeastSquaresMesh< M extends Model< M > > extends TransformMes
 	 *     transformations of each "tile".
 	 */
 	final protected HashMap< PointMatch, Tile< M > > pt = new HashMap< PointMatch, Tile< M > >();
+	final public HashMap< PointMatch, Tile< M > > getVerticeModelMap(){ return pt; }
+	final public Set< PointMatch > getVertices(){ return pt.keySet(); }
 	final public int numVertices(){ return pt.size(); }
 	
 	protected double error = Double.MAX_VALUE;
@@ -208,7 +192,7 @@ public class MovingLeastSquaresMesh< M extends Model< M > > extends TransformMes
 			m.getP2().apply( t.getModel() );
 			
 			error += t.getDistance();
-			updateAffine( m );
+			//updateAffine( m );
 		}
 		error /= s.size();
 	}

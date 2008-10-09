@@ -1,8 +1,9 @@
 import ij.gui.*;
 
+import mpicbg.ij.InteractiveInvertibleCoordinateTransform;
 import mpicbg.models.*;
 
-public class Transform_Perspective extends InteractiveTransform< HomographyModel2D >
+public class Transform_Perspective extends InteractiveInvertibleCoordinateTransform< HomographyModel2D >
 {
 	final protected HomographyModel2D model = new HomographyModel2D();
 	

@@ -151,7 +151,7 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 		gd.addNumericField( "maximal_alignment_error :", max_epsilon, 2 );
 		gd.addNumericField( "inlier_ratio :", min_inlier_ratio, 2 );
 		gd.addCheckbox( "upscale_image_first", upscale );
-		gd.addChoice( "transformation_class", methods, methods[ 1 ] );
+		gd.addChoice( "transformation_class", methods, methods[ method ] );
 		gd.showDialog();
 		
 		if (gd.wasCanceled()) return;

@@ -24,6 +24,7 @@ import ij.plugin.PlugIn;
 import ij.process.*;
 import ij.gui.*;
 
+import mpicbg.ij.TransformMeshMapping;
 import mpicbg.models.*;
 
 import java.awt.Color;
@@ -38,7 +39,7 @@ import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.Vector;
 
-public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotionListener, KeyListener
+public class Transform_ElasticMovingLeastSquaresMesh implements PlugIn, MouseListener,  MouseMotionListener, KeyListener
 {
 	// number of vertices in horizontal direction
 	private static int numX = 16;
@@ -53,11 +54,11 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 	ImageProcessor ipOrig;
 	
 	
-	/**
-	 * Visualisation
-	 */
-	final ByteProcessor ipPlot = new ByteProcessor( 200, 200 );
-	final ImagePlus impPlot = new ImagePlus( "Optimization", ipPlot );
+//	/**
+//	 * Visualisation
+//	 */
+//	final ByteProcessor ipPlot = new ByteProcessor( 200, 200 );
+//	final ImagePlus impPlot = new ImagePlus( "Optimization", ipPlot );
 	
 	//final ArrayList< PointMatch > pq = new ArrayList< PointMatch >();
 	final ArrayList< Point > hooks = new ArrayList< Point >();
@@ -65,6 +66,7 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 	Tile screen;
 	
 	protected ElasticMovingLeastSquaresMesh< ? extends AbstractAffineModel2D > mesh;
+	protected TransformMeshMapping mapping; 
 	
 	int targetIndex = -1;
 	
@@ -83,11 +85,10 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 			{
 				try
 				{
-					//mesh.optimizeByWeight( Float.MAX_VALUE, 100 * mesh.numVertices(), mesh.numVertices() );
-					//mesh.optimize( Float.MAX_VALUE, 10000, 100 );
 					if ( pleaseOptimize && hooks.size() > 0 )
 					{
-						mesh.optimizeByStrength( Float.MAX_VALUE, 10000, 100, ipPlot, impPlot );
+//						mesh.optimizeByStrength( Float.MAX_VALUE, 10000, 100, ipPlot, impPlot );
+						mesh.optimize( Float.MAX_VALUE, 10000, 100 );
 						pleaseIllustrate = false;
 						apply();
 					}
@@ -104,7 +105,7 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 	{
 		public void run()
 		{
-			while ( true )
+			while ( !isInterrupted() )
 			{
 				try
 				{
@@ -112,12 +113,16 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 					{
 						illustrate();
 						if ( pleaseIllustrate )
-							wait( 100 );
+							wait( 125 );
 						else
 							wait();
 					}
 				}
-				catch ( Throwable t ){ t.printStackTrace(); }
+				catch ( InterruptedException e)
+				{
+					illustrate();
+					Thread.currentThread().interrupt();
+				}
 			}
 		}
 	}
@@ -143,7 +148,7 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 		
 		if ( gd.wasCanceled() ) return;
 		
-		impPlot.show();
+//		impPlot.show();
 		
 		numX = ( int )gd.getNextNumber();
 		alpha = ( float )gd.getNextNumber();
@@ -167,35 +172,9 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 			return;
 		}
 		
-//		for ( int i = 0; i < 3; ++i )
-//		{
-//			hooks[ i ] = new Point( new float[]{ x[ i ], y[ i ] } );
-//			Tile o = mesh.findClosest( hooks[ i ].getL() );
-//			Point p2 = new Point( new float[]{ x[ i ], y[ i ] } );
-//			
-//			o.addMatch( new PointMatch( p2, hooks[ i ], 10f ) );
-//			screen.addMatch( new PointMatch( hooks[ i ], p2 ) );
-			
-			hooks.add( new Point( new float[]{ ip.getWidth() / 4, ip.getHeight() / 4 } ) );
-			Point p2 = new Point( new float[]{ ip.getWidth() / 4, ip.getHeight() / 4 } ); // use the same local point for each handle (is this correct?)
-			mesh.addMatchWeightedByDistance( new PointMatch( p2, hooks.get( 0 ), 1f ), alpha );
-			
-			hooks.add( new Point( new float[]{ 3 * ip.getWidth() / 4, ip.getHeight() / 2 } ) );
-			p2 = new Point( new float[]{ 3 * ip.getWidth() / 4, ip.getHeight() / 2 } ); // use the same local point for each handle (is this correct?)
-			mesh.addMatchWeightedByDistance( new PointMatch( p2, hooks.get( 1 ), 1f ), alpha );
-			
-			hooks.add( new Point( new float[]{ ip.getWidth() / 4, 3 * ip.getHeight() / 4 } ) );
-			p2 = new Point( new float[]{ ip.getWidth() / 4, 3 * ip.getHeight() / 4 } ); // use the same local point for each handle (is this correct?)
-			mesh.addMatchWeightedByDistance( new PointMatch( p2, hooks.get( 2 ), 1f ), alpha );
-//		}
-		
-		handles = new PointRoi(
-				new int[]{ ip.getWidth() / 4, 3 * ip.getWidth() / 4, ip.getWidth() / 4 },
-				new int[]{ ip.getHeight() / 4, ip.getHeight() / 2, 3 * ip.getHeight() / 4 }, hooks.size() );
-		imp.setRoi( handles );
+		mapping = new TransformMeshMapping( mesh );
 		
 		Toolbar.getInstance().setTool( Toolbar.getInstance().addTool( "Add_and_drag_handles." ) );
-		
 		
 		opt = new OptimizeThread();
 		ill = new IllustrateThread();
@@ -241,7 +220,7 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 	
 	public void apply()
 	{
-		mesh.paint( ipOrig, ip );
+		mapping.mapInterpolated( ipOrig, ip );
 		imp.updateAndDraw();
 	}
 	
@@ -264,15 +243,13 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 	{
 		if ( e.getKeyCode() == KeyEvent.VK_ESCAPE || e.getKeyCode() == KeyEvent.VK_ENTER )
 		{
-			Thread t = opt;
-			opt = null;
-			t.interrupt();
+			opt.interrupt();
 			
-			t = ill;
-			ill = null;
-			t.interrupt();
-			
+			showMesh = false;
+			showPointMatches = false;
 			pleaseIllustrate = false;
+			
+			ill.interrupt();
 			
 			if ( imp != null )
 			{
@@ -293,24 +270,11 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 		{
 			if ( e.getKeyCode() == KeyEvent.VK_Y ) showMesh = !showMesh;
 			if ( e.getKeyCode() == KeyEvent.VK_U ) showPointMatches = !showPointMatches;
-			if ( showMesh || showPointMatches )
+			
+			synchronized ( ill )
 			{
-				synchronized ( ill )
-				{
-					if ( pleaseIllustrate == false )
-						illustrate();
-					else
-						ill.notify();
-				}
-			}
-			else
-			{
-				pleaseIllustrate = false;
-				synchronized ( ill )
-				{
-					ill.interrupt();
-					imp.getCanvas().setDisplayList( null );
-				}
+				pleaseIllustrate = pleaseOptimize && ( showMesh || showPointMatches );
+				ill.notify();
 			}			
 		} 
 		else if (
@@ -358,7 +322,7 @@ public class Transform_ElasticMesh implements PlugIn, MouseListener,  MouseMotio
 						Point there = new Point( l );
 						hooks.add( here );
 						here.apply( m );
-						mesh.addMatchWeightedByDistance( new PointMatch( there, here, 1f ), alpha );
+						mesh.addMatchWeightedByDistance( new PointMatch( there, here, 0.0025f ), alpha );
 					}
 					catch ( NoninvertibleModelException x ){ x.printStackTrace(); }
 				}

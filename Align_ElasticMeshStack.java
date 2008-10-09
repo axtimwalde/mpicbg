@@ -1,3 +1,22 @@
+/**
+ * License: GPL
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License 2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * 
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ *
+ */
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -6,6 +25,7 @@ import ij.plugin.PlugIn;
 import ij.process.*;
 import ij.gui.*;
 
+import mpicbg.ij.TransformMeshMapping;
 import mpicbg.imagefeatures.Feature;
 import mpicbg.imagefeatures.Filter;
 import mpicbg.imagefeatures.FloatArray2D;
@@ -93,26 +113,20 @@ public class Align_ElasticMeshStack implements PlugIn
 	 * Implemeted transformation models for choice
 	 */
 	final static String[] modelStrings = new String[]{ "Translation", "Rigid", "Affine" };
-	final static Class< ? extends Model >[] modelClasses =
-		new Class[]{
-				TranslationModel2D.class,
-				RigidModel2D.class,
-				AffineModel2D.class };
+	final static List< Class< ? extends Model > > modelClasses =
+		new ArrayList< Class< ? extends Model > >();
 	private static int localModelIndex = 1;
 	private static int globalModelIndex = 1;
-	private static Class< ? extends Model > localModelClass = modelClasses[ localModelIndex ];
-	private static Class< ? extends Model > globalModelClass = modelClasses[ globalModelIndex ];
+	private static Class< ? extends Model > localModelClass;
+	private static Class< ? extends Model > globalModelClass;
 	
 	/**
 	 * Implemeted feature extraction methods for choice
 	 */
 	final static String[] featureMethodStrings = new String[]{ "SIFT", "MOPS" };
-	final static Class< ? >[] featureMethodClasses =
-		new Class[]{
-				FloatArray2DSIFT.class,
-				FloatArray2DMOPS.class };
+	final static List< Class< ? > > featureMethodClasses = new ArrayList< Class< ? > >();
 	private static int featureMethodIndex = 0;
-	private static Class< ? > featureMethodClass = featureMethodClasses[ featureMethodIndex ];
+	private static Class< ? > featureMethodClass;
 	
 	/**
 	 * Set true to double the size of the image by linear interpolation to
@@ -132,6 +146,23 @@ public class Align_ElasticMeshStack implements PlugIn
 	
 	ImageStack stack, stackAligned;
 	ImagePlus imp, impAligned;
+	
+	protected TransformMeshMapping mapping;
+	
+	public Align_ElasticMeshStack()
+	{
+		modelClasses.add( TranslationModel2D.class );
+		modelClasses.add( RigidModel2D.class );
+		modelClasses.add( AffineModel2D.class );
+		
+		localModelClass = modelClasses.get( localModelIndex );
+		globalModelClass = modelClasses.get( globalModelIndex );
+		
+		featureMethodClasses.add( FloatArray2DSIFT.class );
+		featureMethodClasses.add( FloatArray2DMOPS.class );
+		
+		featureMethodClass = featureMethodClasses.get( featureMethodIndex );
+	}
 	
 	private boolean showDialog()
 	{
@@ -208,7 +239,7 @@ public class Align_ElasticMeshStack implements PlugIn
 		else scale = 1.0f;
 		
 		featureMethodIndex = gd.getNextChoiceIndex();
-		featureMethodClass = featureMethodClasses[ featureMethodIndex ];
+		featureMethodClass = featureMethodClasses.get( featureMethodIndex );
 		fdSize = ( int )gd.getNextNumber();
 		fdBins = ( int )gd.getNextNumber();
 		rod = ( float )gd.getNextNumber();
@@ -216,12 +247,12 @@ public class Align_ElasticMeshStack implements PlugIn
 		maxEpsilon = ( float )gd.getNextNumber();
 		minInlierRatio = ( float )gd.getNextNumber();
 		globalModelIndex = gd.getNextChoiceIndex();
-		globalModelClass = modelClasses[ globalModelIndex ];
+		globalModelClass = modelClasses.get( globalModelIndex );
 		
 		numX = ( int )gd.getNextNumber();
 		alpha = ( float )gd.getNextNumber();
 		localModelIndex = gd.getNextChoiceIndex();
-		localModelClass = modelClasses[ localModelIndex ];
+		localModelClass = modelClasses.get( localModelIndex );
 		
 		return true;
 	}
@@ -385,8 +416,8 @@ public class Align_ElasticMeshStack implements PlugIn
 					Tile< ? > t = m1.findClosest( here );
 					Tile< ? > o = m2.findClosest( there );
 					
-					m1.addMatchWeightedByDistance( new PointMatch( pm.getP2(), pm.getP1(), 0.1f ), alpha );
-					m2.addMatchWeightedByDistance( new PointMatch( pm.getP1(), pm.getP2(), 0.1f ), alpha );
+					m1.addMatchWeightedByDistance( new PointMatch( pm.getP2(), pm.getP1(), 0.01f ), alpha );
+					m2.addMatchWeightedByDistance( new PointMatch( pm.getP1(), pm.getP2(), 0.01f ), alpha );
 					
 					t.addConnectedTile( o );
 					o.addConnectedTile( t );
@@ -411,8 +442,8 @@ public class Align_ElasticMeshStack implements PlugIn
 		ArrayList< ElasticMovingLeastSquaresMesh< ? > > ms = meshes.meshes;
 		//ElasticMovingLeastSquaresMesh mm = ms.get( stack.getSize() / 2 );
 		ElasticMovingLeastSquaresMesh mm = ms.get( 0 );
-		Tile< ? > tc = mm.findClosest( new float[]{ imp.getWidth() / 2, imp.getHeight() / 2 } );
-		mm.fixTile( tc );
+		//Tile< ? > tc = mm.findClosest( new float[]{ imp.getWidth() / 2, imp.getHeight() / 2 } );
+		//mm.fixTile( tc );
 		
 		IJ.log( "Optimizing..." );
 		optimize();
@@ -443,7 +474,8 @@ public class Align_ElasticMeshStack implements PlugIn
 		for ( int i = 0; i < stack.getSize(); ++ i )
 		{
 			ElasticMovingLeastSquaresMesh mesh = meshStack.get( i );
-			mesh.paint( stack.getProcessor( i + 1 ), stackAligned.getProcessor( i + 1 ) );
+			mapping = new TransformMeshMapping( mesh );
+			mapping.mapInterpolated( stack.getProcessor( i + 1 ), stackAligned.getProcessor( i + 1 ) );
 		}
 		impAligned.updateAndDraw();
 	}
