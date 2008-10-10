@@ -18,7 +18,6 @@ JAVAS=$(wildcard \
     mpicbg/models/*.java \
     mpicbg/util/*.java \
 	Align_ElasticMeshStack.java \
-	Generate_Deformation.java \
 	MOPS_ExtractPointRoi.java \
 	SIFT_Align.java \
 	SIFT_ExtractPointRoi.java \
@@ -27,6 +26,7 @@ JAVAS=$(wildcard \
 	Transform_Grid.java \
 	Transform_MovingLeastSquaresMesh.java \
 	Transform_Perspective.java \
+	Transform_Rigid.java \
 	Transform_Roi.java \
 	Transform_SpringMesh.java \
 	Transform_TriangularGrid.java)

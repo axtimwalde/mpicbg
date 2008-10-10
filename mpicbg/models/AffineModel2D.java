@@ -22,33 +22,36 @@ package mpicbg.models;
 import java.awt.geom.AffineTransform;
 import java.util.Collection;
 
-import Jama.Matrix;
-
-import mpicbg.util.Matrix3x3;
-
 /**
  * 2d-affine transformation models to be applied to points in 2d-space.
+ * This model includes the closed form weighted least squares solution as
+ * described by \citet{SchaeferAl06} and implemented by Johannes Schindelin.  
  * 
- * @version 0.3b
+ * BibTeX:
+ * <pre>
+ * &#64;article{SchaeferAl06,
+ *   author    = {Scott Schaefer and Travis McPhail and Joe Warren},
+ *   title     = {Image deformation using moving least squares},
+ *   journal   = {ACM Transactions on Graphics},
+ *   volume    = {25},
+ *   number    = {3},
+ *   year      = {2006},
+ *   pages     = {533--540},
+ *   publisher = {ACM},
+ *   address   = {New York, NY, USA},
+ *   url       = {http://faculty.cs.tamu.edu/schaefer/research/mls.pdf},
+ * }
+ * </pre>
+ * 
+ * @version 0.4b
  * 
  */
 public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 {
 	static final protected int MIN_NUM_MATCHES = 3;
 	
-	private double m00 = 1.0;
-	private double m10 = 0.0;
-	private double m01 = 0.0;
-	private double m11 = 1.0;
-	private double m02 = 0.0;
-	private double m12 = 0.0;
-	
-	private double i00 = 1.0;
-	private double i10 = 0.0;
-	private double i01 = 0.0;
-	private double i11 = 1.0;
-	private double i02 = 0.0;
-	private double i12 = 0.0;
+	private float m00 = 1.0f, m10 = 0.0f, m01 = 0.0f, m11 = 1.0f, m02 = 0.0f, m12 = 0.0f;
+	private float i00 = 1.0f, i10 = 0.0f, i01 = 0.0f, i11 = 1.0f, i02 = 0.0f, i12 = 0.0f;
 	
 	private boolean isInvertible = true;
 	
@@ -76,8 +79,9 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	{
 		assert l.length == 2 : "2d affine transformations can be applied to 2d points only.";
 		
-		l[ 0 ] = ( float )( l[ 0 ] * m00 + l[ 1 ] * m01 + m02 );
-		l[ 1 ] = ( float )( l[ 0 ] * m10 + l[ 1 ] * m11 + m12 );
+		final float l0 = l[ 0 ];
+		l[ 0 ] = l0 * m00 + l[ 1 ] * m01 + m02;
+		l[ 1 ] = l0 * m10 + l[ 1 ] * m11 + m12;
 	}
 	
 	//@Override
@@ -98,13 +102,18 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		
 		if ( isInvertible )
 		{
-			l[ 0 ] = ( float )( l[ 0 ] * i00 + l[ 1 ] * i01 + i02 );
-			l[ 1 ] = ( float )( l[ 0 ] * i10 + l[ 1 ] * i11 + i12 );
+			final float l0 = l[ 0 ];
+			l[ 0 ] = l0 * i00 + l[ 1 ] * i01 + i02;
+			l[ 1 ] = l0 * i10 + l[ 1 ] * i11 + i12;
 		}
 		else
 			throw new NoninvertibleModelException( "Model not invertible." );
 	}
 	
+	/**
+	 * Closed form weighted least squares solution as described by
+	 * \citet{SchaeferAl06} and implemented by Johannes Schindelin.
+	 */
 	@Override
 	final public void fit( final Collection< PointMatch > matches )
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException
@@ -112,12 +121,10 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		if ( matches.size() < MIN_NUM_MATCHES )
 			throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
 		
-		// center of mass:
 		float pcx = 0, pcy = 0;
 		float qcx = 0, qcy = 0;
 		
 		double ws = 0.0;
-		//int length = matches.size();
 		
 		for ( final PointMatch m : matches )
 		{
@@ -137,9 +144,8 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		qcx /= ws;
 		qcy /= ws;
 		
-		// Closed form solution for M as implemented by Johannes Schindelin
-		double a00, a01, a11;
-		double b00, b01, b10, b11;
+		float a00, a01, a11;
+		float b00, b01, b10, b11;
 		a00 = a01 = a11 = b00 = b01 = b10 = b11 = 0;
 		for ( final PointMatch m : matches )
 		{
@@ -158,16 +164,15 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 			b11 += w * py * qy;
 		}
 		
-		// invert M
-		final float det = ( float )( a00 * a11 - a01 * a01 );
+		final float det = a00 * a11 - a01 * a01;
 		
 		if ( det == 0 )
 			throw new IllDefinedDataPointsException();
 		
-		m00 = ( float )( a11 * b00 - a01 * b10 ) / det;
-		m01 = ( float )( a00 * b10 - a01 * b00 ) / det;
-		m10 = ( float )( a11 * b01 - a01 * b11 ) / det;
-		m11 = ( float )( a00 * b11 - a01 * b01 ) / det;
+		m00 = ( a11 * b00 - a01 * b10 ) / det;
+		m01 = ( a00 * b10 - a01 * b00 ) / det;
+		m10 = ( a11 * b01 - a01 * b11 ) / det;
+		m11 = ( a00 * b11 - a01 * b01 ) / det;
 		
 		m02 = qcx - m00 * pcx - m01 * pcy;
 		m12 = qcy - m10 * pcx - m11 * pcy;
@@ -216,7 +221,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	
 	final private void invert()
 	{
-		final double det = m00 * m11 - m01 * m10;
+		final float det = m00 * m11 - m01 * m10;
 		if ( det == 0 )
 		{
 			isInvertible = false;
@@ -237,13 +242,13 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	@Override
 	final public void preConcatenate( final AffineModel2D model )
 	{
-		final double a00 = model.m00 * m00 + model.m01 * m10;
-		final double a01 = model.m00 * m01 + model.m01 * m11;
-		final double a02 = model.m00 * m02 + model.m01 * m12 + model.m02;
+		final float a00 = model.m00 * m00 + model.m01 * m10;
+		final float a01 = model.m00 * m01 + model.m01 * m11;
+		final float a02 = model.m00 * m02 + model.m01 * m12 + model.m02;
 		
-		final double a10 = model.m10 * m10 + model.m11 * m10;
-		final double a11 = model.m10 * m11 + model.m11 * m11;
-		final double a12 = model.m10 * m12 + model.m11 * m12 + model.m12;
+		final float a10 = model.m10 * m00 + model.m11 * m10;
+		final float a11 = model.m10 * m01 + model.m11 * m11;
+		final float a12 = model.m10 * m02 + model.m11 * m12 + model.m12;
 		
 		m00 = a00;
 		m01 = a01;
@@ -259,13 +264,13 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	@Override
 	final public void concatenate( final AffineModel2D model )
 	{
-		final double a00 = m00 * model.m00 + m01 * model.m10;
-		final double a01 = m00 * model.m01 + m01 * model.m11;
-		final double a02 = m00 * model.m02 + m01 * model.m12 + m02;
+		final float a00 = m00 * model.m00 + m01 * model.m10;
+		final float a01 = m00 * model.m01 + m01 * model.m11;
+		final float a02 = m00 * model.m02 + m01 * model.m12 + m02;
 		
-		final double a10 = m10 * model.m10 + m11 * model.m10;
-		final double a11 = m10 * model.m11 + m11 * model.m11;
-		final double a12 = m10 * model.m12 + m11 * model.m12 + m12;
+		final float a10 = m10 * model.m00 + m11 * model.m10;
+		final float a11 = m10 * model.m01 + m11 * model.m11;
+		final float a12 = m10 * model.m02 + m11 * model.m12 + m12;
 		
 		m00 = a00;
 		m01 = a01;

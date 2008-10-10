@@ -1,8 +1,7 @@
+import mpicbg.ij.Mapping;
+import mpicbg.ij.TransformMapping;
 import mpicbg.imagefeatures.*;
 import mpicbg.models.*;
-
-import imagescience.transform.*;
-import imagescience.image.Image;
 
 import ij.plugin.*;
 import ij.gui.*;
@@ -13,7 +12,6 @@ import java.util.Collections;
 import java.util.Vector;
 import java.awt.Color;
 import java.awt.Polygon;
-import java.awt.geom.AffineTransform;
 import java.awt.TextField;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -78,20 +76,10 @@ import java.awt.event.KeyListener;
  * is required.
  *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.1b
+ * @version 0.2b
  */
 public class SIFT_Align implements PlugIn, KeyListener
 {
-	private static final String[] schemes = {
-		"nearest neighbor",
-		"linear",
-		"cubic convolution",
-		"cubic B-spline",
-		"cubic O-MOMS",
-		"quintic B-spline"
-		};
-	private static int scheme = 5;
-
 	// steps
 	private static int steps = 3;
 	// initial sigma
@@ -107,8 +95,6 @@ public class SIFT_Align implements PlugIn, KeyListener
 	// size restrictions for scale octaves, use octaves < max_size and > min_size only
 	private static int min_size = 64;
 	private static int max_size = 1024;
-	// minimal allowed alignment error in px
-	private static float min_epsilon = 2.0f;
 	// maximal allowed alignment error in px
 	private static float max_epsilon = 100.0f;
 	private static float min_inlier_ratio = 0.05f;
@@ -124,8 +110,7 @@ public class SIFT_Align implements PlugIn, KeyListener
 	private static boolean upscale = false;
 	private static float scale = 1.0f;
 	
-	private static boolean adjust = false;
-	private static boolean antialias = true;
+	private static boolean interpolate = true;
 	
 	/**
 	 * show the employed feature correspondences in a small info stack
@@ -210,7 +195,7 @@ public class SIFT_Align implements PlugIn, KeyListener
 
 	public void run( String args )
 	{
-		if ( IJ.versionLessThan( "1.37i" ) ) return;
+		if ( IJ.versionLessThan( "1.41m" ) ) return;
 
 		final ImagePlus imp = WindowManager.getCurrentImage();
 		if ( imp == null )  { System.err.println( "There are no images open" ); return; }
@@ -223,12 +208,11 @@ public class SIFT_Align implements PlugIn, KeyListener
 		gd.addNumericField( "minimum_image_size :", min_size, 0 );
 		gd.addNumericField( "maximum_image_size :", max_size, 0 );
 		gd.addNumericField( "closest/next_closest_ratio :", rod, 2 );
-		gd.addNumericField( "minimal_alignment_error :", min_epsilon, 2 );
 		gd.addNumericField( "maximal_alignment_error :", max_epsilon, 2 );
 		gd.addNumericField( "inlier_ratio :", min_inlier_ratio, 2 );
 		gd.addNumericField( "background_color :", bg, 2 );
-		gd.addChoice( "interpolation_scheme :", schemes, schemes[ scheme ] );
 		gd.addCheckbox( "upscale_image_first", upscale );
+		gd.addCheckbox( "interpolate", interpolate );
 		gd.addCheckbox( "display_correspondences", show_info );
 		gd.showDialog();
 		if (gd.wasCanceled()) return;
@@ -240,41 +224,15 @@ public class SIFT_Align implements PlugIn, KeyListener
 		min_size = ( int )gd.getNextNumber();
 		max_size = ( int )gd.getNextNumber();
 		rod = ( float )gd.getNextNumber();
-		min_epsilon = ( float )gd.getNextNumber();
 		max_epsilon = ( float )gd.getNextNumber();
 		min_inlier_ratio = ( float )gd.getNextNumber();
 		bg = ( double )gd.getNextNumber();
-		scheme = gd.getNextChoiceIndex();
 		upscale = gd.getNextBoolean();
 		if ( upscale ) scale = 2.0f;
 		else scale = 1.0f;
+		interpolate = gd.getNextBoolean();
 		show_info = gd.getNextBoolean();
 		
-		Affine a = new Affine();
-		
-		int ischeme = Affine.NEAREST;
-		switch ( scheme )
-		{
-		case 0:
-			ischeme = Affine.NEAREST;
-			break;
-		case 1:
-			ischeme = Affine.LINEAR;
-			break;
-		case 2:
-			ischeme = Affine.CUBIC;
-			break;
-		case 3:
-			ischeme = Affine.BSPLINE3;
-			break;
-		case 4:
-			ischeme = Affine.OMOMS3;
-			break;
-		case 5:
-			ischeme = Affine.BSPLINE5;
-			break;
-		}
-
 		ImageStack stack = imp.getStack();
 		ImageStack stackAligned = new ImageStack( stack.getWidth(), stack.getHeight() );
 		
@@ -300,8 +258,6 @@ public class SIFT_Align implements PlugIn, KeyListener
 		Vector< Feature > fs2;
 
 		ip2 = stack.getProcessor( 1 ).convertToFloat();
-		
-		AffineTransform at = new AffineTransform();
 		
 		FloatArray2DSIFT sift = new FloatArray2DSIFT( fdsize, fdbins );
 		
@@ -335,6 +291,9 @@ public class SIFT_Align implements PlugIn, KeyListener
 		// downscale ip2 for visualisation purposes
 		if ( show_info )
 			ip2 = downScale( ( FloatProcessor )ip2, vis_scale );
+		
+		RigidModel2D model = new RigidModel2D();
+		Mapping mapping = new TransformMapping( model );
 		
 		for ( int i = 1; i < stack.getSize(); ++i )
 		{
@@ -397,11 +356,11 @@ public class SIFT_Align implements PlugIn, KeyListener
 
 			Vector< PointMatch > inliers = new Vector< PointMatch >();
 			
-			RigidModel2D model = new RigidModel2D();
+			RigidModel2D currentModel = new RigidModel2D();
 			boolean modelFound;
 			try
 			{
-				modelFound = model.filterRansac(
+				modelFound = currentModel.filterRansac(
 						candidates,
 						inliers,
 						1000,
@@ -434,49 +393,17 @@ public class SIFT_Align implements PlugIn, KeyListener
 				/**
 				 * append the estimated transformation model
 				 * 
-				 * TODO the current rotation assumes the origin (0,0) of the
-				 * image in the image's "center"
-				 * ( width / 2 - 1.0, height / 2 - 1.0 ).  This is, because we
-				 * use imagescience.jar for transformation and they do so...
-				 * Think about using an other transformation class, focusing on
-				 * better interpolation schemes ( Lanczos would be great ).
 				 */
-				AffineTransform at_current = new AffineTransform( model.getAffine() );
-				double[] m = new double[ 6 ];
-				at_current.getMatrix( m );
-				m[ 4 ] /= scale;
-				m[ 5 ] /= scale;
-				at_current.setTransform( m[ 0 ], m[ 1 ], m[ 2 ], m[ 3 ], m[ 4 ], m[ 5 ] );
-				
-				double hw = ( double )imp.getWidth() / 2.0 - 1.0;
-				double hh = ( double )imp.getHeight() / 2.0 - 1.0;
-				
-				at.translate(
-						-hw,
-						-hh );
-				at.concatenate( at_current );
-				at.translate(
-						hw,
-						hh );
+				model.concatenate( currentModel );
 			}
 			
-			double[] m = new double[ 6 ];
-			at.getMatrix( m );
-
-			Image img = Image.wrap( new ImagePlus( "new_layer", stack.getProcessor( i + 1 ) ) );
-
-			Image imgAligned = a.run(
-					img,
-					new double[][]
-					{ { m[ 0 ], m[ 2 ], 0, m[ 4 ] },
-					  { m[ 1 ], m[ 3 ], 0, m[ 5 ] },
-					  { 0,	  0,	  1, 0 },
-					  { 0, 0, 0, 1 } },
-					  ischeme,
-					  adjust,
-					  antialias );
-			ImagePlus impAlignedSlice = imgAligned.imageplus();
-			stackAligned.addSlice( null, impAlignedSlice.getProcessor() );
+			ImageProcessor alignedSlice = stack.getProcessor( i + 1 ).duplicate();
+			if ( interpolate )
+				mapping.mapInterpolated( stack.getProcessor( i + 1 ), alignedSlice );
+			else
+				mapping.map( stack.getProcessor( i + 1 ), alignedSlice );
+			
+			stackAligned.addSlice( null, alignedSlice );
 			if ( show_info )
 			{
 				ImageProcessor tmp;

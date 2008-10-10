@@ -186,13 +186,13 @@ public abstract class InteractiveMapping implements PlugIn, MouseListener, Mouse
 						painter.notify();
 				}
 			}
-			catch ( NotEnoughDataPointsException ex ) { ex.printStackTrace(); }
-			catch ( IllDefinedDataPointsException ex ) { ex.printStackTrace(); }
+			catch ( NotEnoughDataPointsException ex ){}
+			catch ( IllDefinedDataPointsException ex ){}
 	}
 	
-	public void mouseExited( MouseEvent e ) {}
-	public void mouseClicked( MouseEvent e ) {}	
-	public void mouseEntered( MouseEvent e ) {}
+	public void mouseExited( MouseEvent e ){}
+	public void mouseClicked( MouseEvent e ){}	
+	public void mouseEntered( MouseEvent e ){}
 	
 	public void mouseDragged( MouseEvent e )
 	{
@@ -217,8 +217,8 @@ public abstract class InteractiveMapping implements PlugIn, MouseListener, Mouse
 					}
 				}
 			}
-			catch ( NotEnoughDataPointsException ex ) { ex.printStackTrace(); }
-			catch ( IllDefinedDataPointsException ex ) { ex.printStackTrace(); }
+			catch ( NotEnoughDataPointsException ex ){}
+			catch ( IllDefinedDataPointsException ex ){}
 		}
 	}
 	

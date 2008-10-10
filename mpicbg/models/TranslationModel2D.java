@@ -20,7 +20,6 @@
 package mpicbg.models;
 
 import java.awt.geom.AffineTransform;
-import java.awt.geom.NoninvertibleTransformException;
 import java.util.Collection;
 
 /**
@@ -32,62 +31,49 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 {
 	static final protected int MIN_NUM_MATCHES = 1;
 	
+	private float tx = 0, ty = 0;
+	
 	@Override
 	final public int getMinNumMatches(){ return MIN_NUM_MATCHES; }
 	
-	final protected AffineTransform affine = new AffineTransform();
-	final protected AffineTransform inverseAffine = new AffineTransform();
-	final public AffineTransform getAffine(){ return affine; }
-	final public AffineTransform getInverseAffine(){ return inverseAffine; }
+	@Override
+	final public AffineTransform createAffine(){ return new AffineTransform( 1, 0, 0, 1, tx, ty ); }
+	
+	@Override
+	final public AffineTransform createInverseAffine(){ return new AffineTransform( 1, 0, 0, 1, -tx, -ty ); }
 	
 	//@Override
-	final public float[] apply( final float[] point )
+	final public float[] apply( final float[] l )
 	{
-		assert point.length == 2 : "2d translation transformations can be applied to 2d points only.";
+		assert l.length == 2 : "2d translation transformations can be applied to 2d points only.";
 		
-		final float[] transformed = new float[ 2 ];
-		affine.transform( point, 0, transformed, 0, 1 );
-		return transformed;
+		return new float[]{ l[ 0 ] + tx, l[ 1 ] + ty };
 	}
 	
 	//@Override
-	final public void applyInPlace( final float[] point )
+	final public void applyInPlace( final float[] l )
 	{
-		assert point.length == 2 : "2d translation transformations can be applied to 2d points only.";
+		assert l.length == 2 : "2d translation transformations can be applied to 2d points only.";
 		
-		affine.transform( point, 0, point, 0, 1 );
+		l[ 0 ] += tx;
+		l[ 1 ] += ty;
 	}
 	
 	//@Override
-	final public float[] applyInverse( final float[] point ) throws NoninvertibleModelException
+	final public float[] applyInverse( final float[] l )
 	{
-		assert point.length == 2 : "2d translation transformations can be applied to 2d points only.";
+		assert l.length == 2 : "2d translation transformations can be applied to 2d points only.";
 		
-		final float[] transformed = new float[ 2 ];
-		try
-		{
-			inverseAffine.transform( point, 0, transformed, 0, 1 );
-		}
-		catch ( NullPointerException e )
-		{
-			throw new NoninvertibleModelException( e );
-		}
-		return transformed;
+		return new float[]{ l[ 0 ] - tx, l[ 1 ] - ty };
 	}
 
 	//@Override
-	final public void applyInverseInPlace( final float[] point ) throws NoninvertibleModelException
+	final public void applyInverseInPlace( final float[] l )
 	{
-		assert point.length == 2 : "2d translation transformations can be applied to 2d points only.";
+		assert l.length == 2 : "2d translation transformations can be applied to 2d points only.";
 		
-		try
-		{
-			inverseAffine.transform( point, 0, point, 0, 1 );
-		}
-		catch ( NullPointerException e )
-		{
-			throw new NoninvertibleModelException( e );
-		}
+		l[ 0 ] -= tx;
+		l[ 1 ] -= ty;
 	}
 	
 	@Override
@@ -99,7 +85,7 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 		float pcx = 0, pcy = 0;
 		float qcx = 0, qcy = 0;
 		
-		double ws = 0.0;
+		float ws = 0.0f;
 		
 		for ( final PointMatch m : matches )
 		{
@@ -119,27 +105,23 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 		qcx /= ws;
 		qcy /= ws;
 
-		final float dx = pcx - qcx;
-		final float dy = pcy - qcy;
-		
-		affine.setToIdentity();
-		affine.translate( -dx, -dy );
-		invert();
+		tx = qcx - pcx;
+		ty = qcy - pcy;
 	}
 	
 	@Override
 	final public void shake( final float amount )
 	{
-		affine.translate(
-				rnd.nextGaussian() * amount,
-				rnd.nextGaussian() * amount );
+		tx += rnd.nextGaussian() * amount;
+		ty += rnd.nextGaussian() * amount;
 	}
 
 	@Override
 	final public TranslationModel2D clone()
 	{
 		final TranslationModel2D m = new TranslationModel2D();
-		m.affine.setTransform( affine );
+		m.tx = tx;
+		m.ty = ty;
 		m.cost = cost;
 		return m;
 	}
@@ -147,29 +129,22 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 	@Override
 	final public void set( final TranslationModel2D m )
 	{
-		this.affine.setTransform( m.getAffine() );
-		this.cost = m.getCost();
+		tx = m.tx;
+		ty = m.ty;
+		cost = m.getCost();
 	}
 
-	final private void invert()
+	@Override
+	final public void preConcatenate( final TranslationModel2D m )
 	{
-		try
-		{
-			inverseAffine.setTransform( affine );
-			inverseAffine.invert();
-		}
-		catch ( NoninvertibleTransformException e ){}
+		tx += m.tx;
+		ty += m.ty;
 	}
 	
 	@Override
-	final public void preConcatenate( final TranslationModel2D model )
+	final public void concatenate( final TranslationModel2D m )
 	{
-		affine.preConcatenate( model.getAffine() );
-	}
-	
-	@Override
-	final public void concatenate( final TranslationModel2D model )
-	{
-		affine.concatenate( model.getAffine() );
+		tx += m.tx;
+		ty += m.ty;
 	}
 }
