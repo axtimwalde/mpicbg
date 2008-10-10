@@ -29,14 +29,26 @@ import java.awt.geom.AffineTransform;
  */
 public abstract class AbstractAffineModel2D< M extends AbstractAffineModel2D< M > > extends InvertibleModel< M >
 {
-	abstract public AffineTransform getAffine();
-	abstract public AffineTransform getInverseAffine();
+	/**
+	 * Create an {@link AffineTransform} representing the current parameters
+	 * the model.
+	 * 
+	 * @return {@link AffineTransform}
+	 */
+	abstract public AffineTransform createAffine();
+	
+	/**
+	 * Create an {@link AffineTransform} representing the inverse of the
+	 * current parameters of the model.
+	 * 
+	 * @return {@link AffineTransform}
+	 */
+	abstract public AffineTransform createInverseAffine();
 	
 	@Override
 	public String toString()
 	{
-		return ( "[3,3](" + getAffine() + ") " + cost );
-		//return "";
+		return ( "[3,3](" + createAffine() + ") " + cost );
 	}
 	
 	abstract public void preConcatenate( final M model );

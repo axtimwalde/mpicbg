@@ -20,8 +20,11 @@
 package mpicbg.models;
 
 import java.awt.geom.AffineTransform;
-import java.awt.geom.NoninvertibleTransformException;
 import java.util.Collection;
+
+import Jama.Matrix;
+
+import mpicbg.util.Matrix3x3;
 
 /**
  * 2d-affine transformation models to be applied to points in 2d-space.
@@ -33,65 +36,73 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 {
 	static final protected int MIN_NUM_MATCHES = 3;
 	
+	private double m00 = 1.0;
+	private double m10 = 0.0;
+	private double m01 = 0.0;
+	private double m11 = 1.0;
+	private double m02 = 0.0;
+	private double m12 = 0.0;
+	
+	private double i00 = 1.0;
+	private double i10 = 0.0;
+	private double i01 = 0.0;
+	private double i11 = 1.0;
+	private double i02 = 0.0;
+	private double i12 = 0.0;
+	
+	private boolean isInvertible = true;
+	
 	@Override
 	final public int getMinNumMatches(){ return MIN_NUM_MATCHES; }
 	
-	final protected AffineTransform affine = new AffineTransform();
-	final protected AffineTransform inverseAffine = new AffineTransform();
-	final public AffineTransform getAffine(){ return affine; }
-	final public AffineTransform getInverseAffine(){ return inverseAffine; }
+	@Override
+	final public AffineTransform createAffine(){ return new AffineTransform( m00, m10, m01, m11, m02, m12 ); }
 	
-	private AffineTransform inverseAffineRef = inverseAffine;
+	@Override
+	final public AffineTransform createInverseAffine(){ return new AffineTransform( i00, i10, i01, i11, i02, i12 ); }
 	
 	//@Override
-	final public float[] apply( final float[] point )
+	final public float[] apply( final float[] l )
 	{
-		assert point.length == 2 : "2d affine transformations can be applied to 2d points only.";
+		assert l.length == 2 : "2d affine transformations can be applied to 2d points only.";
 		
 		final float[] transformed = new float[ 2 ];
-		affine.transform( point, 0, transformed, 0, 1 );
+		applyInPlace( transformed );
 		return transformed;
 	}
 	
 	//@Override
-	final public void applyInPlace( final float[] point )
+	final public void applyInPlace( final float[] l )
 	{
-		assert point.length == 2 : "2d affine transformations can be applied to 2d points only.";
+		assert l.length == 2 : "2d affine transformations can be applied to 2d points only.";
 		
-		affine.transform( point, 0, point, 0, 1 );
+		l[ 0 ] = ( float )( l[ 0 ] * m00 + l[ 1 ] * m01 + m02 );
+		l[ 1 ] = ( float )( l[ 0 ] * m10 + l[ 1 ] * m11 + m12 );
 	}
 	
 	//@Override
-	final public float[] applyInverse( final float[] point ) throws NoninvertibleModelException
+	final public float[] applyInverse( final float[] l ) throws NoninvertibleModelException
 	{
-		assert point.length == 2 : "2d affine transformations can be applied to 2d points only.";
+		assert l.length == 2 : "2d affine transformations can be applied to 2d points only.";
 		
 		final float[] transformed = new float[ 2 ];
-		try
-		{
-			inverseAffineRef.transform( point, 0, transformed, 0, 1 );
-		}
-		catch ( NullPointerException e )
-		{
-			throw new NoninvertibleModelException( e );
-		}
+		applyInverseInPlace( transformed );
 		return transformed;
 	}
 
 
 	//@Override
-	final public void applyInverseInPlace( final float[] point ) throws NoninvertibleModelException
+	final public void applyInverseInPlace( final float[] l ) throws NoninvertibleModelException
 	{
-		assert point.length == 2 : "2d affine transformations can be applied to 2d points only.";
+		assert l.length == 2 : "2d affine transformations can be applied to 2d points only.";
 		
-		try
+		if ( isInvertible )
 		{
-			inverseAffineRef.transform( point, 0, point, 0, 1 );
+			l[ 0 ] = ( float )( l[ 0 ] * i00 + l[ 1 ] * i01 + i02 );
+			l[ 1 ] = ( float )( l[ 0 ] * i10 + l[ 1 ] * i11 + i12 );
 		}
-		catch ( NullPointerException e )
-		{
-			throw new NoninvertibleModelException( e );
-		}
+		else
+			throw new NoninvertibleModelException( "Model not invertible." );
 	}
 	
 	@Override
@@ -127,9 +138,9 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		qcy /= ws;
 		
 		// Closed form solution for M as implemented by Johannes Schindelin
-		double a11, a12, a22;
-		double b11, b12, b21, b22;
-		a11 = a12 = a22 = b11 = b12 = b21 = b22 = 0;
+		double a00, a01, a11;
+		double b00, b01, b10, b11;
+		a00 = a01 = a11 = b00 = b01 = b10 = b11 = 0;
 		for ( final PointMatch m : matches )
 		{
 			final float[] p = m.getP1().getL();
@@ -138,30 +149,29 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 			
 			final float px = p[ 0 ] - pcx, py = p[ 1 ] - pcy;
 			final float qx = q[ 0 ] - qcx, qy = q[ 1 ] - qcy;
-			a11 += w * px * px;
-			a12 += w * px * py;
-			a22 += w * py * py;
-			b11 += w * px * qx;
-			b12 += w * px * qy;
-			b21 += w * py * qx;
-			b22 += w * py * qy;
+			a00 += w * px * px;
+			a01 += w * px * py;
+			a11 += w * py * py;
+			b00 += w * px * qx;
+			b01 += w * px * qy;
+			b10 += w * py * qx;
+			b11 += w * py * qy;
 		}
 		
 		// invert M
-		final float det = ( float )( a11 * a22 - a12 * a12 );
+		final float det = ( float )( a00 * a11 - a01 * a01 );
 		
 		if ( det == 0 )
 			throw new IllDefinedDataPointsException();
 		
-		final float m11 = ( float )( a22 * b11 - a12 * b21 ) / det;
-		final float m12 = ( float )( a11 * b21 - a12 * b11 ) / det;
-		final float m21 = ( float )( a22 * b12 - a12 * b22 ) / det;
-		final float m22 = ( float )( a11 * b22 - a12 * b12 ) / det;
+		m00 = ( float )( a11 * b00 - a01 * b10 ) / det;
+		m01 = ( float )( a00 * b10 - a01 * b00 ) / det;
+		m10 = ( float )( a11 * b01 - a01 * b11 ) / det;
+		m11 = ( float )( a00 * b11 - a01 * b01 ) / det;
 		
-		final float tx = qcx - m11 * pcx - m12 * pcy;
-		final float ty = qcy - m21 * pcx - m22 * pcy;
+		m02 = qcx - m00 * pcx - m01 * pcy;
+		m12 = qcy - m10 * pcx - m11 * pcy;
 		
-		affine.setTransform( m11, m21, m12, m22, tx, ty );
 		invert();
 	}
 
@@ -177,42 +187,94 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	@Override
 	final public void set( final AffineModel2D m )
 	{
-		this.affine.setTransform( m.getAffine() );
-		this.cost = m.getCost();
+		m00 = m.m00;
+		m01 = m.m01;
+		m10 = m.m10;
+		m11 = m.m11;
+
+		m02 = m.m02;
+		m12 = m.m12;
+
+		cost = m.getCost();
 	}
 
 	@Override
 	final public AffineModel2D clone()
 	{
 		AffineModel2D m = new AffineModel2D();
-		m.affine.setTransform( affine );
+		m.m00 = m00;
+		m.m01 = m01;
+		m.m10 = m10;
+		m.m11 = m11;
+
+		m.m02 = m02;
+		m.m12 = m12;
+
 		m.cost = cost;
 		return m;
 	}
 	
 	final private void invert()
 	{
-		try
+		final double det = m00 * m11 - m01 * m10;
+		if ( det == 0 )
 		{
-			inverseAffine.setTransform( affine );
-			inverseAffine.invert();
-			inverseAffineRef = inverseAffine;
+			isInvertible = false;
+			return;
 		}
-		catch ( NoninvertibleTransformException e )
-		{
-			inverseAffineRef = null;
-		}
+		
+		isInvertible = true;
+		
+		i00 = m11 / det;
+		i01 = -m01 / det;
+		i02 = ( m01 * m12 - m02 * m11 ) / det;
+		
+		i10 = -m10 / det;
+		i11 = m00 / det;
+		i12 = ( m02 * m10 - m00 * m12 ) / det;		
 	}
 	
 	@Override
 	final public void preConcatenate( final AffineModel2D model )
 	{
-		affine.preConcatenate( model.getAffine() );
+		final double a00 = model.m00 * m00 + model.m01 * m10;
+		final double a01 = model.m00 * m01 + model.m01 * m11;
+		final double a02 = model.m00 * m02 + model.m01 * m12 + model.m02;
+		
+		final double a10 = model.m10 * m10 + model.m11 * m10;
+		final double a11 = model.m10 * m11 + model.m11 * m11;
+		final double a12 = model.m10 * m12 + model.m11 * m12 + model.m12;
+		
+		m00 = a00;
+		m01 = a01;
+		m02 = a02;
+		
+		m10 = a10;
+		m11 = a11;
+		m12 = a12;
+		
+		invert();
 	}
 	
 	@Override
 	final public void concatenate( final AffineModel2D model )
 	{
-		affine.concatenate( model.getAffine() );
+		final double a00 = m00 * model.m00 + m01 * model.m10;
+		final double a01 = m00 * model.m01 + m01 * model.m11;
+		final double a02 = m00 * model.m02 + m01 * model.m12 + m02;
+		
+		final double a10 = m10 * model.m10 + m11 * model.m10;
+		final double a11 = m10 * model.m11 + m11 * model.m11;
+		final double a12 = m10 * model.m12 + m11 * model.m12 + m12;
+		
+		m00 = a00;
+		m01 = a01;
+		m02 = a02;
+		
+		m10 = a10;
+		m11 = a11;
+		m12 = a12;
+		
+		invert();
 	}
 }

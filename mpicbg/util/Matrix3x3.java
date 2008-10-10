@@ -38,7 +38,7 @@ public class Matrix3x3
 	 */
 	final static float det( final float[] a )
 	{
-		assert a.length != 9 : "Matrix3x3 supports 3x3 float[][] only.";
+		assert a.length == 9 : "Matrix3x3 supports 3x3 float[][] only.";
 		
 		return
 			a[ 0 ] * a[ 4 ] * a[ 8 ] +
@@ -65,7 +65,7 @@ public class Matrix3x3
 	
 	final static public void invert( float[] a ) throws NoninvertibleModelException
 	{
-		assert a.length != 9 : "Matrix3x3 supports 3x3 float[][] only.";
+		assert a.length == 9 : "Matrix3x3 supports 3x3 float[][] only.";
 		
 		final float det = det( a );
 		if ( det == 0 ) throw new NoninvertibleModelException( "Matrix not invertible." );
@@ -95,7 +95,7 @@ public class Matrix3x3
 		a[ 8 ] = i22;
 	}
 
-	final static public float[][] createInverse(
+	final static public float[] createInverse(
 			final float a00, final float a01, final float a02,
 			final float a10, final float a11, final float a12,
 			final float a20, final float a21, final float a22 ) throws NoninvertibleModelException
@@ -103,10 +103,10 @@ public class Matrix3x3
 		final float det = det( a00, a01, a02, a10, a11, a12, a20, a21, a22 );
 		if ( det == 0 ) throw new NoninvertibleModelException( "Matrix not invertible." );
 		
-		return new float[][]{
-				{ ( a11 * a22 - a12 * a21 ) / det, ( a02 * a21 - a01 * a22 ) / det, ( a01 * a12 - a02 * a11 ) / det },
-				{ ( a12 * a20 - a10 * a22 ) / det, ( a00 * a22 - a02 * a20 ) / det, ( a02 * a10 - a00 * a12 ) / det },
-				{ ( a10 * a21 - a11 * a20 ) / det, ( a01 * a20 - a00 * a21 ) / det, ( a00 * a11 - a01 * a10 ) / det } };
+		return new float[]{
+				( a11 * a22 - a12 * a21 ) / det, ( a02 * a21 - a01 * a22 ) / det, ( a01 * a12 - a02 * a11 ) / det,
+				( a12 * a20 - a10 * a22 ) / det, ( a00 * a22 - a02 * a20 ) / det, ( a02 * a10 - a00 * a12 ) / det,
+				( a10 * a21 - a11 * a20 ) / det, ( a01 * a20 - a00 * a21 ) / det, ( a00 * a11 - a01 * a10 ) / det };
 	}
 
 }
