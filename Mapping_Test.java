@@ -33,7 +33,7 @@ public class Mapping_Test extends InteractiveMapping
 	final static private String[] methods = new String[]{ "Translation", "Rigid", "Affine" };
 	static private int method = 1;
 	
-	protected MovingLeastSquaresMesh< ? extends AbstractAffineModel2D > mesh;
+	protected MovingLeastSquaresMesh< ? extends AbstractAffineModel2D< ? > > mesh;
 	
 	@Override
 	final protected void createMapping()
