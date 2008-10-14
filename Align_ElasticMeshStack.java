@@ -186,7 +186,7 @@ public class Align_ElasticMeshStack implements PlugIn
 		gd.addNumericField( "inlier_ratio :", minInlierRatio, 2 );
 		gd.addChoice( "expected_global_transformation :", modelStrings, modelStrings[ globalModelIndex ] );
 		
-		gd.addMessage( "Mesh Tranformation:" );
+		gd.addMessage( "Mesh Transformation:" );
 		gd.addNumericField( "horizontal_handles :", numX, 0 );
 		gd.addNumericField( "alpha :", alpha, 2 );
 		gd.addChoice( "desired_local_transformation :", modelStrings, modelStrings[ localModelIndex ] );

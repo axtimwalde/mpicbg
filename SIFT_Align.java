@@ -8,7 +8,9 @@ import ij.gui.*;
 import ij.*;
 import ij.process.*;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Vector;
 import java.awt.Color;
 import java.awt.Polygon;
@@ -76,7 +78,7 @@ import java.awt.event.KeyListener;
  * is required.
  *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.2b
+ * @version 0.4b
  */
 public class SIFT_Align implements PlugIn, KeyListener
 {
@@ -98,6 +100,13 @@ public class SIFT_Align implements PlugIn, KeyListener
 	// maximal allowed alignment error in px
 	private static float max_epsilon = 100.0f;
 	private static float min_inlier_ratio = 0.05f;
+	
+	/**
+	 * Implemeted transformation models for choice
+	 */
+	final static String[] modelStrings = new String[]{ "Translation", "Rigid", "Affine" };
+	private static int modelIndex = 1;
+	private static Class< ? extends Model > modelClass;
 	
 	/**
 	 * Set true to double the size of the image by linear interpolation to
@@ -212,6 +221,7 @@ public class SIFT_Align implements PlugIn, KeyListener
 		gd.addNumericField( "inlier_ratio :", min_inlier_ratio, 2 );
 		gd.addNumericField( "background_color :", bg, 2 );
 		gd.addCheckbox( "upscale_image_first", upscale );
+		gd.addChoice( "transformation_class", modelStrings, modelStrings[ modelIndex ] );
 		gd.addCheckbox( "interpolate", interpolate );
 		gd.addCheckbox( "display_correspondences", show_info );
 		gd.showDialog();
@@ -230,6 +240,7 @@ public class SIFT_Align implements PlugIn, KeyListener
 		upscale = gd.getNextBoolean();
 		if ( upscale ) scale = 2.0f;
 		else scale = 1.0f;
+		modelIndex = gd.getNextChoiceIndex();
 		interpolate = gd.getNextBoolean();
 		show_info = gd.getNextBoolean();
 		
@@ -292,7 +303,21 @@ public class SIFT_Align implements PlugIn, KeyListener
 		if ( show_info )
 			ip2 = downScale( ( FloatProcessor )ip2, vis_scale );
 		
-		RigidModel2D model = new RigidModel2D();
+		AbstractAffineModel2D model;
+		switch ( modelIndex )
+		{
+		case 0:
+			model = new TranslationModel2D();
+			break;
+		case 1:
+			model = new RigidModel2D();
+			break;
+		case 2:
+			model = new AffineModel2D();
+			break;
+		default:
+			return;
+		}
 		Mapping mapping = new TransformMapping( model );
 		
 		for ( int i = 1; i < stack.getSize(); ++i )
@@ -356,7 +381,23 @@ public class SIFT_Align implements PlugIn, KeyListener
 
 			Vector< PointMatch > inliers = new Vector< PointMatch >();
 			
-			RigidModel2D currentModel = new RigidModel2D();
+			// TODO Implement other models for choice
+			AbstractAffineModel2D< ? > currentModel;
+			switch ( modelIndex )
+			{
+			case 0:
+				currentModel = new TranslationModel2D();
+				break;
+			case 1:
+				currentModel = new RigidModel2D();
+				break;
+			case 2:
+				currentModel = new AffineModel2D();
+				break;
+			default:
+				return;
+			}
+			
 			boolean modelFound;
 			try
 			{

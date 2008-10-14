@@ -12,13 +12,15 @@ public class MappingThread extends Thread
 	final protected ImageProcessor target;
 	final protected AtomicBoolean pleaseRepaint;
 	final protected Mapping mapping;
+	final protected boolean interpolate;
 	
 	public MappingThread(
-			ImagePlus imp,
-			ImageProcessor source,
-			ImageProcessor target,
-			AtomicBoolean pleaseRepaint,
-			Mapping mapping )
+			final ImagePlus imp,
+			final ImageProcessor source,
+			final ImageProcessor target,
+			final AtomicBoolean pleaseRepaint,
+			final Mapping mapping,
+			final boolean interpolate )
 	{
 		this.imp = imp;
 		this.source = source;
@@ -26,6 +28,7 @@ public class MappingThread extends Thread
 		this.pleaseRepaint = pleaseRepaint;
 		this.mapping = mapping;
 		this.setName( "PaintInvertibleCoordinateTransformThread" );
+		this.interpolate = interpolate;
 	}
 	
 	@Override
@@ -37,7 +40,10 @@ public class MappingThread extends Thread
 			{
 				if ( pleaseRepaint.compareAndSet( true, false ) )
 				{
-					mapping.map( source, target );
+					if ( interpolate )
+						mapping.mapInterpolated( source, target );
+					else
+						mapping.map( source, target );
 					imp.updateAndDraw();
 				}
 				else

@@ -47,6 +47,7 @@ public abstract class InteractiveMapping implements PlugIn, MouseListener, Mouse
 	static protected boolean showPreview = false;
 	
 	protected int targetIndex = -1;
+	static protected boolean interpolate;
 	
 	abstract protected void updateHandles( int x, int y );
 	
@@ -74,7 +75,8 @@ public abstract class InteractiveMapping implements PlugIn, MouseListener, Mouse
 				source,
 				target,
 				pleaseRepaint,
-				mapping );
+				mapping,
+				interpolate );
 		painter.start();
 		
 		Toolbar.getInstance().setTool( Toolbar.getInstance().addTool( "Add_and_drag_handles." ) );

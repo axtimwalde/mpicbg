@@ -87,6 +87,7 @@ public class Mapping_Test extends InteractiveMapping
 		gd.addNumericField( "Alpha :", alpha, 2 );
 		gd.addChoice( "Local_transformation :", methods, methods[ method ] );
 		gd.addCheckbox( "_Interactive_preview", showPreview );
+		gd.addCheckbox( "_Interpolate", interpolate );
 		gd.addMessage( man );
 		gd.showDialog();
 		
@@ -98,6 +99,8 @@ public class Mapping_Test extends InteractiveMapping
 		method = gd.getNextChoiceIndex();
 		
 		showPreview = gd.getNextBoolean();
+		
+		interpolate = gd.getNextBoolean();
 		
 		// TODO Implement other models for choice
 		switch ( method )
