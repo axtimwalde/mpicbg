@@ -40,10 +40,6 @@ import java.util.*;
 
 import Jama.Matrix;
 
-import mpicbg.models.NoninvertibleModelException;
-import mpicbg.util.Matrix3x3;
-
-
 
 public class FloatArray2DScaleOctaveDoGDetector
 {
