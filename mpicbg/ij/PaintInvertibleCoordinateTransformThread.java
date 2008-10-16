@@ -2,7 +2,7 @@ package mpicbg.ij;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import mpicbg.models.InvertibleCoordinateTransform;
+import mpicbg.models.InverseCoordinateTransform;
 
 
 import ij.ImagePlus;
@@ -14,7 +14,7 @@ public class PaintInvertibleCoordinateTransformThread extends Thread
 	final protected ImageProcessor source;
 	final protected ImageProcessor target;
 	final protected AtomicBoolean pleaseRepaint;
-	final protected InvertibleCoordinateTransform transform;
+	final protected InverseCoordinateTransform transform;
 	final protected TransformMapping mapping;
 	
 	public PaintInvertibleCoordinateTransformThread(
@@ -22,7 +22,7 @@ public class PaintInvertibleCoordinateTransformThread extends Thread
 			ImageProcessor source,
 			ImageProcessor target,
 			AtomicBoolean pleaseRepaint,
-			InvertibleCoordinateTransform transform )
+			InverseCoordinateTransform transform )
 	{
 		this.imp = imp;
 		this.source = source;

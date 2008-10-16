@@ -90,7 +90,7 @@ public class Point
 	 * 
 	 * @param model
 	 */
-	final public void applyInverse( InvertibleCoordinateTransform t ) throws NoninvertibleModelException
+	final public void applyInverse( InverseCoordinateTransform t ) throws NoninvertibleModelException
 	{
 		System.arraycopy( l, 0, w, 0, l.length );
 		t.applyInverseInPlace( w );

@@ -3,14 +3,14 @@ package mpicbg.ij;
 
 
 import ij.process.ImageProcessor;
-import mpicbg.models.InvertibleCoordinateTransform;
+import mpicbg.models.InverseCoordinateTransform;
 import mpicbg.models.NoninvertibleModelException;
 
 public class TransformMapping implements Mapping
 {
-	final protected InvertibleCoordinateTransform transform;
+	final protected InverseCoordinateTransform transform;
 	
-	public TransformMapping( InvertibleCoordinateTransform t )
+	public TransformMapping( InverseCoordinateTransform t )
 	{
 		this.transform = t;
 	}

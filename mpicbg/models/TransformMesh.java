@@ -44,7 +44,7 @@ import java.util.HashMap;
  * 
  * @version 0.2b
  */
-public class TransformMesh implements CoordinateTransform, InvertibleCoordinateTransform
+public class TransformMesh implements InvertibleCoordinateTransform
 {
 	final protected float width, height;
 	public float getWidth(){ return width; }

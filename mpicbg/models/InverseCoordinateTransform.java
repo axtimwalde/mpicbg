@@ -19,8 +19,22 @@
  */
 package mpicbg.models;
 
-/**
- *
- *
- */
-public interface InvertibleCoordinateTransform extends CoordinateTransform, InverseCoordinateTransform {}
+public interface InverseCoordinateTransform
+{
+	/**
+	 * Apply the inverse of the model to a point location
+	 * 
+	 * @param point
+	 * @return transformed point
+	 */
+	public float[] applyInverse( float[] point ) throws NoninvertibleModelException;
+
+	
+	/**
+	 * apply the inverse of the model to a point location
+	 * 
+	 * @param point
+	 */
+	public void applyInverseInPlace( float[] point ) throws NoninvertibleModelException;
+	
+}

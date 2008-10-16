@@ -26,15 +26,15 @@ import java.util.List;
  * 
  *
  */
-public class InvertibleCoordinateTransformList implements InvertibleCoordinateTransform
+public class InverseCoordinateTransformList implements InverseCoordinateTransform
 {
 
-	final private List< InvertibleCoordinateTransform > l = new ArrayList< InvertibleCoordinateTransform >();
+	final private List< InverseCoordinateTransform > l = new ArrayList< InverseCoordinateTransform >();
 	
-	final public void add( InvertibleCoordinateTransform t ){ l.add( t ); }
-	final public void remove( InvertibleCoordinateTransform t ){ l.remove( t ); }
-	final public InvertibleCoordinateTransform remove( int i ){ return l.remove( i ); }
-	final public InvertibleCoordinateTransform get( int i ){ return l.get( i ); }
+	final public void add( InverseCoordinateTransform t ){ l.add( t ); }
+	final public void remove( InverseCoordinateTransform t ){ l.remove( t ); }
+	final public InverseCoordinateTransform remove( int i ){ return l.remove( i ); }
+	final public InverseCoordinateTransform get( int i ){ return l.get( i ); }
 	final public void clear(){ l.clear(); }
 	
 	final public float[] applyInverse( float[] location ) throws NoninvertibleModelException
@@ -46,7 +46,7 @@ public class InvertibleCoordinateTransformList implements InvertibleCoordinateTr
 
 	final public void applyInverseInPlace( float[] location ) throws NoninvertibleModelException
 	{
-		for ( InvertibleCoordinateTransform t : l )
+		for ( InverseCoordinateTransform t : l )
 			t.applyInverseInPlace( location );
 	}
 }
