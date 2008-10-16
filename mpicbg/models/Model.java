@@ -231,7 +231,7 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 			final double t = observer.getMedian() * maxTrust;
 			for ( final PointMatch m : temp )
 			{
-				if ( m.getDistance() < t )
+				if ( m.getDistance() <= t )
 					inliers.add( m );
 			}
 			
