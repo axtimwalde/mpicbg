@@ -151,7 +151,7 @@ public class Mapping_Test extends InteractiveMapping
 				//mapping.mapInterpolated( source, target );
 				
 				CoordinateTransformMap2D map = new CoordinateTransformMap2D( mesh, imp.getWidth(), imp.getHeight() );
-				InvertibleCoordinateTransformMap2D mapInverse = new InvertibleCoordinateTransformMap2D( mesh, imp.getWidth(), imp.getHeight() );
+				InverseCoordinateTransformMap2D mapInverse = new InverseCoordinateTransformMap2D( mesh, imp.getWidth(), imp.getHeight() );
 				
 				try
 				{
@@ -207,11 +207,11 @@ public class Mapping_Test extends InteractiveMapping
 						return;
 					}
 				}
-				InvertibleCoordinateTransformMap2D loadedInverseMap;
+				InverseCoordinateTransformMap2D loadedInverseMap;
 				try
 				{
 					FileInputStream fis = new FileInputStream( file );
-					loadedInverseMap = new InvertibleCoordinateTransformMap2D( fis );
+					loadedInverseMap = new InverseCoordinateTransformMap2D( fis );
 				}
 				catch ( Exception ex )
 				{

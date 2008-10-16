@@ -27,7 +27,7 @@ import java.io.IOException;
  * A coordinate transform 
  *
  */
-public class InvertibleCoordinateTransformMap2D implements InvertibleCoordinateTransform
+public class InverseCoordinateTransformMap2D implements InverseCoordinateTransform
 {
 	/**
 	 * target coordinates addressed interleaved as
@@ -42,14 +42,14 @@ public class InvertibleCoordinateTransformMap2D implements InvertibleCoordinateT
 	final public int getWidth(){ return width; }
 	final public int getHeight(){ return height; }
 	
-	public InvertibleCoordinateTransformMap2D( final float[][] map )
+	public InverseCoordinateTransformMap2D( final float[][] map )
 	{
 		this.map = map;
 		this.width = map[ 0 ].length / 2;
 		this.height = map.length;
 	}
 	
-	public InvertibleCoordinateTransformMap2D( final InvertibleCoordinateTransform t, int width, int height )
+	public InverseCoordinateTransformMap2D( final InverseCoordinateTransform t, int width, int height )
 	{
 		this.width = width;
 		this.height = height;
@@ -76,7 +76,7 @@ public class InvertibleCoordinateTransformMap2D implements InvertibleCoordinateT
 		}
 	}
 	
-	public InvertibleCoordinateTransformMap2D( final FileInputStream fis ) throws IOException
+	public InverseCoordinateTransformMap2D( final FileInputStream fis ) throws IOException
 	{
 		final byte[] header = new byte[ 8 ];
 		fis.read( header );

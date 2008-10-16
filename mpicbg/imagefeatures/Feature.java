@@ -3,13 +3,13 @@ package mpicbg.imagefeatures;
 
 import java.io.Serializable;
 
-import mpicbg.models.InvertibleCoordinateTransform;
+import mpicbg.models.InverseCoordinateTransform;
 
 /**
  * Local image feature
  * 
- * TODO Replace the {@link InvertibleCoordinateTransform Transformation}
- *   descriptors by a {@link InvertibleCoordinateTransform}.  Think about by
+ * TODO Replace the {@link InverseCoordinateTransform Transformation}
+ *   descriptors by a {@link InverseCoordinateTransform}.  Think about by
  *   hwich means to compare then!
  * 
  * @version 0.3b

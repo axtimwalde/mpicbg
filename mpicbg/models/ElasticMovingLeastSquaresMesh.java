@@ -1,6 +1,3 @@
-package mpicbg.models;
-
-
 /**
  * License: GPL
  *
@@ -20,6 +17,8 @@ package mpicbg.models;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  *
  */
+package mpicbg.models;
+
 import ij.ImagePlus;
 import ij.process.ByteProcessor;
 
@@ -30,9 +29,6 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.HashSet;
 import java.util.Set;
-
-
-
 
 /**
  * 
