@@ -20,10 +20,11 @@
 package mpicbg.models;
 
 import java.awt.geom.AffineTransform;
+import java.awt.geom.NoninvertibleTransformException;
 import java.util.Collection;
 
 /**
- * 2d-rigid transformation models to be applied to points in 2d-space.
+ * 2d-similarity transformation models to be applied to points in 2d-space.
  * This model includes the closed form weighted least squares solution as
  * described by \citet{SchaeferAl06} and implemented by Johannes Schindelin.  
  * 
@@ -46,27 +47,27 @@ import java.util.Collection;
  * @version 0.4b
  * 
  */
-public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
+public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D >
 {
 	static final protected int MIN_NUM_MATCHES = 2;
 	
-	private float cos = 1.0f, sin = 0.0f, tx = 0.0f, ty = 0.0f;
-	private float itx = 0.0f, ity = 0.0f;
+	private float scos = 1.0f, ssin = 0.0f, tx = 0.0f, ty = 0.0f;
+	private float iscos = 1.0f, issin = 0.0f, itx = 0.0f, ity = 0.0f;
 	
 	
 	@Override
 	final public int getMinNumMatches(){ return MIN_NUM_MATCHES; }
 	
 	@Override
-	final public AffineTransform createAffine(){ return new AffineTransform( cos, -sin, sin, cos, tx, ty ); }
+	final public AffineTransform createAffine(){ return new AffineTransform( scos, -ssin, ssin, scos, tx, ty ); }
 	
 	@Override
-	final public AffineTransform createInverseAffine(){ return new AffineTransform( cos, sin, -sin, cos, itx, ity ); }
+	final public AffineTransform createInverseAffine(){ return new AffineTransform( iscos, ssin, -ssin, iscos, itx, ity ); }
 	
 	//@Override
 	final public float[] apply( final float[] l )
 	{
-		assert l.length == 2 : "2d rigid transformations can be applied to 2d points only.";
+		assert l.length == 2 : "2d similarity transformations can be applied to 2d points only.";
 		
 		final float[] transformed = new float[ 2 ];
 		applyInPlace( transformed );
@@ -76,17 +77,17 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	//@Override
 	final public void applyInPlace( final float[] l )
 	{
-		assert l.length == 2 : "2d rigid transformations can be applied to 2d points only.";
+		assert l.length == 2 : "2d similarity transformations can be applied to 2d points only.";
 		
 		final float l0 = l[ 0 ];
-		l[ 0 ] = cos * l0 - sin * l[ 1 ] + tx;
-		l[ 1 ] = sin * l0 + cos * l[ 1 ] + ty;
+		l[ 0 ] = scos * l0 - ssin * l[ 1 ] + tx;
+		l[ 1 ] = ssin * l0 + scos * l[ 1 ] + ty;
 	}
 	
 	//@Override
 	final public float[] applyInverse( final float[] l )
 	{
-		assert l.length == 2 : "2d rigid transformations can be applied to 2d points only.";
+		assert l.length == 2 : "2d similarity transformations can be applied to 2d points only.";
 		
 		final float[] transformed = new float[ 2 ];
 		applyInverseInPlace( transformed );
@@ -96,11 +97,20 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	//@Override
 	final public void applyInverseInPlace( final float[] l )
 	{
-		assert l.length == 2 : "2d rigid transformations can be applied to 2d points only.";
+		assert l.length == 2 : "2d similarity transformations can be applied to 2d points only.";
 		
 		final float l0 = l[ 0 ];
-		l[ 0 ] = cos * l0  + sin * l[ 1 ] + itx;
-		l[ 1 ] = -sin * l0 + cos * l[ 1 ] + ity;		
+		l[ 0 ] = iscos * l0  - issin * l[ 1 ] + itx;
+		l[ 1 ] = issin * l0 + iscos * l[ 1 ] + ity;		
+		
+//		final AffineTransform a = new AffineTransform( scos, ssin, -ssin, scos, tx, ty );
+//		try
+//		{
+//			a.invert();
+//		}
+//		catch ( NoninvertibleTransformException ex ){ ex.printStackTrace(); }
+//		a.transform( l, 0, l, 0, 1 );
+		
 	}
 
 	/**
@@ -139,8 +149,11 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 		final float dx = pcx - qcx;
 		final float dy = pcy - qcy;
 		
-		cos = 0;
-		sin = 0;
+		scos = 0;
+		ssin = 0;
+		
+		ws = 0.0f;
+		
 		for ( final PointMatch m : matches )
 		{
 			final float[] p = m.getP1().getL(); 
@@ -151,15 +164,16 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 			final float y1 = p[ 1 ] - pcy; // x2
 			final float x2 = q[ 0 ] - qcx + dx; // y1
 			final float y2 = q[ 1 ] - qcy + dy; // y2
-			sin += w * ( x1 * y2 - y1 * x2 ); //   x1 * y2 - x2 * y1 // assuming p1 is x1,x2 and p2 is y1,y2
-			cos += w * ( x1 * x2 + y1 * y2 ); //   x1 * y1 + x2 * y2
+			ssin += w * ( x1 * y2 - y1 * x2 ); //   x1 * y2 - x2 * y1 // assuming p1 is x1,x2 and p2 is y1,y2
+			scos += w * ( x1 * x2 + y1 * y2 ); //   x1 * y1 + x2 * y2
+			
+			ws += w * ( x1 * x1 + y1 * y1 );
 		}
-		final float norm = ( float )Math.sqrt( cos * cos + sin * sin );
-		cos /= norm;
-		sin /= norm;
+		scos /= ws;
+		ssin /= ws;
 		
-		tx = qcx - cos * pcx + sin * pcy;
-		ty = qcy - sin * pcx - cos * pcy;
+		tx = qcx - scos * pcx + ssin * pcy;
+		ty = qcy - ssin * pcx - scos * pcy;
 		
 		invert();
 	}
@@ -174,13 +188,15 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	}
 	
 	@Override
-	final public RigidModel2D clone()
+	final public SimilarityModel2D clone()
 	{
-		final RigidModel2D m = new RigidModel2D();
-		m.cos = cos;
-		m.sin = sin;
+		final SimilarityModel2D m = new SimilarityModel2D();
+		m.scos = scos;
+		m.ssin = ssin;
 		m.tx = tx;
 		m.ty = ty;
+		m.iscos = iscos;
+		m.issin = issin;
 		m.itx = itx;
 		m.ity = ity;
 		m.cost = cost;
@@ -188,12 +204,14 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	}
 	
 	@Override
-	final public void set( final RigidModel2D m )
+	final public void set( final SimilarityModel2D m )
 	{
-		cos = m.cos;
-		sin = m.sin;
+		scos = m.scos;
+		ssin = m.ssin;
 		tx = m.tx;
 		ty = m.ty;
+		iscos = m.iscos;
+		issin = m.issin;
 		itx = m.itx;
 		ity = m.ity;
 		cost = m.cost;
@@ -201,21 +219,26 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	
 	final private void invert()
 	{
-		itx = -sin * ty - cos * tx;
-		ity = sin * tx - cos * ty;
+		final float det = scos * scos + ssin * ssin;
+		
+		iscos = scos / det;
+		issin = -ssin / det;
+		
+		itx = ( -ssin * ty - scos * tx ) / det;
+		ity = ( ssin * tx - scos * ty ) / det;
 	}
 
 
 	@Override
-	final public void preConcatenate( final RigidModel2D model )
+	final public void preConcatenate( final SimilarityModel2D model )
 	{
-		final float a = model.cos * cos - model.sin * sin;
-		final float b = model.sin * cos + model.cos * sin;
-		final float c = model.cos * tx - model.sin * ty + model.tx;
-		final float d = model.sin * tx + model.cos * ty + model.ty;
+		final float a = model.scos * scos - model.ssin * ssin;
+		final float b = model.ssin * scos + model.scos * ssin;
+		final float c = model.scos * tx - model.ssin * ty + model.tx;
+		final float d = model.ssin * tx + model.scos * ty + model.ty;
 		
-		cos = a;
-		sin = b;
+		scos = a;
+		ssin = b;
 		tx = c;
 		ty = d;
 		
@@ -223,56 +246,55 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	}
 	
 	@Override
-	final public void concatenate( final RigidModel2D model )
+	final public void concatenate( final SimilarityModel2D model )
 	{
-		final float a = cos * model.cos - sin * model.sin;
-		final float b = sin * model.cos + cos * model.sin;
-		final float c = cos * model.tx - sin * model.ty + tx;
-		final float d = sin * model.tx + cos * model.ty + ty;
+		final float a = scos * model.scos - ssin * model.ssin;
+		final float b = ssin * model.scos + scos * model.ssin;
+		final float c = scos * model.tx - ssin * model.ty + tx;
+		final float d = ssin * model.tx + scos * model.ty + ty;
 		
-		cos = a;
-		sin = b;
+		scos = a;
+		ssin = b;
 		tx = c;
 		ty = d;
 		
 		invert();
 	}
 	
-	/**
-	 * Initialize the model such that the respective affine transform is:
-	 * 
-	 * cos(&theta;) -sin(&theta;) tx
-	 * sin(&theta;)  cos(&theta;) ty
-	 * 0       0      1
-	 * 
-	 * @param theta &theta;
-	 * @param tx
-	 * @param ty
-	 */
-	final public void set( final float theta, final float tx, final float ty )
-	{
-		set( ( float )Math.cos( theta ), ( float )Math.sin( theta ), tx, ty );
-	}
+//	/**
+//	 * Initialize the model such that the respective affine transform is:
+//	 * 
+//	 * s * cos(&theta;) -sin(&theta;) tx
+//	 * sin(&theta;)      s * cos(&theta;) ty
+//	 * 0           0          1
+//	 * 
+//	 * @param theta &theta;
+//	 * @param tx
+//	 * @param ty
+//	 */
+//	final public void set( final float s, final float theta, final float tx, final float ty )
+//	{
+//		set( s * ( float )Math.cos( theta ), ( float )Math.sin( theta ), tx, ty );
+//	}
 	
 	/**
 	 * Initialize the model such that the respective affine transform is:
 	 * 
-	 * cos -sin tx
-	 * sin  cos ty
-	 * 0    0   1
+	 * scos -sin  tx
+	 * sin   scos ty
+	 * 0     0    1
 	 * 
-	 * @param cos
+	 * @param scos
 	 * @param sin
 	 * @param tx
 	 * @param ty
 	 */
-	final public void set( final float cos, final float sin, final float tx, final float ty )
+	final public void set( final float scos, final float sin, final float tx, final float ty )
 	{
-		this.cos = cos;
-		this.sin = sin;
+		this.scos = scos;
+		this.ssin = sin;
 		this.tx = tx;
 		this.ty = ty;
-		
 		invert();
 	}
 }

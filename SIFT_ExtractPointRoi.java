@@ -126,7 +126,7 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 	/**
 	 * Implemeted transformation models for choice
 	 */
-	final static String[] modelStrings = new String[]{ "Translation", "Rigid", "Affine" };
+	final static String[] modelStrings = new String[]{ "Translation", "Rigid", "Similarity", "Affine" };
 	private static int modelIndex = 1;
 	
 	/**
@@ -284,6 +284,9 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 			model = new RigidModel2D();
 			break;
 		case 2:
+			model = new SimilarityModel2D();
+			break;
+		case 3:
 			model = new AffineModel2D();
 			break;
 		default:

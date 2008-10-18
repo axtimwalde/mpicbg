@@ -46,7 +46,7 @@ public class Transform_ElasticMovingLeastSquaresMesh implements PlugIn, MouseLis
 	// alpha [0 smooth, 1 less smooth ;)]
 	private static float alpha = 1.0f;
 	// local transformation model
-	final static String[] methods = new String[]{ "Translation", "Rigid", "Affine" };
+	final static String[] methods = new String[]{ "Translation", "Rigid", "Similarity", "Affine" };
 	private static int method = 1;
 	
 	ImagePlus imp;
@@ -166,6 +166,9 @@ public class Transform_ElasticMovingLeastSquaresMesh implements PlugIn, MouseLis
 			mesh = new ElasticMovingLeastSquaresMesh< RigidModel2D >( RigidModel2D.class, numX, imp.getWidth(), imp.getHeight(), alpha );
 			break;
 		case 2:
+			mesh = new ElasticMovingLeastSquaresMesh< SimilarityModel2D >( SimilarityModel2D.class, numX, imp.getWidth(), imp.getHeight(), alpha );
+			break;
+		case 3:
 			mesh = new ElasticMovingLeastSquaresMesh< AffineModel2D >( AffineModel2D.class, numX, imp.getWidth(), imp.getHeight(), alpha );
 			break;
 		default:

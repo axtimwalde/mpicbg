@@ -8,9 +8,7 @@ import ij.gui.*;
 import ij.*;
 import ij.process.*;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Vector;
 import java.awt.Color;
 import java.awt.Polygon;
@@ -104,9 +102,8 @@ public class SIFT_Align implements PlugIn, KeyListener
 	/**
 	 * Implemeted transformation models for choice
 	 */
-	final static String[] modelStrings = new String[]{ "Translation", "Rigid", "Affine" };
+	final static String[] modelStrings = new String[]{ "Translation", "Rigid", "Similarity", "Affine" };
 	private static int modelIndex = 1;
-	private static Class< ? extends Model > modelClass;
 	
 	/**
 	 * Set true to double the size of the image by linear interpolation to
@@ -313,6 +310,9 @@ public class SIFT_Align implements PlugIn, KeyListener
 			model = new RigidModel2D();
 			break;
 		case 2:
+			model = new SimilarityModel2D();
+			break;
+		case 3:
 			model = new AffineModel2D();
 			break;
 		default:
@@ -392,6 +392,9 @@ public class SIFT_Align implements PlugIn, KeyListener
 				currentModel = new RigidModel2D();
 				break;
 			case 2:
+				currentModel = new SimilarityModel2D();
+				break;
+			case 3:
 				currentModel = new AffineModel2D();
 				break;
 			default:

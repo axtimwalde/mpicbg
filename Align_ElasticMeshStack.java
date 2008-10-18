@@ -112,7 +112,7 @@ public class Align_ElasticMeshStack implements PlugIn
 	/**
 	 * Implemeted transformation models for choice
 	 */
-	final static String[] modelStrings = new String[]{ "Translation", "Rigid", "Affine" };
+	final static String[] modelStrings = new String[]{ "Translation", "Rigid", "Similarity", "Affine" };
 	final static List< Class< ? extends Model > > modelClasses =
 		new ArrayList< Class< ? extends Model > >();
 	private static int localModelIndex = 1;
@@ -153,6 +153,7 @@ public class Align_ElasticMeshStack implements PlugIn
 	{
 		modelClasses.add( TranslationModel2D.class );
 		modelClasses.add( RigidModel2D.class );
+		modelClasses.add( SimilarityModel2D.class );
 		modelClasses.add( AffineModel2D.class );
 		
 		localModelClass = modelClasses.get( localModelIndex );

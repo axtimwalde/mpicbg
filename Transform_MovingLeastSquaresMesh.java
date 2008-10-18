@@ -40,7 +40,7 @@ public class Transform_MovingLeastSquaresMesh extends InteractiveMapping
 	// alpha [0 smooth, 1 less smooth ;)]
 	private static float alpha = 1.0f;
 	// local transformation model
-	final static private String[] methods = new String[]{ "Translation", "Rigid", "Affine" };
+	final static private String[] methods = new String[]{ "Translation", "Rigid", "Similarity", "Affine" };
 	static private int method = 1;
 	
 	protected MovingLeastSquaresMesh< ? extends AbstractAffineModel2D > mesh;
@@ -119,6 +119,9 @@ public class Transform_MovingLeastSquaresMesh extends InteractiveMapping
 			mesh = new MovingLeastSquaresMesh< RigidModel2D >( RigidModel2D.class, numX, imp.getWidth(), imp.getHeight() );
 			break;
 		case 2:
+			mesh = new MovingLeastSquaresMesh< SimilarityModel2D >( SimilarityModel2D.class, numX, imp.getWidth(), imp.getHeight() );
+			break;
+		case 3:
 			mesh = new MovingLeastSquaresMesh< AffineModel2D >( AffineModel2D.class, numX, imp.getWidth(), imp.getHeight() );
 			break;
 		default:
