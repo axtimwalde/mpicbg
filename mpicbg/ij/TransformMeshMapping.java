@@ -1,7 +1,5 @@
 package mpicbg.ij;
 
-
-
 import ij.process.ImageProcessor;
 
 import java.awt.Color;
@@ -20,7 +18,7 @@ public class TransformMeshMapping implements Mapping
 {
 	final protected TransformMesh transform;
 	
-	public TransformMeshMapping( TransformMesh t )
+	public TransformMeshMapping( final TransformMesh t )
 	{
 		this.transform = t;
 	}
@@ -55,8 +53,8 @@ public class TransformMeshMapping implements Mapping
 	final static protected void mapTriangle(
 			final TransformMesh m, 
 			final AffineModel2D ai,
-			ImageProcessor source,
-			ImageProcessor target )
+			final ImageProcessor source,
+			final ImageProcessor target )
 	{
 		final ArrayList< PointMatch > pm = m.getAV().get( ai );
 		final float[] min = new float[ 2 ];
@@ -89,8 +87,8 @@ public class TransformMeshMapping implements Mapping
 	final static protected void mapTriangleInterpolated(
 			final TransformMesh m, 
 			final AffineModel2D ai,
-			ImageProcessor source,
-			ImageProcessor target )
+			final ImageProcessor source,
+			final ImageProcessor target )
 	{
 		final ArrayList< PointMatch > pm = m.getAV().get( ai );
 		final float[] min = new float[ 2 ];
@@ -122,25 +120,25 @@ public class TransformMeshMapping implements Mapping
 	
 	//@Override
 	final public void map(
-			ImageProcessor source,
-			ImageProcessor target )
+			final ImageProcessor source,
+			final ImageProcessor target )
 	{
 		target.setColor( Color.black );
 		target.fill();
-		Set< AffineModel2D > s = transform.getAV().keySet();
-		for ( AffineModel2D ai : s )
+		final Set< AffineModel2D > s = transform.getAV().keySet();
+		for ( final AffineModel2D ai : s )
 			mapTriangle( transform, ai, source, target );
 	}
 	
 	//@Override
 	final public void mapInterpolated(
-			ImageProcessor source,
-			ImageProcessor target )
+			final ImageProcessor source,
+			final ImageProcessor target )
 	{
 		target.setColor( Color.black );
 		target.fill();
-		Set< AffineModel2D > s = transform.getAV().keySet();
-		for ( AffineModel2D ai : s )
+		final Set< AffineModel2D > s = transform.getAV().keySet();
+		for ( final AffineModel2D ai : s )
 			mapTriangleInterpolated( transform, ai, source, target );
 	}
 	
@@ -175,8 +173,8 @@ public class TransformMeshMapping implements Mapping
 	final static protected void mapTriangleInverse(
 			final TransformMesh m, 
 			final AffineModel2D ai,
-			ImageProcessor source,
-			ImageProcessor target )
+			final ImageProcessor source,
+			final ImageProcessor target )
 	{
 		final ArrayList< PointMatch > pm = m.getAV().get( ai );
 		final float[] min = new float[ 2 ];
@@ -202,8 +200,8 @@ public class TransformMeshMapping implements Mapping
 	final static protected void mapTriangleInverseInterpolated(
 			final TransformMesh m, 
 			final AffineModel2D ai,
-			ImageProcessor source,
-			ImageProcessor target )
+			final ImageProcessor source,
+			final ImageProcessor target )
 	{
 		final ArrayList< PointMatch > pm = m.getAV().get( ai );
 		final float[] min = new float[ 2 ];
@@ -228,25 +226,25 @@ public class TransformMeshMapping implements Mapping
 	
 	//Override
 	final public void mapInverse(
-			ImageProcessor source,
-			ImageProcessor target )
+			final ImageProcessor source,
+			final ImageProcessor target )
 	{
 		target.setColor( Color.black );
 		target.fill();
-		Set< AffineModel2D > s = transform.getAV().keySet();
-		for ( AffineModel2D ai : s )
+		final Set< AffineModel2D > s = transform.getAV().keySet();
+		for ( final AffineModel2D ai : s )
 			mapTriangleInverse( transform, ai, source, target );
 	}
 	
 	//@Override
 	final public void mapInterpolatedInverse(
-			ImageProcessor source,
-			ImageProcessor target )
+			final ImageProcessor source,
+			final ImageProcessor target )
 	{
 		target.setColor( Color.black );
 		target.fill();
-		Set< AffineModel2D > s = transform.getAV().keySet();
-		for ( AffineModel2D ai : s )
+		final Set< AffineModel2D > s = transform.getAV().keySet();
+		for ( final AffineModel2D ai : s )
 			mapTriangleInverseInterpolated( transform, ai, source, target );
 	}
 }

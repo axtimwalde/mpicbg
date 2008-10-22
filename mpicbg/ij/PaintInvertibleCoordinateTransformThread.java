@@ -15,7 +15,7 @@ public class PaintInvertibleCoordinateTransformThread extends Thread
 	final protected ImageProcessor target;
 	final protected AtomicBoolean pleaseRepaint;
 	final protected InverseCoordinateTransform transform;
-	final protected TransformMapping mapping;
+	final protected InverseTransformMapping mapping;
 	
 	public PaintInvertibleCoordinateTransformThread(
 			ImagePlus imp,
@@ -29,7 +29,7 @@ public class PaintInvertibleCoordinateTransformThread extends Thread
 		this.target = target;
 		this.pleaseRepaint = pleaseRepaint;
 		this.transform = transform;
-		this.mapping = new TransformMapping( transform );
+		this.mapping = new InverseTransformMapping( transform );
 		this.setName( "PaintInvertibleCoordinateTransformThread" );
 	}
 	

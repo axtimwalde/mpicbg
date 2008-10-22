@@ -1,5 +1,5 @@
 import mpicbg.ij.Mapping;
-import mpicbg.ij.TransformMapping;
+import mpicbg.ij.InverseTransformMapping;
 import mpicbg.imagefeatures.*;
 import mpicbg.models.*;
 
@@ -84,8 +84,6 @@ public class SIFT_Align implements PlugIn, KeyListener
 	private static int steps = 3;
 	// initial sigma
 	private static float initial_sigma = 1.6f;
-	// background colour
-	private static double bg = 0.0;
 	// feature descriptor size
 	private static int fdsize = 4;
 	// feature descriptor orientation bins
@@ -216,7 +214,6 @@ public class SIFT_Align implements PlugIn, KeyListener
 		gd.addNumericField( "closest/next_closest_ratio :", rod, 2 );
 		gd.addNumericField( "maximal_alignment_error :", max_epsilon, 2 );
 		gd.addNumericField( "inlier_ratio :", min_inlier_ratio, 2 );
-		gd.addNumericField( "background_color :", bg, 2 );
 		gd.addCheckbox( "upscale_image_first", upscale );
 		gd.addChoice( "transformation_class", modelStrings, modelStrings[ modelIndex ] );
 		gd.addCheckbox( "interpolate", interpolate );
@@ -233,7 +230,6 @@ public class SIFT_Align implements PlugIn, KeyListener
 		rod = ( float )gd.getNextNumber();
 		max_epsilon = ( float )gd.getNextNumber();
 		min_inlier_ratio = ( float )gd.getNextNumber();
-		bg = ( double )gd.getNextNumber();
 		upscale = gd.getNextBoolean();
 		if ( upscale ) scale = 2.0f;
 		else scale = 1.0f;
@@ -318,7 +314,7 @@ public class SIFT_Align implements PlugIn, KeyListener
 		default:
 			return;
 		}
-		Mapping mapping = new TransformMapping( model );
+		Mapping mapping = new InverseTransformMapping( model );
 		
 		for ( int i = 1; i < stack.getSize(); ++i )
 		{

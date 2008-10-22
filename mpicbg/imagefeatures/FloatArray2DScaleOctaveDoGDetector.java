@@ -38,9 +38,9 @@ package mpicbg.imagefeatures;
 
 import java.util.*;
 
-import Jama.Matrix;
+//import Jama.Matrix;
 
-import mpicbg.models.NoninvertibleModelException;
+//import mpicbg.models.NoninvertibleModelException;
 import mpicbg.util.Matrix3x3;
 
 
@@ -50,8 +50,6 @@ public class FloatArray2DScaleOctaveDoGDetector
 	/**
 	 * minimal contrast of a candidate
 	 */
-	//private static final float MIN_CONTRAST = 0.03f * 255.0f;
-	//private static final float MIN_CONTRAST = 0.025f * 255.0f;
 	private static final float MIN_CONTRAST = 0.025f;
 	
 	/**
@@ -284,37 +282,51 @@ public class FloatArray2DScaleOctaveDoGDetector
 					    dyi = ( e122 - e102 - e120 + e100 ) / 4.0f;
 					    
 					    // invert hessian
-					    Matrix H = new Matrix( new double[][]{
-					    		{ ( double)dxx, ( double )dxy, ( double )dxi },
-					    		{ ( double)dxy, ( double )dyy, ( double )dyi },
-					    		{ ( double)dxi, ( double )dyi, ( double )dii } }, 3, 3 );
-					    Matrix H_inv;
-					    try
-					    {
-					    	H_inv = H.inverse();
-					    }
-					    catch ( RuntimeException e )
-					    {
-					    	continue X;
-					    }
-					    double[][] h_inv = H_inv.getArray();
-//					    float[][] h_inv;
+//					    Matrix H = new Matrix( new double[][]{
+//					    		{ ( double)dxx, ( double )dxy, ( double )dxi },
+//					    		{ ( double)dxy, ( double )dyy, ( double )dyi },
+//					    		{ ( double)dxi, ( double )dyi, ( double )dii } }, 3, 3 );
+//					    Matrix H_inv;
 //					    try
 //					    {
-//					    	h_inv = Matrix3x3.createInverse( dxx, dxy, dxi, dxy, dyy, dyi, dxi, dyi, dii );
+//					    	H_inv = H.inverse();
 //					    }
-//					    catch ( NoninvertibleModelException e )
+//					    catch ( RuntimeException e )
 //					    {
 //					    	continue X;
 //					    }
+//					    double[][] h_inv = H_inv.getArray();
+//
+//					    // estimate the location of zero crossing being the offset of the extremum
+//					    
+//					    ox = -( float )h_inv[ 0 ][ 0 ] * dx - ( float )h_inv[ 0 ][ 1 ] * dy - ( float )h_inv[ 0 ][ 0 ] * di;
+//					    oy = -( float )h_inv[ 1 ][ 0 ] * dx - ( float )h_inv[ 1 ][ 1 ] * dy - ( float )h_inv[ 1 ][ 0 ] * di;
+//					    oi = -( float )h_inv[ 2 ][ 0 ] * dx - ( float )h_inv[ 2 ][ 1 ] * dy - ( float )h_inv[ 2 ][ 0 ] * di; // TODO Shouldn't the last field be h_inv[ 2 ][ 2 ]? 
+
+
 					    
+					    /**
+					     * TODO
+					     * 	Check this code.  I was horribly tired when writing it.
+					     * ####################################################
+					     */
+					    final float det = Matrix3x3.det( dxx, dxy, dxi, dxy, dyy, dyi, dxi, dyi, dii );
+					    if ( det == 0 ) continue X;
 					    
+					    final float hixx = ( dyy * dii - dyi * dyi ) / det;
+					    final float hixy = ( dxi * dyi - dxy * dii ) / det;
+					    final float hixi = ( dxy * dyi - dxi * dyy ) / det;
+					    final float hiyy = ( dxx * dii - dxi * dxi ) / det;
+					    final float hiyi = ( dxi * dxy - dxx * dyi ) / det;
+					    final float hiii = ( dxx * dyy - dxy * dxy ) / det;
 					    
-					    // estimate the location of zero crossing being the offset of the extremum
-					    
-					    ox = -( float )h_inv[ 0 ][ 0 ] * dx - ( float )h_inv[ 0 ][ 1 ] * dy - ( float )h_inv[ 0 ][ 0 ] * di;
-					    oy = -( float )h_inv[ 1 ][ 0 ] * dx - ( float )h_inv[ 1 ][ 1 ] * dy - ( float )h_inv[ 1 ][ 0 ] * di;
-					    oi = -( float )h_inv[ 2 ][ 0 ] * dx - ( float )h_inv[ 2 ][ 1 ] * dy - ( float )h_inv[ 2 ][ 0 ] * di;
+					    ox = -hixx * dx - hixy * dy - hixx * di;
+					    oy = -hixy * dx - hiyy * dy - hixy * di;
+					    oi = -hixi * dx - hiyi * dy - hiii * di;
+
+					    /**
+					     * ####################################################
+					     */
 					    
 					    float odc = ox * ox + oy * oy + oi * oi;
 					    

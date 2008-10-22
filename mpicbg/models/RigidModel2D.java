@@ -68,7 +68,7 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	{
 		assert l.length == 2 : "2d rigid transformations can be applied to 2d points only.";
 		
-		final float[] transformed = new float[ 2 ];
+		final float[] transformed = l.clone();
 		applyInPlace( transformed );
 		return transformed;
 	}
@@ -88,7 +88,7 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	{
 		assert l.length == 2 : "2d rigid transformations can be applied to 2d points only.";
 		
-		final float[] transformed = new float[ 2 ];
+		final float[] transformed = l.clone();
 		applyInverseInPlace( transformed );
 		return transformed;
 	}

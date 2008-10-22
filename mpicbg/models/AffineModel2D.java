@@ -69,7 +69,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	{
 		assert l.length == 2 : "2d affine transformations can be applied to 2d points only.";
 		
-		final float[] transformed = new float[ 2 ];
+		final float[] transformed = l.clone();
 		applyInPlace( transformed );
 		return transformed;
 	}
@@ -89,7 +89,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	{
 		assert l.length == 2 : "2d affine transformations can be applied to 2d points only.";
 		
-		final float[] transformed = new float[ 2 ];
+		final float[] transformed = l.clone();
 		applyInverseInPlace( transformed );
 		return transformed;
 	}

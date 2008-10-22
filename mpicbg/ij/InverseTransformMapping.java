@@ -1,24 +1,27 @@
 package mpicbg.ij;
 
-
-
 import ij.process.ImageProcessor;
 import mpicbg.models.InverseCoordinateTransform;
 import mpicbg.models.NoninvertibleModelException;
 
-public class TransformMapping implements Mapping
+/**
+ * 
+ * 
+ *
+ */
+public class InverseTransformMapping implements Mapping
 {
 	final protected InverseCoordinateTransform transform;
 	
-	public TransformMapping( InverseCoordinateTransform t )
+	public InverseTransformMapping( final InverseCoordinateTransform t )
 	{
 		this.transform = t;
 	}
 	
 	//@Override
 	final public void map(
-			ImageProcessor source,
-			ImageProcessor target )
+			final ImageProcessor source,
+			final ImageProcessor target )
 	{
 		final float[] t = new float[ 2 ];
 		for ( int y = 0; y < target.getHeight(); ++y )
@@ -39,10 +42,10 @@ public class TransformMapping implements Mapping
 	
 	//@Override
 	final public void mapInterpolated(
-			ImageProcessor source,
-			ImageProcessor target )
+			final ImageProcessor source,
+			final ImageProcessor target )
 	{
-		float[] t = new float[ 2 ];
+		final float[] t = new float[ 2 ];
 		for ( int y = 0; y < target.getHeight(); ++y )
 		{
 			for ( int x = 0; x < target.getWidth(); ++x )

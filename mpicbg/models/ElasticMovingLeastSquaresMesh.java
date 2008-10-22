@@ -261,7 +261,7 @@ public class ElasticMovingLeastSquaresMesh< M extends Model< M > > extends Movin
 		while ( i < maxIterations )  // do not run forever
 		{
 			optimizeIteration();
-			update( 0.75f );
+			update( 0.1f );
 			observer.add( error );
 			
 			if ( i >= maxPlateauwidth && error < maxError &&

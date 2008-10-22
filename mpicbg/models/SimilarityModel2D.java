@@ -20,7 +20,6 @@
 package mpicbg.models;
 
 import java.awt.geom.AffineTransform;
-import java.awt.geom.NoninvertibleTransformException;
 import java.util.Collection;
 
 /**
@@ -69,7 +68,7 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 	{
 		assert l.length == 2 : "2d similarity transformations can be applied to 2d points only.";
 		
-		final float[] transformed = new float[ 2 ];
+		final float[] transformed = l.clone();
 		applyInPlace( transformed );
 		return transformed;
 	}
@@ -89,7 +88,7 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 	{
 		assert l.length == 2 : "2d similarity transformations can be applied to 2d points only.";
 		
-		final float[] transformed = new float[ 2 ];
+		final float[] transformed = l.clone();
 		applyInverseInPlace( transformed );
 		return transformed;
 	}

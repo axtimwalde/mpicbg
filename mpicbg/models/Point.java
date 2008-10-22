@@ -46,7 +46,7 @@ public class Point
 	 * 
 	 * @param l reference to the local coordinates of the {@link Point}
 	 */
-	public Point( float[] l )
+	public Point( final float[] l )
 	{
 		this.l = l;
 		w = l.clone();		
@@ -60,7 +60,7 @@ public class Point
 	 * 
 	 * @param t
 	 */
-	final public void apply( CoordinateTransform t )
+	final public void apply( final CoordinateTransform t )
 	{
 		System.arraycopy( l, 0, w, 0, l.length );
 		t.applyInPlace( w );
@@ -75,9 +75,9 @@ public class Point
 	 * @param t
 	 * @param amount 0.0 -> no application, 1.0 -> full application
 	 */
-	final public void apply( CoordinateTransform t, float amount )
+	final public void apply( final CoordinateTransform t, final float amount )
 	{
-		float[] a = t.apply( l );
+		final float[] a = t.apply( l );
 		for ( int i = 0; i < a.length; ++i )
 			w[ i ] += amount * ( a[ i ] - w[ i ] );
 	}
@@ -90,7 +90,7 @@ public class Point
 	 * 
 	 * @param model
 	 */
-	final public void applyInverse( InverseCoordinateTransform t ) throws NoninvertibleModelException
+	final public void applyInverse( final InverseCoordinateTransform t ) throws NoninvertibleModelException
 	{
 		System.arraycopy( l, 0, w, 0, l.length );
 		t.applyInverseInPlace( w );
@@ -103,16 +103,15 @@ public class Point
 	 * @param p2
 	 * @return square distance
 	 */
-	final static public float squareDistance( Point p1, Point p2 )
+	final static public float squareDistance( final Point p1, final Point p2 )
 	{
-		assert
-		p1.l.length == p2.l.length :
+		assert p1.l.length == p2.l.length:
 			"Both points have to have the same dimensionality.";
 		
 		double sum = 0.0;
 		for ( int i = 0; i < p1.w.length; ++i )
 		{
-			double d = p1.w[ i ] - p2.w[ i ];
+			final double d = p1.w[ i ] - p2.w[ i ];
 			sum += d * d;
 		}
 		return ( float )sum;
@@ -125,11 +124,10 @@ public class Point
 	 * @param p2
 	 * @return Euclidean distance
 	 */
-	final static public float distance( Point p1, Point p2 )
+	final static public float distance( final Point p1, final Point p2 )
 	{
-		assert
-			p1.l.length == p2.l.length :
-				"Both points have to have the same dimensionality.";
+		assert p1.l.length == p2.l.length:
+			"Both points have to have the same dimensionality.";
 		
 		return ( float )Math.sqrt( squareDistance( p1, p2 ) );
 	}
@@ -140,7 +138,7 @@ public class Point
 	@Override
 	public Point clone()
 	{
-		Point p = new Point( l.clone() );
+		final Point p = new Point( l.clone() );
 		for ( int i = 0; i < w.length; ++i )
 			p.w[ i ] = w[ i ];
 		return p;
