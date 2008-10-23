@@ -1,22 +1,4 @@
-package mpicbg.imagefeatures;
-
 /**
- * Difference Of Gaussian detector on top of a scale space octave as described
- * by David Lowe \citep{Loew04}.
- * 
- * BibTeX:
- * <pre>
- * &#64;article{Lowe04,
- *   author  = {David G. Lowe},
- *   title   = {Distinctive Image Features from Scale-Invariant Keypoints},
- *   journal = {International Journal of Computer Vision},
- *   year    = {2004},
- *   volume  = {60},
- *   number  = {2},
- *   pages   = {91--110},
- * }
- * </pre>
- * 
  * License: GPL
  *
  * This program is free software; you can redistribute it and/or
@@ -35,16 +17,31 @@ package mpicbg.imagefeatures;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.1b
  */
+package mpicbg.imagefeatures;
 
 import java.util.*;
 
-//import Jama.Matrix;
-
-//import mpicbg.models.NoninvertibleModelException;
 import mpicbg.util.Matrix3x3;
 
 
-
+/**
+ * Difference Of Gaussian detector on top of a scale space octave as described
+ * by Lowe (2004).
+ * 
+ * BibTeX:
+ * <pre>
+ * &#64;article{Lowe04,
+ *   author  = {David G. Lowe},
+ *   title   = {Distinctive Image Features from Scale-Invariant Keypoints},
+ *   journal = {International Journal of Computer Vision},
+ *   year    = {2004},
+ *   volume  = {60},
+ *   number  = {2},
+ *   pages   = {91--110},
+ * }
+ * </pre>
+ *  
+ */
 public class FloatArray2DScaleOctaveDoGDetector
 {
 	/**
@@ -281,35 +278,7 @@ public class FloatArray2DScaleOctaveDoGDetector
 					    dxi = ( e212 - e012 - e210 + e010 ) / 4.0f;
 					    dyi = ( e122 - e102 - e120 + e100 ) / 4.0f;
 					    
-					    // invert hessian
-//					    Matrix H = new Matrix( new double[][]{
-//					    		{ ( double)dxx, ( double )dxy, ( double )dxi },
-//					    		{ ( double)dxy, ( double )dyy, ( double )dyi },
-//					    		{ ( double)dxi, ( double )dyi, ( double )dii } }, 3, 3 );
-//					    Matrix H_inv;
-//					    try
-//					    {
-//					    	H_inv = H.inverse();
-//					    }
-//					    catch ( RuntimeException e )
-//					    {
-//					    	continue X;
-//					    }
-//					    double[][] h_inv = H_inv.getArray();
-//
-//					    // estimate the location of zero crossing being the offset of the extremum
-//					    
-//					    ox = -( float )h_inv[ 0 ][ 0 ] * dx - ( float )h_inv[ 0 ][ 1 ] * dy - ( float )h_inv[ 0 ][ 0 ] * di;
-//					    oy = -( float )h_inv[ 1 ][ 0 ] * dx - ( float )h_inv[ 1 ][ 1 ] * dy - ( float )h_inv[ 1 ][ 0 ] * di;
-//					    oi = -( float )h_inv[ 2 ][ 0 ] * dx - ( float )h_inv[ 2 ][ 1 ] * dy - ( float )h_inv[ 2 ][ 0 ] * di; // TODO Shouldn't the last field be h_inv[ 2 ][ 2 ]? 
-
-
-					    
-					    /**
-					     * TODO
-					     * 	Check this code.  I was horribly tired when writing it.
-					     * ####################################################
-					     */
+					    // invert hessian					    
 					    final float det = Matrix3x3.det( dxx, dxy, dxi, dxy, dyy, dyi, dxi, dyi, dii );
 					    if ( det == 0 ) continue X;
 					    
@@ -320,13 +289,11 @@ public class FloatArray2DScaleOctaveDoGDetector
 					    final float hiyi = ( dxi * dxy - dxx * dyi ) / det;
 					    final float hiii = ( dxx * dyy - dxy * dxy ) / det;
 					    
+					    // localize
 					    ox = -hixx * dx - hixy * dy - hixx * di;
 					    oy = -hixy * dx - hiyy * dy - hixy * di;
 					    oi = -hixi * dx - hiyi * dy - hiii * di;
 
-					    /**
-					     * ####################################################
-					     */
 					    
 					    float odc = ox * ox + oy * oy + oi * oi;
 					    
