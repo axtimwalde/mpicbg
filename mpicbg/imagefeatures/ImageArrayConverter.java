@@ -15,11 +15,15 @@ public class ImageArrayConverter
     public static boolean CUTOFF_VALUES = true;
     public static boolean NORM_VALUES = false;
     
-    public static ImagePlus FloatArrayToImagePlus( FloatArray2D image, String name, float min, float max )
+    final public static ImagePlus FloatArrayToImagePlus(
+    		final FloatArray2D image,
+    		final String name,
+    		final float min,
+    		final float max )
 	{
-		ImagePlus imp = IJ.createImage( name, "32-Bit Black", image.width, image.height, 1 );
-		FloatProcessor ip = ( FloatProcessor ) imp.getProcessor();
-		FloatArrayToFloatProcessor( ip, image );
+		final ImagePlus imp = IJ.createImage( name, "32-Bit Black", image.width, image.height, 1 );
+		final FloatProcessor ip = ( FloatProcessor )imp.getProcessor();
+		floatArray2DToFloatProcessor( image, ip );
 
 		if ( min == max )
 			ip.resetMinAndMax();
@@ -32,62 +36,41 @@ public class ImageArrayConverter
 	}
 
     
-    public static FloatArray2D ImageToFloatArray2D( ImageProcessor ip )
+    final public static void imageProcessorToFloatArray2D( final ImageProcessor ip, final FloatArray2D fa )
 	{
-		FloatArray2D image;
-		Object pixelArray = ip.getPixels();
-		int count = 0;
-
 		if ( ip instanceof ByteProcessor )
 		{
-			image = new FloatArray2D( ip.getWidth(), ip.getHeight() );
-			byte[] pixels = ( byte[] ) pixelArray;
-
-			for ( int y = 0; y < ip.getHeight(); y++ )
-				for ( int x = 0; x < ip.getWidth(); x++ )
-					image.data[ count ] = pixels[ count++ ] & 0xff;
+			final byte[] pixels = ( byte[] )ip.getPixels();
+			for ( int i = 0; i < pixels.length; ++i )
+				fa.data[ i ] = pixels[ i ] & 0xff;
 		}
 		else if ( ip instanceof ShortProcessor )
 		{
-			image = new FloatArray2D( ip.getWidth(), ip.getHeight() );
-			short[] pixels = ( short[] ) pixelArray;
-
-			for ( int y = 0; y < ip.getHeight(); y++ )
-				for ( int x = 0; x < ip.getWidth(); x++ )
-					image.data[ count ] = pixels[ count++ ] & 0xffff;
+			final short[] pixels = ( short[] )ip.getPixels();
+			for ( int i = 0; i < pixels.length; ++i )
+				fa.data[ i ] = pixels[ i ] & 0xffff;
 		}
 		else if ( ip instanceof FloatProcessor )
 		{
-			image = new FloatArray2D( ip.getWidth(), ip.getHeight() );
-			float[] pixels = ( float[] ) pixelArray;
-
-			for ( int y = 0; y < ip.getHeight(); y++ )
-				for ( int x = 0; x < ip.getWidth(); x++ )
-					image.data[ count ] = pixels[ count++ ];
+			final float[] pixels = ( float[] )ip.getPixels();
+			for ( int i = 0; i < pixels.length; ++i )
+				fa.data[ i ] = pixels[ i ];
 		}
-		else // if (ip instanceof ColorProcessor )
+		else if ( ip instanceof ColorProcessor )
 		{
-			image = new FloatArray2D( ip.getWidth(), ip.getHeight() );
-			int[] pixels = ( int[] ) pixelArray;
-
-			for ( int y = 0; y < ip.getHeight(); y++ )
+			final int[] pixels = ( int[] )ip.getPixels();
+			for ( int i = 0; i < pixels.length; ++i )
 			{
-				for ( int x = 0; x < ip.getWidth(); x++ )
-				{
-					int rgb = pixels[ count++ ];
-					int b = rgb & 0xff;
-					rgb = rgb >> 8;
-					int g = rgb & 0xff;
-					rgb = rgb >> 8;
-					int r = rgb & 0xff;
-					image.data[ count ] = 0.3f * r + 0.6f * g + 0.1f * b;
-				}
+				final int rgb = pixels[ i ];
+				final int b = rgb & 0xff;
+				final int g = ( rgb >> 8 ) & 0xff;
+				final int r = ( rgb >> 16 ) & 0xff;
+				fa.data[ i ] = 0.3f * r + 0.6f * g + 0.1f * b;
 			}
 		}
-		return image;
 	}
 
-    public static void FloatArrayToFloatProcessor( ImageProcessor ip, FloatArray2D pixels )
+    public static void floatArray2DToFloatProcessor( final FloatArray2D pixels, final FloatProcessor ip )
 	{
 		float[] data = new float[ pixels.width * pixels.height ];
 

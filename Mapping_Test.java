@@ -11,7 +11,6 @@ import ij.gui.*;
 import ij.io.OpenDialog;
 
 import mpicbg.ij.InteractiveMapping;
-import mpicbg.ij.InverseTransformMapping;
 import mpicbg.ij.TransformMeshMapping;
 import mpicbg.models.*;
 

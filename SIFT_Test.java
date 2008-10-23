@@ -150,7 +150,8 @@ public class SIFT_Test implements PlugIn, KeyListener
 		
 		FloatArray2DSIFT sift = new FloatArray2DSIFT( fdsize, fdbins );
 		
-		FloatArray2D fa = ImageArrayConverter.ImageToFloatArray2D( ip1 );
+		FloatArray2D fa = new FloatArray2D( ip1.getWidth(), ip1.getHeight() );
+		ImageArrayConverter.imageProcessorToFloatArray2D( ip1, fa );
 		Filter.enhance( fa, 1.0f );
 		
 		float[] initial_kernel;

@@ -33,8 +33,8 @@ public class Scale_Space implements PlugIn
 		initialSigma = ( float )gd.getNextNumber();
 		steps = ( int )gd.getNextNumber();
 		
-		ImageProcessor ip = imp.getProcessor().convertToFloat();
-		FloatArray2D fa = ImageArrayConverter.ImageToFloatArray2D( ip );
+		FloatArray2D fa = new FloatArray2D( imp.getWidth(), imp.getHeight() );
+		ImageArrayConverter.imageProcessorToFloatArray2D( imp.getProcessor(), fa );
 		Filter.enhance( fa, 1.0f );
 		float[] initial_kernel = Filter.createGaussianKernel( ( float )Math.sqrt( initialSigma * initialSigma - 0.25 ), true );
 		fa = Filter.convolveSeparable( fa, initial_kernel, initial_kernel );
@@ -73,7 +73,7 @@ public class Scale_Space implements PlugIn
 			for ( int i = 0; i < l.length; ++i )
 			{
 				final FloatProcessor fp = new FloatProcessor( so.width, so.height );
-				ImageArrayConverter.FloatArrayToFloatProcessor( fp, l[ i ] );
+				ImageArrayConverter.floatArray2DToFloatProcessor( l[ i ], fp );
 				fp.setMinAndMax( 0.0, 1.0 );
 				final ImageProcessor bp = fp.convertToByte( true );
 				stackOctave.addSlice( null, bp );
@@ -85,7 +85,7 @@ public class Scale_Space implements PlugIn
 			for ( int i = 0; i < d.length; ++i )
 			{
 				final FloatProcessor fp = new FloatProcessor( so.width, so.height );
-				ImageArrayConverter.FloatArrayToFloatProcessor( fp, d[ i ] );
+				ImageArrayConverter.floatArray2DToFloatProcessor( d[ i ], fp );
 				fp.setMinAndMax( -0.25, 0.25 );
 				final ImageProcessor bp = fp.convertToByte( true );
 				stackOctaveDoG.addSlice( null, bp );
@@ -118,11 +118,11 @@ public class Scale_Space implements PlugIn
 				}
 				os = ( int )Math.pow( 2, o );
 				FloatProcessor fp = new FloatProcessor( ls.width, ls.height );
-				ImageArrayConverter.FloatArrayToFloatProcessor( fp, ls );
+				ImageArrayConverter.floatArray2DToFloatProcessor( ls, fp );
 				fp.setMinAndMax( 0.0, 1.0 );
 				//ImageProcessor ipl = fp.convertToRGB();
 				ImageProcessor ipl = fp.duplicate();
-				ImageArrayConverter.FloatArrayToFloatProcessor( fp, ds );
+				ImageArrayConverter.floatArray2DToFloatProcessor( ds, fp );
 				fp.setMinAndMax( -1.0, 1.0 );
 				ImageProcessor ipd = fp.convertToRGB();
 			

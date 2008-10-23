@@ -287,11 +287,10 @@ public class Align_ElasticMeshStack implements PlugIn
 			
 		ImageProcessor ip;
 			
-		ip = stack.getProcessor( 1 ).convertToFloat();
-			
 		FloatArray2DSIFT sift = new FloatArray2DSIFT( fdSize, fdBins );
 			
-		FloatArray2D fa = ImageArrayConverter.ImageToFloatArray2D( ip );
+		FloatArray2D fa = new FloatArray2D( imp.getWidth(), imp.getHeight() );
+		ImageArrayConverter.imageProcessorToFloatArray2D( stack.getProcessor( 1 ), fa );
 		Filter.enhance( fa, 1.0f );
 			
 		float[] initial_kernel;
@@ -323,8 +322,7 @@ public class Align_ElasticMeshStack implements PlugIn
 			
 		for ( int i = 1; i < stack.getSize(); ++i )
 		{
-			ip = stack.getProcessor( i + 1 ).convertToFloat();
-			fa = ImageArrayConverter.ImageToFloatArray2D( ip );
+			ImageArrayConverter.imageProcessorToFloatArray2D( stack.getProcessor( i + 1 ), fa );
 			Filter.enhance( fa, 1.0f );
 			
 			if ( upscale )
