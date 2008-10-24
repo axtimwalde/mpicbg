@@ -5,7 +5,9 @@ import ij.gui.*;
 import ij.*;
 import ij.process.*;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Vector;
 import java.awt.Color;
 import java.awt.Polygon;
@@ -58,17 +60,7 @@ import java.awt.event.KeyListener;
  */
 public class SIFT_Test implements PlugIn, KeyListener
 {
-	// steps
-	private static int steps = 3;
-	// initial sigma
-	private static float initial_sigma = 1.6f;
-	// feature descriptor size
-	private static int fdsize = 4;
-	// feature descriptor orientation bins
-	private static int fdbins = 8;
-	// size restrictions for scale octaves, use octaves < max_size and > min_size only
-	private static int min_size = 64;
-	private static int max_size = 1024;
+	final static private FloatArray2DSIFT.Param p = new FloatArray2DSIFT.Param(); 
 
 	/**
 	 * Set true to double the size of the image by linear interpolation to
@@ -78,8 +70,9 @@ public class SIFT_Test implements PlugIn, KeyListener
 	 * 
 	 * This is useful for images scmaller than 1000px per side only. 
 	 */ 
-	private static boolean upscale = false;
-	private static float scale = 1.0f;
+	static private boolean upscale = false;
+	
+	final static List< Feature > fs = new ArrayList< Feature >();
 
 	
 	/**
@@ -124,21 +117,23 @@ public class SIFT_Test implements PlugIn, KeyListener
 
 		final GenericDialog gd = new GenericDialog( "Test SIFT" );
 		
-		gd.addNumericField( "steps_per_scale_octave :", steps, 0 );
-		gd.addNumericField( "initial_gaussian_blur :", initial_sigma, 2 );
-		gd.addNumericField( "feature_descriptor_size :", fdsize, 0 );
-		gd.addNumericField( "feature_descriptor_orientation_bins :", fdbins, 0 );
-		gd.addNumericField( "minimum_image_size :", min_size, 0 );
-		gd.addNumericField( "maximum_image_size :", max_size, 0 );
+		gd.addNumericField( "steps_per_scale_octave :", p.steps, 0 );
+		gd.addNumericField( "initial_gaussian_blur :", p.initialSigma, 2 );
+		gd.addNumericField( "feature_descriptor_size :", p.fdSize, 0 );
+		gd.addNumericField( "feature_descriptor_orientation_bins :", p.fdBins, 0 );
+		gd.addNumericField( "minimum_image_size :", p.minOctaveSize, 0 );
+		gd.addNumericField( "maximum_image_size :", p.maxOctaveSize, 0 );
 		gd.addCheckbox( "upscale_image_first", upscale );
 		gd.showDialog();
 		if ( gd.wasCanceled() ) return;
-		steps = ( int )gd.getNextNumber();
-		initial_sigma = ( float )gd.getNextNumber();
-		fdsize = ( int )gd.getNextNumber();
-		fdbins = ( int )gd.getNextNumber();
-		min_size = ( int )gd.getNextNumber();
-		max_size = ( int )gd.getNextNumber();
+		p.steps = ( int )gd.getNextNumber();
+		p.initialSigma = ( float )gd.getNextNumber();
+		p.fdSize = ( int )gd.getNextNumber();
+		p.fdBins = ( int )gd.getNextNumber();
+		p.minOctaveSize = ( int )gd.getNextNumber();
+		p.maxOctaveSize = ( int )gd.getNextNumber();
+		
+		float scale = 1.0f;
 		upscale = gd.getNextBoolean();
 		if ( upscale ) scale = 2.0f;
 		
@@ -146,9 +141,7 @@ public class SIFT_Test implements PlugIn, KeyListener
 		ImageProcessor ip1 = imp.getProcessor().convertToFloat();
 		ImageProcessor ip2 = imp.getProcessor().duplicate().convertToRGB();
 		
-		Vector< Feature > fs1;
-		
-		FloatArray2DSIFT sift = new FloatArray2DSIFT( fdsize, fdbins );
+		FloatArray2DSIFT sift = new FloatArray2DSIFT( p );
 		
 		FloatArray2D fa = new FloatArray2D( ip1.getWidth(), ip1.getHeight() );
 		ImageArrayConverter.imageProcessorToFloatArray2D( ip1, fa );
@@ -161,28 +154,31 @@ public class SIFT_Test implements PlugIn, KeyListener
 			FloatArray2D fat = new FloatArray2D( fa.width * 2 - 1, fa.height * 2 - 1 ); 
 			FloatArray2DScaleOctave.upsample( fa, fat );
 			fa = fat;
-			initial_kernel = Filter.createGaussianKernel( ( float )Math.sqrt( initial_sigma * initial_sigma - 1.0 ), true );
+			initial_kernel = Filter.createGaussianKernel( ( float )Math.sqrt( p.initialSigma * p.initialSigma - 1.0 ), true );
 		}
 		else
-			initial_kernel = Filter.createGaussianKernel( ( float )Math.sqrt( initial_sigma * initial_sigma - 0.25 ), true );
+			initial_kernel = Filter.createGaussianKernel( ( float )Math.sqrt( p.initialSigma * p.initialSigma - 0.25 ), true );
 		
 		fa = Filter.convolveSeparable( fa, initial_kernel, initial_kernel );
 		
+		fs.clear();
+		
 		long start_time = System.currentTimeMillis();
 		System.out.print( "processing SIFT ..." );
-		sift.init( fa, steps, initial_sigma, min_size, max_size );
-		fs1 = sift.run( max_size );
-		Collections.sort( fs1 );
+		sift.init( fa );
+		sift.extractFeatures( fs );
+		Collections.sort( fs );
+		
 		System.out.println( " took " + ( System.currentTimeMillis() - start_time ) + "ms" );
 		
-		System.out.println( fs1.size() + " features identified and processed" );
+		System.out.println( fs.size() + " features identified and processed" );
 		
 		ip2.setLineWidth( 1 );
 		ip2.setColor( Color.red );
-		for ( Feature f : fs1 )
+		for ( Feature f : fs )
 		{
 			//System.out.println( f.location[ 0 ] + " " + f.location[ 1 ] + " " + f.scale + " " + f.orientation );
-			drawSquare( ip2, new double[]{ f.location[ 0 ] / scale, f.location[ 1 ] / scale }, fdsize * 4.0 * ( double )f.scale / scale, ( double )f.orientation );
+			drawSquare( ip2, new double[]{ f.location[ 0 ] / scale, f.location[ 1 ] / scale }, p.fdSize * 4.0 * ( double )f.scale / scale, ( double )f.orientation );
 		}
 	
 		ImagePlus imp1 = new ImagePlus( imp.getTitle() + " Features ", ip2 );

@@ -49,7 +49,7 @@ import mpicbg.models.*;
 
 public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2DSIFT.Param >
 {
-	final public class Param
+	final static public class Param
 	{
 		public int fdSize = 4;
 		public int fdBins = 8;
@@ -417,17 +417,13 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		float orientation = ( ( float )max_i + offset ) * ORIENTATION_BIN_SIZE - ( float )Math.PI;
 
 		// assign descriptor and add the Feature instance to the collection
-		features.addElement(
+		features.add(
 				new Feature(
 						octave_sigma * scale,
 						orientation,
 						new float[]{ c[ 0 ] * scale, c[ 1 ] * scale },
 						//new float[]{ ( c[ 0 ] + 0.5f ) * scale - 0.5f, ( c[ 1 ] + 0.5f ) * scale - 0.5f },
 						createDescriptor( c, o, octave_sigma, orientation ) ) );
-		
-		// TODO this is for test
-		//---------------------------------------------------------------------
-		//ImageArrayConverter.FloatArrayToImagePlus( pattern, "test", 0f, 1.0f ).show();
 		
 		/**
 		 * check if there is another significant orientation ( > 80% max )
@@ -455,17 +451,12 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 					offset = ( e0 - e2 ) / 2.0f / ( e0 - 2.0f * e1 + e2 );
 					orientation = ( ( float )i + 0.5f + offset ) * ORIENTATION_BIN_SIZE - ( float )Math.PI;
 
-					features.addElement(
+					features.add(
 							new Feature(
 									octave_sigma * scale,
 									orientation,
 									new float[]{ c[ 0 ] * scale, c[ 1 ] * scale },
-									//new float[]{ ( c[ 0 ] + 0.5f ) * scale - 0.5f, ( c[ 1 ] + 0.5f ) * scale - 0.5f },
-									createDescriptor( c, o, octave_sigma, orientation ) ) );
-					
-					// TODO this is for test
-					//---------------------------------------------------------------------
-					//ImageArrayConverter.FloatArrayToImagePlus( pattern, "test", 0f, 1.0f ).show();
+									createDescriptor( c, o, octave_sigma, orientation ) ) );					
 				}
 			}
 		}
@@ -480,7 +471,7 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 	 * 
 	 * @return detected features
 	 */
-	public Vector< Feature > runOctave( int o )
+	final private Vector< Feature > runOctave( int o )
 	{
 		Vector< Feature > features = new Vector< Feature >();
 		FloatArray2DScaleOctave octave = octaves[ o ];
@@ -491,7 +482,6 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		{
 			this.processCandidate( c, o, features );
 		}
-		//System.out.println( features.size() + " candidates processed in octave " + o );
 		
 		return features;
 	}
@@ -713,6 +703,19 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 			else ++i;
 		}
 		return matches;
+	}
+	
+	/**
+	 * detect features in all scale octaves
+	 * 
+	 * @param features the list to be filled
+	 * 
+	 * @return number of detected features
+	 */
+	final public int extractFeatures( final List< Feature > features )
+	{
+		features.addAll( run( p.maxOctaveSize ) );
+		return features.size();
 	}
 	
 	/**
