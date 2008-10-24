@@ -334,7 +334,7 @@ public class SIFT_Align implements PlugIn, KeyListener
 			 */
 			if (p.showInfo )
 			{
-				ip2 = downScale( ( FloatProcessor )ip2, vis_scale );
+				ip2 = downScale( ip2, vis_scale );
 			
 				ip1 = ip1.convertToRGB();
 				ip3 = ip2.convertToRGB();

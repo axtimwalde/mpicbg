@@ -47,38 +47,30 @@ import java.util.Vector;
 import java.util.List;
 import mpicbg.models.*;
 
-public class FloatArray2DSIFT
+public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2DSIFT.Param >
 {
+	final public class Param
+	{
+		public int fdSize = 4;
+		public int fdBins = 8;
+		public int maxOctaveSize = 1024;
+		public int minOctaveSize = 64;
+		
+		public int steps = 3;
+		public float initialSigma = 1.6f;
+	}
 	
-	/**
-	 * number of orientation histograms per axis of the feature descriptor
-	 * square
-	 */
-	private int FEATURE_DESCRIPTOR_SIZE;
-	private int FEATURE_DESCRIPTOR_WIDTH;
+	final private int fdWidth;
+	final private float fdBinWidth;
 	
-	/**
-	 * number of bins per orientation histogram of the feature descriptor
-	 */
-	private int FEATURE_DESCRIPTOR_ORIENTATION_BINS = 0;
-	private float FEATURE_DESCRIPTOR_ORIENTATION_BIN_SIZE = 0;
+	private float[] sigma;
+	private float[] sigma_diff;
+	private float[][] kernel_diff;
 	
 	/**
 	 * evaluation mask for the feature descriptor square
 	 */
-	private float[][] descriptorMask;
-
-
-	/**
-	 * Returns the size in bytes of a Feature object.
-	 */
-	public long getFeatureObjectSize() {
-		return FloatArray2DSIFT.getFeatureObjectSize(FEATURE_DESCRIPTOR_SIZE, FEATURE_DESCRIPTOR_ORIENTATION_BINS);
-	}
-
-	static public long getFeatureObjectSize(final int fdsize, final int fdbins) {
-		return 32 + 4 + 4 + 8 + fdsize * fdsize * fdbins * 4 + 32 + 32;
-	}
+	final private float[][] descriptorMask;
 
 	
 	/**
@@ -105,33 +97,44 @@ public class FloatArray2DSIFT
 	 * @param feature_descriptor_size
 	 * @param feature_descriptor_size
 	 */
-	public FloatArray2DSIFT(
-			int feature_descriptor_size,
-			int feature_descriptor_orientation_bins )
+	public FloatArray2DSIFT( final Param p )
 	{
+		super( p );
 		octaves = null;
 		dog = new FloatArray2DScaleOctaveDoGDetector();
 
-		FEATURE_DESCRIPTOR_SIZE = feature_descriptor_size;
-		FEATURE_DESCRIPTOR_WIDTH = 4 * FEATURE_DESCRIPTOR_SIZE;
-		FEATURE_DESCRIPTOR_ORIENTATION_BINS = feature_descriptor_orientation_bins;
-		FEATURE_DESCRIPTOR_ORIENTATION_BIN_SIZE = 2.0f * ( float )Math.PI / ( float )FEATURE_DESCRIPTOR_ORIENTATION_BINS;
+		fdWidth = 4 * p.fdSize;
+		fdBinWidth = 2.0f * ( float )Math.PI / ( float )p.fdBins;
 		
-		descriptorMask = new float[ FEATURE_DESCRIPTOR_SIZE * 4 ][ FEATURE_DESCRIPTOR_SIZE * 4 ];
+		descriptorMask = new float[ fdWidth ][ fdWidth ];
 
-		float two_sq_sigma = FEATURE_DESCRIPTOR_SIZE * FEATURE_DESCRIPTOR_SIZE * 8;
-		for ( int y = FEATURE_DESCRIPTOR_SIZE * 2 - 1; y >= 0; --y )
+		final float two_sq_sigma = p.fdSize * p.fdSize * 8;
+		for ( int y = p.fdSize * 2 - 1; y >= 0; --y )
 		{
 			float fy = ( float )y + 0.5f;
-			for ( int x = FEATURE_DESCRIPTOR_SIZE * 2 - 1; x >= 0; --x )
+			for ( int x = p.fdSize * 2 - 1; x >= 0; --x )
 			{
-				float fx = ( float )x + 0.5f;
-				float val = ( float )Math.exp( -( fy * fy + fx * fx ) / two_sq_sigma );
-				descriptorMask[ 2 * FEATURE_DESCRIPTOR_SIZE - 1 - y ][ 2 * FEATURE_DESCRIPTOR_SIZE - 1 - x ] = val;
-				descriptorMask[ 2 * FEATURE_DESCRIPTOR_SIZE + y ][ 2 * FEATURE_DESCRIPTOR_SIZE - 1 - x ] = val;
-				descriptorMask[ 2 * FEATURE_DESCRIPTOR_SIZE - 1 - y ][ 2 * FEATURE_DESCRIPTOR_SIZE + x ] = val;
-				descriptorMask[ 2 * FEATURE_DESCRIPTOR_SIZE + y ][ 2 * FEATURE_DESCRIPTOR_SIZE + x ] = val;
+				final float fx = ( float )x + 0.5f;
+				final float val = ( float )Math.exp( -( fy * fy + fx * fx ) / two_sq_sigma );
+				descriptorMask[ 2 * p.fdSize - 1 - y ][ 2 * p.fdSize - 1 - x ] = val;
+				descriptorMask[ 2 * p.fdSize + y ][ 2 * p.fdSize - 1 - x ] = val;
+				descriptorMask[ 2 * p.fdSize - 1 - y ][ 2 * p.fdSize + x ] = val;
+				descriptorMask[ 2 * p.fdSize + y ][ 2 * p.fdSize + x ] = val;
 			}
+		}
+		
+		sigma = new float[ p.steps + 3 ];
+		sigma[ 0 ] = p.initialSigma;
+		sigma_diff = new float[ p.steps + 3 ];
+		sigma_diff[ 0 ] = 0.0f;
+		kernel_diff = new float[ p.steps + 3 ][];
+		
+		for ( int i = 1; i < p.steps + 3; ++i )
+		{
+			sigma[ i ] = p.initialSigma * ( float )Math.pow( 2.0f, ( float )i / ( float )p.steps );
+			sigma_diff[ i ] = ( float )Math.sqrt( sigma[ i ] * sigma[ i ] - p.initialSigma * p.initialSigma );
+			
+			kernel_diff[ i ] = Filter.createGaussianKernel( sigma_diff[ i ], true );
 		}
 	}
 	
@@ -147,33 +150,15 @@ public class FloatArray2DSIFT
 	 *   Use this to save memory and procesing time, if processing higher
 	 *   resolutions is not necessary.
 	 */
-	public void init(
-			FloatArray2D src,
-			int steps,
-			float initial_sigma,
-			int min_size,
-			int max_size )
+	@Override
+	final public void init( FloatArray2D src )
 	{
-		float[] sigma = new float[ steps + 3 ];
-		sigma[ 0 ] = initial_sigma;
-		float[] sigma_diff = new float[ steps + 3 ];
-		sigma_diff[ 0 ] = 0.0f;
-		float[][] kernel_diff = new float[ steps + 3 ][];
-		
-		for ( int i = 1; i < steps + 3; ++i )
-		{
-			sigma[ i ] = initial_sigma * ( float )Math.pow( 2.0f, ( float )i / ( float )steps );
-			sigma_diff[ i ] = ( float )Math.sqrt( sigma[ i ] * sigma[ i ] - initial_sigma * initial_sigma );
-			
-			kernel_diff[ i ] = Filter.createGaussianKernel( sigma_diff[ i ], true );
-		}
-		
 		// estimate the number of octaves needed using a simple while loop instead of ld
 		int o = 0;
 		float w = ( float )src.width;
 		float h = ( float )src.height;
-		int max_kernel_size = kernel_diff[ steps + 2 ].length;
-		while ( w > Math.max( max_kernel_size, min_size ) && h > Math.max( max_kernel_size, min_size ) )
+		final int max_kernel_size = kernel_diff[ p.steps + 2 ].length;
+		while ( w > Math.max( max_kernel_size, p.minOctaveSize ) && h > Math.max( max_kernel_size, p.minOctaveSize ) )
 		{
 			w /= 2.0f;
 			h /= 2.0f;
@@ -195,16 +180,11 @@ public class FloatArray2DSIFT
 					src.width / 2 + src.width % 2,
 					src.height / 2 + src.height % 2 );
 			FloatArray2DScaleOctave.downsample( octaves[ i ].getL( 1 ), next );
-			if ( src.width > max_size || src.height > max_size )
+			if ( src.width > p.maxOctaveSize || src.height > p.maxOctaveSize )
 				octaves[ i ].clear();
 			src = next;
 		}
 	}
-	
-	// TODO this is for test
-	//---------------------------------------------------------------------
-	//public FloatArray2D pattern;
-	
 	
 	/**
 	 * sample the scaled and rotated gradients in a region around the
@@ -228,11 +208,11 @@ public class FloatArray2DSIFT
 		FloatArray2D[] region = new FloatArray2D[ 2 ];
 		
 		region[ 0 ] = new FloatArray2D(
-				FEATURE_DESCRIPTOR_WIDTH,
-				FEATURE_DESCRIPTOR_WIDTH );
+				fdWidth,
+				fdWidth );
 		region[ 1 ] = new FloatArray2D(
-				FEATURE_DESCRIPTOR_WIDTH,
-				FEATURE_DESCRIPTOR_WIDTH );
+				fdWidth,
+				fdWidth );
 		float cos_o = ( float )Math.cos( orientation );
 		float sin_o = ( float )Math.sin( orientation );
 
@@ -242,14 +222,14 @@ public class FloatArray2DSIFT
 		//pattern = new FloatArray2D( FEATURE_DESCRIPTOR_WIDTH, FEATURE_DESCRIPTOR_WIDTH );
 		
 		//! sample the region arround the keypoint location
-		for ( int y = FEATURE_DESCRIPTOR_WIDTH - 1; y >= 0; --y )
+		for ( int y = fdWidth - 1; y >= 0; --y )
 		{
 			float ys =
-				( ( float )y - 2.0f * ( float )FEATURE_DESCRIPTOR_SIZE + 0.5f ) * octave_sigma; //!< scale y around 0,0
-			for ( int x = FEATURE_DESCRIPTOR_WIDTH - 1; x >= 0; --x )
+				( ( float )y - 2.0f * ( float )p.fdSize + 0.5f ) * octave_sigma; //!< scale y around 0,0
+			for ( int x = fdWidth - 1; x >= 0; --x )
 			{
 				float xs =
-					( ( float )x - 2.0f * ( float )FEATURE_DESCRIPTOR_SIZE + 0.5f ) * octave_sigma; //!< scale x around 0,0
+					( ( float )x - 2.0f * ( float )p.fdSize + 0.5f ) * octave_sigma; //!< scale x around 0,0
 				float yr = cos_o * ys + sin_o * xs; //!< rotate y around 0,0
 				float xr = cos_o * xs - sin_o * ys; //!< rotate x around 0,0
 
@@ -269,7 +249,7 @@ public class FloatArray2DSIFT
 						gradients[ 0 ].width );
 
 				// get the samples
-				int region_p = FEATURE_DESCRIPTOR_WIDTH * y + x;
+				int region_p = fdWidth * y + x;
 				int gradient_p = gradients[ 0 ].width * yg + xg;
 
 				// weigh the gradients
@@ -286,28 +266,28 @@ public class FloatArray2DSIFT
 		
 		
 		
-		float[][][] hist = new float[ FEATURE_DESCRIPTOR_SIZE ][ FEATURE_DESCRIPTOR_SIZE ][ FEATURE_DESCRIPTOR_ORIENTATION_BINS ];
+		final float[][][] hist = new float[ p.fdSize ][ p.fdSize ][ p.fdBins ];
 
 		// build the orientation histograms of 4x4 subregions
-		for ( int y = FEATURE_DESCRIPTOR_SIZE - 1; y >= 0; --y )
+		for ( int y = p.fdSize - 1; y >= 0; --y )
 		{
-			int yp = FEATURE_DESCRIPTOR_SIZE * 16 * y;
-			for ( int x = FEATURE_DESCRIPTOR_SIZE - 1; x >= 0; --x )
+			int yp = p.fdSize * 16 * y;
+			for ( int x = p.fdSize - 1; x >= 0; --x )
 			{
 				int xp = 4 * x;
 				for ( int ysr = 3; ysr >= 0; --ysr )
 				{
-					int ysrp = 4 * FEATURE_DESCRIPTOR_SIZE * ysr;
+					int ysrp = 4 * p.fdSize * ysr;
 					for ( int xsr = 3; xsr >= 0; --xsr )
 					{
-						float bin_location = ( region[ 1 ].data[ yp + xp + ysrp + xsr ] + ( float )Math.PI ) / ( float )FEATURE_DESCRIPTOR_ORIENTATION_BIN_SIZE;
+						float bin_location = ( region[ 1 ].data[ yp + xp + ysrp + xsr ] + ( float )Math.PI ) / ( float )fdBinWidth;
 
 						int bin_b = ( int )( bin_location );
 						int bin_t = bin_b + 1;
 						float d = bin_location - ( float )bin_b;
 						
-						bin_b = ( bin_b + 2 * FEATURE_DESCRIPTOR_ORIENTATION_BINS ) % FEATURE_DESCRIPTOR_ORIENTATION_BINS;
-						bin_t = ( bin_t + 2 * FEATURE_DESCRIPTOR_ORIENTATION_BINS ) % FEATURE_DESCRIPTOR_ORIENTATION_BINS;
+						bin_b = ( bin_b + 2 * p.fdBins ) % p.fdBins;
+						bin_t = ( bin_t + 2 * p.fdBins ) % p.fdBins;
 
 						float t = region[ 0 ].data[ yp + xp + ysrp + xsr ];
 						
@@ -318,16 +298,16 @@ public class FloatArray2DSIFT
 			}
 		}
 		
-		float[] desc = new float[ FEATURE_DESCRIPTOR_SIZE * FEATURE_DESCRIPTOR_SIZE * FEATURE_DESCRIPTOR_ORIENTATION_BINS ];
+		final float[] desc = new float[ p.fdSize * p.fdSize * p.fdBins ];
 		
 		// normalize, cut above 0.2 and renormalize
 		float max_bin_val = 0;
 		int i = 0;
-		for ( int y = FEATURE_DESCRIPTOR_SIZE - 1; y >= 0; --y )
+		for ( int y = p.fdSize - 1; y >= 0; --y )
 		{
-			for ( int x = FEATURE_DESCRIPTOR_SIZE - 1; x >= 0; --x )
+			for ( int x = p.fdSize - 1; x >= 0; --x )
 			{
-				for ( int b = FEATURE_DESCRIPTOR_ORIENTATION_BINS - 1; b >= 0; --b )
+				for ( int b = p.fdBins - 1; b >= 0; --b )
 				{
 					desc[ i ] = hist[ y ][ x ][ b ];
 					if ( desc[ i ] > max_bin_val ) max_bin_val = desc[ i ];
@@ -354,10 +334,10 @@ public class FloatArray2DSIFT
 	 * @param o octave index
 	 * @param features finally contains all processed candidates
 	 */
-	void processCandidate(
-			float[] c,
-			int o,
-			Vector< Feature > features )
+	final protected void processCandidate(
+			final float[] c,
+			final int o,
+			final List< Feature > features )
 	{
 		final int ORIENTATION_BINS = 36;
 		final float ORIENTATION_BIN_SIZE = 2.0f * ( float )Math.PI / ( float )ORIENTATION_BINS;

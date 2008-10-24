@@ -285,8 +285,6 @@ public class Align_ElasticMeshStack implements PlugIn
 		impAligned = new ImagePlus( imp.getTitle() + " aligned", stackAligned );
 		impAligned.show();
 			
-		ImageProcessor ip;
-			
 		FloatArray2DSIFT sift = new FloatArray2DSIFT( fdSize, fdBins );
 			
 		FloatArray2D fa = new FloatArray2D( imp.getWidth(), imp.getHeight() );
@@ -351,8 +349,8 @@ public class Align_ElasticMeshStack implements PlugIn
 			start_time = System.currentTimeMillis();
 			IJ.log( "identifying correspondences using brute force ..." );
 			List< PointMatch > candidates = 
-					//FloatArray2DSIFT.createMatches( features1, features2, rod );
-					FloatArray2DSIFT.createMatches( features2, features1, 1.33f, null, 1, rod );
+					FloatArray2DSIFT.createMatches( features1, features2, rod );
+					//FloatArray2DSIFT.createMatches( features2, features1, 1.33f, null, 1, rod );
 			IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms" );
 				
 			IJ.log( candidates.size() + " potentially corresponding features identified" );
