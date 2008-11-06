@@ -8,7 +8,6 @@ import ij.process.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Vector;
 import java.awt.Color;
 import java.awt.Polygon;
 import java.awt.TextField;
