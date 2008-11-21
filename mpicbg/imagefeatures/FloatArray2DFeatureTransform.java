@@ -28,8 +28,6 @@ package mpicbg.imagefeatures;
 
 import java.util.List;
 
-import mpicbg.models.*;
-
 abstract public class FloatArray2DFeatureTransform< P >
 {
 	final P p;
