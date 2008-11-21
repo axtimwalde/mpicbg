@@ -36,5 +36,4 @@ public interface InverseCoordinateTransform
 	 * @param point
 	 */
 	public void applyInverseInPlace( float[] point ) throws NoninvertibleModelException;
-	
 }
