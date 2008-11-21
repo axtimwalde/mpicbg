@@ -9,7 +9,6 @@ import ij.gui.*;
 import ij.io.OpenDialog;
 
 import mpicbg.ij.InteractiveInvertibleCoordinateTransform;
-import mpicbg.ij.InverseTransformMapping;
 import mpicbg.models.*;
 
 public class Transform_Test extends InteractiveInvertibleCoordinateTransform< HomographyModel2D >
