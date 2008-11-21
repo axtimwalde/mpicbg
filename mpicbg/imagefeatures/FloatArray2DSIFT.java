@@ -141,8 +141,9 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 	/**
 	 * initialize the scale space as a scale pyramid having octave stubs only
 	 * 
-	 * @param src image having a generating gaussian kernel of initial_sigma
-	 * 	 img must be a 2d-array of float values in range [0.0f, ..., 1.0f]
+	 * @param src image having a generating gaussian kernel of
+	 * 	{@link Param#initialSigma} img must be a 2d-array of float
+	 *  values in range [0.0f, ..., 1.0f]
 	 * @param steps gaussian smooth steps steps per scale octave
 	 * @param initial_sigma sigma of the generating gaussian kernel of img
 	 * @param min_size minimal size of a scale octave in pixel
