@@ -50,7 +50,7 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 {
 	static final protected int MIN_NUM_MATCHES = 2;
 	
-	private float scos = 1.0f, ssin = 0.0f, tx = 0.0f, ty = 0.0f;
+	protected float scos = 1.0f, ssin = 0.0f, tx = 0.0f, ty = 0.0f;
 	private float iscos = 1.0f, issin = 0.0f, itx = 0.0f, ity = 0.0f;
 	
 	
