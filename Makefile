@@ -31,8 +31,7 @@ JAVAS=$(wildcard \
 	Transform_Roi.java \
 	Transform_SpringMesh.java \
 	Transform_TriangularGrid.java)
-RESOURCES ?= deformation.tpl.svg \
-	template.svg
+RESOURCES ?= template.svg
 CLASSES=$(patsubst %.java,%.class,$(JAVAS))
 ALL_CLASSES=$(patsubst %.java,%*.class,$(JAVAS))
 TARGET=mpicbg_.jar
