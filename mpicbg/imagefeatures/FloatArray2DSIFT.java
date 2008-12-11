@@ -747,4 +747,7 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		System.out.println( " done" );
 		return h;
 	}
+	
+	final public float getInitialSigma(){ return p.initialSigma; }
+	final public void setInitialSigma( final float initialSigma ){ p.initialSigma = initialSigma; }
 }

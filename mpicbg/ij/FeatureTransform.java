@@ -40,7 +40,7 @@ import mpicbg.models.PointMatch;
 
 abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< ? > >
 {
-	final T t;
+	final protected T t;
 	
 	/**
 	 * Constructor
@@ -53,14 +53,14 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 	}
 	
 	/**
-	 * Detect features from an ImageProcessor
+	 * Extract features from an ImageProcessor
 	 * 
 	 * @param ip
 	 * @param features the list to be filled
 	 * 
 	 * @return number of detected features
 	 */
-	final public int extractFeatures( final ImageProcessor ip, final List< Feature > features )
+	public int extractFeatures( final ImageProcessor ip, final List< Feature > features )
 	{
 		final FloatArray2D fa = new FloatArray2D( ip.getWidth(), ip.getHeight() );
 		ImageArrayConverter.imageProcessorToFloatArray2D( ip, fa );

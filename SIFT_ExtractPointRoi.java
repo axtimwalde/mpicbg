@@ -24,6 +24,7 @@
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.4b
  */
+import mpicbg.ij.SIFT;
 import mpicbg.imagefeatures.*;
 import mpicbg.models.*;
 
@@ -166,32 +167,11 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 	final protected void extractFeatures(
 			final ImageProcessor ip,
 			final List< Feature > fs,
-			final FloatArray2DSIFT sift,
-			final Param p )
+			final SIFT sift )
 	{
-		FloatArray2D fa = new FloatArray2D( ip.getWidth(), ip.getHeight() );
-		ImageArrayConverter.imageProcessorToFloatArray2D( ip, fa );
-		Filter.enhance( fa, 1.0f );
-		
-		final float[] initialKernel;
-		
-		if ( p.upscale )
-		{
-			final FloatArray2D fat = new FloatArray2D( fa.width * 2 - 1, fa.height * 2 - 1 ); 
-			FloatArray2DScaleOctave.upsample( fa, fat );
-			fa = fat;
-			initialKernel = Filter.createGaussianKernel( ( float )Math.sqrt( p.initialSigma * p.initialSigma - 1.0 ), true );
-		}
-		else
-			initialKernel = Filter.createGaussianKernel( ( float )Math.sqrt( p.initialSigma * p.initialSigma - 0.25 ), true );
-			
-		fa = Filter.convolveSeparable( fa, initialKernel, initialKernel );
-		
-		
 		long start_time = System.currentTimeMillis();
 		IJ.log( "Processing SIFT ..." );
-		sift.init( fa, p.steps, p.initialSigma, p.minOctaveSize, p.maxOctaveSize );
-		fs.addAll( sift.run( p.maxOctaveSize ) );
+		sift.extractFeatures( ip, fs );
 		Collections.sort( fs );
 		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );
 		IJ.log( fs.size() + " features extracted." );
@@ -267,6 +247,7 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 		p.modelIndex = gd.getNextChoiceIndex();
 		
 		FloatArray2DSIFT sift = new FloatArray2DSIFT( p.fdSize, p.fdBins );
+		
 		extractFeatures( imp1.getProcessor(), fs1, sift, p );
 		extractFeatures( imp2.getProcessor(), fs2, sift, p );
 		

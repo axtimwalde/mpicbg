@@ -30,7 +30,7 @@ import java.util.List;
 
 abstract public class FloatArray2DFeatureTransform< P >
 {
-	final P p;
+	final protected P p;
 	
 	/**
 	 * Constructor
