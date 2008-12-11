@@ -50,7 +50,7 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 {
 	static final protected int MIN_NUM_MATCHES = 2;
 	
-	private float cos = 1.0f, sin = 0.0f, tx = 0.0f, ty = 0.0f;
+	protected float cos = 1.0f, sin = 0.0f, tx = 0.0f, ty = 0.0f;
 	private float itx = 0.0f, ity = 0.0f;
 	
 	
