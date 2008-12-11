@@ -16,6 +16,7 @@ JAVAS=$(wildcard \
     mpicbg/ij/*.java \
 	mpicbg/imagefeatures/*.java \
     mpicbg/models/*.java \
+    mpicbg/trakem2/*.java \
     mpicbg/util/*.java \
 	Align_ElasticMeshStack.java \
 	MOPS_ExtractPointRoi.java \
