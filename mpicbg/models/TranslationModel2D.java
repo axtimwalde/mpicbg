@@ -31,7 +31,7 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 {
 	static final protected int MIN_NUM_MATCHES = 1;
 	
-	private float tx = 0, ty = 0;
+	protected float tx = 0, ty = 0;
 	
 	@Override
 	final public int getMinNumMatches(){ return MIN_NUM_MATCHES; }
@@ -146,5 +146,21 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 	{
 		tx += m.tx;
 		ty += m.ty;
+	}
+	
+	/**
+	 * Initialize the model such that the respective affine transform is:
+	 * 
+	 * 1 0 tx
+	 * 0 1 ty
+	 * 0 0 1
+	 * 
+	 * @param tx
+	 * @param ty
+	 */
+	final public void set( final float tx, final float ty )
+	{
+		this.tx = tx;
+		this.ty = ty;
 	}
 }

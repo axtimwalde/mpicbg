@@ -69,7 +69,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	{
 		assert l.length == 2 : "2d affine transformations can be applied to 2d points only.";
 		
-		final float[] transformed = new float[ 2 ];
+		final float[] transformed = l.clone();
 		applyInPlace( transformed );
 		return transformed;
 	}
@@ -89,7 +89,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	{
 		assert l.length == 2 : "2d affine transformations can be applied to 2d points only.";
 		
-		final float[] transformed = new float[ 2 ];
+		final float[] transformed = l.clone();
 		applyInverseInPlace( transformed );
 		return transformed;
 	}
@@ -199,6 +199,8 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 
 		m02 = m.m02;
 		m12 = m.m12;
+		
+		invert();
 
 		cost = m.getCost();
 	}
@@ -214,8 +216,11 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 
 		m.m02 = m02;
 		m.m12 = m12;
-
+		
 		m.cost = cost;
+		
+		m.invert();
+
 		return m;
 	}
 	
@@ -279,6 +284,36 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		m10 = a10;
 		m11 = a11;
 		m12 = a12;
+		
+		invert();
+	}
+	
+	/**
+	 * Initialize the model such that the respective affine transform is:
+	 * 
+	 * m00 m01 m02
+	 * m10 m11 m12
+	 * 0   0   1
+	 * 
+	 * @param m00
+	 * @param m10
+	 * 
+	 * @param m01
+	 * @param m11
+	 * 
+	 * @param m02
+	 * @param m12
+	 */
+	final public void set( final float m00, final float m10, final float m01, final float m11, final float m02, final float m12 )
+	{
+		this.m00 = m00;
+		this.m10 = m10;
+		
+		this.m01 = m01;
+		this.m11 = m11;
+		
+		this.m02 = m02;
+		this.m12 = m12;
 		
 		invert();
 	}
