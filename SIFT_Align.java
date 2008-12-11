@@ -1,5 +1,5 @@
 import mpicbg.ij.Mapping;
-import mpicbg.ij.TransformMapping;
+import mpicbg.ij.InverseTransformMapping;
 import mpicbg.imagefeatures.*;
 import mpicbg.models.*;
 
@@ -8,10 +8,11 @@ import ij.gui.*;
 import ij.*;
 import ij.process.*;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Vector;
 import java.awt.Color;
-import java.awt.Polygon;
 import java.awt.TextField;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -80,176 +81,196 @@ import java.awt.event.KeyListener;
  */
 public class SIFT_Align implements PlugIn, KeyListener
 {
-	// steps
-	private static int steps = 3;
-	// initial sigma
-	private static float initial_sigma = 1.6f;
-	// background colour
-	private static double bg = 0.0;
-	// feature descriptor size
-	private static int fdsize = 4;
-	// feature descriptor orientation bins
-	private static int fdbins = 8;
-	// closest/next closest neighbour distance ratio
-	private static float rod = 0.92f;
-	// size restrictions for scale octaves, use octaves < max_size and > min_size only
-	private static int min_size = 64;
-	private static int max_size = 1024;
-	// maximal allowed alignment error in px
-	private static float max_epsilon = 100.0f;
-	private static float min_inlier_ratio = 0.05f;
+	final private List< Feature > fs1 = new ArrayList< Feature >();
+	final private List< Feature > fs2 = new ArrayList< Feature >();;
 	
-	/**
-	 * Implemeted transformation models for choice
-	 */
-	final static String[] modelStrings = new String[]{ "Translation", "Rigid", "Affine" };
-	private static int modelIndex = 1;
-	
-	/**
-	 * Set true to double the size of the image by linear interpolation to
-	 * ( with * 2 + 1 ) * ( height * 2 + 1 ).  Thus we can start identifying
-	 * DoG extrema with $\sigma = INITIAL_SIGMA / 2$ like proposed by
-	 * \citet{Lowe04}.
-	 * 
-	 * This is useful for images scmaller than 1000px per side only. 
-	 */ 
-	private static boolean upscale = false;
-	private static float scale = 1.0f;
-	
-	private static boolean interpolate = true;
-	
-	/**
-	 * show the employed feature correspondences in a small info stack
-	 */
-	private static boolean show_info = false;
-
-	/**
-	 * draw an arbitrarily rotated and scaled ellipse
-	 * 
-	 * @param evec eigenvectors of unit length ( ev1_x, ev1_y, ev2_x, ev2_y ) define the ellipse's rotation
-	 * @param e eigenvalues ( e1, e2 ) define the ellipses size
-	 * @param o center of the ellipse ( o_x, o_y )
-	 * @param scale scales both, e and o
-	 */
-	static void drawEllipse( ImageProcessor ip, double[] evec, double[] o, double[] e, double scale )
-	{
-		int num_keys = 36;
-		int[] x_keys = new int[ num_keys + 1 ];
-		int[] y_keys = new int[ num_keys + 1 ];
-		for ( int i = 0; i < num_keys; ++i )
-		{
-			double r = ( double )i * 2 * Math.PI / ( double )num_keys;
-			double x = Math.sin( r ) * Math.sqrt( Math.abs( e[ 0 ] ) );
-			double y = Math.cos( r ) * Math.sqrt( Math.abs( e[ 1 ] ) );
-			x_keys[ i ] = ( int )( scale * ( x * evec[ 0 ] + y * evec[ 2 ] + o[ 0 ] ) );
-			y_keys[ i ] = ( int )( scale * ( x * evec[ 1 ] + y * evec[ 3 ] + o[ 1 ] ) );
-//			System.out.println( "keypoint: ( " + x_keys[ i ] + ", " + y_keys[ i ] + ")" );
-		}
-		x_keys[ num_keys ] = x_keys[ 0 ];
-		y_keys[ num_keys ] = y_keys[ 0 ];
-		ip.drawPolygon( new Polygon( x_keys, y_keys, num_keys + 1 ) );
+	static private class Param
+	{	
+		/**
+		 * Steps per Scale Octave 
+		 */
+		public int steps = 3;
+		
+		/**
+		 * Initial sigma of each Scale Octave
+		 */
+		public float initialSigma = 1.6f;
+		
+		/**
+		 * Feature descriptor size
+		 *    How many samples per row and column
+		 */
+		public int fdSize = 4;
+		
+		/**
+		 * Feature descriptor orientation bins
+		 *    How many bins per local histogram
+		 */
+		public int fdBins = 8;
+		
+		/**
+		 * Closest/next closest neighbour distance ratio
+		 */
+		public float rod = 0.92f;
+		
+		/**
+		 * Size limits for scale octaves in px:
+		 * 
+		 * minOctaveSize < octave < maxOctaveSize
+		 */
+		public int minOctaveSize = 64;
+		public int maxOctaveSize = 1024;
+		
+		/**
+		 * Maximal allowed alignment error in px
+		 */
+		public float maxEpsilon = 25.0f;
+		
+		/**
+		 * Inlier/candidates ratio
+		 */
+		public float minInlierRatio = 0.05f;
+		
+		/**
+		 * Implemeted transformation models for choice
+		 */
+		final static public String[] modelStrings = new String[]{ "Translation", "Rigid", "Similarity", "Affine" };
+		public int modelIndex = 1;
+		
+		/**
+		 * Set true to double the size of the image by linear interpolation to
+		 * ( with * 2 + 1 ) * ( height * 2 + 1 ).  Thus we can start identifying
+		 * DoG extrema with $\sigma = INITIAL_SIGMA / 2$ like proposed by
+		 * \citet{Lowe04}.
+		 * 
+		 * This is useful for images scmaller than 1000px per side only. 
+		 */ 
+		public boolean upscale = false;
+		
+		public boolean interpolate = true;
+		
+		public boolean showInfo = false;
 	}
+	
+	final static Param p = new Param(); 
 
 	/**
 	 * downscale a grey scale float image using gaussian blur
 	 */
-	static ImageProcessor downScale( FloatProcessor ip, float s )
+	final static private ImageProcessor downScale( ImageProcessor ip, float s )
 	{
-		FloatArray2D g = ImageArrayConverter.ImageToFloatArray2D( ip );
+		final FloatArray2D g = new FloatArray2D( ip.getWidth(), ip.getHeight() );
+		ImageArrayConverter.imageProcessorToFloatArray2D( ip, g );
 
-		float sigma = ( float )Math.sqrt( 0.25 / s / s - 0.25 );
+		float sigma = ( float )Math.sqrt( 0.25 * 0.25 / s / s - 0.25 );
 		float[] kernel = Filter.createGaussianKernel( sigma, true );
 		
-		g = Filter.convolveSeparable( g, kernel, kernel );
+		final FloatArray2D h = Filter.convolveSeparable( g, kernel, kernel );
+		
+		final FloatProcessor fp = new FloatProcessor( ip.getWidth(), ip.getHeight() );
 
-		ImageArrayConverter.FloatArrayToFloatProcessor( ip, g );
-//		ip.setInterpolate( false );
+		ImageArrayConverter.floatArray2DToFloatProcessor( h, fp );
 		return ip.resize( ( int )( s * ip.getWidth() ) );
 	}
 	
-	/**
-	 * draws a rotated square with center point  center, having size and orientation
-	 */
-	static void drawSquare( ImageProcessor ip, double[] o, double scale, double orient )
+	final protected void extractFeatures(
+			final ImageProcessor ip,
+			final List< Feature > fs,
+			final FloatArray2DSIFT sift,
+			final Param p )
 	{
-		scale /= 2;
+		FloatArray2D fa = new FloatArray2D( ip.getWidth(), ip.getHeight() );
+		ImageArrayConverter.imageProcessorToFloatArray2D( ip, fa );
+		Filter.enhance( fa, 1.0f );
 		
-	    double sin = Math.sin( orient );
-	    double cos = Math.cos( orient );
-	    
-	    int[] x = new int[ 6 ];
-	    int[] y = new int[ 6 ];
-	    
-
-	    x[ 0 ] = ( int )( o[ 0 ] + ( sin - cos ) * scale );
-	    y[ 0 ] = ( int )( o[ 1 ] - ( sin + cos ) * scale );
-	    
-	    x[ 1 ] = ( int )o[ 0 ];
-	    y[ 1 ] = ( int )o[ 1 ];
-	    
-	    x[ 2 ] = ( int )( o[ 0 ] + ( sin + cos ) * scale );
-	    y[ 2 ] = ( int )( o[ 1 ] + ( sin - cos ) * scale );
-	    x[ 3 ] = ( int )( o[ 0 ] - ( sin - cos ) * scale );
-	    y[ 3 ] = ( int )( o[ 1 ] + ( sin + cos ) * scale );
-	    x[ 4 ] = ( int )( o[ 0 ] - ( sin + cos ) * scale );
-	    y[ 4 ] = ( int )( o[ 1 ] - ( sin - cos ) * scale );
-	    x[ 5 ] = x[ 0 ];
-	    y[ 5 ] = y[ 0 ];
-	    
-	    ip.drawPolygon( new Polygon( x, y, x.length ) );
+		final float[] initialKernel;
+		
+		if ( p.upscale )
+		{
+			final FloatArray2D fat = new FloatArray2D( fa.width * 2 - 1, fa.height * 2 - 1 ); 
+			FloatArray2DScaleOctave.upsample( fa, fat );
+			fa = fat;
+			initialKernel = Filter.createGaussianKernel( ( float )Math.sqrt( p.initialSigma * p.initialSigma - 1.0 ), true );
+		}
+		else
+			initialKernel = Filter.createGaussianKernel( ( float )Math.sqrt( p.initialSigma * p.initialSigma - 0.25 ), true );
+			
+		fa = Filter.convolveSeparable( fa, initialKernel, initialKernel );
+		
+		
+		long start_time = System.currentTimeMillis();
+		IJ.log( "Processing SIFT ..." );
+		sift.init( fa, p.steps, p.initialSigma, p.minOctaveSize, p.maxOctaveSize );
+		fs.addAll( sift.run( p.maxOctaveSize ) );
+		Collections.sort( fs );
+		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );
+		IJ.log( fs.size() + " features extracted." );
 	}
-
-	public void run( String args )
+	
+	final public void run( final String args )
 	{
-		if ( IJ.versionLessThan( "1.41m" ) ) return;
+		fs1.clear();
+		fs2.clear();
+		
+		if ( IJ.versionLessThan( "1.41n" ) ) return;
 
 		final ImagePlus imp = WindowManager.getCurrentImage();
 		if ( imp == null )  { System.err.println( "There are no images open" ); return; }
 		
 		GenericDialog gd = new GenericDialog( "Align stack" );
-		gd.addNumericField( "steps_per_scale_octave :", steps, 0 );
-		gd.addNumericField( "initial_gaussian_blur :", initial_sigma, 2 );
-		gd.addNumericField( "feature_descriptor_size :", fdsize, 0 );
-		gd.addNumericField( "feature_descriptor_orientation_bins :", fdbins, 0 );
-		gd.addNumericField( "minimum_image_size :", min_size, 0 );
-		gd.addNumericField( "maximum_image_size :", max_size, 0 );
-		gd.addNumericField( "closest/next_closest_ratio :", rod, 2 );
-		gd.addNumericField( "maximal_alignment_error :", max_epsilon, 2 );
-		gd.addNumericField( "inlier_ratio :", min_inlier_ratio, 2 );
-		gd.addNumericField( "background_color :", bg, 2 );
-		gd.addCheckbox( "upscale_image_first", upscale );
-		gd.addChoice( "transformation_class", modelStrings, modelStrings[ modelIndex ] );
-		gd.addCheckbox( "interpolate", interpolate );
-		gd.addCheckbox( "display_correspondences", show_info );
+		gd.addMessage( "Scale Invariant Interest Point Detector:" );
+		gd.addNumericField( "initial_gaussian_blur :", p.initialSigma, 2, 6, "px" );
+		gd.addNumericField( "steps_per_scale_octave :", p.steps, 0 );
+		gd.addNumericField( "minimum_image_size :", p.minOctaveSize, 0, 6, "px" );
+		gd.addNumericField( "maximum_image_size :", p.maxOctaveSize, 0, 6, "px" );
+		gd.addCheckbox( "upscale_image_first", p.upscale );
+		
+		gd.addMessage( "Feature Descriptor:" );
+		gd.addNumericField( "feature_descriptor_size :", p.fdSize, 0 );
+		gd.addNumericField( "feature_descriptor_orientation_bins :", p.fdBins, 0 );
+		gd.addNumericField( "closest/next_closest_ratio :", p.rod, 2 );
+		
+		gd.addMessage( "Geometric Consensus Filter:" );
+		gd.addNumericField( "maximal_alignment_error :", p.maxEpsilon, 2, 6, "px" );
+		gd.addNumericField( "inlier_ratio :", p.minInlierRatio, 2 );
+		gd.addChoice( "expected_transformation :", Param.modelStrings, Param.modelStrings[ p.modelIndex ] );
+		
+		gd.addMessage( "Output:" );
+		gd.addCheckbox( "interpolate", p.interpolate );
+		gd.addCheckbox( "show_info", p.showInfo );
+		
 		gd.showDialog();
+		
 		if (gd.wasCanceled()) return;
 		
-		steps = ( int )gd.getNextNumber();
-		initial_sigma = ( float )gd.getNextNumber();
-		fdsize = ( int )gd.getNextNumber();
-		fdbins = ( int )gd.getNextNumber();
-		min_size = ( int )gd.getNextNumber();
-		max_size = ( int )gd.getNextNumber();
-		rod = ( float )gd.getNextNumber();
-		max_epsilon = ( float )gd.getNextNumber();
-		min_inlier_ratio = ( float )gd.getNextNumber();
-		bg = ( double )gd.getNextNumber();
-		upscale = gd.getNextBoolean();
-		if ( upscale ) scale = 2.0f;
-		else scale = 1.0f;
-		modelIndex = gd.getNextChoiceIndex();
-		interpolate = gd.getNextBoolean();
-		show_info = gd.getNextBoolean();
+		p.initialSigma = ( float )gd.getNextNumber();
+		p.steps = ( int )gd.getNextNumber();
+		p.minOctaveSize = ( int )gd.getNextNumber();
+		p.maxOctaveSize = ( int )gd.getNextNumber();
+		p.upscale = gd.getNextBoolean();
+		
+		float scale = 1.0f;
+		if ( p.upscale ) scale = 2.0f;
+		
+		p.fdSize = ( int )gd.getNextNumber();
+		p.fdBins = ( int )gd.getNextNumber();
+		p.rod = ( float )gd.getNextNumber();
+		
+		p.maxEpsilon = ( float )gd.getNextNumber();
+		p.minInlierRatio = ( float )gd.getNextNumber();
+		p.modelIndex = gd.getNextChoiceIndex();
+		
+		p.interpolate = gd.getNextBoolean();
+		p.showInfo = gd.getNextBoolean();
 		
 		ImageStack stack = imp.getStack();
 		ImageStack stackAligned = new ImageStack( stack.getWidth(), stack.getHeight() );
 		
 		float vis_scale = 256.0f / imp.getWidth();
-//		float vis_scale = 1024.0f / imp.getWidth();
 		ImageStack stackInfo = null;
 		ImagePlus impInfo = null;
 		
-		if ( show_info )
+		if ( p.showInfo )
 			stackInfo = new ImageStack(
 					Math.round( vis_scale * stack.getWidth() ),
 					Math.round( vis_scale * stack.getHeight() ) );
@@ -259,49 +280,18 @@ public class SIFT_Align implements PlugIn, KeyListener
 		impAligned.show();
 		
 		ImageProcessor ip1;
-		ImageProcessor ip2;
+		ImageProcessor ip2 = stack.getProcessor( 1 );
 		ImageProcessor ip3 = null;
 		
-		Vector< Feature > fs1;
-		Vector< Feature > fs2;
-
-		ip2 = stack.getProcessor( 1 ).convertToFloat();
-		
-		FloatArray2DSIFT sift = new FloatArray2DSIFT( fdsize, fdbins );
-		
-		FloatArray2D fa = ImageArrayConverter.ImageToFloatArray2D( ip2 );
-		Filter.enhance( fa, 1.0f );
-		
-		float[] initial_kernel;
-		
-		if ( upscale )
-		{
-			FloatArray2D fat = new FloatArray2D( fa.width * 2 - 1, fa.height * 2 - 1 ); 
-			FloatArray2DScaleOctave.upsample( fa, fat );
-			fa = fat;
-			initial_kernel = Filter.createGaussianKernel( ( float )Math.sqrt( initial_sigma * initial_sigma - 1.0 ), true );
-		}
-		else
-			initial_kernel = Filter.createGaussianKernel( ( float )Math.sqrt( initial_sigma * initial_sigma - 0.25 ), true );
-		
-		fa = Filter.convolveSeparable( fa, initial_kernel, initial_kernel );
-		
-		
-		long start_time = System.currentTimeMillis();
-		System.out.print( "processing SIFT ..." );
-		sift.init( fa, steps, initial_sigma, min_size, max_size );
-		fs2 = sift.run( max_size );
-		Collections.sort( fs2 );
-		System.out.println( " took " + ( System.currentTimeMillis() - start_time ) + "ms" );
-		
-		System.out.println( fs2.size() + " features identified and processed" );
+		FloatArray2DSIFT sift = new FloatArray2DSIFT( p.fdSize, p.fdBins );
+		extractFeatures( ip2, fs2, sift, p );
 		
 		// downscale ip2 for visualisation purposes
-		if ( show_info )
-			ip2 = downScale( ( FloatProcessor )ip2, vis_scale );
+		if ( p.showInfo )
+			ip2 = downScale( ip2, vis_scale );
 		
 		AbstractAffineModel2D model;
-		switch ( modelIndex )
+		switch ( p.modelIndex )
 		{
 		case 0:
 			model = new TranslationModel2D();
@@ -310,44 +300,31 @@ public class SIFT_Align implements PlugIn, KeyListener
 			model = new RigidModel2D();
 			break;
 		case 2:
+			model = new SimilarityModel2D();
+			break;
+		case 3:
 			model = new AffineModel2D();
 			break;
 		default:
 			return;
 		}
-		Mapping mapping = new TransformMapping( model );
+		Mapping mapping = new InverseTransformMapping( model );
 		
 		for ( int i = 1; i < stack.getSize(); ++i )
 		{
 			ip1 = ip2;
-			ip2 = stack.getProcessor( i + 1 ).convertToFloat();
-			fa = ImageArrayConverter.ImageToFloatArray2D( ip2 );
-			Filter.enhance( fa, 1.0f );
+			ip2 = stack.getProcessor( i + 1 );
 			
-			if ( upscale )
-			{
-				FloatArray2D fat = new FloatArray2D( fa.width * 2 - 1, fa.height * 2 - 1 ); 
-				FloatArray2DScaleOctave.upsample( fa, fat );
-				fa = fat;
-			}
+			fs1.clear();
+			fs1.addAll( fs2 );
+			fs2.clear();
 			
-			fa = Filter.convolveSeparable( fa, initial_kernel, initial_kernel );
+			extractFeatures( ip2, fs2, sift, p );
 			
-			fs1 = fs2;
-			
-			start_time = System.currentTimeMillis();
-			System.out.print( "processing SIFT ..." );
-			sift.init( fa, steps, initial_sigma, min_size, max_size );
-			fs2 = sift.run( max_size);
-			Collections.sort( fs2 );
-			System.out.println( " took " + ( System.currentTimeMillis() - start_time ) + "ms" );
-			
-			System.out.println( fs2.size() + " features identified and processed");
-			
-			start_time = System.currentTimeMillis();
+			long start_time = System.currentTimeMillis();
 			System.out.print( "identifying correspondences using brute force ..." );
 			Vector< PointMatch > candidates = 
-				FloatArray2DSIFT.createMatches( fs2, fs1, 1.5f, null, Float.MAX_VALUE, rod );
+				FloatArray2DSIFT.createMatches( fs2, fs1, 1.5f, null, Float.MAX_VALUE, p.rod );
 			System.out.println( " took " + ( System.currentTimeMillis() - start_time ) + "ms" );
 			
 			IJ.log( candidates.size() + " potentially corresponding features identified" );
@@ -355,9 +332,9 @@ public class SIFT_Align implements PlugIn, KeyListener
 			/**
 			 * draw all correspondence candidates
 			 */
-			if ( show_info )
+			if (p.showInfo )
 			{
-				ip2 = downScale( ( FloatProcessor )ip2, vis_scale );
+				ip2 = downScale( ip2, vis_scale );
 			
 				ip1 = ip1.convertToRGB();
 				ip3 = ip2.convertToRGB();
@@ -380,7 +357,7 @@ public class SIFT_Align implements PlugIn, KeyListener
 			
 			// TODO Implement other models for choice
 			AbstractAffineModel2D< ? > currentModel;
-			switch ( modelIndex )
+			switch ( p.modelIndex )
 			{
 			case 0:
 				currentModel = new TranslationModel2D();
@@ -389,6 +366,9 @@ public class SIFT_Align implements PlugIn, KeyListener
 				currentModel = new RigidModel2D();
 				break;
 			case 2:
+				currentModel = new SimilarityModel2D();
+				break;
+			case 3:
 				currentModel = new AffineModel2D();
 				break;
 			default:
@@ -402,8 +382,8 @@ public class SIFT_Align implements PlugIn, KeyListener
 						candidates,
 						inliers,
 						1000,
-						max_epsilon,
-						min_inlier_ratio );
+						p.maxEpsilon,
+						p.minInlierRatio );
 			}
 			catch ( Exception e )
 			{
@@ -412,7 +392,7 @@ public class SIFT_Align implements PlugIn, KeyListener
 			}
 			if ( modelFound )
 			{
-				if ( show_info )
+				if ( p.showInfo )
 				{
 					ip1.setColor( Color.green );
 					ip3.setColor( Color.green );
@@ -436,13 +416,13 @@ public class SIFT_Align implements PlugIn, KeyListener
 			}
 			
 			ImageProcessor alignedSlice = stack.getProcessor( i + 1 ).duplicate();
-			if ( interpolate )
+			if ( p.interpolate )
 				mapping.mapInterpolated( stack.getProcessor( i + 1 ), alignedSlice );
 			else
 				mapping.map( stack.getProcessor( i + 1 ), alignedSlice );
 			
 			stackAligned.addSlice( null, alignedSlice );
-			if ( show_info )
+			if ( p.showInfo )
 			{
 				ImageProcessor tmp;
 				tmp = ip1.createProcessor( stackInfo.getWidth(), stackInfo.getHeight() );

@@ -8,7 +8,9 @@ import ij.process.*;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Vector;
 import java.awt.TextField;
 import java.awt.event.KeyEvent;
@@ -78,67 +80,77 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 	final static private DecimalFormat decimalFormat = new DecimalFormat();
 	final static private DecimalFormatSymbols decimalFormatSymbols = new DecimalFormatSymbols();
 	
-	/**
-	 * Steps per Scale Octave 
-	 */
-	private static int steps = 3;
+	private ImagePlus imp1;
+	private ImagePlus imp2;
 	
-	/**
-	 * Initial sigma of each Scale Octave
-	 */
-	private static float initialSigma = 1.6f;
+	final private List< Feature > fs1 = new ArrayList< Feature >();
+	final private List< Feature > fs2 = new ArrayList< Feature >();;
 	
-	/**
-	 * Feature descriptor size
-	 *    How many samples per row and column
-	 */
-	private static int fdSize = 4;
+	static private class Param
+	{	
+		/**
+		 * Steps per Scale Octave 
+		 */
+		public int steps = 3;
+		
+		/**
+		 * Initial sigma of each Scale Octave
+		 */
+		public float initialSigma = 1.6f;
+		
+		/**
+		 * Feature descriptor size
+		 *    How many samples per row and column
+		 */
+		public int fdSize = 4;
+		
+		/**
+		 * Feature descriptor orientation bins
+		 *    How many bins per local histogram
+		 */
+		public int fdBins = 8;
+		
+		/**
+		 * Closest/next closest neighbour distance ratio
+		 */
+		public float rod = 0.92f;
+		
+		/**
+		 * Size limits for scale octaves in px:
+		 * 
+		 * minOctaveSize < octave < maxOctaveSize
+		 */
+		public int minOctaveSize = 64;
+		public int maxOctaveSize = 1024;
+		
+		/**
+		 * Maximal allowed alignment error in px
+		 */
+		public float maxEpsilon = 25.0f;
+		
+		/**
+		 * Inlier/candidates ratio
+		 */
+		public float minInlierRatio = 0.05f;
+		
+		/**
+		 * Implemeted transformation models for choice
+		 */
+		final static public String[] modelStrings = new String[]{ "Translation", "Rigid", "Similarity", "Affine" };
+		public int modelIndex = 1;
+		
+		/**
+		 * Set true to double the size of the image by linear interpolation to
+		 * ( with * 2 + 1 ) * ( height * 2 + 1 ).  Thus we can start identifying
+		 * DoG extrema with $\sigma = INITIAL_SIGMA / 2$ like proposed by
+		 * \citet{Lowe04}.
+		 * 
+		 * This is useful for images scmaller than 1000px per side only. 
+		 */ 
+		public boolean upscale = false;
+	}
 	
-	/**
-	 * Feature descriptor orientation bins
-	 *    How many bins per local histogram
-	 */
-	private static int fdBins = 8;
-	
-	/**
-	 * Closest/next closest neighbour distance ratio
-	 */
-	private static float rod = 0.92f;
-	
-	/**
-	 * Size limits for scale octaves in px:
-	 * 
-	 * minOctaveSize < octave < maxOctaveSize
-	 */
-	private static int minOctaveSize = 64;
-	private static int maxOctaveSize = 1024;
-	
-	/**
-	 * Maximal allowed alignment error in px
-	 */
-	private static float maxEpsilon = 25.0f;
-	
-	/**
-	 * Inlier/candidates ratio
-	 */
-	private static float minInlierRatio = 0.05f;
-	
-	/**
-	 * Implemeted transformation models for choice
-	 */
-	final static String[] modelStrings = new String[]{ "Translation", "Rigid", "Affine" };
-	private static int modelIndex = 1;
-	
-	/**
-	 * Set true to double the size of the image by linear interpolation to
-	 * ( with * 2 + 1 ) * ( height * 2 + 1 ).  Thus we can start identifying
-	 * DoG extrema with $\sigma = INITIAL_SIGMA / 2$ like proposed by
-	 * \citet{Lowe04}.
-	 * 
-	 * This is useful for images scmaller than 1000px per side only. 
-	 */ 
-	private static boolean upscale = false;
-	private static float scale = 1.0f;
+	final static private Param p = new Param();
 	
 	public SIFT_ExtractPointRoi()
 	{
@@ -149,9 +161,47 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 		decimalFormat.setMinimumFractionDigits( 3 );		
 	}
 	
+	final protected void extractFeatures(
+			final ImageProcessor ip,
+			final List< Feature > fs,
+			final FloatArray2DSIFT sift,
+			final Param p )
+	{
+		FloatArray2D fa = new FloatArray2D( ip.getWidth(), ip.getHeight() );
+		ImageArrayConverter.imageProcessorToFloatArray2D( ip, fa );
+		Filter.enhance( fa, 1.0f );
+		
+		final float[] initialKernel;
+		
+		if ( p.upscale )
+		{
+			final FloatArray2D fat = new FloatArray2D( fa.width * 2 - 1, fa.height * 2 - 1 ); 
+			FloatArray2DScaleOctave.upsample( fa, fat );
+			fa = fat;
+			initialKernel = Filter.createGaussianKernel( ( float )Math.sqrt( p.initialSigma * p.initialSigma - 1.0 ), true );
+		}
+		else
+			initialKernel = Filter.createGaussianKernel( ( float )Math.sqrt( p.initialSigma * p.initialSigma - 0.25 ), true );
+			
+		fa = Filter.convolveSeparable( fa, initialKernel, initialKernel );
+		
+		
+		long start_time = System.currentTimeMillis();
+		IJ.log( "Processing SIFT ..." );
+		sift.init( fa, p.steps, p.initialSigma, p.minOctaveSize, p.maxOctaveSize );
+		fs.addAll( sift.run( p.maxOctaveSize ) );
+		Collections.sort( fs );
+		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );
+		IJ.log( fs.size() + " features extracted." );
+	}
+	
 	public void run( String args )
 	{
-		if ( IJ.versionLessThan( "1.37i" ) ) return;
+		// cleanup
+		fs1.clear();
+		fs2.clear();
+		
+		if ( IJ.versionLessThan( "1.40" ) ) return;
 		
 		int[] ids = WindowManager.getIDList();
 		if ( ids == null || ids.length < 2 )
@@ -174,98 +224,55 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 		gd.addChoice( "target_image", titles, current.equals( titles[ 0 ] ) ? titles[ 1 ] : titles[ 0 ] );
 		
 		gd.addMessage( "Scale Invariant Interest Point Detector:" );
-		gd.addNumericField( "initial_gaussian_blur :", initialSigma, 2, 6, "px" );
-		gd.addNumericField( "steps_per_scale_octave :", steps, 0 );
-		gd.addNumericField( "minimum_image_size :", minOctaveSize, 0, 6, "px" );
-		gd.addNumericField( "maximum_image_size :", maxOctaveSize, 0, 6, "px" );
-		gd.addCheckbox( "upscale_image_first", upscale );
+		gd.addNumericField( "initial_gaussian_blur :", p.initialSigma, 2, 6, "px" );
+		gd.addNumericField( "steps_per_scale_octave :", p.steps, 0 );
+		gd.addNumericField( "minimum_image_size :", p.minOctaveSize, 0, 6, "px" );
+		gd.addNumericField( "maximum_image_size :", p.maxOctaveSize, 0, 6, "px" );
+		gd.addCheckbox( "upscale_image_first", p.upscale );
 		
 		gd.addMessage( "Feature Descriptor:" );
-		gd.addNumericField( "feature_descriptor_size :", fdSize, 0 );
-		gd.addNumericField( "feature_descriptor_orientation_bins :", fdBins, 0 );
-		gd.addNumericField( "closest/next_closest_ratio :", rod, 2 );
+		gd.addNumericField( "feature_descriptor_size :", p.fdSize, 0 );
+		gd.addNumericField( "feature_descriptor_orientation_bins :", p.fdBins, 0 );
+		gd.addNumericField( "closest/next_closest_ratio :", p.rod, 2 );
 		
 		gd.addMessage( "Geometric Consensus Filter:" );
-		gd.addNumericField( "maximal_alignment_error :", maxEpsilon, 2, 6, "px" );
-		gd.addNumericField( "inlier_ratio :", minInlierRatio, 2 );
-		gd.addChoice( "expected_transformation :", modelStrings, modelStrings[ modelIndex ] );
+		gd.addNumericField( "maximal_alignment_error :", p.maxEpsilon, 2, 6, "px" );
+		gd.addNumericField( "inlier_ratio :", p.minInlierRatio, 2 );
+		gd.addChoice( "expected_transformation :", Param.modelStrings, Param.modelStrings[ p.modelIndex ] );
 		
 		gd.showDialog();
 		
 		if (gd.wasCanceled()) return;
 		
-		ImagePlus imp1 = WindowManager.getImage( ids[ gd.getNextChoiceIndex() ] );
-		ImagePlus imp2 = WindowManager.getImage( ids[ gd.getNextChoiceIndex() ] );
+		imp1 = WindowManager.getImage( ids[ gd.getNextChoiceIndex() ] );
+		imp2 = WindowManager.getImage( ids[ gd.getNextChoiceIndex() ] );
 		
-		initialSigma = ( float )gd.getNextNumber();
-		steps = ( int )gd.getNextNumber();
-		minOctaveSize = ( int )gd.getNextNumber();
-		maxOctaveSize = ( int )gd.getNextNumber();
-		upscale = gd.getNextBoolean();
-		if ( upscale ) scale = 2.0f;
-		else scale = 1.0f;
+		p.initialSigma = ( float )gd.getNextNumber();
+		p.steps = ( int )gd.getNextNumber();
+		p.minOctaveSize = ( int )gd.getNextNumber();
+		p.maxOctaveSize = ( int )gd.getNextNumber();
+		p.upscale = gd.getNextBoolean();
 		
-		fdSize = ( int )gd.getNextNumber();
-		fdBins = ( int )gd.getNextNumber();
-		rod = ( float )gd.getNextNumber();
+		float scale = 1.0f;
+		if ( p.upscale ) scale = 2.0f;
 		
-		maxEpsilon = ( float )gd.getNextNumber();
-		minInlierRatio = ( float )gd.getNextNumber();
-		modelIndex = gd.getNextChoiceIndex();
+		p.fdSize = ( int )gd.getNextNumber();
+		p.fdBins = ( int )gd.getNextNumber();
+		p.rod = ( float )gd.getNextNumber();
 		
-		ImageProcessor ip1 = imp1.getProcessor().convertToFloat();
-		ImageProcessor ip2 = imp2.getProcessor().convertToFloat();
+		p.maxEpsilon = ( float )gd.getNextNumber();
+		p.minInlierRatio = ( float )gd.getNextNumber();
+		p.modelIndex = gd.getNextChoiceIndex();
 		
-		Vector< Feature > fs1;
-		Vector< Feature > fs2;
-
-		FloatArray2DSIFT sift = new FloatArray2DSIFT( fdSize, fdBins );
-		
-		FloatArray2D fa1 = ImageArrayConverter.ImageToFloatArray2D( ip1 );
-		Filter.enhance( fa1, 1.0f );
-		FloatArray2D fa2 = ImageArrayConverter.ImageToFloatArray2D( ip2 );
-		Filter.enhance( fa2, 1.0f );
-		
-		float[] initial_kernel;
-		
-		if ( upscale )
-		{
-			FloatArray2D fat = new FloatArray2D( fa1.width * 2 - 1, fa1.height * 2 - 1 ); 
-			FloatArray2DScaleOctave.upsample( fa1, fat );
-			fa1 = fat;
-			fat = new FloatArray2D( fa2.width * 2 - 1, fa2.height * 2 - 1 ); 
-			FloatArray2DScaleOctave.upsample( fa2, fat );
-			fa2 = fat;
-			initial_kernel = Filter.createGaussianKernel( ( float )Math.sqrt( initialSigma * initialSigma - 1.0 ), true );
-		}
-		else
-			initial_kernel = Filter.createGaussianKernel( ( float )Math.sqrt( initialSigma * initialSigma - 0.25 ), true );
-			
-		fa1 = Filter.convolveSeparable( fa1, initial_kernel, initial_kernel );
-		fa2 = Filter.convolveSeparable( fa2, initial_kernel, initial_kernel );
+		FloatArray2DSIFT sift = new FloatArray2DSIFT( p.fdSize, p.fdBins );
+		extractFeatures( imp1.getProcessor(), fs1, sift, p );
+		extractFeatures( imp2.getProcessor(), fs2, sift, p );
 		
 		
 		long start_time = System.currentTimeMillis();
-		IJ.log( "Processing SIFT ..." );
-		sift.init( fa1, steps, initialSigma, minOctaveSize, maxOctaveSize );
-		fs1 = sift.run( maxOctaveSize );
-		Collections.sort( fs1 );
-		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );
-		IJ.log( fs1.size() + " features extracted." );
-		
-		start_time = System.currentTimeMillis();
-		IJ.log( "Processing SIFT ..." );
-		sift.init( fa2, steps, initialSigma, minOctaveSize, maxOctaveSize );
-		fs2 = sift.run( maxOctaveSize);
-		Collections.sort( fs2 );
-		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );
-		IJ.log( fs2.size() + " features extracted." );
-			
-		start_time = System.currentTimeMillis();
 		IJ.log( "Identifying correspondence candidates using brute force ..." );
 		Vector< PointMatch > candidates = 
-				//FloatArray2DSIFT.createMatches( fs1, fs2, 100.0f, null, Float.MAX_VALUE );
-				FloatArray2DSIFT.createMatches( fs1, fs2, rod );
+				FloatArray2DSIFT.createMatches( fs1, fs2, p.rod );
 		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );	
 		IJ.log( candidates.size() + " potentially corresponding features identified." );
 			
@@ -273,9 +280,8 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 		IJ.log( "Filtering correspondence candidates by geometric consensus ..." );
 		Vector< PointMatch > inliers = new Vector< PointMatch >();
 		
-		// TODO Implement other models for choice
 		Model< ? > model;
-		switch ( modelIndex )
+		switch ( p.modelIndex )
 		{
 		case 0:
 			model = new TranslationModel2D();
@@ -284,6 +290,9 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 			model = new RigidModel2D();
 			break;
 		case 2:
+			model = new SimilarityModel2D();
+			break;
+		case 3:
 			model = new AffineModel2D();
 			break;
 		default:
@@ -297,8 +306,8 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 					candidates,
 					inliers,
 					1000,
-					maxEpsilon,
-					minInlierRatio );
+					p.maxEpsilon,
+					p.minInlierRatio );
 		}
 		catch ( NotEnoughDataPointsException e )
 		{

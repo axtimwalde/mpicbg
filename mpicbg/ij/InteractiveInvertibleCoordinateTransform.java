@@ -1,5 +1,23 @@
+/**
+ * License: GPL
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License 2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * 
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ *
+ */
 package mpicbg.ij;
-
 
 import ij.IJ;
 import ij.ImageListener;
@@ -29,7 +47,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public abstract class InteractiveInvertibleCoordinateTransform< M extends InvertibleModel< M > > implements PlugIn, MouseListener, MouseMotionListener, KeyListener, ImageListener
 {
-	protected TransformMapping mapping;
+	protected InverseTransformMapping mapping;
 	protected ImagePlus imp;
 	protected ImageProcessor target;
 	protected ImageProcessor source;
@@ -40,7 +58,7 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Invert
 	final protected ArrayList< PointMatch > m = new ArrayList< PointMatch >();
 	protected PointRoi handles;
 	
-	protected PaintInvertibleCoordinateTransformThread painter;
+	protected MappingThread painter;
 	
 	protected int targetIndex = -1;
 	
@@ -57,14 +75,15 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Invert
 		target = imp.getProcessor();
 		source = target.duplicate();
 		
-		mapping = new TransformMapping( myModel() );
+		mapping = new InverseTransformMapping( myModel() );
 		
-		painter = new PaintInvertibleCoordinateTransformThread(
+		painter = new MappingThread(
 				imp,
 				source,
 				target,
 				pleaseRepaint,
-				myModel() );
+				mapping,
+				false );
 		painter.start();
 		
 		setHandles();
