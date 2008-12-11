@@ -19,7 +19,7 @@
  */
 package mpicbg.trakem2;
 
-public class RigidModel2D extends mpicbg.models.RigidModel2D implements InvertibleCoordinateTransform
+public class RigidModel2D extends mpicbg.models.RigidModel2D implements CoordinateTransform
 {
 
 	//@Override

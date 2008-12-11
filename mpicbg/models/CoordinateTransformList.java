@@ -29,7 +29,7 @@ import java.util.List;
 public class CoordinateTransformList implements CoordinateTransform
 {
 
-	final private List< CoordinateTransform > l = new ArrayList< CoordinateTransform >();
+	final protected List< CoordinateTransform > l = new ArrayList< CoordinateTransform >();
 	
 	final public void add( CoordinateTransform t ){ l.add( t ); }
 	final public void remove( CoordinateTransform t ){ l.remove( t ); }

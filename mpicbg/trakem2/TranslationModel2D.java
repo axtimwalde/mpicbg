@@ -19,7 +19,7 @@
  */
 package mpicbg.trakem2;
 
-public class TranslationModel2D extends mpicbg.models.TranslationModel2D implements InvertibleCoordinateTransform
+public class TranslationModel2D extends mpicbg.models.TranslationModel2D implements CoordinateTransform
 {
 
 	//@Override
