@@ -20,12 +20,11 @@
 package mpicbg.models;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
  * 
- *
+ * @version 0.4b
  */
 public class CoordinateTransformList implements CoordinateTransform
 {
@@ -38,17 +37,18 @@ public class CoordinateTransformList implements CoordinateTransform
 	final public CoordinateTransform get( int i ){ return l.get( i ); }
 	final public void clear(){ l.clear(); }
 	
+	//@Override
 	final public float[] apply( final float[] location )
 	{
-		float[] a = location.clone();
+		final float[] a = location.clone();
 		applyInPlace( a );
 		return a;
 	}
 
+	//@Override
 	final public void applyInPlace( final float[] location )
 	{
-		Iterator< CoordinateTransform > i = l.iterator();
-		while ( i.hasNext() )
-			i.next().applyInPlace( location );
+		for ( final CoordinateTransform t : l )
+			t.applyInPlace( location );
 	}
 }

@@ -27,16 +27,31 @@ import java.util.ListIterator;
  * 
  * @version 0.4b
  */
-public class InverseCoordinateTransformList implements InverseCoordinateTransform
+public class InvertibleCoordinateTransformList implements InvertibleCoordinateTransform
 {
 
-	final private List< InverseCoordinateTransform > l = new ArrayList< InverseCoordinateTransform >();
+	final protected List< InvertibleCoordinateTransform > l = new ArrayList< InvertibleCoordinateTransform >();
 	
-	final public void add( InverseCoordinateTransform t ){ l.add( t ); }
-	final public void remove( InverseCoordinateTransform t ){ l.remove( t ); }
-	final public InverseCoordinateTransform remove( int i ){ return l.remove( i ); }
-	final public InverseCoordinateTransform get( int i ){ return l.get( i ); }
+	public void add( InvertibleCoordinateTransform t ){ l.add( t ); }
+	public void remove( InvertibleCoordinateTransform t ){ l.remove( t ); }
+	public InvertibleCoordinateTransform remove( int i ){ return l.remove( i ); }
+	public InvertibleCoordinateTransform get( int i ){ return l.get( i ); }
 	final public void clear(){ l.clear(); }
+	
+	//@Override
+	final public float[] apply( final float[] location )
+	{
+		final float[] a = location.clone();
+		applyInPlace( a );
+		return a;
+	}
+
+	//@Override
+	final public void applyInPlace( final float[] location )
+	{
+		for ( final CoordinateTransform t : l )
+			t.applyInPlace( location );
+	}
 	
 	//@Override
 	final public float[] applyInverse( float[] location ) throws NoninvertibleModelException
@@ -49,7 +64,7 @@ public class InverseCoordinateTransformList implements InverseCoordinateTransfor
 	//@Override
 	final public void applyInverseInPlace( float[] location ) throws NoninvertibleModelException
 	{
-		final ListIterator< InverseCoordinateTransform > i = l.listIterator( l.size() );
+		final ListIterator< InvertibleCoordinateTransform > i = l.listIterator( l.size() );
 		while ( i.hasPrevious() )
 			i.previous().applyInverseInPlace( location );
 	}

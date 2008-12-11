@@ -17,10 +17,28 @@
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  *
  */
-package mpicbg.models;
+package mpicbg.trakem2;
 
-/**
- * 
- * @version 0.4b
- */
-public interface InvertibleCoordinateTransform extends CoordinateTransform, InverseCoordinateTransform {}
+public class InvertibleCoordinateTransformList extends mpicbg.models.InvertibleCoordinateTransformList implements InvertibleCoordinateTransform
+{
+	//@Override
+	final public void init( final String data )
+	{
+		throw new NumberFormatException( "There is no parameter based initialisation for " + this.getClass().getCanonicalName() );
+	}
+
+	//@Override
+	final public String toXML()
+	{
+		String s = "<ict_transform_list>";
+		for ( mpicbg.models.InvertibleCoordinateTransform t : l )
+			s += "\n  " + ( ( InvertibleCoordinateTransform )t ).toXML();
+		return s + "\n<ict_transformlist>";
+	}
+	
+	//@Override
+	final public String toDataString()
+	{
+		return "";
+	}
+}
