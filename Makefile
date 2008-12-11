@@ -16,16 +16,23 @@ JAVAS=$(wildcard \
     mpicbg/ij/*.java \
 	mpicbg/imagefeatures/*.java \
     mpicbg/models/*.java \
+    mpicbg/trakem2/*.java \
     mpicbg/util/*.java \
+	Align_ElasticMeshStack.java \
 	MOPS_ExtractPointRoi.java \
 	SIFT_Align.java \
 	SIFT_ExtractPointRoi.java \
 	Transform_Affine.java \
+	Transform_ElasticMovingLeastSquaresMesh.java \
+	Transform_Grid.java \
 	Transform_MovingLeastSquaresMesh.java \
 	Transform_Perspective.java \
 	Transform_Rigid.java \
-	Transform_Roi.java)
-RESOURCES ?= template.svg
+	Transform_Roi.java \
+	Transform_SpringMesh.java \
+	Transform_TriangularGrid.java)
+RESOURCES ?= deformation.tpl.svg \
+	template.svg
 CLASSES=$(patsubst %.java,%.class,$(JAVAS))
 ALL_CLASSES=$(patsubst %.java,%*.class,$(JAVAS))
 TARGET=mpicbg_.jar
