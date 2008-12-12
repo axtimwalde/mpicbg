@@ -32,8 +32,8 @@ public class CoordinateTransformList extends mpicbg.models.CoordinateTransformLi
 	{
 		String s = indent + "<ict_transform_list>";
 		for ( mpicbg.models.CoordinateTransform t : l )
-			s += "\n  " + indent + ( ( CoordinateTransform )t ).toXML( indent );
-		return s + "\n<ict_transformlist>";
+			s += "\n" + indent + ( ( CoordinateTransform )t ).toXML( indent + "\t" );
+		return s + "\n" + indent + "<ict_transformlist>";
 	}
 	
 	//@Override
