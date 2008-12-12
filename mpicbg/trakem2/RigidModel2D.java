@@ -37,9 +37,9 @@ public class RigidModel2D extends mpicbg.models.RigidModel2D implements Coordina
 	}
 
 	//@Override
-	final public String toXML()
+	final public String toXML( final String indent )
 	{
-		return "<ict_transform class=\"" + this.getClass().getCanonicalName() + "\" data=\"" + toDataString() + "\"/>";
+		return indent + "<ict_transform class=\"" + this.getClass().getCanonicalName() + "\" data=\"" + toDataString() + "\"/>";
 	}
 	
 	//@Override

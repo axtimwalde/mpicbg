@@ -36,9 +36,9 @@ public class TranslationModel2D extends mpicbg.models.TranslationModel2D impleme
 	}
 
 	//@Override
-	final public String toXML()
+	final public String toXML( final String indent )
 	{
-		return "<ict_transform class=\"" + this.getClass().getCanonicalName() + "\" data=\"" + toDataString() + "\"/>";
+		return indent + "<ict_transform class=\"" + this.getClass().getCanonicalName() + "\" data=\"" + toDataString() + "\"/>";
 	}
 	
 	//@Override

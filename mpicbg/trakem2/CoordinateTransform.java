@@ -41,7 +41,7 @@ public interface CoordinateTransform extends mpicbg.models.CoordinateTransform
 	 * 
 	 * @return TrakEM2-readable XML
 	 */
-	public String toXML();
+	public String toXML( String indent );
 	
 	
 	/**

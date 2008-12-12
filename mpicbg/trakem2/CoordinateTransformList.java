@@ -28,11 +28,11 @@ public class CoordinateTransformList extends mpicbg.models.CoordinateTransformLi
 	}
 
 	//@Override
-	final public String toXML()
+	final public String toXML( final String indent )
 	{
-		String s = "<ict_transform_list>";
+		String s = indent + "<ict_transform_list>";
 		for ( mpicbg.models.CoordinateTransform t : l )
-			s += "\n  " + ( ( CoordinateTransform )t ).toXML();
+			s += "\n  " + indent + ( ( CoordinateTransform )t ).toXML( indent );
 		return s + "\n<ict_transformlist>";
 	}
 	
