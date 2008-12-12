@@ -53,12 +53,12 @@ public class TransformMesh extends mpicbg.models.TransformMesh
 		{
 			final float[] w = vertex.getP2().getW();
 			
-			t.apply( w );
+			t.applyInPlace( w );
 			
 			if ( w[ 0 ] < xMin ) xMin = w[ 0 ];
-			else if ( w[ 0 ] > xMax ) xMax = w[ 0 ];
+			if ( w[ 0 ] > xMax ) xMax = w[ 0 ];
 			if ( w[ 1 ] < yMin ) yMin = w[ 1 ];
-			else if ( w[ 1 ] > yMax ) yMax = w[ 1 ];
+			if ( w[ 1 ] > yMax ) yMax = w[ 1 ];
 		}
 		
 		for ( PointMatch vertex : vertices )
