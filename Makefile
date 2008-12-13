@@ -20,6 +20,7 @@ JAVAS=$(wildcard \
     mpicbg/util/*.java \
 	Align_ElasticMeshStack.java \
 	MOPS_ExtractPointRoi.java \
+	Optic_Flow.java \
 	SIFT_Align.java \
 	SIFT_ExtractPointRoi.java \
 	Transform_Affine.java \

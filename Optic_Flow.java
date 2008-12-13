@@ -204,7 +204,7 @@ public class Optic_Flow implements PlugIn, KeyListener
 		if ( IJ.versionLessThan( "1.41n" ) ) return;
 
 		final ImagePlus imp = WindowManager.getCurrentImage();
-		if ( imp == null )  { System.err.println( "There are no images open" ); return; }
+		if ( imp == null )  { IJ.error( "There are no images open" ); return; }
 		
 		GenericDialog gd = new GenericDialog( "Generate optic flow" );
 		gd.addNumericField( "sigma :", sigma, 2, 6, "px" );
