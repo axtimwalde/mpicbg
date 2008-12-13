@@ -20,12 +20,7 @@
 package mpicbg.trakem2;
 
 import ij.process.ImageProcessor;
-
-import java.awt.Color;
 import java.awt.Rectangle;
-import java.util.Set;
-
-import mpicbg.models.AffineModel2D;
 
 /**
  *
@@ -42,11 +37,15 @@ public class TransformMeshMapping extends mpicbg.ij.TransformMeshMapping
 	{
 		Rectangle boundingBox = ( ( TransformMesh )transform ).getBoundingBox();
 		final ImageProcessor target = source.createProcessor( boundingBox.width, boundingBox.height );
-		target.setColor( Color.black );
-		target.fill();
-		final Set< AffineModel2D > s = transform.getAV().keySet();
-		for ( final AffineModel2D ai : s )
-			mapTriangle( transform, ai, source, target );
+		map( source, target );
+		return target;
+	}
+	
+	final public ImageProcessor createMappedImageInterpolated( final ImageProcessor source )
+	{
+		Rectangle boundingBox = ( ( TransformMesh )transform ).getBoundingBox();
+		final ImageProcessor target = source.createProcessor( boundingBox.width, boundingBox.height );
+		mapInterpolated( source, target );
 		return target;
 	}
 }
