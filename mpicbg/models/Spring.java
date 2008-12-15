@@ -92,7 +92,7 @@ public class Spring
 	
 	/**
 	 * Estimate the force vector effective to {@link Vertex v1} if this {@link Spring} would
-	 * connect both {@Vertex Vertices}.
+	 * connect both {@link Vertex Vertices}.
 	 *  
 	 * @param v1 
 	 * @param v2
