@@ -29,6 +29,7 @@ JAVAS=$(wildcard \
 	Transform_MovingLeastSquaresMesh.java \
 	Transform_Perspective.java \
 	Transform_Rigid.java \
+	Transform_Similarity.java \
 	Transform_Roi.java \
 	Transform_SpringMesh.java \
 	Transform_TriangularGrid.java)

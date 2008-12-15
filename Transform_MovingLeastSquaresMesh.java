@@ -25,6 +25,29 @@ import mpicbg.models.*;
 
 import java.awt.Color;
 
+/**
+ * Smooth image deformation using landmark based deformation by means
+ * of Moving Least Squares as described by \citet{SchaeferAl06} inspired by the
+ * implementation of Johannes Schindelin.
+ * 
+ * BibTeX:
+ * <pre>
+ * @article{SchaeferAl06,
+ *   author    = {Scott Schaefer and Travis McPhail and Joe Warren},
+ *   title     = {Image deformation using moving least squares},
+ *   journal   = {ACM Transactions on Graphics},
+ *   volume    = {25},
+ *   number    = {3},
+ *   month     = {July},
+ *   year      = {2006},
+ *   issn      = {0730-0301},
+ *   pages     = {533--540},
+ *   publisher = {ACM},
+ *   address   = {New York, NY, USA},
+ * }
+ * </pre>
+ * 
+ */
 public class Transform_MovingLeastSquaresMesh extends InteractiveMapping
 {
 	public static final String NL = System.getProperty( "line.separator" );
@@ -35,12 +58,20 @@ public class Transform_MovingLeastSquaresMesh extends InteractiveMapping
 		"ESC - Return to the original image." + NL +
 		"Y - Toggle mesh display.";
 	
-	// number of vertices in horizontal direction
-	private static int numX = 16;
-	// alpha [0 smooth, 1 less smooth ;)]
+	/**
+	 * number of vertices in horizontal direction
+	 */
+	private static int numX = 32;
+	
+	/**
+	 * alpha [0 smooth, 1 less smooth ;)]
+	 */
 	private static float alpha = 1.0f;
-	// local transformation model
-	final static private String[] methods = new String[]{ "Translation", "Rigid", "Affine" };
+	
+	/**
+	 * local transformation model
+	 */
+	final static private String[] methods = new String[]{ "Translation", "Rigid", "Similarity", "Affine" };
 	static private int method = 1;
 	
 	protected MovingLeastSquaresMesh< ? extends AbstractAffineModel2D > mesh;
@@ -93,7 +124,6 @@ public class Transform_MovingLeastSquaresMesh extends InteractiveMapping
 	{
 		final GenericDialog gd = new GenericDialog( "Moving Least Squares Transform" );
 		gd.addNumericField( "Vertices_per_row :", numX, 0 );
-		//gd.addNumericField( "vertical_handles :", numY, 0 );
 		gd.addNumericField( "Alpha :", alpha, 2 );
 		gd.addChoice( "Local_transformation :", methods, methods[ method ] );
 		gd.addCheckbox( "_Interactive_preview", showPreview );
@@ -109,7 +139,6 @@ public class Transform_MovingLeastSquaresMesh extends InteractiveMapping
 		
 		showPreview = gd.getNextBoolean();
 		
-		// TODO Implement other models for choice
 		switch ( method )
 		{
 		case 0:
@@ -119,6 +148,9 @@ public class Transform_MovingLeastSquaresMesh extends InteractiveMapping
 			mesh = new MovingLeastSquaresMesh< RigidModel2D >( RigidModel2D.class, numX, imp.getWidth(), imp.getHeight() );
 			break;
 		case 2:
+			mesh = new MovingLeastSquaresMesh< SimilarityModel2D >( SimilarityModel2D.class, numX, imp.getWidth(), imp.getHeight() );
+			break;
+		case 3:
 			mesh = new MovingLeastSquaresMesh< AffineModel2D >( AffineModel2D.class, numX, imp.getWidth(), imp.getHeight() );
 			break;
 		default:
