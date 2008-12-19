@@ -30,13 +30,13 @@ public class Matrix3x3
 	private Matrix3x3(){}
 	
 	/**
-	 * Estimate the determinant.
+	 * Calculate the determinant.
 	 * 
 	 * @param a matrix given row by row
 	 * 
 	 * @return determinant
 	 */
-	final static float det( final float[] a )
+	final static public float det( final float[] a )
 	{
 		assert a.length == 9 : "Matrix3x3 supports 3x3 float[][] only.";
 		
@@ -49,7 +49,7 @@ public class Matrix3x3
 			a[ 8 ] * a[ 1 ] * a[ 3 ];
 	}
 	
-	final static float det(
+	final static public float det(
 			final float a00, final float a01, final float a02,
 			final float a10, final float a11, final float a12,
 			final float a20, final float a21, final float a22 )
