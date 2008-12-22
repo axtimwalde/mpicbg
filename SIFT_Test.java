@@ -1,3 +1,4 @@
+import mpicbg.ij.SIFT;
 import mpicbg.imagefeatures.*;
 
 import ij.plugin.*;
@@ -6,7 +7,6 @@ import ij.*;
 import ij.process.*;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.awt.Color;
 import java.awt.Polygon;
@@ -61,18 +61,7 @@ public class SIFT_Test implements PlugIn, KeyListener
 {
 	final static private FloatArray2DSIFT.Param p = new FloatArray2DSIFT.Param(); 
 
-	/**
-	 * Set true to double the size of the image by linear interpolation to
-	 * ( with * 2 + 1 ) * ( height * 2 + 1 ).  Thus we can start identifying
-	 * DoG extrema with $\sigma = INITIAL_SIGMA / 2$ like proposed by
-	 * \citet{Lowe04}.
-	 * 
-	 * This is useful for images scmaller than 1000px per side only. 
-	 */ 
-	static private boolean upscale = false;
-	
 	final static List< Feature > fs = new ArrayList< Feature >();
-
 	
 	/**
 	 * draws a rotated square with center point  center, having size and orientation
@@ -122,7 +111,6 @@ public class SIFT_Test implements PlugIn, KeyListener
 		gd.addNumericField( "feature_descriptor_orientation_bins :", p.fdBins, 0 );
 		gd.addNumericField( "minimum_image_size :", p.minOctaveSize, 0 );
 		gd.addNumericField( "maximum_image_size :", p.maxOctaveSize, 0 );
-		gd.addCheckbox( "upscale_image_first", upscale );
 		gd.showDialog();
 		if ( gd.wasCanceled() ) return;
 		p.steps = ( int )gd.getNextNumber();
@@ -132,41 +120,17 @@ public class SIFT_Test implements PlugIn, KeyListener
 		p.minOctaveSize = ( int )gd.getNextNumber();
 		p.maxOctaveSize = ( int )gd.getNextNumber();
 		
-		float scale = 1.0f;
-		upscale = gd.getNextBoolean();
-		if ( upscale ) scale = 2.0f;
-		
-		
-		ImageProcessor ip1 = imp.getProcessor().convertToFloat();
+		ImageProcessor ip1 = imp.getProcessor();
 		ImageProcessor ip2 = imp.getProcessor().duplicate().convertToRGB();
 		
 		FloatArray2DSIFT sift = new FloatArray2DSIFT( p );
-		
-		FloatArray2D fa = new FloatArray2D( ip1.getWidth(), ip1.getHeight() );
-		ImageArrayConverter.imageProcessorToFloatArray2D( ip1, fa );
-		Filter.enhance( fa, 1.0f );
-		
-		float[] initial_kernel;
-		
-		if ( upscale )
-		{
-			FloatArray2D fat = new FloatArray2D( fa.width * 2 - 1, fa.height * 2 - 1 ); 
-			FloatArray2DScaleOctave.upsample( fa, fat );
-			fa = fat;
-			initial_kernel = Filter.createGaussianKernel( ( float )Math.sqrt( p.initialSigma * p.initialSigma - 1.0 ), true );
-		}
-		else
-			initial_kernel = Filter.createGaussianKernel( ( float )Math.sqrt( p.initialSigma * p.initialSigma - 0.25 ), true );
-		
-		fa = Filter.convolveSeparable( fa, initial_kernel, initial_kernel );
+		SIFT ijSift = new SIFT( sift );
 		
 		fs.clear();
 		
 		long start_time = System.currentTimeMillis();
 		System.out.print( "processing SIFT ..." );
-		sift.init( fa );
-		sift.extractFeatures( fs );
-		Collections.sort( fs );
+		ijSift.extractFeatures( ip1, fs );
 		
 		System.out.println( " took " + ( System.currentTimeMillis() - start_time ) + "ms" );
 		
@@ -177,7 +141,7 @@ public class SIFT_Test implements PlugIn, KeyListener
 		for ( Feature f : fs )
 		{
 			//System.out.println( f.location[ 0 ] + " " + f.location[ 1 ] + " " + f.scale + " " + f.orientation );
-			drawSquare( ip2, new double[]{ f.location[ 0 ] / scale, f.location[ 1 ] / scale }, p.fdSize * 4.0 * ( double )f.scale / scale, ( double )f.orientation );
+			drawSquare( ip2, new double[]{ f.location[ 0 ], f.location[ 1 ] }, p.fdSize * 4.0 * ( double )f.scale, ( double )f.orientation );
 		}
 	
 		ImagePlus imp1 = new ImagePlus( imp.getTitle() + " Features ", ip2 );

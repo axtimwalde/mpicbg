@@ -24,6 +24,7 @@
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.4b
  */
+import mpicbg.ij.FeatureTransform;
 import mpicbg.ij.SIFT;
 import mpicbg.imagefeatures.*;
 import mpicbg.models.*;
@@ -31,14 +32,11 @@ import mpicbg.models.*;
 import ij.plugin.*;
 import ij.gui.*;
 import ij.*;
-import ij.process.*;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Vector;
 import java.awt.TextField;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -91,40 +89,12 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 	
 	static private class Param
 	{	
-		/**
-		 * Steps per Scale Octave 
-		 */
-		public int steps = 3;
-		
-		/**
-		 * Initial sigma of each Scale Octave
-		 */
-		public float initialSigma = 1.6f;
-		
-		/**
-		 * Feature descriptor size
-		 *    How many samples per row and column
-		 */
-		public int fdSize = 4;
-		
-		/**
-		 * Feature descriptor orientation bins
-		 *    How many bins per local histogram
-		 */
-		public int fdBins = 8;
+		final public FloatArray2DSIFT.Param sift = new FloatArray2DSIFT.Param();
 		
 		/**
 		 * Closest/next closest neighbour distance ratio
 		 */
 		public float rod = 0.92f;
-		
-		/**
-		 * Size limits for scale octaves in px:
-		 * 
-		 * minOctaveSize < octave < maxOctaveSize
-		 */
-		public int minOctaveSize = 64;
-		public int maxOctaveSize = 1024;
 		
 		/**
 		 * Maximal allowed alignment error in px
@@ -141,16 +111,6 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 		 */
 		final static public String[] modelStrings = new String[]{ "Translation", "Rigid", "Similarity", "Affine" };
 		public int modelIndex = 1;
-		
-		/**
-		 * Set true to double the size of the image by linear interpolation to
-		 * ( with * 2 + 1 ) * ( height * 2 + 1 ).  Thus we can start identifying
-		 * DoG extrema with $\sigma = INITIAL_SIGMA / 2$ like proposed by
-		 * \citet{Lowe04}.
-		 * 
-		 * This is useful for images scmaller than 1000px per side only. 
-		 */ 
-		public boolean upscale = false;
 	}
 	
 	final static private Param p = new Param();
@@ -162,19 +122,6 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 		decimalFormat.setDecimalFormatSymbols( decimalFormatSymbols );
 		decimalFormat.setMaximumFractionDigits( 3 );
 		decimalFormat.setMinimumFractionDigits( 3 );		
-	}
-	
-	final protected void extractFeatures(
-			final ImageProcessor ip,
-			final List< Feature > fs,
-			final SIFT sift )
-	{
-		long start_time = System.currentTimeMillis();
-		IJ.log( "Processing SIFT ..." );
-		sift.extractFeatures( ip, fs );
-		Collections.sort( fs );
-		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );
-		IJ.log( fs.size() + " features extracted." );
 	}
 	
 	public void run( String args )
@@ -206,15 +153,14 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 		gd.addChoice( "target_image", titles, current.equals( titles[ 0 ] ) ? titles[ 1 ] : titles[ 0 ] );
 		
 		gd.addMessage( "Scale Invariant Interest Point Detector:" );
-		gd.addNumericField( "initial_gaussian_blur :", p.initialSigma, 2, 6, "px" );
-		gd.addNumericField( "steps_per_scale_octave :", p.steps, 0 );
-		gd.addNumericField( "minimum_image_size :", p.minOctaveSize, 0, 6, "px" );
-		gd.addNumericField( "maximum_image_size :", p.maxOctaveSize, 0, 6, "px" );
-		gd.addCheckbox( "upscale_image_first", p.upscale );
+		gd.addNumericField( "initial_gaussian_blur :", p.sift.initialSigma, 2, 6, "px" );
+		gd.addNumericField( "steps_per_scale_octave :", p.sift.steps, 0 );
+		gd.addNumericField( "minimum_image_size :", p.sift.minOctaveSize, 0, 6, "px" );
+		gd.addNumericField( "maximum_image_size :", p.sift.maxOctaveSize, 0, 6, "px" );
 		
 		gd.addMessage( "Feature Descriptor:" );
-		gd.addNumericField( "feature_descriptor_size :", p.fdSize, 0 );
-		gd.addNumericField( "feature_descriptor_orientation_bins :", p.fdBins, 0 );
+		gd.addNumericField( "feature_descriptor_size :", p.sift.fdSize, 0 );
+		gd.addNumericField( "feature_descriptor_orientation_bins :", p.sift.fdBins, 0 );
 		gd.addNumericField( "closest/next_closest_ratio :", p.rod, 2 );
 		
 		gd.addMessage( "Geometric Consensus Filter:" );
@@ -229,39 +175,44 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 		imp1 = WindowManager.getImage( ids[ gd.getNextChoiceIndex() ] );
 		imp2 = WindowManager.getImage( ids[ gd.getNextChoiceIndex() ] );
 		
-		p.initialSigma = ( float )gd.getNextNumber();
-		p.steps = ( int )gd.getNextNumber();
-		p.minOctaveSize = ( int )gd.getNextNumber();
-		p.maxOctaveSize = ( int )gd.getNextNumber();
-		p.upscale = gd.getNextBoolean();
+		p.sift.initialSigma = ( float )gd.getNextNumber();
+		p.sift.steps = ( int )gd.getNextNumber();
+		p.sift.minOctaveSize = ( int )gd.getNextNumber();
+		p.sift.maxOctaveSize = ( int )gd.getNextNumber();
 		
-		float scale = 1.0f;
-		if ( p.upscale ) scale = 2.0f;
-		
-		p.fdSize = ( int )gd.getNextNumber();
-		p.fdBins = ( int )gd.getNextNumber();
+		p.sift.fdSize = ( int )gd.getNextNumber();
+		p.sift.fdBins = ( int )gd.getNextNumber();
 		p.rod = ( float )gd.getNextNumber();
 		
 		p.maxEpsilon = ( float )gd.getNextNumber();
 		p.minInlierRatio = ( float )gd.getNextNumber();
 		p.modelIndex = gd.getNextChoiceIndex();
 		
-		FloatArray2DSIFT sift = new FloatArray2DSIFT( p.fdSize, p.fdBins );
-		
-		extractFeatures( imp1.getProcessor(), fs1, sift, p );
-		extractFeatures( imp2.getProcessor(), fs2, sift, p );
-		
+		FloatArray2DSIFT sift = new FloatArray2DSIFT( p.sift );
+		SIFT ijSIFT = new SIFT( sift );
 		
 		long start_time = System.currentTimeMillis();
+		IJ.log( "Processing SIFT ..." );
+		ijSIFT.extractFeatures( imp1.getProcessor(), fs1 );
+		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );
+		IJ.log( fs1.size() + " features extracted." );
+		
+		start_time = System.currentTimeMillis();
+		IJ.log( "Processing SIFT ..." );
+		ijSIFT.extractFeatures( imp2.getProcessor(), fs2 );
+		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );
+		IJ.log( fs2.size() + " features extracted." );
+		
+		start_time = System.currentTimeMillis();
 		IJ.log( "Identifying correspondence candidates using brute force ..." );
-		Vector< PointMatch > candidates = 
-				FloatArray2DSIFT.createMatches( fs1, fs2, p.rod );
+		final List< PointMatch > candidates = new ArrayList< PointMatch >();
+		final int numMatches = FeatureTransform.matchFeatures( fs1, fs2, candidates, p.rod );
 		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );	
-		IJ.log( candidates.size() + " potentially corresponding features identified." );
+		IJ.log( numMatches + " potentially corresponding features identified." );
 			
 		start_time = System.currentTimeMillis();
 		IJ.log( "Filtering correspondence candidates by geometric consensus ..." );
-		Vector< PointMatch > inliers = new Vector< PointMatch >();
+		List< PointMatch > inliers = new ArrayList< PointMatch >();
 		
 		Model< ? > model;
 		switch ( p.modelIndex )
@@ -313,10 +264,10 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 				float[] m_p1 = m.getP1().getL(); 
 				float[] m_p2 = m.getP2().getL();
 				
-				x1[ i ] = ( int )( m_p1[ 0 ] / scale );
-				y1[ i ] = ( int )( m_p1[ 1 ] / scale );
-				x2[ i ] = ( int )( m_p2[ 0 ] / scale );
-				y2[ i ] = ( int )( m_p2[ 1 ] / scale );
+				x1[ i ] = ( int )( m_p1[ 0 ] );
+				y1[ i ] = ( int )( m_p1[ 1 ] );
+				x2[ i ] = ( int )( m_p2[ 0 ] );
+				y2[ i ] = ( int )( m_p2[ 1 ] );
 				
 				++i;
 			}

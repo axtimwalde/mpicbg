@@ -28,6 +28,7 @@ package mpicbg.ij;
 
 import ij.process.ImageProcessor;
 
+import java.util.Collection;
 import java.util.List;
 
 import mpicbg.imagefeatures.Feature;
@@ -80,8 +81,8 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 	 * @return matches
 	 */
 	static public int matchFeatures(
-			final List< Feature > fs1,
-			final List< Feature > fs2,
+			final Collection< Feature > fs1,
+			final Collection< Feature > fs2,
 			final List< PointMatch > matches,
 			final float rod )
 	{

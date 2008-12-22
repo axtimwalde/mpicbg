@@ -17,6 +17,8 @@
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.3b
  */
+import mpicbg.ij.FeatureTransform;
+import mpicbg.ij.MOPS;
 import mpicbg.imagefeatures.*;
 import mpicbg.models.*;
 
@@ -27,7 +29,6 @@ import ij.process.*;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
-import java.util.Collections;
 import java.util.List;
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -98,34 +99,12 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 	
 	private static class Param
 	{
-		/**
-		 * Steps per Scale Octave 
-		 */
-		public int steps = 3;
-		
-		/**
-		 * Initial sigma of each Scale Octave
-		 */
-		public float initialSigma = 1.6f;
-		
-		/**
-		 * Feature descriptor size
-		 *    How many samples per row and column
-		 */
-		public int fdSize = 16;
+		final public FloatArray2DMOPS.Param mops = new FloatArray2DMOPS.Param();
 		
 		/**
 		 * Closest/next closest neighbour distance ratio
 		 */
 		public float rod = 0.92f;
-		
-		/**
-		 * Size limits for scale octaves in px:
-		 * 
-		 * minOctaveSize < octave < maxOctaveSize
-		 */
-		public int minOctaveSize = 64;
-		public int maxOctaveSize = 1024;
 		
 		/**
 		 * Maximal allowed alignment error in px
@@ -142,16 +121,6 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		 */
 		final static public String[] modelStrings = new String[]{ "Translation", "Rigid", "Similarity", "Affine" };
 		public int modelIndex = 1;
-		
-		/**
-		 * Set true to double the size of the image by linear interpolation to
-		 * ( with * 2 + 1 ) * ( height * 2 + 1 ).  Thus we can start identifying
-		 * DoG extrema with $\sigma = INITIAL_SIGMA / 2$ like proposed by
-		 * \citet{Lowe04}.
-		 * 
-		 * This is useful for images scmaller than 1000px per side only. 
-		 */ 
-		public boolean upscale = false;
 	}
 	
 	final static private Param p = new Param();
@@ -164,39 +133,6 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		decimalFormat.setDecimalFormatSymbols( decimalFormatSymbols );
 		decimalFormat.setMaximumFractionDigits( 3 );
 		decimalFormat.setMinimumFractionDigits( 3 );		
-	}
-	
-	final protected void extractFeatures(
-			final ImageProcessor ip,
-			final List< Feature > fs,
-			final FloatArray2DMOPS mops,
-			final Param p )
-	{
-		FloatArray2D fa = new FloatArray2D( ip.getWidth(), ip.getHeight() );
-		ImageArrayConverter.imageProcessorToFloatArray2D( ip, fa );
-		Filter.enhance( fa, 1.0f );
-		
-		final float[] initialKernel;
-		
-		if ( p.upscale )
-		{
-			FloatArray2D fat = new FloatArray2D( fa.width * 2 - 1, fa.height * 2 - 1 ); 
-			FloatArray2DScaleOctave.upsample( fa, fat );
-			fa = fat;
-			initialKernel = Filter.createGaussianKernel( ( float )Math.sqrt( p.initialSigma * p.initialSigma - 1.0 ), true );
-		}
-		else
-			initialKernel = Filter.createGaussianKernel( ( float )Math.sqrt( p.initialSigma * p.initialSigma - 0.25 ), true );
-			
-		fa = Filter.convolveSeparable( fa, initialKernel, initialKernel );
-		
-		long start_time = System.currentTimeMillis();
-		IJ.log( "Processing MOPS ..." );
-		mops.init( fa, p.steps, p.initialSigma, p.minOctaveSize / 4, p.maxOctaveSize );
-		fs.addAll( mops.run( p.maxOctaveSize ) );
-		Collections.sort( fs );
-		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );
-		IJ.log( fs.size() + " features extracted." );
 	}
 	
 	final public void run( String args )
@@ -234,14 +170,13 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		gd.addChoice( "target_image", titles, current.equals( titles[ 0 ] ) ? titles[ 1 ] : titles[ 0 ] );
 		
 		gd.addMessage( "Scale Invariant Interest Point Detector:" );
-		gd.addNumericField( "initial_gaussian_blur :", p.initialSigma, 2, 6, "px" );
-		gd.addNumericField( "steps_per_scale_octave :", p.steps, 0 );
-		gd.addNumericField( "minimum_image_size :", p.minOctaveSize, 0, 6, "px" );
-		gd.addNumericField( "maximum_image_size :", p.maxOctaveSize, 0, 6, "px" );
-		gd.addCheckbox( "upscale_image_first", p.upscale );
+		gd.addNumericField( "initial_gaussian_blur :", p.mops.initialSigma, 2, 6, "px" );
+		gd.addNumericField( "steps_per_scale_octave :", p.mops.steps, 0 );
+		gd.addNumericField( "minimum_image_size :", p.mops.minOctaveSize, 0, 6, "px" );
+		gd.addNumericField( "maximum_image_size :", p.mops.maxOctaveSize, 0, 6, "px" );
 		
 		gd.addMessage( "Feature Descriptor:" );
-		gd.addNumericField( "feature_descriptor_size :", p.fdSize, 0 );
+		gd.addNumericField( "feature_descriptor_size :", p.mops.fdSize, 0 );
 		gd.addNumericField( "closest/next_closest_ratio :", p.rod, 2 );
 		
 		gd.addMessage( "Geometric Consensus Filter:" );
@@ -259,15 +194,12 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		imp1 = WindowManager.getImage( ids[ gd.getNextChoiceIndex() ] );
 		imp2 = WindowManager.getImage( ids[ gd.getNextChoiceIndex() ] );	
 		
-		p.initialSigma = ( float )gd.getNextNumber();
-		p.steps = ( int )gd.getNextNumber();
-		p.minOctaveSize = ( int )gd.getNextNumber();
-		p.maxOctaveSize = ( int )gd.getNextNumber();
-		p.upscale = gd.getNextBoolean();
-		float scale = 1.0f;
-		if ( p.upscale ) scale = 2.0f;
+		p.mops.initialSigma = ( float )gd.getNextNumber();
+		p.mops.steps = ( int )gd.getNextNumber();
+		p.mops.minOctaveSize = ( int )gd.getNextNumber();
+		p.mops.maxOctaveSize = ( int )gd.getNextNumber();
 		
-		p.fdSize = ( int )gd.getNextNumber();
+		p.mops.fdSize = ( int )gd.getNextNumber();
 		p.rod = ( float )gd.getNextNumber();
 		
 		p.maxEpsilon = ( float )gd.getNextNumber();
@@ -275,14 +207,25 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		p.modelIndex = gd.getNextChoiceIndex();
 		
 		
-		final FloatArray2DMOPS mops = new FloatArray2DMOPS( p.fdSize );		
-		extractFeatures( imp1.getProcessor(), fs1, mops, p );
-		extractFeatures( imp2.getProcessor(), fs2, mops, p );
+		final FloatArray2DMOPS mops = new FloatArray2DMOPS( p.mops );		
+		final MOPS ijMOPS = new MOPS( mops );
 		
 		long start_time = System.currentTimeMillis();
+		IJ.log( "Processing MOPS ..." );
+		ijMOPS.extractFeatures( imp1.getProcessor(), fs1 );
+		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );
+		IJ.log( fs1.size() + " features extracted." );
+		
+		start_time = System.currentTimeMillis();
+		IJ.log( "Processing MOPS ..." );		
+		ijMOPS.extractFeatures( imp2.getProcessor(), fs2 );
+		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );
+		IJ.log( fs2.size() + " features extracted." );
+		
+		start_time = System.currentTimeMillis();
 		IJ.log( "Identifying correspondence candidates using brute force ..." );
 		List< PointMatch > candidates = 
-				FloatArray2DMOPS.createMatches( fs1, fs2, p.rod, m1, m2 );
+			FloatArray2DMOPS.createMatches( fs1, fs2, p.rod, m1, m2 );
 		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );	
 		IJ.log( candidates.size() + " potentially corresponding features identified." );
 			
@@ -340,10 +283,10 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 				float[] m_p1 = m.getP1().getL(); 
 				float[] m_p2 = m.getP2().getL();
 				
-				x1[ i ] = ( int )( m_p1[ 0 ] / scale );
-				y1[ i ] = ( int )( m_p1[ 1 ] / scale );
-				x2[ i ] = ( int )( m_p2[ 0 ] / scale );
-				y2[ i ] = ( int )( m_p2[ 1 ] / scale );
+				x1[ i ] = ( int )( m_p1[ 0 ] );
+				y1[ i ] = ( int )( m_p1[ 1 ] );
+				x2[ i ] = ( int )( m_p2[ 0 ] );
+				y2[ i ] = ( int )( m_p2[ 1 ] );
 				
 				i1.add( m1.get( m.getP1() ) );
 				i2.add( m2.get( m.getP2() ) );
@@ -351,21 +294,6 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 				++i;
 			}
 			
-			// unscale the location of all features for visualization purposes
-			for ( Feature f : i1 )
-			{
-				f.location[ 0 ] /= scale;
-				f.location[ 1 ] /= scale;
-				f.scale /= scale;
-			}
-			for ( Feature f : i2 )
-			{
-				f.location[ 0 ] /= scale;
-				f.location[ 1 ] /= scale;
-				f.scale /= scale;
-			}
-		
-		
 			PointRoi pr1 = new PointRoi( x1, y1, inliers.size() );
 			PointRoi pr2 = new PointRoi( x2, y2, inliers.size() );
 			
@@ -564,7 +492,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 						impFeature1.getWindow().setLocationAndSize(
 								impFeature1.getWindow().getX(),
 								impFeature1.getWindow().getY(),
-								p.fdSize * 16, p.fdSize * 16 );
+								p.mops.fdSize * 16, p.mops.fdSize * 16 );
 					}
 					else
 					{
@@ -587,7 +515,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 						impFeature2.getWindow().setLocationAndSize(
 								impFeature2.getWindow().getX(),
 								impFeature2.getWindow().getY(),
-								p.fdSize * 16, p.fdSize * 16 );
+								p.mops.fdSize * 16, p.mops.fdSize * 16 );
 					}
 					else
 					{

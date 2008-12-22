@@ -51,12 +51,34 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 {
 	final static public class Param
 	{
+		/**
+		 * Feature descriptor size
+		 *    How many samples per row and column
+		 */
 		public int fdSize = 4;
+		
+		/**
+		 * Feature descriptor orientation bins
+		 *    How many bins per local histogram
+		 */
 		public int fdBins = 8;
+		
+		/**
+		 * Size limits for scale octaves in px:
+		 * 
+		 * minOctaveSize < octave < maxOctaveSize
+		 */
 		public int maxOctaveSize = 1024;
 		public int minOctaveSize = 64;
 		
+		/**
+		 * Steps per Scale Octave 
+		 */
 		public int steps = 3;
+		
+		/**
+		 * Initial sigma of each Scale Octave
+		 */
 		public float initialSigma = 1.6f;
 	}
 	
@@ -123,19 +145,7 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 			}
 		}
 		
-		sigma = new float[ p.steps + 3 ];
-		sigma[ 0 ] = p.initialSigma;
-		sigma_diff = new float[ p.steps + 3 ];
-		sigma_diff[ 0 ] = 0.0f;
-		kernel_diff = new float[ p.steps + 3 ][];
-		
-		for ( int i = 1; i < p.steps + 3; ++i )
-		{
-			sigma[ i ] = p.initialSigma * ( float )Math.pow( 2.0f, ( float )i / ( float )p.steps );
-			sigma_diff[ i ] = ( float )Math.sqrt( sigma[ i ] * sigma[ i ] - p.initialSigma * p.initialSigma );
-			
-			kernel_diff[ i ] = Filter.createGaussianKernel( sigma_diff[ i ], true );
-		}
+		setInitialSigma( p.initialSigma );
 	}
 	
 	/**
@@ -144,12 +154,6 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 	 * @param src image having a generating gaussian kernel of
 	 * 	{@link Param#initialSigma} img must be a 2d-array of float
 	 *  values in range [0.0f, ..., 1.0f]
-	 * @param steps gaussian smooth steps steps per scale octave
-	 * @param initial_sigma sigma of the generating gaussian kernel of img
-	 * @param min_size minimal size of a scale octave in pixel
-	 * @param max_size maximal size of an octave to be taken into account
-	 *   Use this to save memory and procesing time, if processing higher
-	 *   resolutions is not necessary.
 	 */
 	@Override
 	final public void init( FloatArray2D src )
@@ -749,5 +753,21 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 	}
 	
 	final public float getInitialSigma(){ return p.initialSigma; }
-	final public void setInitialSigma( final float initialSigma ){ p.initialSigma = initialSigma; }
+	final public void setInitialSigma( final float initialSigma )
+	{
+		p.initialSigma = initialSigma;
+		sigma = new float[ p.steps + 3 ];
+		sigma[ 0 ] = p.initialSigma;
+		sigma_diff = new float[ p.steps + 3 ];
+		sigma_diff[ 0 ] = 0.0f;
+		kernel_diff = new float[ p.steps + 3 ][];
+		
+		for ( int i = 1; i < p.steps + 3; ++i )
+		{
+			sigma[ i ] = p.initialSigma * ( float )Math.pow( 2.0f, ( float )i / ( float )p.steps );
+			sigma_diff[ i ] = ( float )Math.sqrt( sigma[ i ] * sigma[ i ] - p.initialSigma * p.initialSigma );
+			
+			kernel_diff[ i ] = Filter.createGaussianKernel( sigma_diff[ i ], true );
+		}
+	}
 }

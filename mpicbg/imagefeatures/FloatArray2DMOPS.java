@@ -1,10 +1,11 @@
 package mpicbg.imagefeatures;
 
-/**
- * Multi-Scale Oriented Patches after \cite{BrownAl05}.
- * 
+/** 
  * This implementation actually uses the DoG-detector as described by
- * \cite{Lowe04} and extracts MOPS-descriptors instead of SIFT-descriptors.
+ * \cite{Lowe04} and extracts local intensity patches from coarser scales
+ * similar to what was described by \cite{BrownAl05} as Multi-Scale Oriented
+ * Patches.  The intensities of the patches are enhanced such that each patch
+ * uses the full [0.0--1.0] range.
  *  
  * 
  * BibTeX:
@@ -57,22 +58,34 @@ import java.util.List;
 import java.util.HashMap;
 import mpicbg.models.*;
 
-public class FloatArray2DMOPS
+public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2DMOPS.Param >
 {
+	final static public class Param
+	{
+		/**
+		 * Width of the feature descriptor square in samples.
+		 */
+		public int fdSize = 16;
+		public int maxOctaveSize = 1024;
+		public int minOctaveSize = 64;
+		
+		public int steps = 3;
+		public float initialSigma = 1.6f;
+	}
+	
+	private float[] sigma;
+	private float[] sigma_diff;
+	private float[][] kernel_diff;
+	
 	final int O_SCALE = 4;
 	final int O_SCALE_LD2 = 2;
-	
-	/**
-	 * Width of the feature descriptor square in samples.
-	 */
-	private int FEATURE_DESCRIPTOR_WIDTH;
 	
 	/**
 	 * Returns the size in bytes of a Feature object.
 	 */
 	public long getFeatureObjectSize()
 	{
-		return FloatArray2DMOPS.getFeatureObjectSize( FEATURE_DESCRIPTOR_WIDTH );
+		return FloatArray2DMOPS.getFeatureObjectSize( p.fdSize );
 	}
 
 	static public long getFeatureObjectSize( final int fdsize )
@@ -100,11 +113,25 @@ public class FloatArray2DMOPS
 	 * @param feature_descriptor_size
 	 */
 	public FloatArray2DMOPS(
-			int feature_descriptor_size )
+			final Param p )
 	{
-		FEATURE_DESCRIPTOR_WIDTH = feature_descriptor_size; 
+		super( p );
 		octaves = null;
 		dog = new FloatArray2DScaleOctaveDoGDetector();
+		
+		sigma = new float[ p.steps + 3 ];
+		sigma[ 0 ] = p.initialSigma;
+		sigma_diff = new float[ p.steps + 3 ];
+		sigma_diff[ 0 ] = 0.0f;
+		kernel_diff = new float[ p.steps + 3 ][];
+		
+		for ( int i = 1; i < p.steps + 3; ++i )
+		{
+			sigma[ i ] = p.initialSigma * ( float )Math.pow( 2.0f, ( float )i / ( float )p.steps );
+			sigma_diff[ i ] = ( float )Math.sqrt( sigma[ i ] * sigma[ i ] - p.initialSigma * p.initialSigma );
+			
+			kernel_diff[ i ] = Filter.createGaussianKernel( sigma_diff[ i ], true );
+		}
 	}
 	
 	/**
@@ -112,46 +139,25 @@ public class FloatArray2DMOPS
 	 * 
 	 * @param src image having a generating gaussian kernel of initial_sigma
 	 * 	 img must be a 2d-array of float values in range [0.0f, ..., 1.0f]
-	 * @param steps gaussian smooth steps steps per scale octave
-	 * @param initial_sigma sigma of the generating gaussian kernel of img
-	 * @param min_size minimal size of a scale octave in pixel
-	 * @param max_size maximal size of an octave to be taken into account
-	 *   Use this to save memory and procesing time, if processing higher
-	 *   resolutions is not necessary.
 	 */
-	public void init(
-			FloatArray2D src,
-			int steps,
-			float initial_sigma,
-			int min_size,
-			int max_size )
+	@Override
+	public void init( FloatArray2D src )
 	{
-		float[] sigma = new float[ steps + 3 ];
-		sigma[ 0 ] = initial_sigma;
-		float[] sigma_diff = new float[ steps + 3 ];
-		sigma_diff[ 0 ] = 0.0f;
-		float[][] kernel_diff = new float[ steps + 3 ][];
-		
-		for ( int i = 1; i < steps + 3; ++i )
-		{
-			sigma[ i ] = initial_sigma * ( float )Math.pow( 2.0f, ( float )i / ( float )steps );
-			sigma_diff[ i ] = ( float )Math.sqrt( sigma[ i ] * sigma[ i ] - initial_sigma * initial_sigma );
-			
-			kernel_diff[ i ] = Filter.createGaussianKernel( sigma_diff[ i ], true );
-		}
-		
 		// estimate the number of octaves needed using a simple while loop instead of ld
 		int o = 0;
 		float w = ( float )src.width;
 		float h = ( float )src.height;
-		int max_kernel_size = kernel_diff[ steps + 2 ].length;
-		while ( w > Math.max( max_kernel_size, min_size ) && h > Math.max( max_kernel_size, min_size ) )
+		final int minOctaveSize = p.minOctaveSize / 4;
+		final int max_kernel_size = kernel_diff[ p.steps + 2 ].length;
+		while ( w > Math.max( max_kernel_size, minOctaveSize ) && h > Math.max( max_kernel_size, minOctaveSize ) )
 		{
 			w /= 2.0f;
 			h /= 2.0f;
 			++o;
 		}
 		octaves = new FloatArray2DScaleOctave[ o ];
+		
+		
 		
 		FloatArray2D next;
 		
@@ -167,7 +173,7 @@ public class FloatArray2DMOPS
 					src.width / 2 + src.width % 2,
 					src.height / 2 + src.height % 2 );
 			FloatArray2DScaleOctave.downsample( octaves[ i ].getL( 1 ), next );
-			if ( src.width > max_size || src.height > max_size )
+			if ( src.width > p.maxOctaveSize || src.height > p.maxOctaveSize )
 				octaves[ i ].clear();
 			src = next;
 		}
@@ -199,28 +205,28 @@ public class FloatArray2DMOPS
 		FloatArray2DScaleOctave octave = octaves[ o + O_SCALE_LD2 ];
 		FloatArray2D l = octave.getL( Math.round( c[ 2 ] ) );
 		
-		float[] desc = new float[ FEATURE_DESCRIPTOR_WIDTH * FEATURE_DESCRIPTOR_WIDTH ];
+		float[] desc = new float[ p.fdSize * p.fdSize ];
 		
 		float cos_o = ( float )Math.cos( orientation );
 		float sin_o = ( float )Math.sin( orientation );
 
 		// TODO this is for test
 		//---------------------------------------------------------------------
-		pattern = new FloatArray2D( FEATURE_DESCRIPTOR_WIDTH, FEATURE_DESCRIPTOR_WIDTH );
+		//pattern = new FloatArray2D( p.fdSize, p.fdSize );
 		
 		int i = 0;
 		float max = Float.MIN_VALUE;
 		float min = Float.MAX_VALUE;
 		
 		//! sample the region arround the keypoint location
-		for ( int y = FEATURE_DESCRIPTOR_WIDTH - 1; y >= 0; --y )
+		for ( int y = p.fdSize - 1; y >= 0; --y )
 		{
 			float ys =
-				( ( float )y - ( float )FEATURE_DESCRIPTOR_WIDTH / 2.0f + 0.5f ) * octave_sigma; //!< scale y around 0,0
-			for ( int x = FEATURE_DESCRIPTOR_WIDTH - 1; x >= 0; --x )
+				( ( float )y - ( float )p.fdSize / 2.0f + 0.5f ) * octave_sigma; //!< scale y around 0,0
+			for ( int x = p.fdSize - 1; x >= 0; --x )
 			{
 				float xs =
-					( ( float )x - ( float )FEATURE_DESCRIPTOR_WIDTH / 2.0f + 0.5f ) * octave_sigma; //!< scale x around 0,0
+					( ( float )x - ( float )p.fdSize / 2.0f + 0.5f ) * octave_sigma; //!< scale x around 0,0
 				float yr = cos_o * ys + sin_o * xs; //!< rotate y around 0,0
 				float xr = cos_o * xs - sin_o * ys; //!< rotate x around 0,0
 
@@ -238,7 +244,7 @@ public class FloatArray2DMOPS
 
 				// TODO this is for test
 				//---------------------------------------------------------------------
-				pattern.set( desc[ i ], x, y );
+				//pattern.set( desc[ i ], x, y );
 				
 				if ( desc[ i ] > max ) max = desc[ i ];
 				else if ( desc[ i ] < min ) min = desc[ i ];
@@ -744,6 +750,19 @@ public class FloatArray2DMOPS
 	}
 	
 	/**
+	 * detect features in all scale octaves
+	 * 
+	 * @param features the list to be filled
+	 * 
+	 * @return number of detected features
+	 */
+	final public int extractFeatures( final List< Feature > features )
+	{
+		features.addAll( run( p.maxOctaveSize ) );
+		return features.size();
+	}
+	
+	/**
 	 * get a histogram of feature sizes
 	 * 
 	 * @param rs
@@ -770,5 +789,24 @@ public class FloatArray2DMOPS
 		}
 		System.out.println( " done" );
 		return h;
+	}
+	
+	final public float getInitialSigma(){ return p.initialSigma; }
+	final public void setInitialSigma( final float initialSigma )
+	{
+		p.initialSigma = initialSigma;
+		sigma = new float[ p.steps + 3 ];
+		sigma[ 0 ] = p.initialSigma;
+		sigma_diff = new float[ p.steps + 3 ];
+		sigma_diff[ 0 ] = 0.0f;
+		kernel_diff = new float[ p.steps + 3 ][];
+		
+		for ( int i = 1; i < p.steps + 3; ++i )
+		{
+			sigma[ i ] = p.initialSigma * ( float )Math.pow( 2.0f, ( float )i / ( float )p.steps );
+			sigma_diff[ i ] = ( float )Math.sqrt( sigma[ i ] * sigma[ i ] - p.initialSigma * p.initialSigma );
+			
+			kernel_diff[ i ] = Filter.createGaussianKernel( sigma_diff[ i ], true );
+		}
 	}
 }

@@ -34,7 +34,6 @@ import mpicbg.imagefeatures.Feature;
 import mpicbg.imagefeatures.Filter;
 import mpicbg.imagefeatures.FloatArray2D;
 import mpicbg.imagefeatures.FloatArray2DMOPS;
-import mpicbg.imagefeatures.FloatArray2DSIFT;
 import mpicbg.imagefeatures.FloatArray2DScaleOctave;
 import mpicbg.imagefeatures.ImageArrayConverter;
 
@@ -51,7 +50,7 @@ public class MOPS extends FeatureTransform< FloatArray2DMOPS >
 	}
 	
 	/**
-	 * Extract SIFT features from an ImageProcessor
+	 * Extract MOPS features from an ImageProcessor
 	 * 
 	 * @param ip
 	 * @param features the list to be filled
@@ -66,22 +65,39 @@ public class MOPS extends FeatureTransform< FloatArray2DMOPS >
 		Filter.enhance( fa, 1.0f );
 		
 		final float[] initialKernel;
-
+		final boolean upscale;
+		
 		final float initialSigma = t.getInitialSigma();
-		if ( initialSigma > 1.0 )
+		if ( initialSigma < 1.0 )
 		{
-			t.setInitialSigma( initialSigma / 2 );
+			upscale = true;
+			t.setInitialSigma( initialSigma * 2 );
 			final FloatArray2D fat = new FloatArray2D( fa.width * 2 - 1, fa.height * 2 - 1 ); 
 			FloatArray2DScaleOctave.upsample( fa, fat );
+			
 			fa = fat;
-			initialKernel = Filter.createGaussianKernel( ( float )Math.sqrt( initialSigma * initialSigma - 1.0 ), true );
+			initialKernel = Filter.createGaussianKernel( ( float )Math.sqrt( t.getInitialSigma() * t.getInitialSigma() - 1.0 ), true );
 		}
 		else
+		{
+			upscale = false;
 			initialKernel = Filter.createGaussianKernel( ( float )Math.sqrt( initialSigma * initialSigma - 0.25 ), true );
-			
+		}
+		
 		fa = Filter.convolveSeparable( fa, initialKernel, initialKernel );
 		
 		t.init( fa );
-		return t.extractFeatures( features );
+		final int n = t.extractFeatures( features );
+		if ( upscale )
+		{
+			for ( Feature f : features )
+			{
+				f.scale /= 2;
+				f.location[ 0 ] /= 2;
+				f.location[ 1 ] /= 2;
+			}
+			t.setInitialSigma( initialSigma );
+		}
+		return n;
 	} 
 }
