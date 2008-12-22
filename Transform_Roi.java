@@ -39,7 +39,7 @@ public class Transform_Roi implements PlugIn
 	
 	final protected ArrayList< PointMatch > matches = new ArrayList< PointMatch >();
 	
-	final static private String[] methods = new String[]{ "Translation", "Rigid", "Affine" };
+	final static private String[] methods = new String[]{ "Translation", "Rigid", "Similarity", "Affine" };
 	static private int method = 1;
 	
 	static private boolean interpolate = true;
@@ -154,6 +154,9 @@ public class Transform_Roi implements PlugIn
 			model = new RigidModel2D();
 			break;
 		case 2:
+			model = new SimilarityModel2D();
+			break;
+		case 3:
 			model = new AffineModel2D();
 			break;
 		default:

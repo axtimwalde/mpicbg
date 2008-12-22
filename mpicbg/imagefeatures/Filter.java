@@ -24,13 +24,13 @@ package mpicbg.imagefeatures;
 public class Filter
 {
 	/**
-	 * Return an unsigned integer that bounces in a ping pong manneris flipped in the range [0 ... mod - 1]
+	 * Return an unsigned integer that bounces in a ping pong manner in the range [0 ... mod - 1]
 	 *
 	 * @param a the value to be flipped
 	 * @param range the size of the range
 	 * @return a flipped in range like a ping pong ball
 	 */
-	final static public int flipInRange( int a, int mod )
+	final static public int flipInRange( int a, final int mod )
 	{
 		final int p = 2 * mod;
 		if ( a < 0 ) a = p + a % p;

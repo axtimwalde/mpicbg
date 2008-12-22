@@ -43,7 +43,6 @@ public class FloatArray2D extends FloatArray
 	public FloatArray2D clone()
 	{
 		FloatArray2D clone = new FloatArray2D( data.clone(), width, height );
-		//System.arraycopy( this.data, 0, clone.data, 0, this.data.length );
 		return clone;
 	}
 

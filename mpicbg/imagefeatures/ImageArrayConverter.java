@@ -38,12 +38,7 @@ public class ImageArrayConverter
     
     final public static void imageProcessorToFloatArray2D( final ImageProcessor ip, final FloatArray2D fa )
 	{
-    	if ( ip instanceof FloatProcessor )
-		{
-    		final float[] pixels = ( float[] )ip.getPixels();
-			System.arraycopy( pixels, 0, fa.data, 0, pixels.length );
-		}
-		else if ( ip instanceof ByteProcessor )
+		if ( ip instanceof ByteProcessor )
 		{
 			final byte[] pixels = ( byte[] )ip.getPixels();
 			for ( int i = 0; i < pixels.length; ++i )
@@ -54,6 +49,12 @@ public class ImageArrayConverter
 			final short[] pixels = ( short[] )ip.getPixels();
 			for ( int i = 0; i < pixels.length; ++i )
 				fa.data[ i ] = pixels[ i ] & 0xffff;
+		}
+		else if ( ip instanceof FloatProcessor )
+		{
+			final float[] pixels = ( float[] )ip.getPixels();
+			for ( int i = 0; i < pixels.length; ++i )
+				fa.data[ i ] = pixels[ i ];
 		}
 		else if ( ip instanceof ColorProcessor )
 		{
