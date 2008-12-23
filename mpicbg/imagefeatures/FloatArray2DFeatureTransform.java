@@ -26,7 +26,8 @@
  */
 package mpicbg.imagefeatures;
 
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Collection;
 
 abstract public class FloatArray2DFeatureTransform< P >
 {
@@ -44,7 +45,7 @@ abstract public class FloatArray2DFeatureTransform< P >
 	
 	
 	/**
-	 * Initialize the feature transform
+	 * Initialize the feature transform.
 	 * 
 	 * @param src image having a generating gaussian kernel of initial_sigma
 	 * 	 img must be a 2d-array of float values in range [0.0f, ..., 1.0f]
@@ -52,11 +53,16 @@ abstract public class FloatArray2DFeatureTransform< P >
 	abstract public void init( final FloatArray2D src );
 	
 	/**
-	 * detect features in all scale octaves
+	 * Detect features.
 	 * 
-	 * @param features the list to be filled
-	 * 
-	 * @return number of detected features
+	 * @param features the {@link Collection} to be filled
 	 */
-	abstract public int extractFeatures( final List< Feature > features );
+	abstract public void extractFeatures( final Collection< Feature > features );
+	
+	final public Collection< Feature > extractFeatures()
+	{
+		final Collection< Feature > features = new ArrayList< Feature >();
+		extractFeatures( features );
+		return features;
+	}
 }

@@ -61,14 +61,13 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 	 * 
 	 * @return number of detected features
 	 */
-	public int extractFeatures( final ImageProcessor ip, final List< Feature > features )
+	public void extractFeatures( final ImageProcessor ip, final List< Feature > features )
 	{
 		final FloatArray2D fa = new FloatArray2D( ip.getWidth(), ip.getHeight() );
 		ImageArrayConverter.imageProcessorToFloatArray2D( ip, fa );
 		Filter.enhance( fa, 1.0f );
 		
 		t.init( fa );
-		return t.extractFeatures( features );
 	}
 	
 	/**

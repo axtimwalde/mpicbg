@@ -54,6 +54,7 @@ package mpicbg.imagefeatures;
  */
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.HashMap;
 import mpicbg.models.*;
@@ -749,17 +750,10 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 		return matches;
 	}
 	
-	/**
-	 * detect features in all scale octaves
-	 * 
-	 * @param features the list to be filled
-	 * 
-	 * @return number of detected features
-	 */
-	final public int extractFeatures( final List< Feature > features )
+	@Override
+	final public void extractFeatures( final Collection< Feature > features )
 	{
 		features.addAll( run( p.maxOctaveSize ) );
-		return features.size();
 	}
 	
 	/**

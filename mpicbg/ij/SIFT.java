@@ -26,6 +26,7 @@
  */
 package mpicbg.ij;
 
+import ij.gui.GenericDialog;
 import ij.process.ImageProcessor;
 
 import java.util.List;
@@ -49,6 +50,32 @@ public class SIFT extends FeatureTransform< FloatArray2DSIFT >
 		super( t );
 	}
 	
+	final static public void addFields( final GenericDialog gd )
+	{
+		gd.addMessage( "Scale Invariant Interest Point Detector:" );
+		gd.addNumericField( "initial_gaussian_blur :", 1.6f, 2, 6, "px" );
+		gd.addNumericField( "steps_per_scale_octave :", 3, 0 );
+		gd.addNumericField( "minimum_image_size :", 64, 0, 6, "px" );
+		gd.addNumericField( "maximum_image_size :", 1024, 0, 6, "px" );
+		
+		gd.addMessage( "Feature Descriptor:" );
+		gd.addNumericField( "feature_descriptor_size :", 8, 0 );
+		gd.addNumericField( "feature_descriptor_orientation_bins :", 8, 0 );
+	}
+	
+	final static public FloatArray2DSIFT.Param readFields( final GenericDialog gd )
+	{
+		FloatArray2DSIFT.Param p = new FloatArray2DSIFT.Param();
+		p.initialSigma = ( float )gd.getNextNumber();
+		p.steps = ( int )gd.getNextNumber();
+		p.minOctaveSize = ( int )gd.getNextNumber();
+		p.maxOctaveSize = ( int )gd.getNextNumber();
+		p.fdSize = ( int )gd.getNextNumber();
+		p.fdBins = ( int )gd.getNextNumber();
+		return p;
+	}
+
+	
 	/**
 	 * Extract SIFT features from an ImageProcessor
 	 * 
@@ -58,7 +85,7 @@ public class SIFT extends FeatureTransform< FloatArray2DSIFT >
 	 * @return number of detected features
 	 */
 	@Override
-	final public int extractFeatures( final ImageProcessor ip, final List< Feature > features )
+	final public void extractFeatures( final ImageProcessor ip, final List< Feature > features )
 	{
 		FloatArray2D fa = new FloatArray2D( ip.getWidth(), ip.getHeight() );
 		ImageArrayConverter.imageProcessorToFloatArray2D( ip, fa );
@@ -87,7 +114,7 @@ public class SIFT extends FeatureTransform< FloatArray2DSIFT >
 		fa = Filter.convolveSeparable( fa, initialKernel, initialKernel );
 		
 		t.init( fa );
-		final int n = t.extractFeatures( features );
+		t.extractFeatures( features );
 		if ( upscale )
 		{
 			for ( Feature f : features )
@@ -97,7 +124,6 @@ public class SIFT extends FeatureTransform< FloatArray2DSIFT >
 				f.location[ 1 ] /= 2;
 			}
 			t.setInitialSigma( initialSigma );
-		}
-		return n;	
+		}	
 	} 
 }

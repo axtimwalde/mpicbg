@@ -58,7 +58,7 @@ public class MOPS extends FeatureTransform< FloatArray2DMOPS >
 	 * @return number of detected features
 	 */
 	@Override
-	final public int extractFeatures( final ImageProcessor ip, final List< Feature > features )
+	final public void extractFeatures( final ImageProcessor ip, final List< Feature > features )
 	{
 		FloatArray2D fa = new FloatArray2D( ip.getWidth(), ip.getHeight() );
 		ImageArrayConverter.imageProcessorToFloatArray2D( ip, fa );
@@ -87,7 +87,7 @@ public class MOPS extends FeatureTransform< FloatArray2DMOPS >
 		fa = Filter.convolveSeparable( fa, initialKernel, initialKernel );
 		
 		t.init( fa );
-		final int n = t.extractFeatures( features );
+		t.extractFeatures( features );
 		if ( upscale )
 		{
 			for ( Feature f : features )
@@ -98,6 +98,5 @@ public class MOPS extends FeatureTransform< FloatArray2DMOPS >
 			}
 			t.setInitialSigma( initialSigma );
 		}
-		return n;
 	} 
 }

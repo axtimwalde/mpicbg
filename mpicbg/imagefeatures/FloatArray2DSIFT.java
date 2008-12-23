@@ -43,13 +43,15 @@ package mpicbg.imagefeatures;
  * @version 0.1b
  */
 
+import java.io.Serializable;
+import java.util.Collection;
 import java.util.Vector;
 import java.util.List;
 import mpicbg.models.*;
 
 public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2DSIFT.Param >
 {
-	final static public class Param
+	final static public class Param implements Serializable
 	{
 		/**
 		 * Feature descriptor size
@@ -710,17 +712,10 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		return matches;
 	}
 	
-	/**
-	 * detect features in all scale octaves
-	 * 
-	 * @param features the list to be filled
-	 * 
-	 * @return number of detected features
-	 */
-	final public int extractFeatures( final List< Feature > features )
+	@Override
+	final public void extractFeatures( final Collection< Feature > features )
 	{
 		features.addAll( run( p.maxOctaveSize ) );
-		return features.size();
 	}
 	
 	/**
