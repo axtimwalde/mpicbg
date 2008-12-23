@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import mpicbg.models.AbstractAffineModel2D;
+import mpicbg.models.Point;
 import mpicbg.models.PointMatch;
 import mpicbg.models.Tile;
 import mpicbg.models.TileConfiguration;
@@ -77,6 +78,30 @@ public class AffineTile< A extends AbstractAffineModel2D< A > > extends Tile< A 
 		for ( PointMatch m : virtualMatches )
 			matches.remove( m );
 		virtualMatches.clear();
+	}
+	
+	/**
+	 * Try to find the tile which is connected by a particular
+	 * {@link PointMatch}.
+	 * 
+	 * Note that this method searches only the known connected tiles to limit
+	 * the cost of that anyway expensive search.
+	 * 
+	 * @param match
+	 * 
+	 * @return connectedTile or null
+	 */
+	final public Tile< ? > findConnectedTile( PointMatch match )
+	{
+		final Point p = match.getP2();
+		for ( final Tile< ? > t : connectedTiles )
+		{
+			for ( final PointMatch m : t.getMatches() )
+			{
+				if ( p == m.getP1() ) return t;
+			}
+		}
+		return null;
 	}
 	
 	public AffineTile( final A model, final float width, final float height )

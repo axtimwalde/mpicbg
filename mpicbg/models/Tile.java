@@ -88,7 +88,7 @@ public class Tile< M extends Model< M > >
 	 * Note that point correspondences do not know about the tiles they belong
 	 * to.
 	 */
-	final private Set< Tile< ? > > connectedTiles = new HashSet< Tile< ? > >();
+	final protected Set< Tile< ? > > connectedTiles = new HashSet< Tile< ? > >();
 	final public Set< Tile< ? > > getConnectedTiles() { return connectedTiles; }
 	
 	
