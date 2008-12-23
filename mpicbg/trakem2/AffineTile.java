@@ -20,9 +20,13 @@
 package mpicbg.trakem2;
 
 import java.awt.geom.AffineTransform;
+import java.util.HashSet;
+import java.util.Set;
 
 import mpicbg.models.AbstractAffineModel2D;
+import mpicbg.models.PointMatch;
 import mpicbg.models.Tile;
+import mpicbg.models.TileConfiguration;
 
 /**
  * @version 0.1b
@@ -34,6 +38,46 @@ public class AffineTile< A extends AbstractAffineModel2D< A > > extends Tile< A 
 	
 	final protected float height;
 	final public float getHeight(){ return height; }
+	
+	/**
+	 * A set of virtual point correspondences that are used to connect a tile
+	 * to the rest of the {@link TileConfiguration} assuming that the initial
+	 * layout was correct.
+	 * 
+	 * Virtual point correspondences are also stored in matches.  This is just
+	 * to keep track about them.
+	 * 
+	 * Virtual point correspondences have to be removed
+	 * for real connections.
+	 */
+	final protected Set< PointMatch > virtualMatches = new HashSet< PointMatch >();
+	final public Set< PointMatch > getVirtualMatches(){ return virtualMatches; }
+	
+	final public boolean addVirtualMatch( final PointMatch match )
+	{
+		if ( virtualMatches.add( match ) )
+			return matches.add( match );
+		return false;
+	}
+	
+	final public boolean removeVirtualMatch( final PointMatch match )
+	{
+		if ( virtualMatches.remove( match ) )
+			return matches.remove( match );
+		return false;
+	}
+	
+	/**
+	 * Remove all virtual matches
+	 * 
+	 * @return success
+	 */
+	final public void clearVirtualMatches()
+	{
+		for ( PointMatch m : virtualMatches )
+			matches.remove( m );
+		virtualMatches.clear();
+	}
 	
 	public AffineTile( final A model, final float width, final float height )
 	{
