@@ -29,9 +29,17 @@ import mpicbg.models.Tile;
  */
 public class AffineTile< A extends AbstractAffineModel2D< A > > extends Tile< A >
 {
-	public AffineTile( final A model )
+	final protected float width;
+	final public float getWidth(){ return width; }
+	
+	final protected float height;
+	final public float getHeight(){ return height; }
+	
+	public AffineTile( final A model, final float width, final float height )
 	{
 		super( model );
+		this.width = width;
+		this.height = height;
 	}
 	
 	final public AffineTransform createAffine()
