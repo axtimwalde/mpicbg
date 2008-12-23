@@ -58,7 +58,7 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 	 * Extract features from an ImageProcessor
 	 * 
 	 * @param ip
-	 * @param features the list to be filled
+	 * @param features collects all features
 	 * 
 	 * @return number of detected features
 	 */
@@ -85,6 +85,7 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 	 * 
 	 * @param fs1 feature collection from set 1
 	 * @param fs2 feature collection from set 2
+	 * @param matches collects the matching coordinates
 	 * @param rod Ratio of distances (closest/next closest match)
 	 */
 	static public void matchFeatures(
