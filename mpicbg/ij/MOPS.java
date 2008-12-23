@@ -26,6 +26,7 @@
  */
 package mpicbg.ij;
 
+import ij.gui.GenericDialog;
 import ij.process.ImageProcessor;
 
 import java.util.Collection;
@@ -34,6 +35,7 @@ import mpicbg.imagefeatures.Feature;
 import mpicbg.imagefeatures.Filter;
 import mpicbg.imagefeatures.FloatArray2D;
 import mpicbg.imagefeatures.FloatArray2DMOPS;
+import mpicbg.imagefeatures.FloatArray2DSIFT;
 import mpicbg.imagefeatures.FloatArray2DScaleOctave;
 import mpicbg.imagefeatures.ImageArrayConverter;
 
@@ -49,6 +51,27 @@ public class MOPS extends FeatureTransform< FloatArray2DMOPS >
 		super( t );
 	}
 	
+	final static public void addFields( final GenericDialog gd, final FloatArray2DMOPS.Param p )
+	{
+		gd.addMessage( "Scale Invariant Interest Point Detector:" );
+		gd.addNumericField( "initial_gaussian_blur :", p.initialSigma, 2, 6, "px" );
+		gd.addNumericField( "steps_per_scale_octave :", p.steps, 0 );
+		gd.addNumericField( "minimum_image_size :", p.minOctaveSize, 0, 6, "px" );
+		gd.addNumericField( "maximum_image_size :", p.maxOctaveSize, 0, 6, "px" );
+		
+		gd.addMessage( "Feature Descriptor:" );
+		gd.addNumericField( "feature_descriptor_size :", p.fdSize, 0 );
+	}
+	
+	final static public void readFields( final GenericDialog gd, final FloatArray2DMOPS.Param p )
+	{
+		p.initialSigma = ( float )gd.getNextNumber();
+		p.steps = ( int )gd.getNextNumber();
+		p.minOctaveSize = ( int )gd.getNextNumber();
+		p.maxOctaveSize = ( int )gd.getNextNumber();
+		p.fdSize = ( int )gd.getNextNumber();
+	}
+
 	/**
 	 * Extract MOPS features from an ImageProcessor
 	 * 
