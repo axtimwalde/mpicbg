@@ -28,6 +28,7 @@ package mpicbg.ij;
 
 import ij.process.ImageProcessor;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -61,7 +62,7 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 	 * 
 	 * @return number of detected features
 	 */
-	public void extractFeatures( final ImageProcessor ip, final List< Feature > features )
+	public void extractFeatures( final ImageProcessor ip, final Collection< Feature > features )
 	{
 		final FloatArray2D fa = new FloatArray2D( ip.getWidth(), ip.getHeight() );
 		ImageArrayConverter.imageProcessorToFloatArray2D( ip, fa );
@@ -70,16 +71,23 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 		t.init( fa );
 	}
 	
+	final public Collection< Feature > extractFeatures( final ImageProcessor ip )
+	{
+		Collection< Feature > features = new ArrayList< Feature >();
+		extractFeatures( ip, features );
+		return features;
+	}
+	
+	
+	
 	/**
 	 * Identify corresponding features
 	 * 
 	 * @param fs1 feature collection from set 1
 	 * @param fs2 feature collection from set 2
 	 * @param rod Ratio of distances (closest/next closest match)
-	 * 
-	 * @return matches
 	 */
-	static public int matchFeatures(
+	static public void matchFeatures(
 			final Collection< Feature > fs1,
 			final Collection< Feature > fs2,
 			final List< PointMatch > matches,
@@ -133,6 +141,5 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 				matches.remove( i );
 			else ++i;
 		}
-		return matches.size();
 	} 
 }

@@ -206,9 +206,9 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 		start_time = System.currentTimeMillis();
 		IJ.log( "Identifying correspondence candidates using brute force ..." );
 		final List< PointMatch > candidates = new ArrayList< PointMatch >();
-		final int numMatches = FeatureTransform.matchFeatures( fs1, fs2, candidates, p.rod );
+		FeatureTransform.matchFeatures( fs1, fs2, candidates, p.rod );
 		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );	
-		IJ.log( numMatches + " potentially corresponding features identified." );
+		IJ.log( candidates.size() + " potentially corresponding features identified." );
 			
 		start_time = System.currentTimeMillis();
 		IJ.log( "Filtering correspondence candidates by geometric consensus ..." );

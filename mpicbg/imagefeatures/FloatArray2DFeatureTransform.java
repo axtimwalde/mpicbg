@@ -28,6 +28,7 @@ package mpicbg.imagefeatures;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 abstract public class FloatArray2DFeatureTransform< P >
 {
@@ -59,9 +60,9 @@ abstract public class FloatArray2DFeatureTransform< P >
 	 */
 	abstract public void extractFeatures( final Collection< Feature > features );
 	
-	final public Collection< Feature > extractFeatures()
+	final public List< Feature > extractFeatures()
 	{
-		final Collection< Feature > features = new ArrayList< Feature >();
+		final List< Feature > features = new ArrayList< Feature >();
 		extractFeatures( features );
 		return features;
 	}

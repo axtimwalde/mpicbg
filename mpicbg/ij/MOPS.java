@@ -28,7 +28,7 @@ package mpicbg.ij;
 
 import ij.process.ImageProcessor;
 
-import java.util.List;
+import java.util.Collection;
 
 import mpicbg.imagefeatures.Feature;
 import mpicbg.imagefeatures.Filter;
@@ -58,7 +58,7 @@ public class MOPS extends FeatureTransform< FloatArray2DMOPS >
 	 * @return number of detected features
 	 */
 	@Override
-	final public void extractFeatures( final ImageProcessor ip, final List< Feature > features )
+	final public void extractFeatures( final ImageProcessor ip, final Collection< Feature > features )
 	{
 		FloatArray2D fa = new FloatArray2D( ip.getWidth(), ip.getHeight() );
 		ImageArrayConverter.imageProcessorToFloatArray2D( ip, fa );
