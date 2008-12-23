@@ -28,22 +28,11 @@ import ij.gui.*;
 import mpicbg.ij.SIFT;
 import mpicbg.ij.TransformMeshMapping;
 import mpicbg.imagefeatures.Feature;
-import mpicbg.imagefeatures.Filter;
-import mpicbg.imagefeatures.FloatArray2D;
-import mpicbg.imagefeatures.FloatArray2DMOPS;
 import mpicbg.imagefeatures.FloatArray2DSIFT;
-import mpicbg.imagefeatures.FloatArray2DScaleOctave;
-import mpicbg.imagefeatures.ImageArrayConverter;
 import mpicbg.models.*;
 
-import java.awt.Choice;
-import java.awt.Component;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Vector;
 
 
 public class Align_ElasticMeshStack implements PlugIn
@@ -189,8 +178,6 @@ public class Align_ElasticMeshStack implements PlugIn
 		impAligned = new ImagePlus( imp.getTitle() + " aligned", stackAligned );
 		impAligned.show();
 			
-		ImageProcessor ip;
-			
 		FloatArray2DSIFT sift = new FloatArray2DSIFT( siftParam );
 		SIFT ijSIFT = new SIFT( sift );
 		
@@ -202,7 +189,6 @@ public class Align_ElasticMeshStack implements PlugIn
 		IJ.log( features2.size() + " features identified and processed" );
 		
 		m2 = new ElasticMovingLeastSquaresMesh( localModelClass, numX, imp.getWidth(), imp.getHeight(), alpha );
-		
 		meshes.addMesh( m2 );
 			
 		for ( int i = 1; i < stack.getSize(); ++i )
