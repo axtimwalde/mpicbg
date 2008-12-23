@@ -50,29 +50,27 @@ public class SIFT extends FeatureTransform< FloatArray2DSIFT >
 		super( t );
 	}
 	
-	final static public void addFields( final GenericDialog gd )
+	final static public void addFields( final GenericDialog gd, final FloatArray2DSIFT.Param p )
 	{
 		gd.addMessage( "Scale Invariant Interest Point Detector:" );
-		gd.addNumericField( "initial_gaussian_blur :", 1.6f, 2, 6, "px" );
-		gd.addNumericField( "steps_per_scale_octave :", 3, 0 );
-		gd.addNumericField( "minimum_image_size :", 64, 0, 6, "px" );
-		gd.addNumericField( "maximum_image_size :", 1024, 0, 6, "px" );
+		gd.addNumericField( "initial_gaussian_blur :", p.initialSigma, 2, 6, "px" );
+		gd.addNumericField( "steps_per_scale_octave :", p.steps, 0 );
+		gd.addNumericField( "minimum_image_size :", p.minOctaveSize, 0, 6, "px" );
+		gd.addNumericField( "maximum_image_size :", p.maxOctaveSize, 0, 6, "px" );
 		
 		gd.addMessage( "Feature Descriptor:" );
-		gd.addNumericField( "feature_descriptor_size :", 8, 0 );
-		gd.addNumericField( "feature_descriptor_orientation_bins :", 8, 0 );
+		gd.addNumericField( "feature_descriptor_size :", p.fdSize, 0 );
+		gd.addNumericField( "feature_descriptor_orientation_bins :", p.fdBins, 0 );
 	}
 	
-	final static public FloatArray2DSIFT.Param readFields( final GenericDialog gd )
+	final static public void readFields( final GenericDialog gd, final FloatArray2DSIFT.Param p )
 	{
-		FloatArray2DSIFT.Param p = new FloatArray2DSIFT.Param();
 		p.initialSigma = ( float )gd.getNextNumber();
 		p.steps = ( int )gd.getNextNumber();
 		p.minOctaveSize = ( int )gd.getNextNumber();
 		p.maxOctaveSize = ( int )gd.getNextNumber();
 		p.fdSize = ( int )gd.getNextNumber();
 		p.fdBins = ( int )gd.getNextNumber();
-		return p;
 	}
 
 	
