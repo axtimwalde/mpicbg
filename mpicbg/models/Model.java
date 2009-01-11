@@ -58,7 +58,7 @@ import java.util.Collection;
  * }
  * </pre>
  * 
- * @version 0.3b
+ * @version 0.4b
  * 
  */
 public abstract class Model< M extends Model< M > > implements CoordinateTransform
@@ -148,16 +148,20 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 	 * 
 	 * Clears inliers and fills it with the fitting subset of candidates.
 	 * 
+	 * Sets {@link #getCost() cost} = 1.0 - |inliers| / |candidates|.
+	 * 
 	 * @param candidates set of point correspondence candidates
 	 * @param inliers set of point correspondences that fit the model
 	 * @param epsilon maximal allowed transfer error
-	 * @param minInlierRatio minimal ratio of inliers (0.0 => 0%, 1.0 => 100%)
+	 * @param minInlierRatio minimal ratio |inliers| / |candidates| (0.0 => 0%, 1.0 => 100%)
+	 * @param minNumInliers minimally required absolute number of inliers
 	 */
 	final public boolean test(
 			final Collection< PointMatch > candidates,
 			final Collection< PointMatch > inliers,
 			final double epsilon,
-			final double minInlierRatio )
+			final double minInlierRatio,
+			final int minNumInliers )
 	{
 		inliers.clear();
 		
@@ -170,7 +174,20 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 		final float ir = ( float )inliers.size() / ( float )candidates.size();
 		setCost( Math.max( 0.0, Math.min( 1.0, 1.0 - ir ) ) );
 		
-		return ( ir > minInlierRatio );
+		return ( inliers.size() >= minNumInliers && ir > minInlierRatio );
+	}
+	
+	/**
+	 * Call {@link #test(Collection, Collection, double, double, int)} with
+	 * minNumInliers = {@link #getMinNumMatches()}.
+	 */
+	final public boolean test(
+			final Collection< PointMatch > candidates,
+			final Collection< PointMatch > inliers,
+			final double epsilon,
+			final double minInlierRatio )
+	{
+		return test( candidates, inliers, epsilon, minInlierRatio, getMinNumMatches() );
 	}
 		
 	/**
@@ -180,6 +197,8 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 	 * This method performs well on data sets with low amount of outliers.  If
 	 * you have many outliers, you can filter those with a `tolerant' RANSAC
 	 * first as done in {@link #filterRansac() filterRansac}.
+	 * 
+	 * Sets {@link #getCost() cost} to the average point transfer error.
 	 * 
 	 * @param candidates Candidate data points eventually inluding some outliers
 	 * @param inliers Remaining after the robust regression filter
@@ -272,6 +291,7 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 	 * @param epsilon maximal allowed transfer error
 	 * @param minInlierRatio minimal number of inliers to number of
 	 *   candidates
+	 * @param minNumInliers minimally required absolute number of inliers
 	 * 
 	 * @return true if {@link Model} could be estimated and inliers is not
 	 *   empty, false otherwise.  If false, {@link Model} remains unchanged.
@@ -281,7 +301,8 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 			final Collection< PointMatch > inliers,
 			final int iterations,
 			final double epsilon,
-			final double minInlierRatio )
+			final double minInlierRatio,
+			final int minNumInliers )
 		throws NotEnoughDataPointsException
 	{
 		if ( candidates.size() < getMinNumMatches() )
@@ -329,12 +350,12 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 					++i;
 					continue;
 				}
-				isGood = m.test( candidates, tempInliers, epsilon, minInlierRatio );
+				isGood = m.test( candidates, tempInliers, epsilon, minInlierRatio, minNumInliers );
 			}
 			if (
 					isGood &&
 					m.betterThan( copy ) &&
-					tempInliers.size() >= getMinNumMatches() )
+					tempInliers.size() >= minNumInliers )
 			{
 				copy.set( m );
 				inliers.clear();
@@ -349,6 +370,20 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 		return true;
 	}
 	
+	/**
+	 * Call {@link #ransac(List, Collection, int, double, double, int)} with
+	 * minNumInliers = {@link #getMinNumMatches()}.
+	 */
+	final public boolean ransac(
+			final List< PointMatch > candidates,
+			final Collection< PointMatch > inliers,
+			final int iterations,
+			final double epsilon,
+			final double minInlierRatio )
+		throws NotEnoughDataPointsException
+	{
+		return ransac( candidates, inliers, iterations, epsilon, minInlierRatio, getMinNumMatches() );
+	}
 	
 	/**
 	 * Estimate a {@link Model} from a set with many outliers by first
@@ -364,6 +399,7 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 	 * @param maxEpsilon maximal allowed transfer error
 	 * @param minInlierRatio minimal number of inliers to number of
 	 *   candidates
+	 * @param minNumInliers minimally required absolute number of inliers
 	 * @param maxTrust reject candidates with a cost larger than
 	 *   maxTrust * median cost
 	 * 
@@ -375,7 +411,8 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 			final Collection< PointMatch > inliers,
 			final int iterations,
 			final float maxEpsilon,
-			final float maxInlierRatio,
+			final float minInlierRatio,
+			final int minNumInliers,
 			final float maxTrust )
 		throws NotEnoughDataPointsException
 	{
@@ -386,10 +423,44 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 						temp,
 						iterations,
 						maxEpsilon,
-						maxInlierRatio ) &&
+						minInlierRatio,
+						minNumInliers ) &&
 				filter( temp, inliers, maxTrust ) )
 			return true;
 		return false;
+	}
+	
+	/**
+	 * Call {@link #filterRansac(List, Collection, int, float, float, int, float)}
+	 * with maxTrust = 4.
+	 */
+	final public boolean filterRansac(
+			final List< PointMatch > candidates,
+			final Collection< PointMatch > inliers,
+			final int iterations,
+			final float maxEpsilon,
+			final float minInlierRatio,
+			final int minNumInliers )
+		throws NotEnoughDataPointsException
+	{
+		return filterRansac( candidates, inliers, iterations, maxEpsilon, minInlierRatio, minNumInliers, 4f );
+	}
+	
+	
+	/**
+	 * Call {@link #filterRansac(List, Collection, int, float, float, int, float)}
+	 * with minNumInliers = {@link #getMinNumMatches()}.
+	 */
+	final public boolean filterRansac(
+			final List< PointMatch > candidates,
+			final Collection< PointMatch > inliers,
+			final int iterations,
+			final float maxEpsilon,
+			final float minInlierRatio,
+			final float maxTrust )
+		throws NotEnoughDataPointsException
+	{
+		return filterRansac( candidates, inliers, iterations, maxEpsilon, minInlierRatio, getMinNumMatches(), maxTrust );
 	}
 	
 	
@@ -402,16 +473,10 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 			final Collection< PointMatch > inliers,
 			final int iterations,
 			final float maxEpsilon,
-			final float maxInlierRatio )
+			final float minInlierRatio )
 		throws NotEnoughDataPointsException
 	{
-		return filterRansac(
-			candidates,
-			inliers,
-			iterations,
-			maxEpsilon,
-			maxInlierRatio,
-			4f );
+		return filterRansac( candidates, inliers, iterations, maxEpsilon, minInlierRatio, 4f );
 	}
 	
 		
