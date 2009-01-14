@@ -317,4 +317,23 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		
 		invert();
 	}
+	
+	/**
+	 * Initialize the model with the parameters of an {@link AffineTransform}.
+	 * 
+	 * @param a
+	 */
+	final public void set( final AffineTransform a )
+	{
+		m00 = ( float )a.getScaleX();
+		m10 = ( float )a.getShearY();
+		
+		m01 = ( float )a.getShearX();
+		m11 = ( float )a.getScaleY();
+		
+		m02 = ( float )a.getTranslateX();
+		m12 = ( float )a.getTranslateY();
+		
+		invert();
+	}
 }
