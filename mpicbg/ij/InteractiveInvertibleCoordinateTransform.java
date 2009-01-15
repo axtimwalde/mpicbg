@@ -147,7 +147,7 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Invert
 			for ( int i = 0; i < q.length; ++i )
 			{
 				double dx = win.getCanvas().getMagnification() * ( q[ i ].getW()[ 0 ] - x );
-				double dy = win.getCanvas().getMagnification() * ( q[ i ].getW()[ 1 ]  - y );
+				double dy = win.getCanvas().getMagnification() * ( q[ i ].getW()[ 1 ] - y );
 				double d =  dx * dx + dy * dy;
 				if ( d < 64.0 && d < target_d )
 				{

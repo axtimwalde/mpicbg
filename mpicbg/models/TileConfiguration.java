@@ -89,7 +89,7 @@ public class TileConfiguration
 	 * 
 	 * @param t
 	 */
-	final public void addTiles( final Collection< Tile< ? > > t ){ tiles.addAll( t ); }
+	final public void addTiles( final Collection< ? extends Tile< ? > > t ){ tiles.addAll( t ); }
 	
 	/**
 	 * Add all {@link Tile Tiles} of another {@link TileConfiguration}.

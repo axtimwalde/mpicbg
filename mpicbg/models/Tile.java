@@ -244,7 +244,7 @@ public class Tile< M extends Model< M > >
 	 * @param graph
 	 * @return the number of connected tiles in the graph
 	 */
-	final private int traceConnectedGraph( final Set< Tile< ? > > graph )
+	final protected void traceConnectedGraph( final Set< Tile< ? > > graph )
 	{
 		graph.add( this );
 		for ( final Tile< ? > t : connectedTiles )
@@ -252,23 +252,10 @@ public class Tile< M extends Model< M > >
 			if ( !graph.contains( t ) )
 				t.traceConnectedGraph( graph );
 		}
-		return graph.size();
 	}
 	
 	/**
-	 * connect two tiles by a set of point correspondences
-	 * 
-	 * re-weighs the point correpondences
-	 * 
-	 * We set a weigh of 1.0 / num_matches to each correspondence to equalize
-	 * the connections between tiles during minimization.
-	 * TODO Check if this is a good idea...
-	 * TODO What about the size of a detection, shouldn't it be used as a
-	 * weight factor as	well?
-	 * 
-	 * Change 2007-10-27
-	 * Do not normalize by changing the weight, correpondences are weighted by
-	 * feature scale. 
+	 * Connect two tiles by a set of point correspondences
 	 * 
 	 * @param o
 	 * @param matches
@@ -291,7 +278,7 @@ public class Tile< M extends Model< M > >
 	 * @return
 	 */
 	final static public ArrayList< Set< Tile< ?  > > > identifyConnectedGraphs(
-			Collection< Tile< ? > > tiles )
+			Collection< ? extends Tile< ? > > tiles )
 	{
 		ArrayList< Set< Tile< ? > > > graphs = new ArrayList< Set< Tile< ? > > >();
 		int numInspectedTiles = 0;
@@ -300,7 +287,8 @@ A:		for ( final Tile< ? > tile : tiles )
 			for ( final Set< Tile< ? > > knownGraph : graphs )
 				if ( knownGraph.contains( tile ) ) continue A; 
 			Set< Tile< ? > > current_graph = new HashSet< Tile< ? > >();
-			numInspectedTiles += tile.traceConnectedGraph( current_graph );
+			tile.traceConnectedGraph( current_graph );
+			numInspectedTiles += current_graph.size();
 			graphs.add( current_graph );
 			if ( numInspectedTiles == tiles.size() ) break;
 		}
