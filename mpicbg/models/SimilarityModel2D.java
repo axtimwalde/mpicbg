@@ -58,7 +58,7 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 	final public int getMinNumMatches(){ return MIN_NUM_MATCHES; }
 	
 	@Override
-	final public AffineTransform createAffine(){ return new AffineTransform( scos, -ssin, ssin, scos, tx, ty ); }
+	final public AffineTransform createAffine(){ return new AffineTransform( scos, ssin, -ssin, scos, tx, ty ); }
 	
 	@Override
 	final public AffineTransform createInverseAffine(){ return new AffineTransform( iscos, ssin, -ssin, iscos, itx, ity ); }
