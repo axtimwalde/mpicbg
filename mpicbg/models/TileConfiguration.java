@@ -21,6 +21,8 @@ package mpicbg.models;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -40,11 +42,11 @@ public class TileConfiguration
 	final static private DecimalFormat decimalFormat = new DecimalFormat();
 	final static private DecimalFormatSymbols decimalFormatSymbols = new DecimalFormatSymbols();
 
-	final private ArrayList< Tile< ? > > tiles = new ArrayList< Tile< ? > >();
-	final public ArrayList< Tile< ? > > getTiles(){ return tiles; }
+	final private Set< Tile< ? > > tiles = new HashSet< Tile< ? > >();
+	final public Set< Tile< ? > > getTiles(){ return tiles; }
 	
-	final private ArrayList< Tile< ? > > fixedTiles = new ArrayList< Tile< ? > >();
-	final public ArrayList< Tile< ? > > getFixedTiles(){ return fixedTiles; }
+	final private Set< Tile< ? > > fixedTiles = new HashSet< Tile< ? > >();
+	final public Set< Tile< ? > > getFixedTiles(){ return fixedTiles; }
 	
 	private double minError = Double.MAX_VALUE;
 	final public double getMinError() {	return minError; }
@@ -63,6 +65,8 @@ public class TileConfiguration
 		decimalFormat.setMaximumFractionDigits( 3 );
 		decimalFormat.setMinimumFractionDigits( 3 );		
 	}
+	
+	protected void println( String s ){ System.out.println( s ); }
 	
 	/**
 	 * Cleanup.
@@ -170,9 +174,9 @@ public class TileConfiguration
 			++i;
 		}
 		
-		System.out.println( "Successfully optimized configuration of " + tiles.size() + " tiles after " + i + " iterations:" );
-		System.out.println( "  average displacement: " + decimalFormat.format( error ) + "px" );
-		System.out.println( "  minimal displacement: " + decimalFormat.format( minError ) + "px" );
-		System.out.println( "  maximal displacement: " + decimalFormat.format( maxError ) + "px" );
+		println( "Successfully optimized configuration of " + tiles.size() + " tiles after " + i + " iterations:" );
+		println( "  average displacement: " + decimalFormat.format( error ) + "px" );
+		println( "  minimal displacement: " + decimalFormat.format( minError ) + "px" );
+		println( "  maximal displacement: " + decimalFormat.format( maxError ) + "px" );
 	}
 }
