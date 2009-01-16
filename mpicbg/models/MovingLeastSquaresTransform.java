@@ -17,7 +17,6 @@
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  *
  */
-
 package mpicbg.models;
 
 import java.util.ArrayList;

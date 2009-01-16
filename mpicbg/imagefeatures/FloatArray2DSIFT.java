@@ -82,6 +82,17 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		 * Initial sigma of each Scale Octave
 		 */
 		public float initialSigma = 1.6f;
+		
+		public boolean equals( Param p )
+		{
+			return
+				( fdSize == p.fdSize ) &&
+				( fdBins == p.fdBins ) &&
+				( maxOctaveSize == p.maxOctaveSize ) &&
+				( minOctaveSize == p.minOctaveSize ) &&
+				( steps == p.steps ) &&
+				( initialSigma == p.initialSigma );
+		}
 	}
 	
 	final private int fdWidth;
