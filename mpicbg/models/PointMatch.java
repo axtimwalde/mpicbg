@@ -193,6 +193,7 @@ public class PointMatch
 		this.p1 = p1;
 		this.p2 = p2;
 		
+		weights = new float[]{ 1.0f };
 		weight = 1.0f;
 		
 		distance = Point.distance( p1, p2 );
