@@ -58,10 +58,10 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	final public int getMinNumMatches(){ return MIN_NUM_MATCHES; }
 	
 	@Override
-	final public AffineTransform createAffine(){ return new AffineTransform( cos, -sin, sin, cos, tx, ty ); }
+	final public AffineTransform createAffine(){ return new AffineTransform( cos, sin, -sin, cos, tx, ty ); }
 	
 	@Override
-	final public AffineTransform createInverseAffine(){ return new AffineTransform( cos, sin, -sin, cos, itx, ity ); }
+	final public AffineTransform createInverseAffine(){ return new AffineTransform( cos, -sin, sin, cos, itx, ity ); }
 	
 	//@Override
 	final public float[] apply( final float[] l )

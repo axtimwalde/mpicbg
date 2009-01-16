@@ -61,7 +61,7 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 	final public AffineTransform createAffine(){ return new AffineTransform( scos, ssin, -ssin, scos, tx, ty ); }
 	
 	@Override
-	final public AffineTransform createInverseAffine(){ return new AffineTransform( iscos, ssin, -ssin, iscos, itx, ity ); }
+	final public AffineTransform createInverseAffine(){ return new AffineTransform( iscos, issin, -issin, iscos, itx, ity ); }
 	
 	//@Override
 	final public float[] apply( final float[] l )
