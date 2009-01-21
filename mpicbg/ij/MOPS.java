@@ -35,7 +35,6 @@ import mpicbg.imagefeatures.Feature;
 import mpicbg.imagefeatures.Filter;
 import mpicbg.imagefeatures.FloatArray2D;
 import mpicbg.imagefeatures.FloatArray2DMOPS;
-import mpicbg.imagefeatures.FloatArray2DSIFT;
 import mpicbg.imagefeatures.FloatArray2DScaleOctave;
 import mpicbg.imagefeatures.ImageArrayConverter;
 

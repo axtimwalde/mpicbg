@@ -19,6 +19,7 @@
  */
 package mpicbg.models;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -29,8 +30,10 @@ import java.util.Collection;
  * The link is directed, such that each link touches only {@link #p1}.
  *
  */
-public class PointMatch
+public class PointMatch implements Serializable
 {
+	private static final long serialVersionUID = 4021585829747053663L;
+
 	final private Point p1;
 	final public Point getP1() { return p1; }
 	

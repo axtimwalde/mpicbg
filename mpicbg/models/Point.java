@@ -19,14 +19,18 @@
  */
 package mpicbg.models;
 
+import java.io.Serializable;
+
 /**
  * An n-dimensional point.
  * 
  * {@link #l Local coordinates} are thought to be immutable, application
  * of a model changes the {@link #w world coordinates} of the point.
  */
-public class Point
+public class Point implements Serializable
 {
+	private static final long serialVersionUID = 7779693088835156795L;
+	
 	/**
 	 * World coordinates
 	 */

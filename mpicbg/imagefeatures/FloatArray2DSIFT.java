@@ -53,6 +53,8 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 {
 	final static public class Param implements Serializable
 	{
+		private static final long serialVersionUID = -5989002253597993595L;
+
 		/**
 		 * Feature descriptor size
 		 *    How many samples per row and column
