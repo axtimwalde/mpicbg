@@ -8,13 +8,9 @@ mpicbg_.jar <- mpicbg/*/*.java \
 	SIFT_Align.java \
 	SIFT_ExtractPointRoi.java \
 	Transform_Affine.java \
-	Transform_ElasticMovingLeastSquaresMesh.java \
-	Transform_Grid.java \
 	Transform_MovingLeastSquaresMesh.java \
 	Transform_Perspective.java \
 	Transform_Rigid.java \
 	Transform_Similarity.java \
 	Transform_Roi.java \
-	Transform_SpringMesh.java \
-	Transform_TriangularGrid.java \
 	plugins.config
