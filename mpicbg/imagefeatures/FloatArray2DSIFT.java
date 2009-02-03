@@ -95,6 +95,30 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 				( steps == p.steps ) &&
 				( initialSigma == p.initialSigma );
 		}
+		
+		@Override
+		public Param clone()
+		{
+			final Param s = new Param();
+			s.fdBins = fdBins;
+			s.fdSize = fdSize;
+			s.initialSigma = initialSigma;
+			s.maxOctaveSize = maxOctaveSize;
+			s.minOctaveSize = minOctaveSize;
+			s.steps = steps;
+			
+			return s;
+		}
+		
+		public void set( Param p )
+		{
+			fdBins = p.fdBins;
+			fdSize = p.fdSize;
+			initialSigma = p.initialSigma;
+			maxOctaveSize = p.maxOctaveSize;
+			minOctaveSize = p.minOctaveSize;
+			steps = p.steps;
+		}
 	}
 	
 	final private int fdWidth;
