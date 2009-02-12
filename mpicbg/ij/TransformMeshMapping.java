@@ -76,7 +76,8 @@ public class TransformMeshMapping implements Mapping
 					}
 					catch ( Exception e )
 					{
-						e.printStackTrace( System.err );
+						//e.printStackTrace( System.err );
+						continue;
 					}
 					target.putPixel( x, y, source.getPixel( ( int )t[ 0 ], ( int )t[ 1 ] ) );
 				}
@@ -110,7 +111,8 @@ public class TransformMeshMapping implements Mapping
 					}
 					catch ( Exception e )
 					{
-						e.printStackTrace( System.err );
+						//e.printStackTrace( System.err );
+						continue;
 					}
 					target.putPixel( x, y, source.getPixelInterpolated( t[ 0 ], t[ 1 ] ) );
 				}
