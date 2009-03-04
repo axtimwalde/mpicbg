@@ -67,16 +67,33 @@ public class MovingLeastSquaresTransform implements CoordinateTransform
 	}
 
 	//@Override
-	public void applyInPlace( float[] location )
+	public void applyInPlace( final float[] location )
 	{
 		final Collection< PointMatch > weightedMatches = new ArrayList< PointMatch >();
 		for ( final PointMatch m : matches )
 		{
 			final float[] l = m.getP1().getL();
-			final float dx = l[ 0 ] - location[ 0 ];
-			final float dy = l[ 1 ] - location[ 1 ];
+
+//			/* specific for 2d */
+//			final float dx = l[ 0 ] - location[ 0 ];
+//			final float dy = l[ 1 ] - location[ 1 ];
+//			
+//			final float weight = m.getWeight() * ( float )weigh( 1.0f + Math.sqrt( dx * dx + dy * dy ) );
 			
-			final float weight = m.getWeight() * ( float )weigh( 1.0f + Math.sqrt( dx * dx + dy * dy ) );
+			float s = 0;
+			for ( int i = 0; i < location.length; ++i )
+			{
+				final float dx = l[ i ] - location[ i ];
+				s += dx * dx;
+			}
+			if ( s <= 0 )
+			{
+				final float[] w = m.getP2().getW();
+				for ( int i = 0; i < location.length; ++i )
+					location[ i ] = w[ i ];
+				return;
+			}
+			final float weight = m.getWeight() * ( float )weigh( Math.sqrt( s / l.length ) );
 			final PointMatch mw = new PointMatch( m.getP1(), m.getP2(), weight );
 			weightedMatches.add( mw );
 		}
