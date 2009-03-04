@@ -32,8 +32,9 @@ import java.util.Collection;
  * Model: R^n --> R^n 
  * 
  * Provides methods for generic optimization and model extraction algorithms.
- * Currently, the Random Sample Consensus \citet{FischlerB81} and a robust
- * regression method are implemented.
+ * Currently, the Random Sample Consensus \cite{FischlerB81}, a robust
+ * regression method and the Iterative Closest Point Algorithm \cite{Zhang94}
+ * are implemented.
  *  
  * TODO: A model is planned to be a generic transformation pipeline to be
  *   applied to images, volumes or arbitrary sets of n-dimensional points.
@@ -55,6 +56,16 @@ import java.util.Collection;
  *   address   = {New York, NY, USA},
  *   issn      = {0001-0782},
  *   doi       = {http://doi.acm.org/10.1145/358669.358692},
+ * }
+ * &#64;article{Zhang94,
+ *   author    = {{Zhengyou Zhang}},
+ *   title     = {Iterative point matching for registration of free-form curves and surfaces},
+ *   journal   = {International Journal of Computer Vision},
+ *   volume    = {13},
+ *   number    = {2},
+ *   month     = {October},
+ *   year      = {1994},
+ *   pages     = {119--152},
  * }
  * </pre>
  * 
@@ -477,6 +488,64 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 		throws NotEnoughDataPointsException
 	{
 		return filterRansac( candidates, inliers, iterations, maxEpsilon, minInlierRatio, 4f );
+	}
+	
+	
+	/**
+	 * Estimate the best model in terms of the Iterative Closest Point
+	 * Algorithm \cite{Zhang94} for matching two point clouds into each other.
+	 * 
+	 * p -> q
+	 * 
+	 * @param p source
+	 * @param q target
+	 * 
+	 * @return the list of matches
+	 * 
+	 * TODO Test---at least once!
+	 */
+	final public Collection< PointMatch > icp(
+			final List< Point > p,
+			final List< Point > q )
+	{
+		final M m = clone();
+		final List< PointMatch > currentMatches = new ArrayList< PointMatch >();
+		final List< PointMatch > previousMatches = new ArrayList< PointMatch >();
+		do
+		{
+			previousMatches.clear();
+			previousMatches.addAll( currentMatches );
+			currentMatches.clear();
+			
+			/* Match by Euclidean distance in space */
+			for ( final Point pi : p )
+			{
+				float minimalDistance = Float.MAX_VALUE;
+				Point closestPoint = null;
+				for ( final Point qi : q )
+				{
+					final float d = Point.distance( pi, qi );
+					if ( d < minimalDistance )
+					{
+						minimalDistance = d;
+						closestPoint = qi;
+					}
+				}
+				currentMatches.add( new PointMatch( pi, closestPoint ) );
+			}
+			try
+			{
+				m.fit( currentMatches );
+			}
+			catch ( Exception e )
+			{
+				e.printStackTrace();
+				return null;
+			}
+		}
+		while ( currentMatches.equals( previousMatches ) );
+		this.set( m );
+		return currentMatches;
 	}
 	
 		
