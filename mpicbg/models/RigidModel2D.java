@@ -174,7 +174,7 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	}
 	
 	@Override
-	final public RigidModel2D clone()
+	public RigidModel2D clone()
 	{
 		final RigidModel2D m = new RigidModel2D();
 		m.cos = cos;

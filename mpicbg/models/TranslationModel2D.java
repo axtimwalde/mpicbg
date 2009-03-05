@@ -117,7 +117,7 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 	}
 
 	@Override
-	final public TranslationModel2D clone()
+	public TranslationModel2D clone()
 	{
 		final TranslationModel2D m = new TranslationModel2D();
 		m.tx = tx;
