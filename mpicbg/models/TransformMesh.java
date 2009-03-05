@@ -61,17 +61,20 @@ public class TransformMesh implements InvertibleCoordinateTransform
 			final float width,
 			final float height )
 	{
-		float w = width * height / numX / numY;
-		PointMatch[] pq = new PointMatch[ numX * numY + ( numX - 1 ) * ( numY - 1 ) ];
+		final int numXs = Math.max( 2, numX );
+		final int numYs = Math.max( 2, numY );
+		
+		float w = width * height / numXs / numYs;
+		PointMatch[] pq = new PointMatch[ numXs * numYs + ( numXs - 1 ) * ( numYs - 1 ) ];
 		
 		this.width = width;
 		this.height = height;
 		
-		float dy = height / ( numY - 1 );
-		float dx = width / ( numX - 1 );
+		float dy = height / ( numYs - 1 );
+		float dx = width / ( numXs - 1 );
 		
 		int i = 0;
-		for ( int xi = 0; xi < numX; ++xi )
+		for ( int xi = 0; xi < numXs; ++xi )
 		{
 			float xip = xi * dx;
 			Point p = new Point( new float[]{ xip, 0 } );
@@ -84,7 +87,7 @@ public class TransformMesh implements InvertibleCoordinateTransform
 		int i1, i2, i3;
 		ArrayList< PointMatch > t1, t2;
 		
-		for ( int yi = 1; yi < numY; ++yi )
+		for ( int yi = 1; yi < numYs; ++yi )
 		{
 			// odd row
 			float yip = yi * dy - dy / 2;
@@ -92,7 +95,7 @@ public class TransformMesh implements InvertibleCoordinateTransform
 			p  = new Point( new float[]{ dx - dx / 2, yip } );
 			pq[ i ] = new PointMatch( p, p.clone(), w );
 			
-			i1 = i - numX;
+			i1 = i - numXs;
 			i2 = i1 + 1;
 			
 			t1 = new ArrayList< PointMatch >();
@@ -104,14 +107,14 @@ public class TransformMesh implements InvertibleCoordinateTransform
 			
 			++i;
 			
-			for ( int xi = 2; xi < numX; ++xi )
+			for ( int xi = 2; xi < numXs; ++xi )
 			{
 				float xip = xi * dx - dx / 2;
 				
 				p  = new Point( new float[]{ xip, yip } );
 				pq[ i ] = new PointMatch( p, p.clone(), w );
 				
-				i1 = i - numX;
+				i1 = i - numXs;
 				i2 = i1 + 1;
 				i3 = i - 1;
 				
@@ -137,8 +140,8 @@ public class TransformMesh implements InvertibleCoordinateTransform
 			p  = new Point( new float[]{ 0, yip } );
 			pq[ i ] = new PointMatch( p, p.clone(), w );
 			
-			i1 = i - numX + 1;
-			i2 = i1 - numX;
+			i1 = i - numXs + 1;
+			i2 = i1 - numXs;
 			
 			t1 = new ArrayList< PointMatch >();
 			t1.add( pq[ i2 ] );
@@ -149,14 +152,14 @@ public class TransformMesh implements InvertibleCoordinateTransform
 			
 			++i;
 			
-			for ( int xi = 1; xi < numX - 1; ++xi )
+			for ( int xi = 1; xi < numXs - 1; ++xi )
 			{
 				float xip = xi * dx;
 								
 				p = new Point( new float[]{ xip, yip } );
 				pq[ i ] = new PointMatch( p, p.clone(), w );
 				
-				i1 = i - numX;
+				i1 = i - numXs;
 				i2 = i1 + 1;
 				i3 = i - 1;
 				
@@ -180,8 +183,8 @@ public class TransformMesh implements InvertibleCoordinateTransform
 			p  = new Point( new float[]{ width, yip } );
 			pq[ i ] = new PointMatch( p, p.clone(), w );
 			
-			i1 = i - numX;
-			i2 = i1 - numX + 1;
+			i1 = i - numXs;
+			i2 = i1 - numXs + 1;
 			i3 = i - 1;
 			
 			t1 = new ArrayList< PointMatch >();
@@ -207,9 +210,10 @@ public class TransformMesh implements InvertibleCoordinateTransform
 			final float width,
 			final float height )
 	{
-		final float dx = width / ( float )( numX - 1 );
+		final int numXs = Math.max( 2, numX );
+		final float dx = width / ( float )( numXs - 1 );
 		final float dy = 2.0f * ( float )Math.sqrt(4.0f / 5.0f * dx * dx );
-		return ( int )Math.round( height / dy ) + 1;
+		return ( int )Math.max( 2, Math.round( height / dy ) + 1 );
 	}
 	
 	public TransformMesh(
