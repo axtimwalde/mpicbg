@@ -63,7 +63,7 @@ public class MovingLeastSquaresTransform implements CoordinateTransform
 	{
 		final float[] a = location.clone();
 		applyInPlace( a );
-		return null;
+		return a;
 	}
 
 	//@Override
