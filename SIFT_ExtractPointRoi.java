@@ -37,9 +37,6 @@ import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
-import java.awt.TextField;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 
 /**
  * Extract landmark correspondences in two images as PointRoi.
@@ -76,7 +73,7 @@ import java.awt.event.KeyListener;
  * </pre>
  * 
  */
-public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
+public class SIFT_ExtractPointRoi implements PlugIn
 {
 	final static private DecimalFormat decimalFormat = new DecimalFormat();
 	final static private DecimalFormatSymbols decimalFormatSymbols = new DecimalFormatSymbols();
@@ -187,7 +184,48 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 		p.maxEpsilon = ( float )gd.getNextNumber();
 		p.minInlierRatio = ( float )gd.getNextNumber();
 		p.modelIndex = gd.getNextChoiceIndex();
-		
+
+		exec(imp1, imp2);
+	}
+
+	/** If unsure, just use default parameters by using exec(ImagePlus, ImagePlus, int) method, where only the model is specified. */
+	public void exec(final ImagePlus imp1, final ImagePlus imp2,
+			 final float initialSigma, final int steps,
+			 final int minOctaveSize, final int maxOctaveSize,
+			 final int fdSize, final int fdBins,
+			 final float rod, final float maxEpsilon,
+			 final float minInlierRatio, final int modelIndex) {
+
+		p.sift.initialSigma = initialSigma;
+		p.sift.steps = steps;
+		p.sift.minOctaveSize = minOctaveSize;
+		p.sift.maxOctaveSize = maxOctaveSize;
+
+		p.sift.fdSize = fdSize;
+		p.sift.fdBins = fdBins;
+		p.rod = rod;
+
+		p.maxEpsilon = maxEpsilon;
+		p.minInlierRatio = minInlierRatio;
+		p.modelIndex = modelIndex;
+
+		exec( imp1, imp2 );
+	}
+
+	/** Execute with default parameters, except the model.
+	 *  @param modelIndex: 0=Translation, 1=Rigid, 2=Similarity, 3=Affine */
+	public void exec(final ImagePlus imp1, final ImagePlus imp2, final int modelIndex) {
+		if ( modelIndex < 0 || modelIndex > 3 ) {
+			IJ.log("Invalid model index: " + modelIndex);
+			return;
+		}
+		p.modelIndex = modelIndex;
+		exec( imp1, imp2 );
+	}
+
+	/** Execute with default parameters (model is Rigid) */
+	public void exec(final ImagePlus imp1, final ImagePlus imp2) {
+
 		FloatArray2DSIFT sift = new FloatArray2DSIFT( p.sift );
 		SIFT ijSIFT = new SIFT( sift );
 		
@@ -287,17 +325,4 @@ public class SIFT_ExtractPointRoi implements PlugIn, KeyListener
 		}
 
 	}
-
-	public void keyPressed(KeyEvent e)
-	{
-		if (
-				( e.getKeyCode() == KeyEvent.VK_F1 ) &&
-				( e.getSource() instanceof TextField ) )
-		{
-		}
-	}
-
-	public void keyReleased(KeyEvent e) { }
-
-	public void keyTyped(KeyEvent e) { }
 }
