@@ -138,7 +138,7 @@ public class Optic_Flow implements PlugIn, KeyListener
 			{
 				int xb = x + xo;
 				if ( xb < 0 || xb >= w )
-					xb = pingPong( xb, h );
+					xb = pingPong( xb, w );
 				
 				final int i = yAdd + x;
 				final float d = bf[ ybAdd + xb ] - af[ i ];
