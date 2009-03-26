@@ -22,7 +22,6 @@ import ij.ImagePlus;
 import ij.ImageStack;
 import ij.WindowManager;
 import ij.plugin.PlugIn;
-import ij.process.*;
 import ij.gui.*;
 
 import mpicbg.ij.SIFT;

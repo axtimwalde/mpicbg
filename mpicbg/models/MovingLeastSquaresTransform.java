@@ -32,7 +32,7 @@ public class MovingLeastSquaresTransform implements CoordinateTransform
 	protected Model< ? > model = new AffineModel2D();
 	final public Model< ? > getModel(){ return model; }
 	final public void setModel( final Model< ? > model ){ this.model = model; }
-	final public void setModel( final Class< Model< ? > > modelClass )
+	final public void setModel( final Class< ? extends Model< ? > > modelClass )
 	{
 		try
 		{
