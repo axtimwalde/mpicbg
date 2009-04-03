@@ -65,7 +65,7 @@ void displayPointMesh(
 	String title )
 {
 	CustomPointMesh mesh = makePointMesh( points );
-	universe.addCustomMesh( mesh, null, title );
+	universe.addCustomMesh( mesh, title );
 	mesh.setPointSize( pointSize );
 	mesh.setColor( color );
 }
@@ -78,7 +78,7 @@ void displayLineMesh(
 	String title )
 {
 	CustomLineMesh mesh = makeLineMesh( lines );
-	univ.addCustomMesh( mesh, null, title );
+	univ.addCustomMesh( mesh, title );
 	mesh.setLineWidth( lineWidth );
 	mesh.setColor( color );
 }
@@ -196,7 +196,7 @@ displayLineMesh( refVector_medial_lobe, univ, r, 4, "refVector_medial_lobe" );
 
 /* display the source grid */
 CustomLineMesh srcLandmarksGrid = makeGridMesh( srcLandmarks, 16, null );
-univ.addCustomMesh( srcLandmarksGrid, null, "grid" );
+univ.addCustomMesh( srcLandmarksGrid, "grid" );
 srcLandmarksGrid.setLineWidth( 0.5f );
 srcLandmarksGrid.setTransparency( 0.8f );
 
@@ -253,7 +253,7 @@ mt.setMatches( matches );
 
 /* display the source transformation grid */
 CustomLineMesh srcLandmarksGridMLS = makeGridMesh( srcLandmarks, 16, mt );
-univ.addCustomMesh( srcLandmarksGridMLS, null, "grid_mls" );
+univ.addCustomMesh( srcLandmarksGridMLS, "grid_mls" );
 srcLandmarksGridMLS.setLineWidth( 0.5f );
 srcLandmarksGridMLS.setColor( y );
 srcLandmarksGridMLS.setTransparency( 0.8f );
