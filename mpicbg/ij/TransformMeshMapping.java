@@ -14,7 +14,7 @@ import mpicbg.models.TransformMesh;
  * @author saalfeld
  *
  */
-public class TransformMeshMapping implements Mapping
+public class TransformMeshMapping implements InvertibleMapping
 {
 	final protected TransformMesh transform;
 	
@@ -226,7 +226,7 @@ public class TransformMeshMapping implements Mapping
 		}
 	}
 	
-	//Override
+	//@Override
 	final public void mapInverse(
 			final ImageProcessor source,
 			final ImageProcessor target )
@@ -239,7 +239,7 @@ public class TransformMeshMapping implements Mapping
 	}
 	
 	//@Override
-	final public void mapInterpolatedInverse(
+	final public void mapInverseInterpolated(
 			final ImageProcessor source,
 			final ImageProcessor target )
 	{
