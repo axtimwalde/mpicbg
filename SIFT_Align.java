@@ -205,6 +205,7 @@ public class SIFT_Align implements PlugIn, KeyListener
 		ImageProcessor ip1;
 		ImageProcessor ip2 = stack.getProcessor( 1 );
 		ImageProcessor ip3 = null;
+		ImageProcessor ip4 = null;
 		
 		FloatArray2DSIFT sift = new FloatArray2DSIFT( p.sift );
 		SIFT ijSIFT = new SIFT( sift );
@@ -269,20 +270,20 @@ public class SIFT_Align implements PlugIn, KeyListener
 			{
 				ip2 = downScale( ip2, vis_scale );
 			
-				ip1 = ip1.convertToRGB();
-				ip3 = ip2.convertToRGB();
-				ip1.setColor( Color.red );
+				ip3 = ip1.convertToRGB().duplicate();
+				ip4 = ip2.convertToRGB().duplicate();
 				ip3.setColor( Color.red );
+				ip4.setColor( Color.red );
 
-				ip1.setLineWidth( 2 );
 				ip3.setLineWidth( 2 );
+				ip4.setLineWidth( 2 );
 				for ( PointMatch m : candidates )
 				{
 					float[] m_p1 = m.getP1().getL(); 
 					float[] m_p2 = m.getP2().getL(); 
 					
-					ip1.drawDot( ( int )Math.round( vis_scale * m_p2[ 0 ] ), ( int )Math.round( vis_scale * m_p2[ 1 ] ) );
-					ip3.drawDot( ( int )Math.round( vis_scale * m_p1[ 0 ] ), ( int )Math.round( vis_scale * m_p1[ 1 ] ) );
+					ip3.drawDot( ( int )Math.round( vis_scale * m_p2[ 0 ] ), ( int )Math.round( vis_scale * m_p2[ 1 ] ) );
+					ip4.drawDot( ( int )Math.round( vis_scale * m_p1[ 0 ] ), ( int )Math.round( vis_scale * m_p1[ 1 ] ) );
 				}
 			}
 
@@ -327,17 +328,17 @@ public class SIFT_Align implements PlugIn, KeyListener
 			{
 				if ( p.showInfo )
 				{
-					ip1.setColor( Color.green );
 					ip3.setColor( Color.green );
-					ip1.setLineWidth( 2 );
+					ip4.setColor( Color.green );
 					ip3.setLineWidth( 2 );
+					ip4.setLineWidth( 2 );
 					for ( PointMatch m : inliers )
 					{
 						float[] m_p1 = m.getP1().getL(); 
 						float[] m_p2 = m.getP2().getL(); 
 						
-						ip1.drawDot( ( int )Math.round( vis_scale * m_p2[ 0 ] ), ( int )Math.round( vis_scale * m_p2[ 1 ] ) );
-						ip3.drawDot( ( int )Math.round( vis_scale * m_p1[ 0 ] ), ( int )Math.round( vis_scale * m_p1[ 1 ] ) );
+						ip3.drawDot( ( int )Math.round( vis_scale * m_p2[ 0 ] ), ( int )Math.round( vis_scale * m_p2[ 1 ] ) );
+						ip4.drawDot( ( int )Math.round( vis_scale * m_p1[ 0 ] ), ( int )Math.round( vis_scale * m_p1[ 1 ] ) );
 					}
 				}
 
@@ -358,11 +359,11 @@ public class SIFT_Align implements PlugIn, KeyListener
 			if ( p.showInfo )
 			{
 				ImageProcessor tmp;
-				tmp = ip1.createProcessor( stackInfo.getWidth(), stackInfo.getHeight() );
-				tmp.insert( ip1, 0, 0 );
-				stackInfo.addSlice( null, tmp ); // fixing silly 1 pixel size missmatches
 				tmp = ip3.createProcessor( stackInfo.getWidth(), stackInfo.getHeight() );
 				tmp.insert( ip3, 0, 0 );
+				stackInfo.addSlice( null, tmp ); // fixing silly 1 pixel size missmatches
+				tmp = ip4.createProcessor( stackInfo.getWidth(), stackInfo.getHeight() );
+				tmp.insert( ip4, 0, 0 );
 				stackInfo.addSlice( null, tmp );
 				if ( i == 1 )
 				{
