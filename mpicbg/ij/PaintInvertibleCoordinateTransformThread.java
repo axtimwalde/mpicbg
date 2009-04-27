@@ -1,13 +1,15 @@
 package mpicbg.ij;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import mpicbg.models.InverseCoordinateTransform;
-
-
 import ij.ImagePlus;
 import ij.process.ImageProcessor;
 
+/**
+ * 
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @version 0.1b
+ */
 public class PaintInvertibleCoordinateTransformThread extends Thread
 {
 	final protected ImagePlus imp;
@@ -29,7 +31,7 @@ public class PaintInvertibleCoordinateTransformThread extends Thread
 		this.target = target;
 		this.pleaseRepaint = pleaseRepaint;
 		this.transform = transform;
-		this.mapping = new InverseTransformMapping( transform );
+		this.mapping = new InverseTransformMapping< InverseCoordinateTransform >( transform );
 		this.setName( "PaintInvertibleCoordinateTransformThread" );
 	}
 	

@@ -1,20 +1,21 @@
-/**
- * 
- */
 package mpicbg.ij;
 
 import mpicbg.models.CoordinateTransform;
 import ij.process.ImageProcessor;
 
 /**
- * @author saalfeld
- *
+ * Use a {@link CoordinateTransform} to map {@linkplain ImageProcessor source}
+ * into {@linkplain ImageProcessor target} which is an {@link InverseMapping}.
+ * 
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @version 0.1b
  */
-public class TransformMapping implements InverseMapping
+public class TransformMapping< T extends CoordinateTransform > implements InverseMapping< T >
 {
-	final protected CoordinateTransform transform;
+	final protected T transform;
+	final public T getTransform(){ return transform; }	
 	
-	public TransformMapping( final CoordinateTransform t )
+	public TransformMapping( final T t )
 	{
 		this.transform = t;
 	}
@@ -23,6 +24,8 @@ public class TransformMapping implements InverseMapping
 	public void mapInverse( ImageProcessor source, ImageProcessor target )
 	{
 		final float[] t = new float[ 2 ];
+		final int w = source.getWidth() - 1;
+		final int h = source.getHeight() - 1;
 		for ( int y = 0; y < target.getHeight(); ++y )
 		{
 			for ( int x = 0; x < target.getWidth(); ++x )
@@ -30,7 +33,12 @@ public class TransformMapping implements InverseMapping
 				t[ 0 ] = x;
 				t[ 1 ] = y;
 				transform.applyInPlace( t );
-				target.putPixel( x, y, source.getPixel( ( int )t[ 0 ], ( int )t[ 1 ] ) );
+				if (
+						t[ 0 ] >= 0 &&
+						t[ 0 ] < w &&
+						t[ 1 ] >= 0 &&
+						t[ 1 ] < h )
+					target.putPixel( x, y, source.getPixel( ( int )t[ 0 ], ( int )t[ 1 ] ) );
 			}
 		}
 	}
@@ -39,6 +47,8 @@ public class TransformMapping implements InverseMapping
 	public void mapInverseInterpolated( ImageProcessor source, ImageProcessor target )
 	{
 		final float[] t = new float[ 2 ];
+		final int w = source.getWidth() - 1;
+		final int h = source.getHeight() - 1;
 		for ( int y = 0; y < target.getHeight(); ++y )
 		{
 			for ( int x = 0; x < target.getWidth(); ++x )
@@ -46,10 +56,13 @@ public class TransformMapping implements InverseMapping
 				t[ 0 ] = x;
 				t[ 1 ] = y;
 				transform.applyInPlace( t );
-				target.putPixel( x, y, source.getPixelInterpolated( t[ 0 ], t[ 1 ] ) );
+				if (
+						t[ 0 ] >= 0 &&
+						t[ 0 ] < w &&
+						t[ 1 ] >= 0 &&
+						t[ 1 ] < h )
+					target.putPixel( x, y, source.getPixelInterpolated( t[ 0 ], t[ 1 ] ) );
 			}
 		}
-
 	}
-
 }

@@ -1,0 +1,90 @@
+import mpicbg.models.CoordinateTransformList;
+import mpicbg.models.InvertibleCoordinateTransformList;
+import mpicbg.models.TranslationModel3D;
+import mpicbg.models.TranslationModel2D;
+import mpicbg.models.RigidModel2D;
+import mpicbg.ij.InvertibleTransformMapping;
+import ij.IJ;
+import ij.ImagePlus;
+import ij.process.ImageProcessor;
+
+IJ.log( ">>> Test mpicbg.models.CoordinateTransform.estimateBounds(float[],float[]) >>>" );
+
+l = new CoordinateTransformList();
+t1 = new TranslationModel3D();
+tt1 = t1.getTranslation();
+tt1[0] = 5;
+tt1[1] = 6;
+tt1[2] = 7;
+t2 = new TranslationModel3D();
+tt2 = t2.getTranslation();
+tt2[0] = -10;
+tt2[1] = -2;
+tt2[2] = -4;
+l.add( t1 );
+l.add( t2 );
+
+max = new float[]{1,2,3};
+min = new float[]{10,20,30};
+l.estimateBounds(min,max);
+
+System.out.print( "min: " );
+for ( a : min ) System.out.print( a + " " );
+System.out.println();
+
+System.out.print( "max: " );
+for ( a : max ) System.out.print( a + " " );
+System.out.println();
+
+if (
+	min[ 0 ] == -4 && min[ 1 ] == 6 && min[ 2 ] == 6 &&
+	max[ 0 ] == 5 && max[ 1 ] == 24 && max[ 2 ] == 33 )
+	IJ.log( " + CoordinateTransformList 3D passed" );
+else
+	IJ.log( " - CoordinateTransformList 3D failed" );
+
+a = new RigidModel2D();
+a.set( 0.5236f, 10, 20 );
+
+min = new float[]{10,20};
+max = new float[]{50,40};
+a.estimateBounds(min,max);
+
+System.out.print( "min: " );
+for ( float a : min ) System.out.print( a + " " );
+System.out.println();
+
+System.out.print( "max: " );
+for ( float a : max ) System.out.print( a + " " );
+System.out.println();
+
+IJ.run( "Clown (14K)" );
+imp = IJ.getImage();
+min = new float[]{ 0, 0 };
+max = new float[]{ imp.getWidth(), imp.getHeight() };
+a.estimateBounds( min, max );
+
+System.out.print( "min: " );
+for ( float a : min ) System.out.print( a + " " );
+System.out.println();
+
+System.out.print( "max: " );
+for ( float a : max ) System.out.print( a + " " );
+System.out.println();
+
+t = new TranslationModel2D();
+t.set( -min[ 0 ], -min[ 1 ] );
+
+l = new InvertibleCoordinateTransformList();
+l.add( a );
+l.add( t );
+
+mapping = new InvertibleTransformMapping( l );
+
+ip = imp.getProcessor().createProcessor(
+		( int )( Math.ceil( max[ 0 ] - min[ 0 ] ) ),
+		( int )( Math.ceil( max[ 1 ] - min[ 1 ] ) ) );
+mapping.mapInterpolated( imp.getProcessor(), ip );
+new ImagePlus( "map", ip ).show();
+
+IJ.log( "<<< Test mpicbg.models.CoordinateTransform.estimateBounds(float[],float[]) <<<" );

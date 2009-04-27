@@ -1,15 +1,14 @@
 package mpicbg.imagefeatures;
 
-/**
- * 
- * @author Stephan Preibisch
- * @version 1.0
- */
-
 import ij.IJ;
 import ij.ImagePlus;
 import ij.process.*;
 
+/**
+ * 
+ * @author Stephan Preibisch and Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @version 1.4b
+ */
 public class ImageArrayConverter
 {
     public static boolean CUTOFF_VALUES = true;

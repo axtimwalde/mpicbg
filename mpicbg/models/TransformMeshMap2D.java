@@ -1,14 +1,11 @@
-/**
- * 
- */
 package mpicbg.models;
 
 import java.util.ArrayList;
 import java.util.Set;
 
 /**
- * @author saalfeld
- *
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @version 0.1b
  */
 public class TransformMeshMap2D extends CoordinateTransformMap2D
 {

@@ -14,22 +14,23 @@ JAVACOPTS=-classpath ../ij.jar$(CPSEP)$(JAVACOPTSJARS) -target 1.5 -source 1.5
 
 JAVAS=$(wildcard \
     mpicbg/ij/*.java \
+	mpicbg/ij/blockmatching/*.java \
 	mpicbg/imagefeatures/*.java \
     mpicbg/models/*.java \
     mpicbg/trakem2/*.java \
     mpicbg/util/*.java \
-	Align_ElasticMeshStack.java \
 	MOPS_ExtractPointRoi.java \
-	Optic_Flow.java \
 	SIFT_Align.java \
 	SIFT_ExtractPointRoi.java \
+	SIFT_Test.java \
 	Transform_Affine.java \
 	Transform_MovingLeastSquaresMesh.java \
 	Transform_Perspective.java \
 	Transform_Rigid.java \
 	Transform_Similarity.java \
 	Transform_Roi.java)
-RESOURCES ?= template.svg
+RESOURCES ?= plugins.config \
+	LICENSE
 CLASSES=$(patsubst %.java,%.class,$(JAVAS))
 ALL_CLASSES=$(patsubst %.java,%*.class,$(JAVAS))
 TARGET=mpicbg_.jar
@@ -39,7 +40,7 @@ all: $(TARGET)
 show:
 	echo $(ALL_CLASSES)
 
-$(TARGET): plugins.config $(CLASSES)
+$(TARGET): $(CLASSES) $(RESOURCES)
 	jar cvf $@ $< $(ALL_CLASSES) $(RESOURCES)
 
 $(CLASSES): %.class: %.java

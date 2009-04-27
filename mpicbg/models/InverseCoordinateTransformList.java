@@ -1,33 +1,20 @@
-/**
- * License: GPL
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License 2
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- *
- */
 package mpicbg.models;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 
+import mpicbg.util.Util;
+
 /**
- * 
+ * TODO Think about if it should really implement InverseBoundable.  There is
+ *   no adequate solution for estimating the bounding box correctly instead of
+ *   approximative as implemented here.
+ *   
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.4b
  */
-public class InverseCoordinateTransformList implements InverseCoordinateTransform
+public class InverseCoordinateTransformList implements InverseBoundable
 {
 
 	final private List< InverseCoordinateTransform > l = new ArrayList< InverseCoordinateTransform >();
@@ -52,5 +39,66 @@ public class InverseCoordinateTransformList implements InverseCoordinateTransfor
 		final ListIterator< InverseCoordinateTransform > i = l.listIterator( l.size() );
 		while ( i.hasPrevious() )
 			i.previous().applyInverseInPlace( location );
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * Estimate the bounds approximately by iteration over a fixed grid of
+	 * exemplary locations.
+	 * 
+	 * TODO Find a better solution.
+	 */
+	//@Override
+	public void estimateInverseBounds( final float[] min, final float[] max ) throws NoninvertibleModelException
+	{
+		assert min.length == max.length : "min and max have to have equal length.";
+		
+		final int g = 32;
+		
+		final float[] minBounds = new float[ min.length ];
+		final float[] maxBounds = new float[ min.length ];
+		final float[] s = new float[ min.length ];
+		final int[] i = new int[ min.length ];
+		final float[] l = new float[ min.length ];
+		
+		for ( int k = 0; k < min.length; ++k )
+		{
+			minBounds[ k ] = Float.MAX_VALUE;
+			maxBounds[ k ] = -Float.MAX_VALUE;
+			s[ k ] = ( max[ k ] - min[ k ] ) / ( g - 1 );
+			l[ k ] = min[ k ];
+		}
+		
+		final long d = Util.pow( g, min.length );
+		
+		for ( long j = 0; j < d; ++j )
+		{
+			final float[] m = applyInverse( l );
+			for ( int k = 0; k < min.length; ++k )
+			{
+				if ( m[ k ] < minBounds[ k ] ) minBounds[ k ] = m[ k ];
+				if ( m[ k ] > maxBounds[ k ] ) maxBounds[ k ] = m[ k ];
+			}
+			
+			for ( int k = 0; k < min.length; ++k )
+			{
+				++i[ k ];
+				if ( i[ k ] >= g )
+				{
+					i[ k ] = 0;
+					l[ k ] = min[ k ];
+					continue;
+				}
+				l[ k ] = min[ k ] + i[ k ] * s[ k ];
+				break;
+			}
+		}
+		
+		for ( int k = 0; k < min.length; ++k )
+		{
+			min[ k ] = minBounds[ k ];
+			max[ k ] = maxBounds[ k ];
+		}
 	}
 }

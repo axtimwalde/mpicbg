@@ -1,33 +1,14 @@
-/**
- * License: GPL
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License 2
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- *
- */
 package mpicbg.models;
 
 import java.awt.geom.AffineTransform;
 
 /**
- * Abstract 
  * 
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.2b
  * 
  */
-public abstract class AbstractAffineModel2D< M extends AbstractAffineModel2D< M > > extends InvertibleModel< M >
+public abstract class AbstractAffineModel2D< M extends AbstractAffineModel2D< M > > extends InvertibleModel< M > implements InvertibleBoundable
 {
 	/**
 	 * Create an {@link AffineTransform} representing the current parameters
@@ -44,6 +25,104 @@ public abstract class AbstractAffineModel2D< M extends AbstractAffineModel2D< M 
 	 * @return {@link AffineTransform}
 	 */
 	abstract public AffineTransform createInverseAffine();
+	
+	//@Override
+	public void estimateBounds( final float[] min, final float[] max )
+	{
+		assert min.length == 2 && max.length == 2 : "2d affine transformations can be applied to 2d points only.";
+		
+		float minX = Float.MAX_VALUE, minY = Float.MAX_VALUE;
+		float maxX = -Float.MAX_VALUE, maxY = -Float.MAX_VALUE;
+		
+		final float[] l = min.clone();
+		applyInPlace( l );
+		
+		if ( l[ 0 ] < minX ) minX = l[ 0 ];
+		if ( l[ 0 ] > maxX ) maxX = l[ 0 ];
+		if ( l[ 1 ] < minY ) minY = l[ 1 ];
+		if ( l[ 1 ] > maxY ) maxY = l[ 1 ];
+		
+		l[ 0 ] = min[ 0 ];
+		l[ 1 ] = max[ 1 ];
+		applyInPlace( l );
+		
+		if ( l[ 0 ] < minX ) minX = l[ 0 ];
+		else if ( l[ 0 ] > maxX ) maxX = l[ 0 ];
+		if ( l[ 1 ] < minY ) minY = l[ 1 ];
+		else if ( l[ 1 ] > maxY ) maxY = l[ 1 ];
+		
+		l[ 0 ] = max[ 0 ];
+		l[ 1 ] = max[ 1 ];
+		applyInPlace( l );
+		
+		if ( l[ 0 ] < minX ) minX = l[ 0 ];
+		else if ( l[ 0 ] > maxX ) maxX = l[ 0 ];
+		if ( l[ 1 ] < minY ) minY = l[ 1 ];
+		else if ( l[ 1 ] > maxY ) maxY = l[ 1 ];
+		
+		l[ 0 ] = max[ 0 ];
+		l[ 1 ] = min[ 1 ];
+		applyInPlace( l );
+		
+		if ( l[ 0 ] < minX ) minX = l[ 0 ];
+		else if ( l[ 0 ] > maxX ) maxX = l[ 0 ];
+		if ( l[ 1 ] < minY ) minY = l[ 1 ];
+		else if ( l[ 1 ] > maxY ) maxY = l[ 1 ];
+		
+		min[ 0 ] = minX;
+		min[ 1 ] = minY;
+		max[ 0 ] = maxX;
+		max[ 1 ] = maxY;
+	}
+	
+	//@Override
+	public void estimateInverseBounds( final float[] min, final float[] max ) throws NoninvertibleModelException
+	{
+		assert min.length == 2 && max.length == 2 : "2d affine transformations can be applied to 2d points only.";
+		
+		float minX = Float.MAX_VALUE, minY = Float.MAX_VALUE;
+		float maxX = -Float.MAX_VALUE, maxY = -Float.MAX_VALUE;
+		
+		final float[] l = min.clone();
+		applyInverseInPlace( l );
+		
+		if ( l[ 0 ] < minX ) minX = l[ 0 ];
+		if ( l[ 0 ] > maxX ) maxX = l[ 0 ];
+		if ( l[ 1 ] < minY ) minY = l[ 1 ];
+		if ( l[ 1 ] > maxY ) maxY = l[ 1 ];
+		
+		l[ 0 ] = min[ 0 ];
+		l[ 1 ] = max[ 1 ];
+		applyInverseInPlace( l );
+		
+		if ( l[ 0 ] < minX ) minX = l[ 0 ];
+		else if ( l[ 0 ] > maxX ) maxX = l[ 0 ];
+		if ( l[ 1 ] < minY ) minY = l[ 1 ];
+		else if ( l[ 1 ] > maxY ) maxY = l[ 1 ];
+		
+		l[ 0 ] = max[ 0 ];
+		l[ 1 ] = max[ 1 ];
+		applyInverseInPlace( l );
+		
+		if ( l[ 0 ] < minX ) minX = l[ 0 ];
+		else if ( l[ 0 ] > maxX ) maxX = l[ 0 ];
+		if ( l[ 1 ] < minY ) minY = l[ 1 ];
+		else if ( l[ 1 ] > maxY ) maxY = l[ 1 ];
+		
+		l[ 0 ] = max[ 0 ];
+		l[ 1 ] = min[ 1 ];
+		applyInverseInPlace( l );
+		
+		if ( l[ 0 ] < minX ) minX = l[ 0 ];
+		else if ( l[ 0 ] > maxX ) maxX = l[ 0 ];
+		if ( l[ 1 ] < minY ) minY = l[ 1 ];
+		else if ( l[ 1 ] > maxY ) maxY = l[ 1 ];
+		
+		min[ 0 ] = minX;
+		min[ 1 ] = minY;
+		max[ 0 ] = maxX;
+		max[ 1 ] = maxY;
+	}
 	
 	@Override
 	public String toString()

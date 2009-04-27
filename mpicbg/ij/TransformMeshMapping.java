@@ -5,22 +5,23 @@ import ij.process.ImageProcessor;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Set;
-
 import mpicbg.models.AffineModel2D;
 import mpicbg.models.PointMatch;
 import mpicbg.models.TransformMesh;
 
 /**
- * @author saalfeld
- *
+ * Use a {@link TransformMesh} to map and map inversely
+ * {@linkplain ImageProcessor source} into {@linkplain ImageProcessor target}
+ * which is an {@link InvertibleMapping}.
+ * 
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @version 0.1b
  */
-public class TransformMeshMapping implements InvertibleMapping
+public class TransformMeshMapping extends InvertibleTransformMapping< TransformMesh >
 {
-	final protected TransformMesh transform;
-	
 	public TransformMeshMapping( final TransformMesh t )
 	{
-		this.transform = t;
+		super( t );
 	}
 	
 	/**

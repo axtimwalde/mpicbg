@@ -1,13 +1,10 @@
 package mpicbg.models;
 
-
 import java.awt.Shape;
 import java.awt.geom.GeneralPath;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashMap;
-
-
 
 /**
  * Trianguar transformation mesh.
@@ -42,6 +39,7 @@ import java.util.HashMap;
  * vertex as PointMatch, this {@link AffineModel2D 2d affine transform} is a
  * forward transform (p1.l->p2.w). 
  * 
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.2b
  */
 public class TransformMesh implements InvertibleCoordinateTransform
@@ -464,7 +462,8 @@ public class TransformMesh implements InvertibleCoordinateTransform
 		return true;
 	}
 	
-	final public float[] apply( final float[] location )
+	//@Override
+	public float[] apply( final float[] location )
 	{
 		assert location.length == 2 : "2d transform meshs can be applied to 2d points only.";
 		
@@ -473,7 +472,8 @@ public class TransformMesh implements InvertibleCoordinateTransform
 		return transformed;
 	}
 
-	final public void applyInPlace( final float[] location )
+	//@Override
+	public void applyInPlace( final float[] location )
 	{
 		assert location.length == 2 : "2d transform meshs can be applied to 2d points only.";
 		

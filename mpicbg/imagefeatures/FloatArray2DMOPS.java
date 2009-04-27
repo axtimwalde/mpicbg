@@ -1,5 +1,12 @@
 package mpicbg.imagefeatures;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.HashMap;
+import mpicbg.models.*;
+import mpicbg.util.Util;
+
 /** 
  * This implementation actually uses the DoG-detector as described by
  * \cite{Lowe04} and extracts local intensity patches from coarser scales
@@ -33,32 +40,9 @@ package mpicbg.imagefeatures;
  * }
  * </pre>
  * 
- * 
- * License: GPL
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License 2
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- * 
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.1b
  */
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.HashMap;
-import mpicbg.models.*;
-
 public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2DMOPS.Param >
 {
 	final static public class Param
@@ -232,12 +216,12 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 				float xr = cos_o * xs - sin_o * ys; //!< rotate x around 0,0
 
 				// translate ys to sample y position in the gradient image
-				int yg = Filter.flipInRange(
+				int yg = Util.flipInRange(
 						( int )( Math.round( yr + c[ 1 ] / O_SCALE ) ),
 						l.height );
 
 				// translate xs to sample x position in the gradient image
-				int xg = Filter.flipInRange(
+				int xg = Util.flipInRange(
 						( int )( Math.round( xr + c[ 0 ] / O_SCALE ) ),
 						l.width );
 

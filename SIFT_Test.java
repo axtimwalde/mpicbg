@@ -1,38 +1,4 @@
-import mpicbg.imagefeatures.*;
-
-import ij.plugin.*;
-import ij.gui.*;
-import ij.*;
-import ij.process.*;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.awt.Color;
-import java.awt.Polygon;
-import java.awt.TextField;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-
-/**
- * Extract and display Scale Invariant Features after the method of David Lowe
- * \cite{Lowe04} in an image.
- * 
- * BibTeX:
- * <pre>
- * &#64;article{Lowe04,
- *   author    = {David G. Lowe},
- *   title     = {Distinctive Image Features from Scale-Invariant Keypoints},
- *   journal   = {International Journal of Computer Vision},
- *   year      = {2004},
- *   volume    = {60},
- *   number    = {2},
- *   pages     = {91--110},
- * }
- * </pre>
- * 
- * 
- * License: GPL
+/** License: GPL
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License 2
@@ -53,29 +19,53 @@ import java.awt.event.KeyListener;
  * same for locating an object in an image" by the University of British
  * Columbia.  That is, for commercial applications the permission of the author
  * is required.
- *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.1b
  */
-public class SIFT_Test implements PlugIn, KeyListener
+import mpicbg.ij.SIFT;
+import mpicbg.imagefeatures.*;
+
+import ij.plugin.*;
+import ij.gui.*;
+import ij.*;
+import ij.process.*;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.awt.Color;
+import java.awt.Polygon;
+
+/**
+ * Extract and display Scale Invariant Features after the method of David Lowe
+ * \cite{Lowe04} in an image.
+ * 
+ * BibTeX:
+ * <pre>
+ * &#64;article{Lowe04,
+ *   author    = {David G. Lowe},
+ *   title     = {Distinctive Image Features from Scale-Invariant Keypoints},
+ *   journal   = {International Journal of Computer Vision},
+ *   year      = {2004},
+ *   volume    = {60},
+ *   number    = {2},
+ *   pages     = {91--110},
+ * }
+ * </pre>
+ * 
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @version 0.2b
+ */
+public class SIFT_Test implements PlugIn
 {
 	final static private FloatArray2DSIFT.Param p = new FloatArray2DSIFT.Param(); 
 
-	/**
-	 * Set true to double the size of the image by linear interpolation to
-	 * ( with * 2 + 1 ) * ( height * 2 + 1 ).  Thus we can start identifying
-	 * DoG extrema with $\sigma = INITIAL_SIGMA / 2$ like proposed by
-	 * \citet{Lowe04}.
-	 * 
-	 * This is useful for images scmaller than 1000px per side only. 
-	 */ 
-	static private boolean upscale = false;
-	
 	final static List< Feature > fs = new ArrayList< Feature >();
 
 	
 	/**
-	 * draws a rotated square with center point  center, having size and orientation
+	 * Draw a rotated square around a center point having size and orientation
+	 * 
+	 * @param o center point
+	 * @param scale size
+	 * @param orient orientation
 	 */
 	static void drawSquare( ImageProcessor ip, double[] o, double scale, double orient )
 	{
@@ -106,7 +96,7 @@ public class SIFT_Test implements PlugIn, KeyListener
 	    ip.drawPolygon( new Polygon( x, y, x.length ) );
 	}
 
-
+	//@Override //Java 6 fixes this
 	public void run( String args )
 	{
 		if ( IJ.versionLessThan( "1.37i" ) ) return;
@@ -116,84 +106,29 @@ public class SIFT_Test implements PlugIn, KeyListener
 
 		final GenericDialog gd = new GenericDialog( "Test SIFT" );
 		
-		gd.addNumericField( "steps_per_scale_octave :", p.steps, 0 );
-		gd.addNumericField( "initial_gaussian_blur :", p.initialSigma, 2 );
-		gd.addNumericField( "feature_descriptor_size :", p.fdSize, 0 );
-		gd.addNumericField( "feature_descriptor_orientation_bins :", p.fdBins, 0 );
-		gd.addNumericField( "minimum_image_size :", p.minOctaveSize, 0 );
-		gd.addNumericField( "maximum_image_size :", p.maxOctaveSize, 0 );
-		gd.addCheckbox( "upscale_image_first", upscale );
+		SIFT.addFields( gd, p );
 		gd.showDialog();
 		if ( gd.wasCanceled() ) return;
-		p.steps = ( int )gd.getNextNumber();
-		p.initialSigma = ( float )gd.getNextNumber();
-		p.fdSize = ( int )gd.getNextNumber();
-		p.fdBins = ( int )gd.getNextNumber();
-		p.minOctaveSize = ( int )gd.getNextNumber();
-		p.maxOctaveSize = ( int )gd.getNextNumber();
+		SIFT.readFields( gd, p );
 		
-		float scale = 1.0f;
-		upscale = gd.getNextBoolean();
-		if ( upscale ) scale = 2.0f;
+		final ImageProcessor ip1 = imp.getProcessor().convertToFloat();
+		final ImageProcessor ip2 = imp.getProcessor().duplicate().convertToRGB();
 		
-		
-		ImageProcessor ip1 = imp.getProcessor().convertToFloat();
-		ImageProcessor ip2 = imp.getProcessor().duplicate().convertToRGB();
-		
-		FloatArray2DSIFT sift = new FloatArray2DSIFT( p );
-		
-		FloatArray2D fa = new FloatArray2D( ip1.getWidth(), ip1.getHeight() );
-		ImageArrayConverter.imageProcessorToFloatArray2D( ip1, fa );
-		Filter.enhance( fa, 1.0f );
-		
-		float[] initial_kernel;
-		
-		if ( upscale )
-		{
-			FloatArray2D fat = new FloatArray2D( fa.width * 2 - 1, fa.height * 2 - 1 ); 
-			FloatArray2DScaleOctave.upsample( fa, fat );
-			fa = fat;
-			initial_kernel = Filter.createGaussianKernel( ( float )Math.sqrt( p.initialSigma * p.initialSigma - 1.0 ), true );
-		}
-		else
-			initial_kernel = Filter.createGaussianKernel( ( float )Math.sqrt( p.initialSigma * p.initialSigma - 0.25 ), true );
-		
-		fa = Filter.convolveSeparable( fa, initial_kernel, initial_kernel );
-		
+		final SIFT ijSift = new SIFT( new FloatArray2DSIFT( p ) );
 		fs.clear();
 		
-		long start_time = System.currentTimeMillis();
+		final long start_time = System.currentTimeMillis();
 		System.out.print( "processing SIFT ..." );
-		sift.init( fa );
-		sift.extractFeatures( fs );
-		Collections.sort( fs );
-		
+		ijSift.extractFeatures( ip1, fs );
 		System.out.println( " took " + ( System.currentTimeMillis() - start_time ) + "ms" );
 		
 		System.out.println( fs.size() + " features identified and processed" );
 		
 		ip2.setLineWidth( 1 );
 		ip2.setColor( Color.red );
-		for ( Feature f : fs )
-		{
-			//System.out.println( f.location[ 0 ] + " " + f.location[ 1 ] + " " + f.scale + " " + f.orientation );
-			drawSquare( ip2, new double[]{ f.location[ 0 ] / scale, f.location[ 1 ] / scale }, p.fdSize * 4.0 * ( double )f.scale / scale, ( double )f.orientation );
-		}
+		for ( final Feature f : fs )
+			drawSquare( ip2, new double[]{ f.location[ 0 ], f.location[ 1 ] }, p.fdSize * 4.0 * ( double )f.scale, ( double )f.orientation );
 	
-		ImagePlus imp1 = new ImagePlus( imp.getTitle() + " Features ", ip2 );
-		imp1.show();
+		new ImagePlus( imp.getTitle() + " Features ", ip2 ).show();
 	}
-
-	public void keyPressed(KeyEvent e)
-	{
-		if (
-				( e.getKeyCode() == KeyEvent.VK_F1 ) &&
-				( e.getSource() instanceof TextField) )
-		{
-		}
-	}
-
-	public void keyReleased(KeyEvent e) { }
-
-	public void keyTyped(KeyEvent e) { }
 }

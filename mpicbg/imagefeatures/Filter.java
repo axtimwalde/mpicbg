@@ -1,63 +1,15 @@
 package mpicbg.imagefeatures;
 
+import mpicbg.util.Util;
+
 /**
- * License: GPL
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License 2
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de> and Stephan Preibisch <preibisch@mpi-cbg.de>
- *   
+ * 
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.2b
  */
-
 public class Filter
 {
 	/**
-	 * Return an unsigned integer that bounces in a ping pong manner in the range [0 ... mod - 1]
-	 *
-	 * @param a the value to be flipped
-	 * @param range the size of the range
-	 * @return a flipped in range like a ping pong ball
-	 */
-	final static public int flipInRange( int a, final int mod )
-	{
-		final int p = 2 * mod;
-		if ( a < 0 ) a = p + a % p;
-		if ( a >= p ) a = a % p;
-		if ( a >= mod ) a = mod - a % mod - 1;
-		return a;
-	}
-	
-	/**
-	 * Fast floor log_2 of an unsigned integer value.
-	 * 
-	 * @param v unsigned integer
-	 * @return floor log_2
-	 */
-	final static public int ldu( int v )
-	{
-	    int c = 0;
-	    do
-	    {
-	    	v >>= 1;
-	        ++c;
-	    }
-	    while ( v > 1 );
-	    return c;
-	}
-	
-    /**
      * Create a 1d-Gaussian kernel of appropriate size.
      *
      * @param sigma Standard deviation of the Gaussian kernel
@@ -231,16 +183,16 @@ public class Filter
 		final int[] xa = new int[ h.length + hl - 1 ];
 		for ( int i = 0; i < xb.length; ++i )
 		{
-			xb[ i ] = flipInRange( i - hl, input.width );
-			xa[ i ] = flipInRange( i + xl, input.width );
+			xb[ i ] = Util.flipInRange( i - hl, input.width );
+			xa[ i ] = Util.flipInRange( i + xl, input.width );
 		}
 		
 		final int[] yb = new int[ v.length + vl - 1 ];
 		final int[] ya = new int[ v.length + vl - 1 ];
 		for ( int i = 0; i < yb.length; ++i )
 		{
-			yb[ i ] = input.width * flipInRange( i - vl, input.height );
-			ya[ i ] = input.width * flipInRange( i + yl, input.height );
+			yb[ i ] = input.width * Util.flipInRange( i - vl, input.height );
+			ya[ i ] = input.width * Util.flipInRange( i + yl, input.height );
 		}
 		
 		xl += hl;

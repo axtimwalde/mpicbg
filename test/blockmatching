@@ -1,0 +1,70 @@
+import mpicbg.ij.blockmatching.BlockMatching;
+import mpicbg.models.RigidModel2D;
+import ij.ImagePlus;
+import ij.process.FloatProcessor;
+import ij.IJ;
+import java.util.ArrayList;
+import java.util.Collection;
+import mpicbg.models.Point;
+import java.awt.Color;
+import ij.gui.PointRoi;
+
+IJ.open( "/home/saalfeld/Desktop/original.jpg" );
+imp1 = IJ.getImage();
+
+IJ.open( "/home/saalfeld/Desktop/westwoodbl.tif" );
+imp2 = IJ.getImage();
+
+transform = new RigidModel2D();
+//transform.set( ( float )Math.PI/2 - 0.01f, imp1.getHeight() - 1 - 4, 0 );
+transform.set( ( float )Math.PI/2, imp1.getHeight() - 1, 0 );
+
+fp1 = imp1.getProcessor().duplicate().convertToFloat();
+fp2 = imp2.getProcessor().duplicate().convertToFloat();
+
+sourcePoints = new ArrayList();
+
+for ( y = 0; y <= 10; ++y )
+{
+	for ( x = 0; x <= 10; ++x )
+		sourcePoints.add( new Point( new float[]{ x * imp1.getWidth() / 10, y * imp1.getHeight() / 10 } ) );
+}
+
+sourceMatches = new ArrayList();
+
+BlockMatching.matchByMinimalSquareDifference(
+	fp1,
+	fp2,
+	transform,
+	32,
+	32,
+	16,
+	16,
+	sourcePoints,
+	sourceMatches );
+
+PointRoi PointsToPointRoi( Collection points )
+{
+	int[] x = new int[ points.size() ];
+	int[] y = new int[ points.size() ];
+	return new PointRoi( x, y, x.length );
+}
+
+Collection sourcePoints( Collection matches )
+{
+	ArrayList sourcePoints = new ArrayList();
+	for ( PointMatch m : matches )
+		sourcePoints.add( m.getP1() );
+	return sourcePoints;
+}
+
+Collection sourcePoints( Collection matches )
+{
+	ArrayList sourcePoints = new ArrayList();
+	for ( PointMatch m : matches )
+		sourcePoints.add( m.getP1() );
+	return sourcePoints;
+}
+imp1.getCanvas().setDisplayList( BlockMatching.illustrateMatches( sourceMatches ), Color.white, null );
+
+
