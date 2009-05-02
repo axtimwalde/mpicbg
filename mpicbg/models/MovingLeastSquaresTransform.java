@@ -105,11 +105,4 @@ public class MovingLeastSquaresTransform implements CoordinateTransform
 		catch ( IllDefinedDataPointsException e ){}
 		catch ( NotEnoughDataPointsException e ){}
 	}
-
-	//@Override
-	public void estimateBounds( final float[] min, final float[] max )
-	{
-		// TODO Auto-generated method stub
-		
-	}
 }

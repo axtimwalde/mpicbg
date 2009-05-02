@@ -39,10 +39,19 @@ public class Transform_Roi implements PlugIn
 	
 	final protected ArrayList< PointMatch > matches = new ArrayList< PointMatch >();
 	
-	final static private String[] methods = new String[]{ "Translation", "Rigid", "Similarity", "Affine" };
-	static private int method = 1;
+	final static private String[] methods = new String[]{ "Static Least Squares", "Moving Least Squares" };
+	static private int methodIndex = 0;
+	
+	static float alpha = 1.0f;
+	static int meshResolution = 32;
+	
+	final static private String[] modelClasses = new String[]{ "Translation", "Rigid", "Similarity", "Affine" };
+	static private int modelClassIndex = 1;
 	
 	static private boolean interpolate = true;
+	
+	protected ImagePlus source;
+	protected ImagePlus template;
 	
 	public Transform_Roi()
 	{
@@ -89,54 +98,7 @@ public class Transform_Roi implements PlugIn
 	{
 		matches.clear();
 		
-		if ( IJ.versionLessThan( "1.40c" ) ) return;
-		
-		int[] ids = WindowManager.getIDList();
-		if ( ids == null || ids.length < 2 )
-		{
-			IJ.showMessage( "You should have at least two images open." );
-			return;
-		}
-		
-		ArrayList< String > titlesList = new ArrayList< String >();
-		String currentTitle = null;
-		for ( int i = 0; i < ids.length; ++i )
-		{
-			final ImagePlus imp = WindowManager.getImage( ids[ i ] );
-			Roi roi = imp.getRoi();
-			if ( roi != null && roi.getType() == Roi.POINT )
-			{
-				titlesList.add( imp.getTitle() );
-				if ( imp == WindowManager.getCurrentImage() )
-					currentTitle = imp.getTitle();
-			}	
-		}
-		
-		if ( titlesList.size() < 2 )
-		{
-			IJ.showMessage( "You should have at least two images with selected landmark correspondences open." );
-			return;
-		}
-		String[] titles = new String[ titlesList.size() ];
-		titlesList.toArray( titles );
-		
-		if ( currentTitle == null )
-			currentTitle = titles[ 0 ];
-		
-		GenericDialog gd = new GenericDialog( "Transform" );
-		
-		gd.addChoice( "source_image", titles, currentTitle );
-		gd.addChoice( "template_image", titles, currentTitle.equals( titles[ 0 ] ) ? titles[ 1 ] : titles[ 0 ] );
-		gd.addChoice( "transformation_class", methods, methods[ method ] );
-		gd.addCheckbox( "interpolate", interpolate );
-		gd.showDialog();
-		
-		if ( gd.wasCanceled() ) return;
-		
-		ImagePlus source = WindowManager.getImage( ids[ gd.getNextChoiceIndex() ] );
-		ImagePlus template = WindowManager.getImage( ids[ gd.getNextChoiceIndex() ] );
-		method = gd.getNextChoiceIndex();
-		interpolate = gd.getNextBoolean();
+		if ( !setup() ) return;
 		
 		ImagePlus target = template.createImagePlus();
 		
@@ -145,7 +107,7 @@ public class Transform_Roi implements PlugIn
 		
 		// TODO Implement other models for choice
 		Model< ? > model;
-		switch ( method )
+		switch ( modelClassIndex )
 		{
 		case 0:
 			model = new TranslationModel2D();
@@ -208,5 +170,64 @@ public class Transform_Roi implements PlugIn
 		
 		target.setProcessor( "Transformed" + source.getTitle(), ipTarget );
 		target.show();
+	}
+	
+	final protected boolean setup()
+	{
+		if ( IJ.versionLessThan( "1.40c" ) ) return false;
+		
+		final int[] ids = WindowManager.getIDList();
+		if ( ids == null || ids.length < 2 )
+		{
+			IJ.showMessage( "You should have at least two images open." );
+			return false;
+		}
+		
+		final ArrayList< String > titlesList = new ArrayList< String >();
+		String currentTitle = null;
+		for ( int i = 0; i < ids.length; ++i )
+		{
+			final ImagePlus imp = WindowManager.getImage( ids[ i ] );
+			final Roi roi = imp.getRoi();
+			if ( roi != null && roi.getType() == Roi.POINT )
+			{
+				titlesList.add( imp.getTitle() );
+				if ( imp == WindowManager.getCurrentImage() )
+					currentTitle = imp.getTitle();
+			}	
+		}
+		
+		if ( titlesList.size() < 2 )
+		{
+			IJ.showMessage( "You should have at least two images with selected landmark correspondences open." );
+			return false;
+		}
+		final String[] titles = new String[ titlesList.size() ];
+		titlesList.toArray( titles );
+		
+		if ( currentTitle == null )
+			currentTitle = titles[ 0 ];
+		final GenericDialog gd = new GenericDialog( "Transform" );
+		
+		gd.addChoice( "source_image", titles, currentTitle );
+		gd.addChoice( "template_image", titles, currentTitle.equals( titles[ 0 ] ) ? titles[ 1 ] : titles[ 0 ] );
+		gd.addChoice( "transformation_method", methods, methods[ methodIndex ] );
+		gd.addNumericField( "alpha", alpha, 2 );
+		gd.addNumericField( "mesh_resolution", meshResolution, 0 );
+		gd.addChoice( "transformation_class", modelClasses, modelClasses[ modelClassIndex ] );
+		gd.addCheckbox( "interpolate", interpolate );
+		gd.showDialog();
+		
+		if ( gd.wasCanceled() ) return false;
+		
+		source = WindowManager.getImage( ids[ gd.getNextChoiceIndex() ] );
+		template = WindowManager.getImage( ids[ gd.getNextChoiceIndex() ] );
+		methodIndex = gd.getNextChoiceIndex();
+		alpha = ( float )gd.getNextNumber();
+		meshResolution = ( int )gd.getNextNumber();
+		modelClassIndex = gd.getNextChoiceIndex();
+		interpolate = gd.getNextBoolean();
+		
+		return true;		
 	}
 }

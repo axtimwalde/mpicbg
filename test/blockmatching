@@ -6,18 +6,68 @@ import ij.IJ;
 import java.util.ArrayList;
 import java.util.Collection;
 import mpicbg.models.Point;
+import mpicbg.models.PointMatch;
 import java.awt.Color;
 import ij.gui.PointRoi;
+import mpicbg.ij.util.Util;
+import mpicbg.models.MovingLeastSquaresTransform;
+import mpicbg.models.CoordinateTransformMesh;
+import mpicbg.ij.TransformMeshMapping;
+import mpicbg.ij.InvertibleTransformMapping;
 
-IJ.open( "/home/saalfeld/Desktop/original.jpg" );
+IJ.run( "Lena (68K)" );
 imp1 = IJ.getImage();
 
-IJ.open( "/home/saalfeld/Desktop/westwoodbl.tif" );
-imp2 = IJ.getImage();
+m = new MovingLeastSquaresTransform();
+m.setModel( RigidModel2D.class );
+m.setAlpha( 1 );
 
-transform = new RigidModel2D();
+matches = new ArrayList();
+matches.add(
+		new PointMatch(
+				new Point( new float[]{ 80, 80 } ),
+				new Point( new float[]{ 100, 100 } ) ) );
+matches.add(
+		new PointMatch(
+				new Point( new float[]{ 432, 432 } ),
+				new Point( new float[]{ 412, 412 } ) ) );
+matches.add(
+		new PointMatch(
+				new Point( new float[]{ 432, 80 } ),
+				new Point( new float[]{ 412, 100 } ) ) );
+matches.add(
+		new PointMatch(
+				new Point( new float[]{ 255, 255 } ),
+				new Point( new float[]{ 275, 235 } ) ) );
+m.setMatches( matches );
+
+mesh = new CoordinateTransformMesh( m, 32, imp1.getWidth(), imp1.getHeight() );
+
+approximatedModel = new RigidModel2D();
+approximatedModel.fit( matches );
+mapping = new TransformMeshMapping( mesh );
+//mapping = new InvertibleTransformMapping( approximatedModel );
+
+ip = imp1.getProcessor().createProcessor( imp1.getWidth(), imp1.getHeight() );
+mapping.mapInterpolated( imp1.getProcessor(), ip );
+
+imp2 = new ImagePlus( "lena-std deformed", ip );
+imp2.show();
+	
+
+//IJ.open( "/home/saalfeld/Desktop/original.jpg" );
+//imp1 = IJ.getImage();
+
+//IJ.open( "/home/saalfeld/Desktop/westwoodbl.tif" );
+//imp2 = IJ.getImage();
+
+//transform = new RigidModel2D();
 //transform.set( ( float )Math.PI/2 - 0.01f, imp1.getHeight() - 1 - 4, 0 );
-transform.set( ( float )Math.PI/2, imp1.getHeight() - 1, 0 );
+//transform.set( ( float )Math.PI/2, imp1.getHeight() - 1, 0 );
+//transform = mesh;
+
+transform = approximatedModel;
+
 
 fp1 = imp1.getProcessor().duplicate().convertToFloat();
 fp2 = imp2.getProcessor().duplicate().convertToFloat();
@@ -31,40 +81,42 @@ for ( y = 0; y <= 10; ++y )
 }
 
 sourceMatches = new ArrayList();
-
+/*
 BlockMatching.matchByMinimalSquareDifference(
 	fp1,
 	fp2,
 	transform,
+	48,
+	48,
 	32,
 	32,
-	16,
-	16,
 	sourcePoints,
 	sourceMatches );
-
-PointRoi PointsToPointRoi( Collection points )
+*/
+try
 {
-	int[] x = new int[ points.size() ];
-	int[] y = new int[ points.size() ];
-	return new PointRoi( x, y, x.length );
-}
+BlockMatching.matchByNormalizedCrossCorrelation(
+	fp1,
+	fp2,
+	transform,
+	48,
+	48,
+	32,
+	32,
+	0,
+	sourcePoints,
+	sourceMatches );
+} catch ( e ) { e.printStackTrace(); }
 
-Collection sourcePoints( Collection matches )
-{
-	ArrayList sourcePoints = new ArrayList();
-	for ( PointMatch m : matches )
-		sourcePoints.add( m.getP1() );
-	return sourcePoints;
-}
+sourcePoints = new ArrayList();
+targetPoints = new ArrayList();
 
-Collection sourcePoints( Collection matches )
-{
-	ArrayList sourcePoints = new ArrayList();
-	for ( PointMatch m : matches )
-		sourcePoints.add( m.getP1() );
-	return sourcePoints;
-}
+PointMatch.sourcePoints( sourceMatches, sourcePoints );
+PointMatch.targetPoints( sourceMatches, targetPoints );
+
 imp1.getCanvas().setDisplayList( BlockMatching.illustrateMatches( sourceMatches ), Color.white, null );
+imp1.setRoi( Util.pointsToPointRoi( sourcePoints) );
+imp2.setRoi( Util.pointsToPointRoi( targetPoints) );
+
 
 

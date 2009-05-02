@@ -3,17 +3,17 @@ package mpicbg.models;
 import java.util.Random;
 
 /**
- * A simple spring model.  Instances represent the acyual spring only, not the
+ * A simple spring model.  Instances represent the actual spring only, not the
  * {@link Vertex Vertices} it may interconnect.
  * 
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.1b
+ * @version 0.2b
  */
 public class Spring
 {
 	final static protected Random rnd = new Random( 0 );
 	final protected float length;
-	final static protected float length(
+	static protected float length(
 			float[] p1,
 			float[] p2 )
 	{
@@ -34,40 +34,44 @@ public class Spring
 	
 	protected float[] weights;
 	protected float weight;
-	final protected void calculateWeight()
+	protected void calculateWeight()
 	{
 		weight = 1.0f;
-		for ( float wi : weights )
+		for ( final float wi : weights )
 			weight *= wi;
 	}
 	
-	final public float getWeight(){ return weight; }
-	final public float[] getWeights(){ return weights; }
-	final public void setWeights( float[] weights )
+	public float getWeight(){ return weight; }
+	public float[] getWeights(){ return weights; }
+	public void setWeights( final float[] weights )
 	{
 		this.weights = weights.clone();
 		calculateWeight();
 	}
-	final public void addWeight( float weight )
+	public void addWeight( final float weight )
 	{
-		float[] newWeights = new float[ weights.length + 1 ];
+		final float[] newWeights = new float[ weights.length + 1 ];
 		System.arraycopy( weights, 0, newWeights, 0, weights.length );
 		newWeights[ weights.length ] = weight;
+		weights = newWeights;
 		calculateWeight();
 	}
-	final public void removeWeight( int index )
+	
+	public void removeWeight( final int index )
 	{
 		if ( index < weights.length )
 		{
-			float[] newWeights = new float[ weights.length - 1 ];
+			final float[] newWeights = new float[ weights.length - 1 ];
 			int j = 0;
 			for ( int i = 0; i < weights.length; ++i )
 				if ( i != index )
 					newWeights[ j++ ] = weights[ i ];
+			weights = newWeights;
 			calculateWeight();
 		}
 	}
-	final public void setWeight( int index, float weight )
+	
+	public void setWeight( final int index, final float weight )
 	{
 		weights[ index ] = weight;
 		calculateWeight();
@@ -81,18 +85,18 @@ public class Spring
 	 * @param v2
 	 * @param force
 	 */
-	final public void calculateForce(
-			Vertex v1,
-			Vertex v2,
-			float[] force )
+	public void calculateForce(
+			final Vertex v1,
+			final Vertex v2,
+			final float[] force )
 	{
 		assert
-				force.length == v1.getLocation().getL().length &&
-				force.length == v2.getLocation().getL().length :
+				force.length == v1.getL().length &&
+				force.length == v2.getL().length :
 				"Both vertices and force have to have the same dimensionality.";
 		
-		final float[] w1 = v1.getLocation().getW();
-		final float[] w2 = v2.getLocation().getW();
+		final float[] w1 = v1.getW();
+		final float[] w2 = v2.getW();
 		
 		float lw = length( w1, w2 );
 		final float d = lw - length;
@@ -125,8 +129,8 @@ public class Spring
 	 * @param weights Array of weights
 	 */
 	public Spring(
-			float length,
-			float[] weights )
+			final float length,
+			final float[] weights )
 	{
 		this.length = length;
 		this.weights = weights.clone();
@@ -145,9 +149,9 @@ public class Spring
 	 * @param maxStretch stretch limit
 	 */
 	public Spring(
-			float length,
-			float[] weights,
-			float maxStretch )
+			final float length,
+			final float[] weights,
+			final float maxStretch )
 	{
 		this.length = length;
 		this.weights = weights.clone();
@@ -164,8 +168,8 @@ public class Spring
 	 * @param weight (spring constant)
 	 */
 	public Spring(
-			float length,
-			float weight )
+			final float length,
+			final float weight )
 	{
 		this.length = length;
 		weights = new float[]{ weight };
@@ -183,9 +187,9 @@ public class Spring
 	 * @param maxStretch stretch limit
 	 */
 	public Spring(
-			float length,
-			float weight,
-			float maxStretch )
+			final float length,
+			final float weight,
+			final float maxStretch )
 	{
 		this.length = length;
 		weights = new float[]{ weight };
@@ -218,11 +222,11 @@ public class Spring
 	 * @param weights Array of weights
 	 */
 	public Spring(
-			Vertex v1,
-			Vertex v2,
-			float[] weights )
+			final Vertex v1,
+			final Vertex v2,
+			final float[] weights )
 	{
-		this( length( v1.getLocation().getL(), v2.getLocation().getL() ), weights );
+		this( length( v1.getL(), v2.getL() ), weights );
 	}
 	
 	/**
@@ -237,12 +241,12 @@ public class Spring
 	 * @param maxStretch stretch limit
 	 */
 	public Spring(
-			Vertex v1,
-			Vertex v2,
-			float[] weights,
-			float maxStretch )
+			final Vertex v1,
+			final Vertex v2,
+			final float[] weights,
+			final float maxStretch )
 	{
-		this( length( v1.getLocation().getL(), v2.getLocation().getL() ), weights, maxStretch );
+		this( length( v1.getL(), v2.getL() ), weights, maxStretch );
 	}
 	
 	
@@ -256,12 +260,11 @@ public class Spring
 	 * @param weight Weight
 	 */
 	public Spring(
-			Vertex v1,
-			Vertex v2,
-			float weight )
+			final Vertex v1,
+			final Vertex v2,
+			final float weight )
 	{
-		//this( length( v1.getLocation().getL(), v2.getLocation().getL() ), weight );
-		this( length( v1.getLocation().getW(), v2.getLocation().getW() ), weight );
+		this( length( v1.getL(), v2.getL() ), weight );
 	}
 	
 	/**
@@ -275,12 +278,12 @@ public class Spring
 	 * @param maxStretch stretch limit
 	 */
 	public Spring(
-			Vertex v1,
-			Vertex v2,
-			float weight,
-			float maxStretch )
+			final Vertex v1,
+			final Vertex v2,
+			final float weight,
+			final float maxStretch )
 	{
-		this( length( v1.getLocation().getL(), v2.getLocation().getL() ), weight, maxStretch );
+		this( length( v1.getL(), v2.getL() ), weight, maxStretch );
 	}
 	
 	/**
@@ -292,9 +295,9 @@ public class Spring
 	 * @param v2 Vertex 2
 	 */
 	public Spring(
-			Vertex v1,
-			Vertex v2 )
+			final Vertex v1,
+			final Vertex v2 )
 	{
-		this( length( v1.getLocation().getL(), v2.getLocation().getL() ) );
+		this( length( v1.getL(), v2.getL() ) );
 	}	
 }

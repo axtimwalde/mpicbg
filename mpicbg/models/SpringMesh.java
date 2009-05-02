@@ -1,48 +1,64 @@
 package mpicbg.models;
 
-import ij.ImagePlus;
-
 import java.awt.Shape;
 import java.awt.geom.GeneralPath;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
-
-
+import java.util.Map.Entry;
 
 /**
  * A {@link TransformMesh} with all Vertices being interconnected by springs.
  * It implements the optimization straightforward as a dynamic process.
+ * 
+ * A {@link SpringMesh} may or may not contain passive
+ * {@linkplain Vertex vertices} that are not connected to other
+ * {@linkplain Vertex vertices} of the mesh itself.  Depending on their
+ * location, such passive {@linkplain Vertex vertices} are moved by the
+ * respective {@link AffineModel2D}.  Passive {@linkplain Vertex vertices}
+ * are used to uni-directionally connect two
+ * {@linkplain SpringMesh SpringMeshes}.
  *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.1b
+ * @version 0.2b
  */
 public class SpringMesh extends TransformMesh
 {
 	final protected HashSet< Vertex > fixedVertices = new HashSet< Vertex >();
-	final protected HashSet< Vertex > vertices = new HashSet< Vertex >(); 
+	final protected HashSet< Vertex > vertices = new HashSet< Vertex >();
 	final protected HashMap< Vertex, PointMatch > vp = new HashMap< Vertex, PointMatch >();
 	final protected HashMap< PointMatch, Vertex > pv = new HashMap< PointMatch, Vertex >();
-	final public int numVertices(){ return pv.size(); }
+	public int numVertices(){ return pv.size(); }
+	
+	final protected HashMap< AffineModel2D, Vertex > apv = new HashMap< AffineModel2D, Vertex >();
+	final protected HashMap< Vertex, AffineModel2D > pva = new HashMap< Vertex, AffineModel2D >();
 	
 	final static private DecimalFormat decimalFormat = new DecimalFormat();
 	final static private DecimalFormatSymbols decimalFormatSymbols = new DecimalFormatSymbols();
 	
-	private double force = 0.0;
-	private double minForce = Double.MAX_VALUE;
-	private double maxForce = 0.0;
+	protected double force = 0.0;
+	protected double minForce = Double.MAX_VALUE;
+	protected double maxForce = 0.0;
 	public double getForce(){ return force; }
+	
+	protected float damp;
 	
 	public SpringMesh(
 			final int numX,
 			final int numY,
 			final float width,
 			final float height,
-			float maxStretch )
+			final float springWeight,
+			final float maxStretch,
+			final float damp )
 	{
 		super( numX, numY, width, height );
+		
+		this.damp = damp;
 		
 		decimalFormatSymbols.setGroupingSeparator( ',' );
 		decimalFormatSymbols.setDecimalSeparator( '.' );
@@ -50,16 +66,11 @@ public class SpringMesh extends TransformMesh
 		decimalFormat.setMaximumFractionDigits( 3 );
 		decimalFormat.setMinimumFractionDigits( 3 );
 		
-		Set< PointMatch > s = va.keySet();
+		final Set< PointMatch > s = va.keySet();
 		
-		float[] w = new float[ 2 ];
-		//w[ 0 ] = 100.0f / s.size();
-		w[ 0 ] = 0.001f;
-		w[ 1 ] = 1.0f;
-		
-		for ( PointMatch p : s )
+		for ( final PointMatch p : s )
 		{
-			Vertex vertex = new Vertex( p.getP2() );
+			final Vertex vertex = new Vertex( p.getP2() );
 			vp.put( vertex, p );
 			pv.put( p, vertex );
 			vertices.add( vertex );
@@ -83,7 +94,7 @@ public class SpringMesh extends TransformMesh
 				{
 					Vertex connectedVertex = pv.get( m );
 					if ( p != m && !connectedVertices.contains( connectedVertex ) )
-						vertex.addSpring( connectedVertex, w, maxStretch );
+						vertex.addSpring( connectedVertex, springWeight, maxStretch );
 				}
 			}
 		}
@@ -142,34 +153,41 @@ public class SpringMesh extends TransformMesh
 //		}
 	}
 	
-	public SpringMesh( int numX, float width, float height, float maxStretch )
+	public SpringMesh(
+			final int numX,
+			final float width,
+			final float height,
+			final float springWeight,
+			final float maxStretch,
+			final float damp )
 	{
-		this( numX, numY( numX, width, height ), width, height, maxStretch );
+		this( numX, numY( numX, width, height ), width, height, springWeight, maxStretch, damp );
 	}
 	
-	final protected float weigh( final float d, final float alpha )
+	protected float weigh( final float d, final float alpha )
 	{
 		return 1.0f / ( float )Math.pow( d, alpha );
 	}
 	
 	/**
-	 * Find the closest {@link Vertex} to a given coordinate.
+	 * Find the closest {@link Vertex} to a given coordinate in terms of its
+	 * {@linkplain Vertex#getW() target coordinates}.
 	 *  
 	 * @param there
 	 * @return closest {@link Vertex}
 	 */
-	final public Vertex findClosestVertex( final float[] there )
+	final public Vertex findClosestTargetVertex( final float[] there )
 	{
 		Set< Vertex > vertices = vp.keySet();
 		
 		Vertex closest = null;
 		float cd = Float.MAX_VALUE;
-		for ( Vertex v : vertices )
+		for ( final Vertex v : vertices )
 		{
-			float[] here = v.getLocation().getW();
-			float dx = here[ 0 ] - there[ 0 ];
-			float dy = here[ 1 ] - there[ 1 ];
-			float d = dx * dx + dy * dy;
+			final float[] here = v.getW();
+			final float dx = here[ 0 ] - there[ 0 ];
+			final float dy = here[ 1 ] - there[ 1 ];
+			final float d = dx * dx + dy * dy;
 			if ( d < cd )
 			{
 				cd = d;
@@ -179,52 +197,78 @@ public class SpringMesh extends TransformMesh
 		return closest;
 	}
 	
-	
 	/**
-	 * Add a {@link Vertex} to the mesh.  Connect it to its next three vertices
-	 * of the actual mesh by springs with the given weights.
+	 * Find the closest {@link Vertex} to a given coordinate in terms of its
+	 * {@linkplain Vertex#getL() source coordinates}.
 	 *  
-	 * @param vertex
-	 * @param weights
+	 * @param there
+	 * @return closest {@link Vertex}
 	 */
-	public void addVertex( final Vertex vertex, final float weight )
+	final public Vertex findClosestSourceVertex( final float[] there )
 	{
 		Set< Vertex > vertices = vp.keySet();
-		final float[] there = vertex.getLocation().getW();
 		
-		/**
-		 * Find the closest vertex.
-		 */
 		Vertex closest = null;
 		float cd = Float.MAX_VALUE;
-		for ( Vertex v : vertices )
+		for ( final Vertex v : vertices )
 		{
-			float[] here = v.getLocation().getW();
-			float dx = here[ 0 ] - there[ 0 ];
-			float dy = here[ 1 ] - there[ 1 ];
-			float d = dx * dx + dy * dy;
+			final float[] here = v.getL();
+			final float dx = here[ 0 ] - there[ 0 ];
+			final float dy = here[ 1 ] - there[ 1 ];
+			final float d = dx * dx + dy * dy;
 			if ( d < cd )
 			{
 				cd = d;
 				closest = v;
 			}
 		}
+		return closest;
+	}
+	
+	/**
+	 * Add a {@linkplain Vertex passive vertex}.  Associate it with the
+	 * {@linkplain AffineModel2D triangle} by whom it is contained.
+	 * 
+	 * @param vertex
+	 */
+	public void addPassiveVertex( final Vertex vertex )
+	{
+		final float[] l = vertex.getL();
+		final PointMatch closest = findClosestSourcePoint( vertex.getL() );
+		final Collection< AffineModel2D > s = va.get( closest );
+		for ( final AffineModel2D ai : s )
+		{
+			final ArrayList< PointMatch > pm = av.get( ai );
+			if ( isInSourcePolygon( pm, l ) )
+			{
+				apv.put( ai, vertex );
+				pva.put( vertex, ai );
+				return;
+			}
+		}
+	}
+	
+	/**
+	 * Remove a {@linkplain Vertex passive vertex}.
+	 * 
+	 * @param vertex
+	 */
+	public void removePassiveVertex( final Vertex vertex )
+	{
+		apv.remove( pva.remove( vertex ) );
+	}
+	
+	/**
+	 * Add a {@link Vertex} to the mesh.  Connect it to the closest vertex
+	 * of the actual mesh by a spring with the given weight.
+	 *  
+	 * @param vertex
+	 * @param weights
+	 */
+	public void addVertex( final Vertex vertex, final float weight )
+	{
+		final Vertex closest = findClosestTargetVertex( vertex.getW() ); 
 		vertex.addSpring( closest, weight );
-		
-//		/**
-//		 * The three closest vertices are connected to the closest.
-//		 * 
-//		 * TODO This has to be changed, if we interconnect vertices
-//		 *   differently.
-//		 */
-//		for ( Vertex v : closest.getConnectedVertices() )
-//		{
-//			if ( vertices.contains( v ) )
-//			{
-//				//System.out.println( "Adding hook vertex." );
-//				vertex.addSpring( v, weight );
-//			}
-//		}
 	}
 	
 	/**
@@ -241,16 +285,16 @@ public class SpringMesh extends TransformMesh
 			final float weight,
 			final float alpha )
 	{
-		Set< Vertex > vertices = vp.keySet();
-		final float[] there = vertex.getLocation().getL();
+		final Set< Vertex > vertices = vp.keySet();
+		final float[] there = vertex.getW();
 		
 		float[] weights = new float[]{ weight, 1.0f };
 		
-		for ( Vertex v : vertices )
+		for ( final Vertex v : vertices )
 		{
-			float[] here = v.getLocation().getL();
-			float dx = here[ 0 ] - there[ 0 ];
-			float dy = here[ 1 ] - there[ 1 ];
+			final float[] here = v.getL();
+			final float dx = here[ 0 ] - there[ 0 ];
+			final float dy = here[ 1 ] - there[ 1 ];
 			
 			weights[ 1 ] = weigh( 1f + dx * dx + dy * dy, alpha );
 			
@@ -266,16 +310,17 @@ public class SpringMesh extends TransformMesh
 	 * @param observer collecting the error after update
 	 * @throws NotEnoughDataPointsException
 	 */
-	void optimizeStep( ErrorStatistic observer ) throws NotEnoughDataPointsException
+	protected void optimizeStep( final ErrorStatistic observer ) throws NotEnoughDataPointsException
 	{
 		float maxSpeed = Float.MIN_VALUE;
+		minForce = Double.MAX_VALUE;
+		maxForce = 0.0;
 		synchronized ( this )
 		{
-			minForce = Double.MAX_VALUE;
-			maxForce = 0.0;
-			for ( Vertex vertex : vertices )
+			/* active vertices */
+			for ( final Vertex vertex : vertices )
 			{
-				vertex.update( 0.6f );
+				vertex.update( damp );
 				force += vertex.getForce();
 				final float speed = vertex.getSpeed();
 				if ( speed > maxSpeed ) maxSpeed = speed;
@@ -283,10 +328,27 @@ public class SpringMesh extends TransformMesh
 				if ( force > maxForce ) maxForce = force;
 			}
 			
-			for ( Vertex vertex : vertices )
+			for ( final Vertex vertex : vertices )
 				vertex.move( Math.min( 1000.0f, 2.0f / maxSpeed ) );
+			
+			/* passive vertices */
+			
+			updateAffines();
+			updatePassiveVertices();			
 		}
 		observer.add( force );
+	}
+	
+	public void updatePassiveVertices()
+	{
+		for ( final Entry< Vertex, AffineModel2D > entry : pva.entrySet() )
+			entry.getKey().apply( entry.getValue() );
+	}
+	
+	@Override
+	public void updateAffines()
+	{
+		super.updateAffines();
 	}
 	
 	/**
@@ -301,12 +363,11 @@ public class SpringMesh extends TransformMesh
 	 * 
 	 */
 	public void optimize(
-			float maxError,
-			int maxIterations,
-			int maxPlateauwidth,
-			ImagePlus imp ) throws NotEnoughDataPointsException 
+			final float maxError,
+			final int maxIterations,
+			final int maxPlateauwidth ) throws NotEnoughDataPointsException 
 	{
-		ErrorStatistic observer = new ErrorStatistic();
+		final ErrorStatistic observer = new ErrorStatistic();
 		
 		int i = 0;
 		
@@ -339,18 +400,39 @@ public class SpringMesh extends TransformMesh
 	 */
 	public Shape illustrateSprings()
 	{
-		GeneralPath path = new GeneralPath();
+		final GeneralPath path = new GeneralPath();
 		
-		for ( Vertex vertex : vertices )
+		for ( final Vertex vertex : vertices )
 		{
-			float[] v1 = vertex.getLocation().getW();
-			for ( Vertex v : vertex.getConnectedVertices() )
+			final float[] v1 = vertex.getW();
+			for ( final Vertex v : vertex.getConnectedVertices() )
 			{
-				float[] v2 = v.getLocation().getW();
+				final float[] v2 = v.getW();
 				path.moveTo( v1[ 0 ], v1[ 1 ] );
 				path.lineTo( v2[ 0 ], v2[ 1 ] );
 			}
 		}
+		return path;
+	}
+	
+	/**
+	 * Create a Shape that illustrates the mesh.
+	 * 
+	 * @return the illustration
+	 */
+	@Override
+	public Shape illustrateMesh()
+	{
+		final GeneralPath path = ( GeneralPath )super.illustrateMesh();
+		for ( final Vertex pv : pva.keySet() )
+		{
+			final float[] w = pv.getW();
+			path.moveTo( w[ 0 ], w[ 1 ] -1 );
+			path.lineTo( w[ 0 ] + 1, w[ 1 ] );
+			path.lineTo( w[ 0 ], w[ 1 ] + 1 );
+			path.lineTo( w[ 0 ] - 1, w[ 1 ] );
+		}
+		
 		return path;
 	}
 }

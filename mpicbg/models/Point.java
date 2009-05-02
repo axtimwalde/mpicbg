@@ -18,14 +18,30 @@ public class Point implements Serializable
 	/**
 	 * World coordinates
 	 */
-	final private float[] w;
-	final public float[] getW() { return w; }
+	final protected float[] w;
+	public float[] getW() { return w; }
 	
 	/**
 	 * Local coordinates
 	 */
-	final private float[] l;
-	final public float[] getL() { return l; }
+	final protected float[] l;
+	public float[] getL() { return l; }
+	
+	/**
+	 * Constructor
+	 *          
+	 * Sets {@link #l} to the given float[] reference.
+	 * 
+	 * @param l reference to the local coordinates of the {@link Point}
+	 * @param w reference to the world coordinates of the {@link Point}
+	 */
+	public Point( final float[] l, final float[] w )
+	{
+		assert l.length == w.length : "Local and world coordinates have to have the same dimensionality.";
+		
+		this.l = l;
+		this.w = w;
+	}
 	
 	/**
 	 * Constructor
@@ -36,8 +52,7 @@ public class Point implements Serializable
 	 */
 	public Point( final float[] l )
 	{
-		this.l = l;
-		w = l.clone();		
+		this( l, l.clone() );
 	}
 	
 	/**
@@ -93,8 +108,7 @@ public class Point implements Serializable
 	 */
 	final static public float squareDistance( final Point p1, final Point p2 )
 	{
-		assert p1.l.length == p2.l.length:
-			"Both points have to have the same dimensionality.";
+		assert p1.l.length == p2.l.length : "Both points have to have the same dimensionality.";
 		
 		double sum = 0.0;
 		for ( int i = 0; i < p1.w.length; ++i )

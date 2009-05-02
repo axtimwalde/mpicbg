@@ -49,9 +49,9 @@ public class TransformMesh implements InvertibleCoordinateTransform
 	public float getHeight(){ return height; }
 	
 	final protected HashMap< AffineModel2D, ArrayList< PointMatch > > av = new HashMap< AffineModel2D, ArrayList< PointMatch > >();
-	final public HashMap< AffineModel2D, ArrayList< PointMatch > > getAV(){ return av; }
+	public HashMap< AffineModel2D, ArrayList< PointMatch > > getAV(){ return av; }
 	final protected HashMap< PointMatch, ArrayList< AffineModel2D > > va = new HashMap< PointMatch, ArrayList< AffineModel2D > >();
-	final public HashMap< PointMatch, ArrayList< AffineModel2D > > getVA(){ return va; };
+	public HashMap< PointMatch, ArrayList< AffineModel2D > > getVA(){ return va; };
 	
 	public TransformMesh(
 			final int numX,
@@ -62,20 +62,20 @@ public class TransformMesh implements InvertibleCoordinateTransform
 		final int numXs = Math.max( 2, numX );
 		final int numYs = Math.max( 2, numY );
 		
-		float w = width * height / numXs / numYs;
-		PointMatch[] pq = new PointMatch[ numXs * numYs + ( numXs - 1 ) * ( numYs - 1 ) ];
+		final float w = width * height / numXs / numYs;
+		final PointMatch[] pq = new PointMatch[ numXs * numYs + ( numXs - 1 ) * ( numYs - 1 ) ];
 		
 		this.width = width;
 		this.height = height;
 		
-		float dy = height / ( numYs - 1 );
-		float dx = width / ( numXs - 1 );
+		final float dy = height / ( numYs - 1 );
+		final float dx = width / ( numXs - 1 );
 		
 		int i = 0;
 		for ( int xi = 0; xi < numXs; ++xi )
 		{
-			float xip = xi * dx;
-			Point p = new Point( new float[]{ xip, 0 } );
+			final float xip = xi * dx;
+			final Point p = new Point( new float[]{ xip, 0 } );
 			pq[ i ] = new PointMatch( p, p.clone() );
 			
 			++i;
@@ -107,7 +107,7 @@ public class TransformMesh implements InvertibleCoordinateTransform
 			
 			for ( int xi = 2; xi < numXs; ++xi )
 			{
-				float xip = xi * dx - dx / 2;
+				final float xip = xi * dx - dx / 2;
 				
 				p  = new Point( new float[]{ xip, yip } );
 				pq[ i ] = new PointMatch( p, p.clone(), w );
@@ -152,7 +152,7 @@ public class TransformMesh implements InvertibleCoordinateTransform
 			
 			for ( int xi = 1; xi < numXs - 1; ++xi )
 			{
-				float xip = xi * dx;
+				final float xip = xi * dx;
 								
 				p = new Point( new float[]{ xip, yip } );
 				pq[ i ] = new PointMatch( p, p.clone(), w );
@@ -230,9 +230,9 @@ public class TransformMesh implements InvertibleCoordinateTransform
 	 *            3 PointMatches (will not be copied, so do not reuse this
 	 *            list!)
 	 */
-	public void addTriangle( ArrayList< PointMatch > t )
+	public void addTriangle( final ArrayList< PointMatch > t )
 	{
-		AffineModel2D m = new AffineModel2D();
+		final AffineModel2D m = new AffineModel2D();
 		try
 		{
 			m.fit( t );
@@ -241,7 +241,7 @@ public class TransformMesh implements InvertibleCoordinateTransform
 		catch ( IllDefinedDataPointsException e ) { e.printStackTrace(); }
 		av.put( m, t );
 		
-		for ( PointMatch pm : t )
+		for ( final PointMatch pm : t )
 		{
 			if ( !va.containsKey( pm ) )
 				va.put( pm, new ArrayList< AffineModel2D >() );
@@ -249,17 +249,17 @@ public class TransformMesh implements InvertibleCoordinateTransform
 		}
 	}	
 	
-	private void illustrateTriangle( AffineModel2D ai, GeneralPath path )
+	protected void illustrateTriangle( final AffineModel2D ai, final GeneralPath path )
 	{
-		ArrayList< PointMatch > m = av.get( ai );
+		final ArrayList< PointMatch > m = av.get( ai );
 		
-		float[] w = m.get( 0 ).getP2().getW();
+		final float[] w = m.get( 0 ).getP2().getW();
 		path.moveTo( w[ 0 ], w[ 1 ] );
 		
 		for ( int i = 1; i < m.size(); ++i )
 		{
-			w = m.get( i ).getP2().getW();
-			path.lineTo( w[ 0 ], w[ 1 ] );
+			final float[] wi = m.get( i ).getP2().getW();
+			path.lineTo( wi[ 0 ], wi[ 1 ] );
 		}
 		path.closePath();
 	}
@@ -271,28 +271,28 @@ public class TransformMesh implements InvertibleCoordinateTransform
 	 */
 	public Shape illustrateMesh()
 	{
-		GeneralPath path = new GeneralPath();
+		final GeneralPath path = new GeneralPath();
 		
-		Set< AffineModel2D > s = av.keySet();
-		for ( AffineModel2D ai : s )
+		final Set< AffineModel2D > s = av.keySet();
+		for ( final AffineModel2D ai : s )
 			illustrateTriangle( ai, path );
 		
 		return path;
 	}
 	
-	private String illustrateTriangleSVG( AffineModel2D ai )
+	private String illustrateTriangleSVG( final AffineModel2D ai )
 	{
 		String svg = "";
 		
-		ArrayList< PointMatch > m = av.get( ai );
+		final ArrayList< PointMatch > m = av.get( ai );
 		
-		float[] w = m.get( 0 ).getP2().getW();
+		final float[] w = m.get( 0 ).getP2().getW();
 		svg += "M " + w[ 0 ] + " " + w[ 1 ] + " ";
 		
 		for ( int i = 1; i < m.size(); ++i )
 		{
-			w = m.get( i ).getP2().getW();
-			svg += "L " + w[ 0 ] + " "  + w[ 1 ] + " ";
+			final float[] wi = m.get( i ).getP2().getW();
+			svg += "L " + wi[ 0 ] + " "  + wi[ 1 ] + " ";
 		}
 		
 		svg += "Z ";
@@ -326,8 +326,8 @@ public class TransformMesh implements InvertibleCoordinateTransform
 	public String illustrateBestRigidSVG()
 	{
 		String svg = "<path style=\"fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1\" d=\"";
-		Set< PointMatch > s = va.keySet();
-		RigidModel2D m = new RigidModel2D();
+		final Set< PointMatch > s = va.keySet();
+		final RigidModel2D m = new RigidModel2D();
 		try
 		{
 			m.fit( s );
@@ -338,7 +338,7 @@ public class TransformMesh implements InvertibleCoordinateTransform
 			return "";
 		}
 		
-		float[] l = new float[]{ 0, 0 };
+		final float[] l = new float[]{ 0, 0 };
 		m.applyInPlace( l );
 		svg += "M " + l[ 0 ] + " " + l[ 1 ] + " ";
 		
@@ -370,9 +370,9 @@ public class TransformMesh implements InvertibleCoordinateTransform
 	 * 
 	 * @param p
 	 */
-	public void updateAffine( PointMatch p )
+	public void updateAffine( final PointMatch p )
 	{
-		for ( AffineModel2D ai : va.get( p ) )
+		for ( final AffineModel2D ai : va.get( p ) )
 		{
 			try
 			{
@@ -389,8 +389,8 @@ public class TransformMesh implements InvertibleCoordinateTransform
 	 */
 	public void updateAffines()
 	{
-		Set< AffineModel2D > s = av.keySet();
-		for ( AffineModel2D ai : s )
+		final Set< AffineModel2D > s = av.keySet();
+		for ( final AffineModel2D ai : s )
 		{
 			try
 			{
@@ -402,13 +402,75 @@ public class TransformMesh implements InvertibleCoordinateTransform
 	}
 	
 	/**
+	 * Find the closest {@linkplain Point source point} to a given coordinate.
+	 * Each vertex being defined by a {@link PointMatch}, the source
+	 * coordinates are the {@linkplain Point#getL() local coordinates} of the
+	 * {@linkplain PointMatch#getP1() source point}. 
+	 *  
+	 * @param there
+	 * @return closest {@link PointMatch} in terms of the
+	 *   {@linkplain PointMatch#getP1() source point}
+	 */
+	public PointMatch findClosestSourcePoint( final float[] there )
+	{
+		final Set< PointMatch > points = va.keySet();
+		
+		PointMatch closest = null;
+		float cd = Float.MAX_VALUE;
+		for ( final PointMatch m : points )
+		{
+			final float[] here = m.getP1().getL();
+			final float dx = here[ 0 ] - there[ 0 ];
+			final float dy = here[ 1 ] - there[ 1 ];
+			final float d = dx * dx + dy * dy;
+			if ( d < cd )
+			{
+				cd = d;
+				closest = m;
+			}
+		}
+		return closest;
+	}
+	
+	/**
+	 * Find the closest {@linkplain Point target point} to a given coordinate.
+	 * Each vertex being defined by a {@link PointMatch}, the target
+	 * coordinates are the {@linkplain Point#getW() world coordinates} of the
+	 * {@linkplain PointMatch#getP2() target point}. 
+	 *  
+	 * @param there
+	 * @return closest {@link PointMatch} in terms of the
+	 *   {@linkplain PointMatch#getP2() target point}
+	 */
+	public PointMatch findClosestTargetPoint( final float[] there )
+	{
+		final Set< PointMatch > points = va.keySet();
+		
+		PointMatch closest = null;
+		float cd = Float.MAX_VALUE;
+		for ( final PointMatch m : points )
+		{
+			final float[] here = m.getP2().getW();
+			final float dx = here[ 0 ] - there[ 0 ];
+			final float dy = here[ 1 ] - there[ 1 ];
+			final float d = dx * dx + dy * dy;
+			if ( d < cd )
+			{
+				cd = d;
+				closest = m;
+			}
+		}
+		return closest;
+	}
+	
+	/**
 	 * Checks if a location is inside a given polygon at the target side or not.
 	 * 
 	 * @param pm
 	 * @param t
 	 * @return
 	 */
-	final static public boolean isInTargetPolygon(
+	static public boolean isInTargetPolygon(
 			final ArrayList< PointMatch > pm,
 			final float[] t )
 	{
@@ -449,8 +511,8 @@ public class TransformMesh implements InvertibleCoordinateTransform
 		{
 			final PointMatch r1 = pm.get( i );
 			final PointMatch r2 = pm.get( ( i + 1 ) % pm.size() );
-			final float[] t1 = r1.getP2().getL();
-			final float[] t2 = r2.getP2().getL();
+			final float[] t1 = r1.getP1().getL();
+			final float[] t2 = r2.getP1().getL();
 			
 			final float x1 = t2[ 0 ] - t1[ 0 ];
 			final float y1 = t2[ 1 ] - t1[ 1 ];
@@ -477,8 +539,8 @@ public class TransformMesh implements InvertibleCoordinateTransform
 	{
 		assert location.length == 2 : "2d transform meshs can be applied to 2d points only.";
 		
-		Set< AffineModel2D > s = av.keySet();
-		for ( AffineModel2D ai : s )
+		final Set< AffineModel2D > s = av.keySet();
+		for ( final AffineModel2D ai : s )
 		{
 			final ArrayList< PointMatch > pm = av.get( ai );
 			if ( isInSourcePolygon( pm, location ) )
@@ -486,11 +548,11 @@ public class TransformMesh implements InvertibleCoordinateTransform
 				ai.applyInPlace( location );
 				return;
 			}
-		} 
+		}
 	}
 
 	//@Override
-	public float[] applyInverse( float[] location ) throws NoninvertibleModelException
+	public float[] applyInverse( final float[] location ) throws NoninvertibleModelException
 	{
 		assert location.length == 2 : "2d transform meshs can be applied to 2d points only.";
 		
@@ -500,12 +562,12 @@ public class TransformMesh implements InvertibleCoordinateTransform
 	}
 
 	//@Override
-	public void applyInverseInPlace( float[] location ) throws NoninvertibleModelException
+	public void applyInverseInPlace( final float[] location ) throws NoninvertibleModelException
 	{
 		assert location.length == 2 : "2d transform meshs can be applied to 2d points only.";
 		
-		Set< AffineModel2D > s = av.keySet();
-		for ( AffineModel2D ai : s )
+		final Set< AffineModel2D > s = av.keySet();
+		for ( final AffineModel2D ai : s )
 		{
 			final ArrayList< PointMatch > pm = av.get( ai );
 			if ( isInTargetPolygon( pm, location ) )

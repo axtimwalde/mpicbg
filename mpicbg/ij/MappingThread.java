@@ -4,7 +4,9 @@ import java.awt.Canvas;
 import java.awt.Cursor;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import ij.IJ;
 import ij.ImagePlus;
+import ij.gui.Toolbar;
 import ij.process.ImageProcessor;
 
 /**
@@ -34,6 +36,7 @@ public class MappingThread extends Thread
 		this.source = source;
 		this.target = target;
 		this.temp = target.createProcessor( target.getWidth(), target.getHeight() );
+		temp.snapshot();
 		this.pleaseRepaint = pleaseRepaint;
 		this.mapping = mapping;
 		this.interpolate = interpolate;
@@ -49,10 +52,11 @@ public class MappingThread extends Thread
 			final Cursor cursor = canvas == null ? canvas.getCursor() : Cursor.getDefaultCursor();
 			try
 			{
-				if ( pleaseRepaint.compareAndSet( true, false ) )
+				if ( pleaseRepaint.getAndSet( false ) )
 				{
 					if ( canvas != null )
 						canvas.setCursor( Cursor.getPredefinedCursor( Cursor.WAIT_CURSOR ) );
+					temp.reset();
 					if ( interpolate )
 						mapping.mapInterpolated( source, temp );
 					else

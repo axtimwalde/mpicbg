@@ -241,5 +241,17 @@ public class PointMatch implements Serializable
 		final ArrayList< PointMatch > list = new ArrayList< PointMatch >();
 		flip( matches, list );
 		return list;
-	}	
+	}
+	
+	final public static void sourcePoints( final Collection< PointMatch > matches, final Collection< Point > sourcePoints )
+	{
+		for ( final PointMatch m : matches )
+			sourcePoints.add( m.getP1() );
+	}
+	
+	final public static void targetPoints( final Collection< PointMatch > matches, final Collection< Point > targetPoints )
+	{
+		for ( final PointMatch m : matches )
+			targetPoints.add( m.getP2() );
+	}
 }

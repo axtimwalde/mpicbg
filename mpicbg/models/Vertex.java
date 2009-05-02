@@ -8,16 +8,14 @@ import java.util.Set;
  * An n-dimensional {@link Vertex} being connected to other
  * {@link Vertex Vertices} by {@link Spring Springs}
  * 
+ * TODO Moivng vertices does not move points any more!!!!!!!!!!!!!!!!!!!!!!!!!!! 
+ * 
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.1b
+ * @version 0.2b
  */
-public class Vertex
+public class Vertex extends Point
 {
-	/**
-	 * The location of the {@link Vertex}.
-	 */
-	final protected Point location;
-	final public Point getLocation() { return location; }
+	private static final long serialVersionUID = 452481402612427648L;
 	
 	/**
 	 * A set of {@link Spring Springs} with {@link Spring#getV1() v1} being
@@ -25,14 +23,14 @@ public class Vertex
 	 * {@link Vertex} at the other side of the {@link Spring}.
 	 */
 	final protected HashMap< Vertex, Spring > springs = new HashMap< Vertex, Spring >();
-	final public Collection< Spring > getSprings(){ return springs.values(); }
+	public Collection< Spring > getSprings(){ return springs.values(); }
 	/**
 	 * Get all {@link Vertex Vertices} that are connected to this
 	 * {@link Vertex} by a spring.
 	 * 
 	 * @return conntected vertices
 	 */
-	final public Set< Vertex > getConnectedVertices(){ return springs.keySet(); }
+	public Set< Vertex > getConnectedVertices(){ return springs.keySet(); }
 	
 	/**
 	 * Add a {@link Spring} connecting this {@link Vertex} with another
@@ -41,11 +39,11 @@ public class Vertex
 	 * @param v2 the other {@link Vertex}
 	 * @param weights weighting factors
 	 */
-	final public void addSpring(
-			Vertex v2,
-			float[] weights )
+	public void addSpring(
+			final Vertex v2,
+			final float[] weights )
 	{
-		Spring spring = new Spring( this, v2, weights );
+		final Spring spring = new Spring( this, v2, weights );
 		springs.put( v2, spring );
 		v2.springs.put( this, spring );
 	}
@@ -58,12 +56,12 @@ public class Vertex
 	 * @param weights weighting factors
 	 * @param maxStretch stretch limit
 	 */
-	final public void addSpring(
-			Vertex v2,
-			float[] weights,
-			float maxStretch )
+	public void addSpring(
+			final Vertex v2,
+			final float[] weights,
+			final float maxStretch )
 	{
-		Spring spring = new Spring( this, v2, weights, maxStretch );
+		final Spring spring = new Spring( this, v2, weights, maxStretch );
 		springs.put( v2, spring );
 		v2.springs.put( this, spring );
 	}
@@ -75,11 +73,11 @@ public class Vertex
 	 * @param v2 the other {@link Vertex}
 	 * @param weight weighting factor (spring constant)
 	 */
-	final public void addSpring(
-			Vertex v2,
-			float weight )
+	public void addSpring(
+			final Vertex v2,
+			final float weight )
 	{
-		Spring spring = new Spring( this, v2, weight );
+		final Spring spring = new Spring( this, v2, weight );
 		springs.put( v2, spring );
 		v2.springs.put( this, spring );
 	}
@@ -92,12 +90,12 @@ public class Vertex
 	 * @param weight weighting factor (spring constant)
 	 * @param maxStretch stretch limit
 	 */
-	final public void addSpring(
-			Vertex v2,
-			float weight,
-			float maxStretch )
+	public void addSpring(
+			final Vertex v2,
+			final float weight,
+			final float maxStretch )
 	{
-		Spring spring = new Spring( this, v2, weight, maxStretch );
+		final Spring spring = new Spring( this, v2, weight, maxStretch );
 		springs.put( v2, spring );
 		v2.springs.put( this, spring );
 	}
@@ -107,34 +105,65 @@ public class Vertex
 	 * vector gives the current speed. 
 	 */
 	final protected float[] direction;
-	final public float[] getDirection(){ return direction; }
+	public float[] getDirection(){ return direction; }
 	protected float speed;
-	final public float getSpeed() { return speed; }
+	public float getSpeed() { return speed; }
 	
 	/**
 	 * The sum of all forces amplitudes applied to this {@link Vertex}.
 	 */
 	private float forceSum;
-	final public float getForceSum() { return forceSum; }
+	public float getForceSum() { return forceSum; }
 	
 	/**
 	 * The resulting force amplitude applied to this {@link Vertex}.
 	 */
 	final private float[] force;
-	final public float[] getForces(){ return force; }
+	public float[] getForces(){ return force; }
 	private float forceAmplitude;
-	final public float getForce(){ return forceAmplitude; }
+	public float getForce(){ return forceAmplitude; }
 	
 	/**
 	 * Constructor
 	 * 
+	 * @param l local coordinates
+	 */
+	public Vertex( final float[] l )
+	{
+		super( l );
+		direction = new float[ l.length ];
+		force = new float[ direction.length ];
+	}
+	
+	/**
+	 * Constructor
+	 * 
+	 * @param l local coordinates
+	 * @param w world coordinates
+	 */
+	public Vertex( final float[] l, final float[] w )
+	{
+		super( l, w );
+		direction = new float[ l.length ];
+		force = new float[ direction.length ];
+	}
+	
+	/**
+	 * Constructor
+	 * 
+	 * The {@link Vertex} takes over the coordinates of the {@link Point} by
+	 * pointer.  That is, changes applyed to the {@link Vertex} will affect
+	 * the {@link Point} and vice versa.
+	 * 
+	 * TODO This is done for use in {@link SpringMesh} that replaces control
+	 * points by the {@link Vertex} class.  It feels that there is a better 
+	 * solution for this problem...
+	 * 
 	 * @param location
 	 */
-	public Vertex( Point location )
+	public Vertex( final Point point )
 	{
-		this.location = location;
-		direction = new float[ location.getL().length ];
-		force = new float[ direction.length ];
+		this( point.getL(), point.getW() );
 	}
 	
 	/**
@@ -142,7 +171,7 @@ public class Vertex
 	 * 
 	 * @param damp damping factor (0.0 fully damped, 1.0 not damped)
 	 */
-	final public void update( float damp )
+	public void update( final float damp )
 	{
 		for ( int i = 0; i < force.length; ++i )
 			force[ i ] = 0;
@@ -151,10 +180,10 @@ public class Vertex
 		final float[] f = new float[ force.length ];
 		float fAmplitude;
 		
-		Set< Vertex > vertices = springs.keySet();
-		for ( Vertex vertex : vertices )
+		final Set< Vertex > vertices = springs.keySet();
+		for ( final Vertex vertex : vertices )
 		{
-			Spring spring = springs.get( vertex );
+			final Spring spring = springs.get( vertex );
 			
 //			System.out.println(
 //					"(" +
@@ -197,7 +226,6 @@ public class Vertex
 	 */
 	final public void move( float t )
 	{
-		final float[] w = location.getW();
 		for ( int i = 0; i < w.length; ++i )
 			w[ i ] += t * direction[ i ];
 	}
@@ -212,8 +240,8 @@ public class Vertex
 	final public int traceConnectedGraph( Set< Vertex > graph )
 	{
 		graph.add( this );
-		Set< Vertex > vertices = springs.keySet();
-		for ( Vertex vertex : vertices )
+		final Set< Vertex > vertices = springs.keySet();
+		for ( final Vertex vertex : vertices )
 			if ( !vertices.contains( vertex ) )
 				vertex.traceConnectedGraph( graph );
 		return graph.size();
