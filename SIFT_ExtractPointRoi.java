@@ -1,29 +1,3 @@
-/**
- * License: GPL
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License 2
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- * 
- * NOTE:
- * The SIFT-method is protected by U.S. Patent 6,711,293: "Method and
- * apparatus for identifying scale invariant features in an image and use of
- * same for locating an object in an image" by the University of British
- * Columbia.  That is, for commercial applications the permission of the author
- * is required.
- *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.4b
- */
 import mpicbg.ij.FeatureTransform;
 import mpicbg.ij.SIFT;
 import mpicbg.imagefeatures.*;
@@ -72,6 +46,8 @@ import java.util.List;
  * }
  * </pre>
  * 
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @version 0.4b
  */
 public class SIFT_ExtractPointRoi implements PlugIn
 {
@@ -302,10 +278,10 @@ public class SIFT_ExtractPointRoi implements PlugIn
 				float[] m_p1 = m.getP1().getL(); 
 				float[] m_p2 = m.getP2().getL();
 				
-				x1[ i ] = ( int )( m_p1[ 0 ] );
-				y1[ i ] = ( int )( m_p1[ 1 ] );
-				x2[ i ] = ( int )( m_p2[ 0 ] );
-				y2[ i ] = ( int )( m_p2[ 1 ] );
+				x1[ i ] = Math.round( m_p1[ 0 ] );
+				y1[ i ] = Math.round( m_p1[ 1 ] );
+				x2[ i ] = Math.round( m_p2[ 0 ] );
+				y2[ i ] = Math.round( m_p2[ 1 ] );
 				
 				++i;
 			}

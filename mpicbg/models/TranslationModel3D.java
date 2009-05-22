@@ -131,4 +131,21 @@ public class TranslationModel3D extends InvertibleModel< TranslationModel3D >
 		m.cost = cost;
 		return m;
 	}
+	
+	/**
+	 * TODO Not yet tested
+	 */
+	//@Override
+	public TranslationModel3D createInverse()
+	{
+		final TranslationModel3D ict = new TranslationModel3D();
+		
+		ict.translation[ 0 ] = -translation[ 0 ];
+		ict.translation[ 1 ] = -translation[ 1 ];
+		ict.translation[ 2 ] = -translation[ 2 ];
+		
+		ict.cost = cost;
+		
+		return ict;
+	}
 }

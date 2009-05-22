@@ -317,4 +317,31 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		
 		invert();
 	}
+	
+	/**
+	 * TODO Not yet tested
+	 */
+	//@Override
+	final public AffineModel2D createInverse()
+	{
+		final AffineModel2D ict = new AffineModel2D();
+		
+		ict.m00 = i00;
+		ict.m10 = i10;
+		ict.m01 = i01;
+		ict.m11 = i11;
+		ict.m02 = i02;
+		ict.m12 = i12;
+		
+		ict.i00 = m00;
+		ict.i10 = m10;
+		ict.i01 = m01;
+		ict.i11 = m11;
+		ict.i02 = m02;
+		ict.i12 = m12;
+		
+		ict.cost = cost;
+		
+		return ict;
+	}
 }

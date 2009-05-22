@@ -89,7 +89,7 @@ public class ElasticMeshStack< M extends AbstractAffineModel2D< M > >
 			final ImageStack trg )
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException 
 	{
-		final ErrorStatistic observer = new ErrorStatistic();
+		final ErrorStatistic observer = new ErrorStatistic( maxPlateauwidth + 1 );
 		int i = 0;
 		
 		while ( i < maxIterations )  // do not run forever
@@ -168,7 +168,7 @@ public class ElasticMeshStack< M extends AbstractAffineModel2D< M > >
 					src,
 					trg );
 			numMatches = 0;
-			final ErrorStatistic observer = new ErrorStatistic();
+			final ErrorStatistic observer = new ErrorStatistic( maxPlateauwidth + 1 );
 			for ( final ElasticMovingLeastSquaresMesh< ? > m : meshes )
 			{
 				Set< PointMatch > tiles = m.getVertices();

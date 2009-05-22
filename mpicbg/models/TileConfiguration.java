@@ -32,10 +32,10 @@ public class TileConfiguration
 	final public double getMinError() {	return minError; }
 	
 	private double maxError = 0.0;
-	final public double getMaxError() {	return maxError; }
+	final public double getMaxError() { return maxError; }
 	
 	private double error = Double.MAX_VALUE;
-	final public double getError() {	return error; }
+	final public double getError() { return error; }
 
 	public TileConfiguration()
 	{
@@ -127,13 +127,15 @@ public class TileConfiguration
 			final int maxIterations,
 			final int maxPlateauwidth ) throws NotEnoughDataPointsException, IllDefinedDataPointsException 
 	{
-		final ErrorStatistic observer = new ErrorStatistic();
+		final ErrorStatistic observer = new ErrorStatistic( maxPlateauwidth + 1 );
 		
 		int i = 0;
 		
-		while ( i < maxIterations )  // do not run forever
+		boolean proceed = i < maxIterations;
+		
+		while ( proceed )
 		{
-			for ( Tile< ? > tile : tiles )
+			for ( final Tile< ? > tile : tiles )
 			{
 				if ( fixedTiles.contains( tile ) ) continue;
 				tile.update();
@@ -141,17 +143,25 @@ public class TileConfiguration
 				tile.update();
 			}
 			update();
-			observer.add( error );			
+			observer.add( error );
 			
-			if (
-					i >= maxPlateauwidth &&
-					error < maxAllowedError &&
-					Math.abs( observer.getWideSlope( maxPlateauwidth ) ) <= 0.0001 &&
-					Math.abs( observer.getWideSlope( maxPlateauwidth / 2 ) ) <= 0.0001 )
+			if ( i > maxPlateauwidth )
 			{
-				break;
+				proceed = error > maxAllowedError;
+				
+				int d = maxPlateauwidth;
+				while ( !proceed && d >= 1 )
+				{
+					try
+					{
+						proceed |= Math.abs( observer.getWideSlope( d ) ) > 0.0001;
+					}
+					catch ( Exception e ) { e.printStackTrace(); }
+					d /= 2;
+				}
 			}
-			++i;
+			
+			proceed &= ++i < maxIterations;
 		}
 		
 		println( "Successfully optimized configuration of " + tiles.size() + " tiles after " + i + " iterations:" );

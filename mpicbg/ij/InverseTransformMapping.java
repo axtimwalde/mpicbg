@@ -28,23 +28,27 @@ public class InverseTransformMapping< T extends InverseCoordinateTransform > imp
 			final ImageProcessor target )
 	{
 		final float[] t = new float[ 2 ];
-		final int w = source.getWidth() - 1;
-		final int h = source.getHeight() - 1;
-		for ( int y = 0; y < target.getHeight(); ++y )
+		final int sw = source.getWidth() - 1;
+		final int sh = source.getHeight() - 1;
+		final int tw = target.getWidth();
+		final int th = target.getHeight();
+		for ( int y = 0; y < th; ++y )
 		{
-			for ( int x = 0; x < target.getWidth(); ++x )
+			for ( int x = 0; x < tw; ++x )
 			{
 				t[ 0 ] = x;
 				t[ 1 ] = y;
 				try
 				{
 					transform.applyInverseInPlace( t );
+					final int tx = ( int )( t[ 0 ] + 0.5f );
+					final int ty = ( int )( t[ 1 ] + 0.5f );
 					if (
-							t[ 0 ] >= 0 &&
-							t[ 0 ] < w &&
-							t[ 1 ] >= 0 &&
-							t[ 1 ] < h )
-						target.putPixel( x, y, source.getPixel( ( int )t[ 0 ], ( int )t[ 1 ] ) );
+							tx >= 0 &&
+							tx <= sw &&
+							ty >= 0 &&
+							ty <= sh )
+						target.putPixel( x, y, source.getPixel( tx, ty ) );
 				}
 				catch ( NoninvertibleModelException e ){}
 			}
@@ -57,11 +61,13 @@ public class InverseTransformMapping< T extends InverseCoordinateTransform > imp
 			final ImageProcessor target )
 	{
 		final float[] t = new float[ 2 ];
-		final int w = source.getWidth() - 1;
-		final int h = source.getHeight() - 1;
-		for ( int y = 0; y < target.getHeight(); ++y )
+		final int sw = source.getWidth() - 1;
+		final int sh = source.getHeight() - 1;
+		final int tw = target.getWidth();
+		final int th = target.getHeight();
+		for ( int y = 0; y < th; ++y )
 		{
-			for ( int x = 0; x < target.getWidth(); ++x )
+			for ( int x = 0; x < tw; ++x )
 			{
 				t[ 0 ] = x;
 				t[ 1 ] = y;
@@ -70,9 +76,9 @@ public class InverseTransformMapping< T extends InverseCoordinateTransform > imp
 					transform.applyInverseInPlace( t );
 					if (
 							t[ 0 ] >= 0 &&
-							t[ 0 ] < w &&
+							t[ 0 ] <= sw &&
 							t[ 1 ] >= 0 &&
-							t[ 1 ] < h )
+							t[ 1 ] <= sh )
 						target.putPixel( x, y, source.getPixelInterpolated( t[ 0 ], t[ 1 ] ) );
 				}
 				catch ( NoninvertibleModelException e ){}

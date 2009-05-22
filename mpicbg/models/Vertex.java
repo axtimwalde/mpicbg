@@ -37,15 +37,28 @@ public class Vertex extends Point
 	 * {@link Vertex}.  It puts the spring to the other {@link Vertex} as well.
 	 * 
 	 * @param v2 the other {@link Vertex}
+	 * @param spring the {@link Spring}
+	 */
+	public void addSpring(
+			final Vertex v2,
+			final Spring spring )
+	{
+		springs.put( v2, spring );
+		v2.springs.put( this, spring );
+	}
+	
+	/**
+	 * Add a {@link Spring} connecting this {@link Vertex} with another
+	 * {@link Vertex}.  It puts the spring to the other {@link Vertex} as well.
+	 * 
+	 * @param v2 the other {@link Vertex}
 	 * @param weights weighting factors
 	 */
 	public void addSpring(
 			final Vertex v2,
 			final float[] weights )
 	{
-		final Spring spring = new Spring( this, v2, weights );
-		springs.put( v2, spring );
-		v2.springs.put( this, spring );
+		addSpring( v2, new Spring( this, v2, weights ) );
 	}
 	
 	/**
@@ -61,9 +74,7 @@ public class Vertex extends Point
 			final float[] weights,
 			final float maxStretch )
 	{
-		final Spring spring = new Spring( this, v2, weights, maxStretch );
-		springs.put( v2, spring );
-		v2.springs.put( this, spring );
+		addSpring( v2, new Spring( this, v2, weights, maxStretch ) );
 	}
 	
 	/**
@@ -77,9 +88,7 @@ public class Vertex extends Point
 			final Vertex v2,
 			final float weight )
 	{
-		final Spring spring = new Spring( this, v2, weight );
-		springs.put( v2, spring );
-		v2.springs.put( this, spring );
+		addSpring( v2, new Spring( this, v2, weight ) );
 	}
 	
 	/**
@@ -95,9 +104,7 @@ public class Vertex extends Point
 			final float weight,
 			final float maxStretch )
 	{
-		final Spring spring = new Spring( this, v2, weight, maxStretch );
-		springs.put( v2, spring );
-		v2.springs.put( this, spring );
+		addSpring( v2, new Spring( this, v2, weight, maxStretch ) );
 	}
 	
 	/**

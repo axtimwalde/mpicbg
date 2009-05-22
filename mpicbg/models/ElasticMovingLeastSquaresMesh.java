@@ -237,7 +237,7 @@ public class ElasticMovingLeastSquaresMesh< M extends Model< M > > extends Movin
 			final int maxPlateauwidth )
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException 
 	{
-		final ErrorStatistic observer = new ErrorStatistic();
+		final ErrorStatistic observer = new ErrorStatistic( maxPlateauwidth + 1 );
 		
 		int i = 0;
 		
@@ -282,7 +282,7 @@ public class ElasticMovingLeastSquaresMesh< M extends Model< M > > extends Movin
 			final ImagePlus impPlot )
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException 
 	{
-		final ErrorStatistic observer = new ErrorStatistic();
+		final ErrorStatistic observer = new ErrorStatistic( maxPlateauwidth + 1 );
 		
 		int i = 0;
 		

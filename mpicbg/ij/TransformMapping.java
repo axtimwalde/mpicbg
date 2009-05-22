@@ -24,21 +24,25 @@ public class TransformMapping< T extends CoordinateTransform > implements Invers
 	public void mapInverse( ImageProcessor source, ImageProcessor target )
 	{
 		final float[] t = new float[ 2 ];
-		final int w = source.getWidth() - 1;
-		final int h = source.getHeight() - 1;
-		for ( int y = 0; y < target.getHeight(); ++y )
+		final int sw = source.getWidth() - 1;
+		final int sh = source.getHeight() - 1;
+		final int tw = target.getWidth();
+		final int th = target.getHeight();
+		for ( int y = 0; y < th; ++y )
 		{
-			for ( int x = 0; x < target.getWidth(); ++x )
+			for ( int x = 0; x < tw; ++x )
 			{
 				t[ 0 ] = x;
 				t[ 1 ] = y;
 				transform.applyInPlace( t );
+				final int tx = ( int )( t[ 0 ] + 0.5f );
+				final int ty = ( int )( t[ 1 ] + 0.5f );
 				if (
 						t[ 0 ] >= 0 &&
-						t[ 0 ] < w &&
+						t[ 0 ] <= sw &&
 						t[ 1 ] >= 0 &&
-						t[ 1 ] < h )
-					target.putPixel( x, y, source.getPixel( ( int )t[ 0 ], ( int )t[ 1 ] ) );
+						t[ 1 ] <= sh )
+					target.putPixel( x, y, source.getPixel( tx, ty ) );
 			}
 		}
 	}
@@ -47,20 +51,22 @@ public class TransformMapping< T extends CoordinateTransform > implements Invers
 	public void mapInverseInterpolated( ImageProcessor source, ImageProcessor target )
 	{
 		final float[] t = new float[ 2 ];
-		final int w = source.getWidth() - 1;
-		final int h = source.getHeight() - 1;
-		for ( int y = 0; y < target.getHeight(); ++y )
+		final int sw = source.getWidth() - 1;
+		final int sh = source.getHeight() - 1;
+		final int tw = target.getWidth();
+		final int th = target.getHeight();
+		for ( int y = 0; y < th; ++y )
 		{
-			for ( int x = 0; x < target.getWidth(); ++x )
+			for ( int x = 0; x < tw; ++x )
 			{
 				t[ 0 ] = x;
 				t[ 1 ] = y;
 				transform.applyInPlace( t );
 				if (
 						t[ 0 ] >= 0 &&
-						t[ 0 ] < w &&
+						t[ 0 ] <= sw &&
 						t[ 1 ] >= 0 &&
-						t[ 1 ] < h )
+						t[ 1 ] <= sh )
 					target.putPixel( x, y, source.getPixelInterpolated( t[ 0 ], t[ 1 ] ) );
 			}
 		}

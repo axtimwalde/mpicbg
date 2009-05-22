@@ -1,23 +1,19 @@
-/**
- * License: GPL
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License 2
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- *
- */
-import mpicbg.models.*;
+import mpicbg.ij.InverseTransformMapping;
+import mpicbg.ij.Mapping;
+import mpicbg.ij.TransformMeshMapping;
+import mpicbg.ij.util.Util;
+import mpicbg.models.AbstractAffineModel2D;
+import mpicbg.models.AffineModel2D;
+import mpicbg.models.CoordinateTransform;
+import mpicbg.models.CoordinateTransformMesh;
+import mpicbg.models.IllDefinedDataPointsException;
+import mpicbg.models.MovingLeastSquaresTransform;
+import mpicbg.models.NotEnoughDataPointsException;
+import mpicbg.models.Point;
+import mpicbg.models.PointMatch;
+import mpicbg.models.RigidModel2D;
+import mpicbg.models.SimilarityModel2D;
+import mpicbg.models.TranslationModel2D;
 
 import ij.plugin.*;
 import ij.gui.*;
@@ -27,19 +23,21 @@ import ij.process.*;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Use two sets of {@link PointRoi landmarks} selected in two images to map
  * one image to the other.
+ * 
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @version 0.2b
  */
 public class Transform_Roi implements PlugIn
 {
 	final static private DecimalFormat decimalFormat = new DecimalFormat();
 	final static private DecimalFormatSymbols decimalFormatSymbols = new DecimalFormatSymbols();
 	
-	final protected ArrayList< PointMatch > matches = new ArrayList< PointMatch >();
-	
-	final static private String[] methods = new String[]{ "Static Least Squares", "Moving Least Squares" };
+	final static private String[] methods = new String[]{ "Least Squares (linear)", "Moving Least Squares (non-linear)" };
 	static private int methodIndex = 0;
 	
 	static float alpha = 1.0f;
@@ -96,77 +94,101 @@ public class Transform_Roi implements PlugIn
 	
 	final public void run( String args )
 	{
-		matches.clear();
+		final ArrayList< PointMatch > matches = new ArrayList< PointMatch >();
 		
 		if ( !setup() ) return;
 		
-		ImagePlus target = template.createImagePlus();
+		final ImagePlus target = template.createImagePlus();
 		
-		ImageProcessor ipSource = source.getProcessor();
-		ImageProcessor ipTarget = template.getProcessor().duplicate();
+		final ImageProcessor ipSource = source.getProcessor();
+		final ImageProcessor ipTarget = template.getProcessor().createProcessor( template.getWidth(), template.getHeight() );
 		
-		// TODO Implement other models for choice
-		Model< ? > model;
-		switch ( modelClassIndex )
-		{
-		case 0:
-			model = new TranslationModel2D();
-			break;
-		case 1:
-			model = new RigidModel2D();
-			break;
-		case 2:
-			model = new SimilarityModel2D();
-			break;
-		case 3:
-			model = new AffineModel2D();
-			break;
-		default:
-			return;
-		}
+		/* Collect the PointRois from both images and make PointMatches of them. */
+		final List< Point > sourcePoints = Util.pointRoiToPoints( ( PointRoi )source.getRoi() );
+		final List< Point > templatePoints = Util.pointRoiToPoints( ( PointRoi )template.getRoi() );
 		
-		// Now, collect the PointRois from both images and make PointMatches of them.
-		PointRoi roiSource = ( PointRoi )source.getRoi();
-		PointRoi roiTemplate = ( PointRoi )template.getRoi();
-		
-		int offsetSourceX = ( int )roiSource.getBoundingRect().getX();
-		int offsetSourceY = ( int )roiSource.getBoundingRect().getY();
-		int offsetTemplateX = ( int )roiTemplate.getBoundingRect().getX();
-		int offsetTemplateY = ( int )roiTemplate.getBoundingRect().getY();
-		
-		int[] roiSourceX = roiSource.getXCoordinates();
-		int[] roiSourceY = roiSource.getYCoordinates();
-		int[] roiTemplateX = roiTemplate.getXCoordinates();
-		int[] roiTemplateY = roiTemplate.getYCoordinates();
-		
-		final int numMatches = Math.min( roiSource.getNCoordinates(), roiTemplate.getNCoordinates() );
+		final int numMatches = Math.min( sourcePoints.size(), templatePoints.size() );
 		
 		for ( int i = 0; i < numMatches; ++i )
-		{
-			final Point pSource = new Point( new float[]{ roiSourceX[ i ] + offsetSourceX, roiSourceY[ i ] + offsetSourceY } );
-			final Point pTemplate = new Point( new float[]{ roiTemplateX[ i ] + offsetTemplateX, roiTemplateY[ i ] + offsetTemplateY } );
-			matches.add( new PointMatch( pTemplate, pSource ) );
-		}
+			matches.add( new PointMatch( sourcePoints.get( i ), templatePoints.get( i ) ) );
 		
-		try
+		final Mapping< ? > mapping;
+		
+		if ( methodIndex == 0 )
 		{
-			model.fit( matches );
+			/* TODO Implement other models for choice */
+			AbstractAffineModel2D< ? > model;
+			switch ( modelClassIndex )
+			{
+			case 0:
+				model = new TranslationModel2D();
+				break;
+			case 1:
+				model = new RigidModel2D();
+				break;
+			case 2:
+				model = new SimilarityModel2D();
+				break;
+			case 3:
+				model = new AffineModel2D();
+				break;
+			default:
+				return;
+			}
+			
+			try
+			{
+				model.fit( matches );
+			}
+			catch ( NotEnoughDataPointsException e )
+			{
+				IJ.showMessage( "Not enough landmarks selected to find a transformation model." );
+				return;
+			}
+			catch ( IllDefinedDataPointsException e )
+			{
+				IJ.showMessage( "The set of landmarks is ill-defined in terms of the desired transformation." );
+				return;
+			}
+			
+			mapping = new InverseTransformMapping< AbstractAffineModel2D< ? > >( model );
 		}
-		catch ( NotEnoughDataPointsException e )
+		else
 		{
-			IJ.showMessage( "Not enough landmarks selected to find a transformation model." );
-			return;
-		}
-		catch ( IllDefinedDataPointsException e )
-		{
-			IJ.showMessage( "The set of landmarks is ill-defined in terms of the desired transformation." );
-			return;
+			final MovingLeastSquaresTransform t = new MovingLeastSquaresTransform();
+			/* TODO Implement other models for choice */
+			try
+			{
+				switch ( modelClassIndex )
+				{
+				case 0:
+					t.setModel( TranslationModel2D.class );
+					break;
+				case 1:
+					t.setModel( RigidModel2D.class );
+					break;
+				case 2:
+					t.setModel( SimilarityModel2D.class );
+					break;
+				case 3:
+					t.setModel( AffineModel2D.class );
+					break;
+				default:
+					return;
+				}
+			}
+			catch ( Exception e ) { return; }
+			t.setAlpha( alpha );
+			
+			t.setMatches( matches );
+			
+			mapping = new TransformMeshMapping( new CoordinateTransformMesh( t, meshResolution, source.getWidth(), source.getHeight() ) );
 		}
 		
 		if ( interpolate )
-			transformInterpolated( model, ipSource, ipTarget );
+			mapping.mapInterpolated( ipSource, ipTarget );
 		else
-			transform( model, ipSource, ipTarget );
+			mapping.map( ipSource, ipTarget );
 		
 		target.setProcessor( "Transformed" + source.getTitle(), ipTarget );
 		target.show();

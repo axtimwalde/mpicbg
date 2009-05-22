@@ -180,6 +180,27 @@ public class Filter
 	}
     
     /**
+	 * Create a convolved image with a horizontal and a vertical kernel
+	 * simple straightforward, not optimized---replace this with a trusted better version soon
+	 * 
+	 * @param input the input image
+	 * @param h horizontal kernel
+	 * @param v vertical kernel
+	 * 
+	 * @return convolved image
+	 */
+	final static public FloatProcessor createConvolveSeparable(
+			final FloatProcessor input,
+			final float[] h,
+			final float[] v )
+	{
+		final FloatProcessor output = ( FloatProcessor )input.duplicate();
+		convolveSeparable( output, h, v );
+		return output;
+	}
+	
+	
+	/**
 	 * Convolve an image with a horizontal and a vertical kernel
 	 * simple straightforward, not optimized---replace this with a trusted better version soon
 	 * 
@@ -189,7 +210,7 @@ public class Filter
 	 * 
 	 * @return convolved image
 	 */
-	final static public FloatProcessor convolveSeparable(
+	final static public void convolveSeparable(
 			final FloatProcessor input,
 			final float[] h,
 			final float[] v )
@@ -197,13 +218,11 @@ public class Filter
 		final int width = input.getWidth();
 		final int height = input.getHeight();
 		
-		final FloatProcessor output = new FloatProcessor( width, height );
 		final FloatProcessor temp = new FloatProcessor( width, height );
 		
 		final float[] inputData = ( float[] )input.getPixels();
 		final float[] tempData = ( float[] )temp.getPixels();
-		final float[] outputData = ( float[] )output.getPixels();
-
+		
 		final int hl = h.length / 2;
 		final int vl = v.length / 2;
 		
@@ -215,16 +234,16 @@ public class Filter
 		final int[] xa = new int[ h.length + hl - 1 ];
 		for ( int i = 0; i < xb.length; ++i )
 		{
-			xb[ i ] = Util.flipInRange( i - hl, width );
-			xa[ i ] = Util.flipInRange( i + xl, width );
+			xb[ i ] = Util.pingPong( i - hl, width );
+			xa[ i ] = Util.pingPong( i + xl, width );
 		}
 		
 		final int[] yb = new int[ v.length + vl - 1 ];
 		final int[] ya = new int[ v.length + vl - 1 ];
 		for ( int i = 0; i < yb.length; ++i )
 		{
-			yb[ i ] = width * Util.flipInRange( i - vl, height );
-			ya[ i ] = width * Util.flipInRange( i + yl, height );
+			yb[ i ] = width * Util.pingPong( i - vl, height );
+			ya[ i ] = width * Util.pingPong( i + yl, height );
 		}
 		
 		xl += hl;
@@ -273,7 +292,7 @@ public class Filter
 					val += v[ yk ] * tempData[ c + rk + x ];
 					rk += width;
 				}
-				outputData[ r + x ] = val;
+				inputData[ r + x ] = val;
 			}
 			for ( int y = 0; y < vl; ++y )
 			{
@@ -285,11 +304,74 @@ public class Filter
 					valb += h[ yk ] * tempData[ yb[ y + yk ] + x ];
 					vala += h[ yk ] * tempData[ ya[ y + yk ] + x ];
 				}
-				outputData[ r + x ] = valb;
-				outputData[ r + rm + x ] = vala;
+				inputData[ r + x ] = valb;
+				inputData[ r + rm + x ] = vala;
 			}
 		}
-
-		return output;
+	}
+	
+	
+	/**
+	 * Smooth with a Gaussian kernel that represents downsampling at a given
+	 * scale factor and sourceSigma.
+	 */
+	final static public void smoothForScale(
+			final FloatProcessor source,
+			final float scale,
+			final float sourceSigma )
+	{
+		assert scale <= 1.0f : "Downsampling requires a scale factor < 1.0";
+		
+		if ( scale == 1.0f ) return;
+		final float s = 0.5f / scale;
+		final float[] kernel = createNormalizedGaussianKernel( ( float )Math.sqrt( s * s - sourceSigma * sourceSigma ) );
+		convolveSeparable( source, kernel, kernel );
+	}
+	
+	
+	/**
+	 * Downsample an image
+	 * 
+	 * @param source the source image
+	 * @param scale scaling factor
+	 * @param v vertical kernel
+	 * 
+	 * @return convolved image
+	 */
+	final static public FloatProcessor downsample(
+			final FloatProcessor source,
+			final float scale,
+			final float sourceSigma )
+	{
+		assert scale <= 1.0f : "Downsampling requires a scale factor < 1.0";
+		
+		final int ow = source.getWidth();
+		final int oh = source.getHeight();
+		final int w = Math.round( ow * scale );
+		final int h = Math.round( oh * scale );
+		final int l = Math.max( w, h );
+		
+		final FloatProcessor temp = ( FloatProcessor )source.duplicate();
+		if ( scale == 1.0f ) return temp;
+		
+		smoothForScale( temp, scale, sourceSigma );
+		final float[] tempPixels = ( float[] )temp.getPixels();
+		
+		final FloatProcessor target = ( FloatProcessor )source.createProcessor( w, h );
+		final float[] targetPixels = ( float[] )target.getPixels();
+		
+		final int[] lut = new int[ l ];
+		for ( int x = 0; x < l; ++x )
+			lut[ x ] = Math.round( x / scale );
+		
+		for ( int y = 0; y < h; ++y )
+		{
+			final int p = y * w;
+			final int q = lut[ y ] * ow;
+			for ( int x = 0; x < w; ++x )
+				targetPixels[ p + x ] = tempPixels[ q + lut[ x ] ];
+		}
+		
+		return target;
 	}
 }

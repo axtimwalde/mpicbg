@@ -1,0 +1,48 @@
+import ij.IJ;
+import mpicbg.util.DCT;
+import ij.process.ColorProcessor;
+import java.awt.Color;
+import ij.ImagePlus;
+
+void plotSamples( float[] samples, float xMin, float xMax, float yMin, float yMax, ColorProcessor ip, Color c )
+{
+	float scaleX = ip.getWidth() / ( xMax - xMin );
+	float scaleY = ip.getHeight() / ( yMax - yMin );
+	ip.setColor( c );
+	ip.setLineWidth( 3 );
+	for ( int x = 0; x < samples.length; ++x )
+		ip.drawDot(
+			Math.round( ( x - xMin ) * scaleX ),
+			Math.round( ( samples[ x ] - yMin ) * scaleY ) );
+}
+
+void plotDCT( float[] coefficients, float xMin, float xMax, float yMin, float yMax, ColorProcessor ip, Color c )
+{
+	float scaleX = ip.getWidth() / ( xMax - xMin );
+	float scaleY = ip.getHeight() / ( yMax - yMin );
+	ip.setColor( c );
+	ip.setLineWidth( 1 );
+	int lastX = 0;
+	int lastY = Math.round( ( DCT.idct( coefficients, xMin, samples.length ) - yMin ) * scaleY );
+	int currentX;
+	int currentY;
+	for ( int x = 1; x < ip.getWidth(); ++x )
+	{
+		currentX = x;
+		currentY = Math.round( ( DCT.idct( coefficients, ( float )x / scaleX + xMin, samples.length ) - yMin ) * scaleY );
+		ip.drawLine( lastX, lastY, currentX, currentY );
+		lastX = currentX;
+		lastY = currentY;
+	}
+}
+
+float[] samples = new float[]{ 10, 20, 15, -20, 0, -10 };
+float[] coefficients = new float[ samples.length ];
+DCT.dct( samples, coefficients );
+
+ColorProcessor ip = new ColorProcessor( 512, 512 );
+
+plotDCT( coefficients, -1, 6, -25, 25, ip, Color.green );
+plotSamples( samples, -1, 6, -25, 25, ip, Color.red );
+
+new ImagePlus( "samplePlot", ip ).show();

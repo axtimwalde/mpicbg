@@ -62,10 +62,13 @@ public class TransformMeshMapping extends InvertibleTransformMapping< TransformM
 		final float[] max = new float[ 2 ];
 		calculateBoundingBox( pm, min, max );
 		
+		final int maxX = ( int )max[ 0 ];
+		final int maxY = ( int )max[ 1 ];
+		
 		final float[] t = new float[ 2 ];
-		for ( int y = ( int )min[ 1 ]; y <= ( int )max[ 1 ]; ++y )
+		for ( int y = ( int )min[ 1 ]; y <= maxY; ++y )
 		{
-			for ( int x = ( int )min[ 0 ]; x <= ( int )max[ 0 ]; ++x )
+			for ( int x = ( int )min[ 0 ]; x <= maxX; ++x )
 			{
 				t[ 0 ] = x;
 				t[ 1 ] = y;
@@ -80,7 +83,7 @@ public class TransformMeshMapping extends InvertibleTransformMapping< TransformM
 						//e.printStackTrace( System.err );
 						continue;
 					}
-					target.putPixel( x, y, source.getPixel( ( int )t[ 0 ], ( int )t[ 1 ] ) );
+					target.putPixel( x, y, source.getPixel( ( int )( t[ 0 ] + 0.5f ), ( int )( t[ 1 ] + 0.5f ) ) );
 				}
 			}
 		}
@@ -97,10 +100,13 @@ public class TransformMeshMapping extends InvertibleTransformMapping< TransformM
 		final float[] max = new float[ 2 ];
 		calculateBoundingBox( pm, min, max );
 		
+		final int maxX = ( int )max[ 0 ];
+		final int maxY = ( int )max[ 1 ];
+		
 		final float[] t = new float[ 2 ];
-		for ( int y = ( int )min[ 1 ]; y <= max[ 1 ]; ++y )
+		for ( int y = ( int )min[ 1 ]; y <= maxY; ++y )
 		{
-			for ( int x = ( int )min[ 0 ]; x <= max[ 0 ]; ++x )
+			for ( int x = ( int )min[ 0 ]; x <= maxX; ++x )
 			{
 				t[ 0 ] = x;
 				t[ 1 ] = y;
@@ -121,25 +127,21 @@ public class TransformMeshMapping extends InvertibleTransformMapping< TransformM
 		}
 	}
 	
-	//@Override
+	@Override
 	final public void map(
 			final ImageProcessor source,
 			final ImageProcessor target )
 	{
-		target.setColor( Color.black );
-		target.fill();
 		final Set< AffineModel2D > s = transform.getAV().keySet();
 		for ( final AffineModel2D ai : s )
 			mapTriangle( transform, ai, source, target );
 	}
 	
-	//@Override
+	@Override
 	final public void mapInterpolated(
 			final ImageProcessor source,
 			final ImageProcessor target )
 	{
-		target.setColor( Color.black );
-		target.fill();
 		final Set< AffineModel2D > s = transform.getAV().keySet();
 		for ( final AffineModel2D ai : s )
 			mapTriangleInterpolated( transform, ai, source, target );
@@ -184,17 +186,20 @@ public class TransformMeshMapping extends InvertibleTransformMapping< TransformM
 		final float[] max = new float[ 2 ];
 		calculateBoundingBoxInverse( pm, min, max );
 		
+		final int maxX = ( int )max[ 0 ];
+		final int maxY = ( int )max[ 1 ];
+		
 		final float[] t = new float[ 2 ];
-		for ( int y = ( int )min[ 1 ]; y <= ( int )max[ 1 ]; ++y )
+		for ( int y = ( int )min[ 1 ]; y <= maxY; ++y )
 		{
-			for ( int x = ( int )min[ 0 ]; x <= ( int )max[ 0 ]; ++x )
+			for ( int x = ( int )min[ 0 ]; x <= maxX; ++x )
 			{
 				t[ 0 ] = x;
 				t[ 1 ] = y;
 				if ( TransformMesh.isInSourcePolygon( pm, t ) )
 				{
 					ai.applyInPlace( t );
-					target.putPixel( x, y, source.getPixel( ( int )t[ 0 ], ( int )t[ 1 ] ) );
+					target.putPixel( x, y, source.getPixel( ( int )( t[ 0 ] + 0.5f ), ( int )( t[ 1 ] + 0.5f ) ) );
 				}
 			}
 		}
@@ -211,10 +216,13 @@ public class TransformMeshMapping extends InvertibleTransformMapping< TransformM
 		final float[] max = new float[ 2 ];
 		calculateBoundingBoxInverse( pm, min, max );
 		
+		final int maxX = ( int )max[ 0 ];
+		final int maxY = ( int )max[ 1 ];
+		
 		final float[] t = new float[ 2 ];
-		for ( int y = ( int )min[ 1 ]; y <= max[ 1 ]; ++y )
+		for ( int y = ( int )min[ 1 ]; y <= maxY; ++y )
 		{
-			for ( int x = ( int )min[ 0 ]; x <= max[ 0 ]; ++x )
+			for ( int x = ( int )min[ 0 ]; x <= maxX; ++x )
 			{
 				t[ 0 ] = x;
 				t[ 1 ] = y;

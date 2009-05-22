@@ -51,7 +51,7 @@ final public class Util
 	 * @param range the size of the range
 	 * @return a flipped in range like a ping pong ball
 	 */
-	final static public int flipInRange( int a, final int mod )
+	final static public int pingPong( int a, final int mod )
 	{
 		final int p = 2 * mod;
 		if ( a < 0 ) a = p + a % p;

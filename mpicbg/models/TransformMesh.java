@@ -5,6 +5,7 @@ import java.awt.geom.GeneralPath;
 import java.util.ArrayList;
 import java.util.Set;
 import java.util.HashMap;
+import java.util.Map.Entry;
 
 /**
  * Trianguar transformation mesh.
@@ -68,8 +69,8 @@ public class TransformMesh implements InvertibleCoordinateTransform
 		this.width = width;
 		this.height = height;
 		
-		final float dy = height / ( numYs - 1 );
-		final float dx = width / ( numXs - 1 );
+		final float dy = ( height - 1 ) / ( numYs - 1 );
+		final float dx = ( width - 1 ) / ( numXs - 1 );
 		
 		int i = 0;
 		for ( int xi = 0; xi < numXs; ++xi )
@@ -577,5 +578,99 @@ public class TransformMesh implements InvertibleCoordinateTransform
 			}
 		}
 		throw new NoninvertibleModelException( "Noninvertible location ( " + location[ 0 ] + ", " + location[ 1 ] + " )" );
+	}
+	
+	/**
+	 * TODO Not yet tested
+	 */
+	//@Override
+	public TransformMesh createInverse()
+	{
+		final TransformMesh ict = new TransformMesh( 0, 0, width, height );
+		
+		final Set< PointMatch > v = va.keySet();
+		final HashMap< PointMatch, PointMatch > vv = new HashMap< PointMatch, PointMatch >();
+		
+		for ( final PointMatch p : v )
+		{
+			final float[] l = p.getP1().getL();
+			final float[] w = p.getP2().getW();
+			
+			final Point pi1 = new Point( w.clone() );
+			final Point pi2 = new Point( w.clone() );
+			final float[] pi2w = pi2.getW();
+			for ( int i = 0; i < pi2w.length; ++i )
+				pi2w[ i ] = l[ i ];
+			
+			final PointMatch pim = new PointMatch( pi1, pi2 );
+			
+			vv.put( p, pim );
+		}
+		
+		ict.va.clear();
+		ict.av.clear();
+		
+		for ( final Entry< PointMatch, PointMatch > e : vv.entrySet() )
+			ict.va.put( e.getValue(), new ArrayList< AffineModel2D >() );
+		
+		for ( final Entry< AffineModel2D, ArrayList< PointMatch > > e : av.entrySet() )
+		{
+			final ArrayList< PointMatch > pm = new ArrayList< PointMatch >();
+			final AffineModel2D a = new AffineModel2D();
+			for ( final PointMatch p : e.getValue() )
+			{
+				final PointMatch q = vv.get( p );
+				va.get( q ).add( a );
+				pm.add( q );
+			}
+			ict.av.put( a, pm );
+		}
+		
+		ict.updateAffines();
+		
+		return ict;
+	}
+	
+	/**
+	 * Initialize the mesh with a {@link CoordinateTransform}.
+	 * 
+	 * @param t
+	 */
+	public void init( final CoordinateTransform t )
+	{
+		final Set< PointMatch > vertices = va.keySet();
+		for ( final PointMatch vertex : vertices )
+			vertex.getP2().apply( t );
+		
+		updateAffines();
+	}
+	
+	/**
+	 * Scale all vertex coordinates
+	 * 
+	 * @param scale
+	 */
+	public void scale( final float scale )
+	{
+		for ( final PointMatch m : va.keySet() )
+		{
+			final Point p1 = m.getP1();
+			final Point p2 = m.getP2();
+			
+			final float[] l1 = p1.getL();
+			final float[] w1 = p1.getW();
+			final float[] l2 = p2.getL();
+			final float[] w2 = p2.getW();
+			
+			for ( int i = 0; i < l1.length; ++i )
+			{
+				l1[ i ] *= scale;
+				w1[ i ] *= scale;
+				l2[ i ] *= scale;
+				w2[ i ] *= scale;
+			}
+			
+			updateAffines();
+		}
 	}
 }

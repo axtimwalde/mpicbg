@@ -210,6 +210,19 @@ public class PointMatch implements Serializable
 	}
 	
 	/**
+	 * Apply a {@link CoordinateTransform} to {@link #p1} a {@link Collection}
+	 * of {@link PointMatch PointMatches}, update their distances.
+	 * 
+	 * @param matches
+	 * @param t
+	 */
+	static public void apply( final Collection< PointMatch > matches, final CoordinateTransform t )
+	{
+		for ( final PointMatch match : matches )
+			match.apply( t );
+	}
+	
+	/**
 	 * Flip all {@link PointMatch PointMatches} from
 	 * {@linkplain Collection matches} symmetrically and fill
 	 * {@linkplain Collection flippedMatches} with them, weights remain
@@ -253,5 +266,13 @@ public class PointMatch implements Serializable
 	{
 		for ( final PointMatch m : matches )
 			targetPoints.add( m.getP2() );
+	}
+	
+	static public float meanDistance( final Collection< PointMatch > matches )
+	{
+		double d = 0.0;
+		for ( final PointMatch match : matches )
+			d += match.getDistance();
+		return ( float )( d / matches.size() );
 	}
 }

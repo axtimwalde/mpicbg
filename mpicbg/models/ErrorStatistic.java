@@ -1,15 +1,25 @@
 package mpicbg.models;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.lang.IndexOutOfBoundsException;
 import java.util.ListIterator;
 
+import mpicbg.util.RingBuffer;
+
 public class ErrorStatistic
 {
-	final public ArrayList< Double > values = new ArrayList< Double >();
-	final public ArrayList< Double > slope = new ArrayList< Double >();
-	final public ArrayList< Double > sortedValues = new ArrayList< Double >();
+	final static IndexOutOfBoundsException tooWide = new IndexOutOfBoundsException( "Cannot estimate a wide slope for width larger than than the number of sample." );
+	
+	final public RingBuffer< Double > values;
+	final public RingBuffer< Double > slope;
+	final public RingBuffer< Double > sortedValues;
+	
+	public ErrorStatistic( final int capacity )
+	{
+		values = new RingBuffer< Double >( capacity );
+		slope = new RingBuffer< Double >( capacity );
+		sortedValues = new RingBuffer< Double >( capacity );
+	}
 	
 	public double var0 = 0;		// variance relative to 0
 	public double var = 0;		// variance relative to mean
@@ -36,17 +46,17 @@ public class ErrorStatistic
 	
 	final public void add( double new_value )
 	{
-		if (values.size() > 1 ) slope.add( new_value - values.get( values.size() - 1 ) );
+		if (values.size() > 1 ) slope.add( new_value - values.get( values.lastIndex() ) );
 		else slope.add( 0.0 );
-		mean = ( mean * values.size() + new_value );
+		mean = ( mean * values.lastIndex() + new_value );
 		values.add( new_value );
-		mean /= values.size();
+		mean /= values.lastIndex();
 		
-		var0 += new_value * new_value / ( double )( values.size() - 1 );
+		var0 += new_value * new_value / ( double )( values.lastIndex() );
 		std0 = Math.sqrt( var0 );
 		
 		double tmp = new_value - mean;
-		var += tmp * tmp / ( double )( values.size() - 1 );
+		var += tmp * tmp / ( double )( values.lastIndex() );
 		std = Math.sqrt( var );
 		
 		sortedValues.add( new_value );
@@ -57,16 +67,23 @@ public class ErrorStatistic
 	
 	final public double getWideSlope( int width ) throws IndexOutOfBoundsException
 	{
-		if ( width > slope.size() ) throw new IndexOutOfBoundsException( "Cannot estimate a wide slope for width larger than than the number of sample." );
-		ListIterator< Double > li = slope.listIterator( slope.size() - 1 );
-		int i = 0;
-		double s = 0.0;
-		while ( i < width && li.hasPrevious() )
-		{
-			s += li.previous();
-			++i;
-		}
-		s /= ( double )width;
-		return s;
+//		if ( width > values.size() ) throw tooWide;
+//		ListIterator< Double > li = slope.listIterator( slope.size() - 1 );
+//		int i = 0;
+//		double s = 0.0;
+//		while ( i < width && li.hasPrevious() )
+//		{
+//			s += li.previous();
+//			++i;
+//		}
+//		s /= ( double )width;
+//		return s;
+		
+		return ( values.get( values.lastIndex() ) - values.get( values.lastIndex() - width ) ) / width;
+	}
+	
+	public void flush()
+	{
+		
 	}
 }

@@ -277,4 +277,27 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 		this.ty = ty;
 		invert();
 	}
+	
+	/**
+	 * TODO Not yet tested
+	 */
+	//@Override
+	public SimilarityModel2D createInverse()
+	{
+		final SimilarityModel2D ict = new SimilarityModel2D();
+		
+		ict.scos = iscos;
+		ict.ssin = issin;
+		ict.tx = itx;
+		ict.ty = ity;
+		
+		ict.iscos = scos;
+		ict.issin = ssin;
+		ict.itx = tx;
+		ict.ity = ty;
+		
+		ict.cost = cost;
+		
+		return ict;
+	}
 }

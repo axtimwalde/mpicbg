@@ -154,7 +154,12 @@ public class MovingLeastSquaresMesh< M extends Model< M > > extends TransformMes
 			
 			// add a new weight to the existing weights
 			//weights[ oldWeights.length ] = 1.0f / ( float )Math.pow( dx * dx + dy * dy, alpha );
-			weights[ oldWeights.length ] = weigh( 1f + dx * dx + dy * dy, alpha );
+			
+			/*
+			 * TODO The 0.001f constant is a bad trick to be not required to
+			 *   handle the special case that the distance is 0.0 
+			 */
+			weights[ oldWeights.length ] = weigh( 0.001f + dx * dx + dy * dy, alpha );
 			
 			// add a new PointMatch using the same Points as pm
 			final Tile< M > t = pt.get( m );

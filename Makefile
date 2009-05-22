@@ -15,10 +15,13 @@ JAVACOPTS=-classpath ../ij.jar$(CPSEP)$(JAVACOPTSJARS) -target 1.5 -source 1.5
 JAVAS=$(wildcard \
     mpicbg/ij/*.java \
 	mpicbg/ij/blockmatching/*.java \
+	mpicbg/ij/util/*.java \
 	mpicbg/imagefeatures/*.java \
     mpicbg/models/*.java \
     mpicbg/trakem2/*.java \
     mpicbg/util/*.java \
+	Align_SIFT_Blockmatching.java \
+	Elastic_Align.java \
 	MOPS_ExtractPointRoi.java \
 	SIFT_Align.java \
 	SIFT_ExtractPointRoi.java \
@@ -28,6 +31,7 @@ JAVAS=$(wildcard \
 	Transform_Perspective.java \
 	Transform_Rigid.java \
 	Transform_Similarity.java \
+	Transform_SpringMesh.java \
 	Transform_Roi.java)
 RESOURCES ?= plugins.config \
 	LICENSE

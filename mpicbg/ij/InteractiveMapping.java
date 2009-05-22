@@ -66,8 +66,6 @@ public abstract class InteractiveMapping implements PlugIn, MouseListener, Mouse
 		imp = IJ.getImage();
 		target = imp.getProcessor();
 		source = target.duplicate();
-		target = source.createProcessor( source.getWidth(), source.getHeight() );
-		target.snapshot();
 		
 		init();
 		
@@ -189,7 +187,8 @@ public abstract class InteractiveMapping implements PlugIn, MouseListener, Mouse
 				synchronized ( painter )
 				{
 					//if ( !pleaseRepaint.getAndSet( true ) )
-						painter.notify();
+					pleaseRepaint.set( true );
+					painter.notify();
 				}
 			}
 			catch ( NotEnoughDataPointsException ex ){}
@@ -219,7 +218,8 @@ public abstract class InteractiveMapping implements PlugIn, MouseListener, Mouse
 					synchronized ( painter )
 					{
 						//if ( !pleaseRepaint.getAndSet( true ) )
-							painter.notify();
+						pleaseRepaint.set( true );
+						painter.notify();
 					}
 				}
 			}

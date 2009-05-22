@@ -10,14 +10,15 @@ package mpicbg.util;
 final public class DCT
 {
 	/**
-	 * Transfer data values into DCT coefficients.
+	 * Transfer data values into DCT coefficients.  The x-spacing of data
+	 * values is 1. 
 	 * 
 	 * @param f source data values
 	 * @param c destination dct coefficients
 	 */
-	final static public void dct( float[] f, float c[] )
+	static public void dct( final float[] f, final float c[] )
 	{
-		float pn = ( float )( Math.PI / f.length );
+		final float pn = ( float )( Math.PI / f.length );
 		for ( int x = 0; x < f.length; ++x )
 		{
 			c[ 0 ] += f[ x ];
@@ -31,6 +32,22 @@ final public class DCT
 			}
 			c[ k ] /= f.length;
 		}
+	}
+	
+	/**
+	 * Reconstruct a sample from DCT coefficients.
+	 * 
+	 * @param c source DCT coefficients
+	 * @param x sample location
+	 */
+	static public float idct( final float[] c, final float x, final float lambda )
+	{
+		float f = c[ 0 ] * ( float )( 1.0 / Math.sqrt( 2 ) );
+		for ( int k = 1; k < c.length; ++k )
+		{
+			f += c[ k ] * ( float )Math.cos( Math.PI * k * ( x + 0.5 ) / lambda );
+		}
+		return f * 2;
 	}
 	
 	/**

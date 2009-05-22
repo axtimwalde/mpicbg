@@ -33,7 +33,7 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	static final protected int MIN_NUM_MATCHES = 2;
 	
 	protected float cos = 1.0f, sin = 0.0f, tx = 0.0f, ty = 0.0f;
-	private float itx = 0.0f, ity = 0.0f;
+	protected float itx = 0.0f, ity = 0.0f;
 	
 	
 	@Override
@@ -256,5 +256,24 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 		this.ty = ty;
 		
 		invert();
+	}
+	
+	/**
+	 * TODO Not yet tested
+	 */
+	//@Override
+	public RigidModel2D createInverse()
+	{
+		final RigidModel2D ict = new RigidModel2D();
+		
+		ict.cos = cos;
+		ict.sin = -sin;
+		ict.tx = itx;
+		ict.ty = ity;
+		ict.itx = tx;
+		ict.ity = ty;
+		ict.cost = cost;
+		
+		return ict;
 	}
 }

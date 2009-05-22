@@ -216,12 +216,12 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 				float xr = cos_o * xs - sin_o * ys; //!< rotate x around 0,0
 
 				// translate ys to sample y position in the gradient image
-				int yg = Util.flipInRange(
+				int yg = Util.pingPong(
 						( int )( Math.round( yr + c[ 1 ] / O_SCALE ) ),
 						l.height );
 
 				// translate xs to sample x position in the gradient image
-				int xg = Util.flipInRange(
+				int xg = Util.pingPong(
 						( int )( Math.round( xr + c[ 0 ] / O_SCALE ) ),
 						l.width );
 

@@ -1,0 +1,92 @@
+import mpicbg.util.RingBuffer;
+import java.util.Iterator;
+import java.util.ListIterator;
+import ij.IJ;
+
+printUnordered()
+{
+	String a = "[ ";
+	for( j : rb )
+		a += j + " ";
+	IJ.log( a + "] : nextIndex = " + rb.nextIndex() + "; size = " + rb.size() );
+}
+
+printOrdered()
+{
+	String a = "[ ";
+	ListIterator i = rb.listIterator();
+	while( i.hasNext() )
+		a += i.next() + " ";
+	IJ.log( a + "] : nextIndex = " + rb.nextIndex() + "; size = " + rb.size() );
+}
+
+print()
+{
+	IJ.log( "v unordered" );
+	printUnordered();
+	printOrdered();
+	IJ.log( "^ ordered" );
+}
+
+IJ.log( ">>> Test mpicbg.utils.RingBuffer >>>" );
+
+String a;
+
+IJ.log( "Creating RingBuffer" );
+RingBuffer rb = new RingBuffer( 5 );
+print();
+
+IJ.log( "Adding elements" );
+for ( i = 0; i < 10; ++i )
+{
+	rb.add( i );
+	print();
+}
+
+ListIterator rbi = rb.listIterator();
+a = "";
+IJ.log( "forward" );
+while ( rbi.hasNext() )
+{
+	a += rbi.next() + " ";
+}
+IJ.log( a );
+a = "";
+IJ.log( "back" );
+while ( rbi.hasPrevious() )
+{
+	a += rbi.previous() + " ";
+}
+IJ.log( a );
+
+ListIterator rbi = rb.listIterator( 8 );
+a = "";
+IJ.log( "forward" );
+while ( rbi.hasNext() )
+{
+	a += rbi.next() + " ";
+}
+IJ.log( a );
+
+IJ.log( "Adding elements at index" );
+rb.add( 8, 20 );
+print();
+
+IJ.log( "Clear" );
+rb.clear();
+print();
+
+IJ.log( "Adding elements" );
+rb.add( 100 );
+print();
+
+IJ.log( "Adding elements at index" );
+rb.add( 0, 20 );
+print();
+
+IJ.log( "Adding element" );
+rb.add( 3 );
+print();
+
+IJ.log( "Removing element at index 1 : " + rb.remove( 1 ) );
+print();

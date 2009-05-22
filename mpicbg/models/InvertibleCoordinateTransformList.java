@@ -13,7 +13,6 @@ import mpicbg.util.Util;
  */
 public class InvertibleCoordinateTransformList implements InvertibleBoundable
 {
-
 	final protected List< InvertibleCoordinateTransform > l = new ArrayList< InvertibleCoordinateTransform >();
 	
 	public void add( InvertibleCoordinateTransform t ){ l.add( t ); }
@@ -173,5 +172,15 @@ public class InvertibleCoordinateTransformList implements InvertibleBoundable
 			min[ k ] = minBounds[ k ];
 			max[ k ] = maxBounds[ k ];
 		}
+	}
+	
+	//@Override
+	public InvertibleCoordinateTransformList createInverse()
+	{
+		final InvertibleCoordinateTransformList ict = new InvertibleCoordinateTransformList();
+		final ListIterator< InvertibleCoordinateTransform > i = l.listIterator( l.size() );
+		while ( i.hasPrevious() )
+			ict.add( i.previous().createInverse() );
+		return ict;
 	}
 }

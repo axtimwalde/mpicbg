@@ -1,0 +1,11 @@
+import ij.IJ;
+import ij.ImagePlus;
+import ij.process.FloatProcessor;
+import mpicbg.ij.util.Filter;
+
+new ImagePlus(
+		"downsampled",
+		Filter.downsample(
+			( FloatProcessor )IJ.getImage().getProcessor().convertToFloat(),
+			300f / 4096f,
+			0.5f ) ).show();

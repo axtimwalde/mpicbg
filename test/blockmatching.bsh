@@ -1,0 +1,168 @@
+import mpicbg.ij.blockmatching.BlockMatching;
+import mpicbg.models.RigidModel2D;
+import mpicbg.models.AffineModel2D;
+import ij.ImagePlus;
+import ij.process.FloatProcessor;
+import ij.IJ;
+import java.util.ArrayList;
+import java.util.Collection;
+import mpicbg.models.Point;
+import mpicbg.models.PointMatch;
+import java.awt.Color;
+import ij.gui.PointRoi;
+import mpicbg.ij.util.Util;
+import mpicbg.models.MovingLeastSquaresTransform;
+import mpicbg.models.CoordinateTransformMesh;
+import mpicbg.ij.TransformMeshMapping;
+import mpicbg.ij.InvertibleTransformMapping;
+
+IJ.run( "Lena (68K)" );
+imp1 = IJ.getImage();
+
+m = new MovingLeastSquaresTransform();
+m.setModel( RigidModel2D.class );
+m.setAlpha( 0.5f );
+
+matches = new ArrayList();
+matches.add(
+		new PointMatch(
+				new Point( new float[]{ 80, 80 } ),
+				new Point( new float[]{ 120, 80 } ) ) );
+matches.add(
+		new PointMatch(
+				new Point( new float[]{ 432, 432 } ),
+				new Point( new float[]{ 392, 432 } ) ) );
+matches.add(
+		new PointMatch(
+				new Point( new float[]{ 432, 80 } ),
+				new Point( new float[]{ 432, 120 } ) ) );
+matches.add(
+		new PointMatch(
+				new Point( new float[]{ 255, 255 } ),
+				new Point( new float[]{ 275, 235 } ) ) );
+m.setMatches( matches );
+
+mesh = new CoordinateTransformMesh( m, 32, imp1.getWidth(), imp1.getHeight() );
+
+approximatedModel = new AffineModel2D();
+approximatedModel.fit( mesh.getVA().keySet() );
+PointMatch.apply( mesh.getVA().keySet(), approximatedModel );
+IJ.log( "Average approximation error : " + PointMatch.meanDistance( mesh.getVA().keySet() ) );
+
+mapping = new TransformMeshMapping( mesh );
+//mapping = new InvertibleTransformMapping( approximatedModel );
+
+ip = imp1.getProcessor().createProcessor( imp1.getWidth(), imp1.getHeight() );
+mapping.mapInterpolated( imp1.getProcessor(), ip );
+
+imp2 = new ImagePlus( "lena-std deformed", ip );
+imp2.show();
+	
+
+//IJ.open( "/home/saalfeld/Desktop/original.jpg" );
+//imp1 = IJ.getImage();
+
+//IJ.open( "/home/saalfeld/Desktop/westwoodbl.tif" );
+//imp2 = IJ.getImage();
+
+//transform = new RigidModel2D();
+//transform.set( ( float )Math.PI/2 - 0.01f, imp1.getHeight() - 1 - 4, 0 );
+//transform.set( ( float )Math.PI/2, imp1.getHeight() - 1, 0 );
+//transform = mesh;
+
+transform = approximatedModel;
+
+
+fp1 = imp1.getProcessor().duplicate().convertToFloat();
+fp2 = imp2.getProcessor().duplicate().convertToFloat();
+
+sourcePoints = new ArrayList();
+
+int n = 8;
+
+for ( y = 0; y <= n; ++y )
+{
+	for ( x = 0; x <= n; ++x )
+		sourcePoints.add( new Point( new float[]{ x * ( imp1.getWidth() - 1 ) / ( n - 1 ), y * ( imp1.getHeight() - 1 ) / ( n - 1 ) } ) );
+}
+
+/*
+BlockMatching.matchByMinimalSquareDifference(
+	fp1,
+	fp2,
+	1.0f,
+	transform,
+	48,
+	48,
+	48,
+	48,
+	sourcePoints,
+	sourceMatches );
+*/
+
+
+groundTruthSourceMatches = new ArrayList();
+for ( Point p : sourcePoints )
+{
+	float[] t = mesh.apply( p.getL() );
+	groundTruthSourceMatches.add( new PointMatch( p, new Point( t ) ) );
+}
+for ( i = 1; i < 20; ++i )
+{
+	ArrayList sourceMatches = new ArrayList();
+	IJ.log( "" + i );
+	try
+	{
+		BlockMatching.matchByMaximalPMCC(
+			fp1,
+			fp2,
+			1.0f / i,
+			transform,
+			imp1.getWidth() / ( n - 1 ),
+			imp1.getWidth() / ( n - 1 ),
+			32,
+			32,
+			0,
+			sourcePoints,
+			sourceMatches );
+	}
+	catch ( e ) { e.printStackTrace(); }	
+	
+	double mean = 0;
+	float max = 0;
+	float min = Float.MAX_VALUE;
+	float histBinWidth = 1.0f;
+	int[] hist = new int[ 10 ];
+	for ( PointMatch p : sourceMatches )
+	{
+		for ( PointMatch po : groundTruthSourceMatches )
+			if ( po.getP1() == p.getP1() )
+			{
+				float d = Point.distance( po.getP2(), p.getP2() );
+				if ( d < min ) min = d;
+				if ( d > max ) max = d;
+				mean += d;
+				for ( h = 0; h < hist.length; ++h )
+					if ( d < ( h + 1 ) * histBinWidth && d > h * histBinWidth ) ++hist[ h ];
+			}
+	}
+	mean /= sourceMatches.size();
+	IJ.log( "1 / " + i + " : " + mean + " in [" + min + ", " + max + "]" );
+	histStr = "  error histogram";
+	for ( h = 0; h < hist.length; ++h )
+		histStr += ( h * histBinWidth ) + " : " + hist[ h ] + " | ";
+	IJ.log( histStr );
+}
+
+sourcePoints = new ArrayList();
+targetPoints = new ArrayList();
+
+PointMatch.sourcePoints( sourceMatches, sourcePoints );
+PointMatch.targetPoints( sourceMatches, targetPoints );
+
+imp1.getCanvas().setDisplayList( BlockMatching.illustrateMatches( sourceMatches ), Color.white, null );
+imp1.setRoi( Util.pointsToPointRoi( sourcePoints) );
+imp2.setRoi( Util.pointsToPointRoi( targetPoints) );
+
+
+

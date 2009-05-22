@@ -92,7 +92,7 @@ public class MovingLeastSquaresTransform implements CoordinateTransform
 					location[ i ] = w[ i ];
 				return;
 			}
-			final float weight = m.getWeight() * ( float )weigh( Math.sqrt( s ) );
+			final float weight = m.getWeight() * ( float )weigh( s );
 			final PointMatch mw = new PointMatch( m.getP1(), m.getP2(), weight );
 			weightedMatches.add( mw );
 		}

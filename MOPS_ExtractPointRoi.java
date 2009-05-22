@@ -282,10 +282,10 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 				float[] m_p1 = m.getP1().getL(); 
 				float[] m_p2 = m.getP2().getL();
 				
-				x1[ i ] = ( int )( m_p1[ 0 ] );
-				y1[ i ] = ( int )( m_p1[ 1 ] );
-				x2[ i ] = ( int )( m_p2[ 0 ] );
-				y2[ i ] = ( int )( m_p2[ 1 ] );
+				x1[ i ] = Math.round( m_p1[ 0 ] );
+				y1[ i ] = Math.round( m_p1[ 1 ] );
+				x2[ i ] = Math.round( m_p2[ 0 ] );
+				y2[ i ] = Math.round( m_p2[ 1 ] );
 				
 				i1.add( m1.get( m.getP1() ) );
 				i2.add( m2.get( m.getP2() ) );

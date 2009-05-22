@@ -237,12 +237,17 @@ public class AffineModel3D extends InvertibleModel< AffineModel3D >
 	{
 		AffineModel3D m = new AffineModel3D();
 		m.m00 = m00;
-		m.m01 = m01;
 		m.m10 = m10;
+		m.m20 = m20;
+		m.m01 = m01;
 		m.m11 = m11;
-
+		m.m21 = m21;
 		m.m02 = m02;
 		m.m12 = m12;
+		m.m22 = m22;
+		m.m03 = m03;
+		m.m13 = m13;
+		m.m23 = m23;
 		
 		m.cost = cost;
 		
@@ -378,5 +383,44 @@ public class AffineModel3D extends InvertibleModel< AffineModel3D >
 			m00 + ", " + m01 + ", " + m02 + ", " + m03 + ", " +
 			m10 + ", " + m11 + ", " + m12 + ", " + m13 + ", " +
 			m20 + ", " + m21 + ", " + m22 + ", " + m23 + ")";
+	}
+	
+	/**
+	 * TODO Not yet tested
+	 */
+	//@Override
+	final public AffineModel3D createInverse()
+	{
+		final AffineModel3D ict = new AffineModel3D();
+		
+		ict.m00 = i00;
+		ict.m10 = i10;
+		ict.m20 = i20;
+		ict.m01 = i01;
+		ict.m11 = i11;
+		ict.m21 = i21;
+		ict.m02 = i02;
+		ict.m12 = i12;
+		ict.m22 = i22;
+		ict.m03 = i03;
+		ict.m13 = i13;
+		ict.m23 = i23;
+		
+		ict.i00 = m00;
+		ict.i10 = m10;
+		ict.i20 = m20;
+		ict.i01 = m01;
+		ict.i11 = m11;
+		ict.i21 = m21;
+		ict.i02 = m02;
+		ict.i12 = m12;
+		ict.i22 = m22;
+		ict.i03 = m03;
+		ict.i13 = m13;
+		ict.i23 = m23;
+		
+		ict.cost = cost;
+		
+		return ict;
 	}
 }

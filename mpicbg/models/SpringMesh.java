@@ -30,6 +30,7 @@ public class SpringMesh extends TransformMesh
 {
 	final protected HashSet< Vertex > fixedVertices = new HashSet< Vertex >();
 	final protected HashSet< Vertex > vertices = new HashSet< Vertex >();
+	public Set< Vertex > getVertices(){ return vertices; }
 	final protected HashMap< Vertex, PointMatch > vp = new HashMap< Vertex, PointMatch >();
 	final protected HashMap< PointMatch, Vertex > pv = new HashMap< PointMatch, Vertex >();
 	public int numVertices(){ return pv.size(); }
@@ -315,6 +316,7 @@ public class SpringMesh extends TransformMesh
 		float maxSpeed = Float.MIN_VALUE;
 		minForce = Double.MAX_VALUE;
 		maxForce = 0.0;
+		force = 0;
 		synchronized ( this )
 		{
 			/* active vertices */
@@ -367,27 +369,114 @@ public class SpringMesh extends TransformMesh
 			final int maxIterations,
 			final int maxPlateauwidth ) throws NotEnoughDataPointsException 
 	{
-		final ErrorStatistic observer = new ErrorStatistic();
+		final ErrorStatistic observer = new ErrorStatistic( maxPlateauwidth + 1 );
 		
 		int i = 0;
 		
-		while ( i < maxIterations )  // do not run forever
+		boolean proceed = i < maxIterations;
+		
+		while ( proceed )
 		{
 			optimizeStep( observer );
 			
-			if (
-					i >= maxPlateauwidth &&
-					observer.values.get( observer.values.size() - 1 ) < maxError &&
-					Math.abs( observer.getWideSlope( maxPlateauwidth ) ) <= 0.0001 &&
-					Math.abs( observer.getWideSlope( maxPlateauwidth / 2 ) ) <= 0.0001 )
-				break;
+			if ( i > maxPlateauwidth )
+			{
+				proceed = observer.values.get( observer.values.lastIndex() ) > maxError;
+				
+				int d = maxPlateauwidth;
+				while ( !proceed && d >= 1 )
+				{
+					try
+					{
+						proceed |= Math.abs( observer.getWideSlope( d ) ) > 0.0001;
+					}
+					catch ( Exception e ) { e.printStackTrace(); }
+					d /= 2;
+				}
+			}
 			
-			++i;
+			proceed &= ++i < maxIterations;
 		}
 		
 		updateAffines();
 		
 		System.out.println( "Successfully optimized configuration of " + vertices.size() + " vertices after " + i + " iterations:" );
+		System.out.println( "  average force: " + decimalFormat.format( force ) + "N" );
+		System.out.println( "  minimal force: " + decimalFormat.format( minForce ) + "N" );
+		System.out.println( "  maximal force: " + decimalFormat.format( maxForce ) + "N" );
+	}
+	
+	/**
+	 * Optimize a {@link Collection} of connected {@link SpringMesh SpringMeshes}.
+	 * 
+	 * @param maxError do not accept convergence if error is > max_error
+	 * @param maxIterations stop after that many iterations even if there was
+	 *   no minimum found
+	 * @param maxPlateauwidth convergence is reached if the average slope in
+	 *   an interval of this size is 0.0 (in double accuracy).  This prevents
+	 *   the algorithm from stopping at plateaus smaller than this value.
+	 * 
+	 */
+	public static void optimizeMeshes(
+			final Collection< SpringMesh > meshes,
+			final float maxError,
+			final int maxIterations,
+			final int maxPlateauwidth ) throws NotEnoughDataPointsException 
+	{
+		final ErrorStatistic observer = new ErrorStatistic( maxPlateauwidth + 1 );
+		final ErrorStatistic singleMeshObserver = new ErrorStatistic( maxPlateauwidth + 1 );
+		
+		int i = 0;
+		
+		double force = 0;
+		double maxForce = 0;
+		double minForce = 0;
+		
+		boolean proceed = i < maxIterations;
+		
+		while ( proceed )
+		{
+			force = 0;
+			maxForce = -Double.MAX_VALUE;
+			minForce = Double.MAX_VALUE;
+			
+			for ( final SpringMesh mesh : meshes )
+			{
+				mesh.optimizeStep( singleMeshObserver );
+				force += mesh.getForce();
+				final double meshMaxForce = mesh.maxForce;
+				final double meshMinForce = mesh.minForce;
+				if ( meshMaxForce > maxForce ) maxForce = meshMaxForce;
+				if ( meshMinForce < minForce ) minForce = meshMinForce;
+			}
+			observer.add( force / meshes.size() );
+			
+			if ( i > maxPlateauwidth )
+			{
+				proceed = force > maxError;
+				
+				int d = maxPlateauwidth;
+				while ( !proceed && d >= 1 )
+				{
+					try
+					{
+						proceed |= Math.abs( observer.getWideSlope( d ) ) > 0.0001;
+					}
+					catch ( Exception e ) { e.printStackTrace(); }
+					d /= 2;
+				}
+			}
+			
+			proceed &= ++i < maxIterations;
+		}
+		
+		for ( final SpringMesh mesh : meshes )
+		{
+			mesh.updateAffines();
+			mesh.updatePassiveVertices();
+		}
+		
+		System.out.println( "Successfully optimized " + meshes.size() + " meshes after " + i + " iterations:" );
 		System.out.println( "  average force: " + decimalFormat.format( force ) + "N" );
 		System.out.println( "  minimal force: " + decimalFormat.format( minForce ) + "N" );
 		System.out.println( "  maximal force: " + decimalFormat.format( maxForce ) + "N" );
@@ -431,8 +520,58 @@ public class SpringMesh extends TransformMesh
 			path.lineTo( w[ 0 ] + 1, w[ 1 ] );
 			path.lineTo( w[ 0 ], w[ 1 ] + 1 );
 			path.lineTo( w[ 0 ] - 1, w[ 1 ] );
+			path.closePath();
 		}
 		
 		return path;
+	}
+	
+	/**
+	 * TODO Not yet tested
+	 */
+	@Override
+	public void init( final CoordinateTransform t )
+	{
+		super.init( t );
+		updatePassiveVertices();
+	}
+	
+	/**
+	 * TODO Not yet tested
+	 */
+	@Override
+	public void scale( final float scale )
+	{
+		super.scale( scale );
+		
+		/* active vertices */
+		for ( final Vertex v : vertices )
+		{
+			final float[] d = v.getDirection();
+			final float[] f = v.getForces();
+			for ( int i = 0; i < d.length; ++i )
+			{
+				d[ i ] *= scale;
+				f[ i ] *= scale;
+			}
+			for ( final Spring s : v.getSprings() )
+				s.setLength( s.getLength() * scale );
+		}
+		
+		/* passive vertices */
+		for ( final Vertex v : pva.keySet() )
+		{
+			final float[] d = v.getDirection();
+			final float[] f = v.getForces();
+			for ( int i = 0; i < d.length; ++i )
+			{
+				d[ i ] *= scale;
+				f[ i ] *= scale;
+			}
+			for ( final Spring s : v.getSprings() )
+				s.setLength( s.getLength() * scale );
+		}
+		
+		updatePassiveVertices();
 	}
 }

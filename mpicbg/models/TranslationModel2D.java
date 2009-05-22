@@ -144,4 +144,20 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 		this.tx = tx;
 		this.ty = ty;
 	}
+	
+	/**
+	 * TODO Not yet tested
+	 */
+	//@Override
+	public TranslationModel2D createInverse()
+	{
+		final TranslationModel2D ict = new TranslationModel2D();
+		
+		ict.tx = -tx;
+		ict.ty = -ty;
+		
+		ict.cost = cost;
+		
+		return ict;
+	}
 }

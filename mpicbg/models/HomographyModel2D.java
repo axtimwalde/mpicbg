@@ -310,4 +310,18 @@ public class HomographyModel2D extends InvertibleModel< HomographyModel2D > impl
 		max[ 0 ] = maxX;
 		max[ 1 ] = maxY;
 	}
+	
+	/**
+	 * TODO Not yet tested
+	 */
+	//@Override
+	final public HomographyModel2D createInverse()
+	{
+		final HomographyModel2D ict = new HomographyModel2D();
+		ict.a = ( Matrix )inverseA.clone();
+		ict.inverseA = ( Matrix )a.clone();
+		ict.cost = cost;
+		return ict;
+		
+	}
 }

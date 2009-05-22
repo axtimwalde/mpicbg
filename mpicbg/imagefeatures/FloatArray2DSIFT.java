@@ -267,12 +267,12 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 				// improve the result?
 
 				// translate ys to sample y position in the gradient image
-				int yg = Util.flipInRange(
+				int yg = Util.pingPong(
 						( int )( Math.round( yr + c[ 1 ] ) ),
 						gradients[ 0 ].height );
 
 				// translate xs to sample x position in the gradient image
-				int xg = Util.flipInRange(
+				int xg = Util.pingPong(
 						( int )( Math.round( xr + c[ 0 ] ) ),
 						gradients[ 0 ].width );
 

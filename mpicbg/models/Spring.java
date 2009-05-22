@@ -4,7 +4,7 @@ import java.util.Random;
 
 /**
  * A simple spring model.  Instances represent the actual spring only, not the
- * {@link Vertex Vertices} it may interconnect.
+ * {@link Point Points} it may interconnect.
  * 
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.2b
@@ -12,7 +12,11 @@ import java.util.Random;
 public class Spring
 {
 	final static protected Random rnd = new Random( 0 );
-	final protected float length;
+	
+	protected float length;
+	public float getLength() { return length; }
+	public void setLength( final float length ) { this.length = length; }
+	
 	static protected float length(
 			float[] p1,
 			float[] p2 )
@@ -78,25 +82,25 @@ public class Spring
 	}
 	
 	/**
-	 * Estimate the force vector effective to {@link Vertex v1} if this {@link Spring} would
-	 * connect both {@link Vertex Vertices}.
+	 * Estimate the force vector effective to {@link Point p1} if this {@link Spring} would
+	 * connect both {@link Point Vertices}.
 	 *  
-	 * @param v1 
-	 * @param v2
+	 * @param p1 
+	 * @param p2
 	 * @param force
 	 */
 	public void calculateForce(
-			final Vertex v1,
-			final Vertex v2,
+			final Point p1,
+			final Point p2,
 			final float[] force )
 	{
 		assert
-				force.length == v1.getL().length &&
-				force.length == v2.getL().length :
+				force.length == p1.getL().length &&
+				force.length == p2.getL().length :
 				"Both vertices and force have to have the same dimensionality.";
 		
-		final float[] w1 = v1.getW();
-		final float[] w2 = v2.getW();
+		final float[] w1 = p1.getW();
+		final float[] w2 = p2.getW();
 		
 		float lw = length( w1, w2 );
 		final float d = lw - length;
@@ -214,90 +218,90 @@ public class Spring
 	/**
 	 * Constructor
 	 * 
-	 * Create a {@link Spring} between two {@link Vertex Vertices} with an
+	 * Create a {@link Spring} between two {@link Point Points} with an
 	 * Array of weights.  The Array of weights will be copied.
 	 * 
-	 * @param v1 Vertex 1
-	 * @param v2 Vertex 2
+	 * @param p1 Point 1
+	 * @param p2 Point 2
 	 * @param weights Array of weights
 	 */
 	public Spring(
-			final Vertex v1,
-			final Vertex v2,
+			final Point p1,
+			final Point p2,
 			final float[] weights )
 	{
-		this( length( v1.getL(), v2.getL() ), weights );
+		this( length( p1.getL(), p2.getL() ), weights );
 	}
 	
 	/**
 	 * Constructor
 	 * 
-	 * Create a {@link Spring} between two {@link Vertex Vertices} with an
+	 * Create a {@link Spring} between two {@link Point Points} with an
 	 * Array of weights.  The Array of weights will be copied.
 	 * 
-	 * @param v1 Vertex 1
-	 * @param v2 Vertex 2
+	 * @param v1 Point 1
+	 * @param v2 Point 2
 	 * @param weights Array of weights
 	 * @param maxStretch stretch limit
 	 */
 	public Spring(
-			final Vertex v1,
-			final Vertex v2,
+			final Point p1,
+			final Point p2,
 			final float[] weights,
 			final float maxStretch )
 	{
-		this( length( v1.getL(), v2.getL() ), weights, maxStretch );
+		this( length( p1.getL(), p2.getL() ), weights, maxStretch );
 	}
 	
 	
 	/**
 	 * Constructor
 	 * 
-	 * Create a {@link Spring} between two {@link Vertex Vertices} with one weight.
+	 * Create a {@link Spring} between two {@link Point Points} with one weight.
 	 * 
-	 * @param v1 Vertex 1
-	 * @param v2 Vertex 2
+	 * @param p1 Point 1
+	 * @param p2 Point 2
 	 * @param weight Weight
 	 */
 	public Spring(
-			final Vertex v1,
-			final Vertex v2,
+			final Point p1,
+			final Point p2,
 			final float weight )
 	{
-		this( length( v1.getL(), v2.getL() ), weight );
+		this( length( p1.getL(), p2.getL() ), weight );
 	}
 	
 	/**
 	 * Constructor
 	 * 
-	 * Create a {@link Spring} between two {@link Vertex Vertices} with one weight.
+	 * Create a {@link Spring} between two {@link Point Points} with one weight.
 	 * 
-	 * @param v1 Vertex 1
-	 * @param v2 Vertex 2
+	 * @param p1 Point 1
+	 * @param p2 Point 2
 	 * @param weight Weight
 	 * @param maxStretch stretch limit
 	 */
 	public Spring(
-			final Vertex v1,
-			final Vertex v2,
+			final Point p1,
+			final Point p2,
 			final float weight,
 			final float maxStretch )
 	{
-		this( length( v1.getL(), v2.getL() ), weight, maxStretch );
+		this( length( p1.getL(), p2.getL() ), weight, maxStretch );
 	}
 	
 	/**
 	 * Constructor
 	 * 
-	 * Create a {@link Spring} between two {@link Vertex Vertices} without weight.
+	 * Create a {@link Spring} between two {@link Point Points} without weight.
 	 * 
-	 * @param v1 Vertex 1
-	 * @param v2 Vertex 2
+	 * @param p1 Point 1
+	 * @param p2 Point 2
 	 */
 	public Spring(
-			final Vertex v1,
-			final Vertex v2 )
+			final Point p1,
+			final Point p2 )
 	{
-		this( length( v1.getL(), v2.getL() ) );
-	}	
+		this( length( p1.getL(), p2.getL() ) );
+	}
 }

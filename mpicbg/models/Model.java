@@ -122,7 +122,7 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 	 * and/ or {@link #filter(Class, Collection, Collection)} to remove
 	 * outliers from your data points
 	 * 
-	 * The estimated model transfers match.p2.local to match.p1.world.
+	 * The estimated model transfers match.p1.local to match.p2.world.
 	 * 
 	 * @param matches set of point correpondences
 	 * @throws {@link NotEnoughDataPointsException} if matches does not contain
@@ -232,7 +232,7 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 			{
 				return false;
 			}
-			final ErrorStatistic observer = new ErrorStatistic();
+			final ErrorStatistic observer = new ErrorStatistic( temp.size() );
 			for ( final PointMatch m : temp )
 			{
 				m.apply( copy );

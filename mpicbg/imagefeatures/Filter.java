@@ -183,16 +183,16 @@ public class Filter
 		final int[] xa = new int[ h.length + hl - 1 ];
 		for ( int i = 0; i < xb.length; ++i )
 		{
-			xb[ i ] = Util.flipInRange( i - hl, input.width );
-			xa[ i ] = Util.flipInRange( i + xl, input.width );
+			xb[ i ] = Util.pingPong( i - hl, input.width );
+			xa[ i ] = Util.pingPong( i + xl, input.width );
 		}
 		
 		final int[] yb = new int[ v.length + vl - 1 ];
 		final int[] ya = new int[ v.length + vl - 1 ];
 		for ( int i = 0; i < yb.length; ++i )
 		{
-			yb[ i ] = input.width * Util.flipInRange( i - vl, input.height );
-			ya[ i ] = input.width * Util.flipInRange( i + yl, input.height );
+			yb[ i ] = input.width * Util.pingPong( i - vl, input.height );
+			ya[ i ] = input.width * Util.pingPong( i + yl, input.height );
 		}
 		
 		xl += hl;
