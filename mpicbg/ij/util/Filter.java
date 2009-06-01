@@ -1,5 +1,6 @@
 package mpicbg.ij.util;
 
+import ij.plugin.filter.GaussianBlur;
 import ij.process.FloatProcessor;
 import mpicbg.util.Util;
 
@@ -324,8 +325,10 @@ public class Filter
 		
 		if ( scale == 1.0f ) return;
 		final float s = 0.5f / scale;
-		final float[] kernel = createNormalizedGaussianKernel( ( float )Math.sqrt( s * s - sourceSigma * sourceSigma ) );
-		convolveSeparable( source, kernel, kernel );
+		final float sigma = ( float )Math.sqrt( s * s - sourceSigma * sourceSigma );
+//		final float[] kernel = createNormalizedGaussianKernel( sigma );
+//		convolveSeparable( source, kernel, kernel );
+		new GaussianBlur().blurFloat( source, sigma, sigma, 0.01 );
 	}
 	
 	

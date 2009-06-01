@@ -30,25 +30,33 @@ public class Align_SIFT_Blockmatching implements PlugIn
 		/**
 		 * Maximal allowed alignment error in px
 		 */
-		public float maxEpsilon = 25.0f;
+		public float maxEpsilon = 200.0f;
 		
 		/**
 		 * Inlier/candidates ratio
 		 */
-		public float minInlierRatio = 0.05f;
+		public float minInlierRatio = 0.2f;
 		
 		/**
 		 * Implemeted transformation models for choice
 		 */
 		final static public String[] modelStrings = new String[]{ "Translation", "Rigid", "Similarity", "Affine" };
 		public int expectedModelIndex = 1;
-		public int desiredModelIndex = 3;
-		public int localModelIndex = 3;
+		public int desiredModelIndex = 1;
+		public int localModelIndex = 1;
 		
 		public float alpha = 1.0f;
-		public int meshResolution = 16;
+		public int meshResolution = 32;
 		
-		public float minCCC = 0.6f;
+		public float minR = 0.7f;
+		public float maxCurvatureR = 5f;
+		public float rodR = 0.8f;
+		
+		Param()
+		{
+			sift.fdSize = 8;
+			sift.maxOctaveSize = 512;
+		}
 		
 		public boolean setup()
 		{
@@ -117,6 +125,94 @@ public class Align_SIFT_Blockmatching implements PlugIn
 	
 	final static private Param p = new Param();
 	
+	final private static void findMatches(
+			final Param p,
+			final Model< ? > initialModel,
+			final Collection< PointMatch > sourceMatches )
+	{
+		CoordinateTransform ict = initialModel;
+		final Collection< Point > sourcePoints = new ArrayList< Point >();
+		final Collection< Point > targetPoints = new ArrayList< Point >();
+		final Class< ? extends AbstractAffineModel2D< ? > > localModelClass;
+		switch ( p.localModelIndex )
+		{
+		case 0:
+			localModelClass = TranslationModel2D.class;
+			break;
+		case 1:
+			localModelClass = RigidModel2D.class;
+			break;
+		case 2:
+			localModelClass = SimilarityModel2D.class;
+			break;
+		case 3:
+			localModelClass = AffineModel2D.class;
+			break;
+		default:
+			IJ.error( "Invalid model selected." );
+			return;
+		}
+		
+		for ( int n = 4; n <= p.meshResolution; n *= 2 )
+		{
+			n = Math.min( p.meshResolution, n );
+			
+			final MovingLeastSquaresTransform mlst = new MovingLeastSquaresTransform();
+			try
+			{
+				mlst.setModel( localModelClass );
+			}
+			catch ( Exception e )
+			{
+				IJ.error( "Invalid local model selected." );
+				return;
+			}
+			
+			final int blockRadius = Math.max( 16, p.imp1.getWidth() / n );
+			// TODO adapt the search radius to the last search results (largest shift * constant)
+			final int searchRadius = ( int )( sourceMatches.size() >= mlst.getModel().getMinNumMatches() ? Math.min( p.maxEpsilon + 0.5f, blockRadius ) : p.maxEpsilon );
+			
+			/* block match forward */
+			sourcePoints.clear();
+			sourceMatches.clear();
+			
+			final TransformMesh mesh = new TransformMesh( n, p.imp1.getWidth(), p.imp1.getHeight() );
+			PointMatch.sourcePoints( mesh.getVA().keySet(), sourcePoints );
+			BlockMatching.matchByMaximalPMCC(
+					( FloatProcessor )p.imp1.getProcessor().convertToFloat().duplicate(),
+					( FloatProcessor )p.imp2.getProcessor().convertToFloat().duplicate(),
+					//512.0f / p.imp1.getWidth(),
+					Math.min(  1.0f, 16.0f / searchRadius ),
+					ict,
+					blockRadius,
+					blockRadius,
+					searchRadius,
+					searchRadius,
+					p.minR,
+					p.rodR,
+					p.maxCurvatureR,
+					sourcePoints,
+					sourceMatches );
+			
+			if  ( sourceMatches.size() >= mlst.getModel().getMinNumMatches() )
+			{	
+				mlst.setAlpha( p.alpha );
+				mlst.setMatches( sourceMatches );
+				
+				ict = mlst;
+				
+				sourcePoints.clear();
+				targetPoints.clear();
+				PointMatch.sourcePoints( sourceMatches, sourcePoints );
+				PointMatch.targetPoints( sourceMatches, targetPoints );
+			
+				p.imp1.setRoi( Util.pointsToPointRoi( sourcePoints ) );
+				p.imp2.setRoi( Util.pointsToPointRoi( targetPoints ) );
+			}
+		}
+		// TODO refine the search results by rematching at higher resolution with lower search radius
+	}
+	
 	public void run( String args )
 	{
 		if ( p.setup() )
@@ -159,6 +255,7 @@ public class Align_SIFT_Blockmatching implements PlugIn
 				model = new AffineModel2D();
 				break;
 			default:
+				IJ.error( "Invalid model selected." );
 				return;
 			}
 			
@@ -169,32 +266,8 @@ public class Align_SIFT_Blockmatching implements PlugIn
 				return;
 			}
 			
-			/* block match forward */
-			final Collection< Point > sourcePoints = new ArrayList< Point >();
-			final Collection< Point > targetPoints = new ArrayList< Point >();
-			final int blockRadius = Math.max( 16, p.imp1.getWidth() / p.meshResolution / 2 );
-			final TransformMesh mesh = new TransformMesh( p.meshResolution, p.imp1.getWidth(), p.imp1.getHeight() );
-			PointMatch.sourcePoints( mesh.getVA().keySet(), sourcePoints );
 			final Collection< PointMatch > sourceMatches = new ArrayList< PointMatch >();
-			BlockMatching.matchByMaximalPMCC(
-					( FloatProcessor )p.imp1.getProcessor().convertToFloat().duplicate(),
-					( FloatProcessor )p.imp2.getProcessor().convertToFloat().duplicate(),
-					512.0f / p.imp1.getWidth(),
-					model,
-					blockRadius,
-					blockRadius,
-					Math.round( p.maxEpsilon ),
-					Math.round( p.maxEpsilon ),
-					p.minCCC,
-					sourcePoints,
-					sourceMatches );
-			
-			sourcePoints.clear();
-			PointMatch.sourcePoints( sourceMatches, sourcePoints );
-			PointMatch.targetPoints( sourceMatches, targetPoints );
-			
-			p.imp1.setRoi( Util.pointsToPointRoi( sourcePoints ) );
-			p.imp2.setRoi( Util.pointsToPointRoi( targetPoints ) );
+			findMatches( p, model, sourceMatches );
 		}
 	}
 }

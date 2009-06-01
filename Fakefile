@@ -2,9 +2,12 @@ javaVersion=1.5
 all <- mpicbg_.jar
 
 mpicbg_.jar <- mpicbg/**/*.java \
+	Align_SIFT_BlockMatching_ElasticMeshStack.java \
 	Align_SIFT_Blockmatching.java \
 	Elastic_Align.java \
+	Find_PointRoi.java \
 	MOPS_ExtractPointRoi.java \
+	Optic_Flow.java \
 	SIFT_Align.java \
 	SIFT_ExtractPointRoi.java \
 	SIFT_Test.java \

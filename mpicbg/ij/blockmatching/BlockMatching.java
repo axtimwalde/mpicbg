@@ -32,11 +32,11 @@ import mpicbg.models.TranslationModel2D;
  */
 public class BlockMatching
 {
-	/** &sigma; of the Gaussian kernel required to make an image sampled at &sigma; = 1.6 (see Lowe 2004) */  
+	/* 
+	 * &sigma; of the Gaussian kernel required to make an image sampled at
+	 * &sigma; = 1.6 (as suggested by Lowe, 2004)
+	 */  
 	final static private float minSigma = ( float )Math.sqrt( 2.31f );
-	final static private float maxCurvature = 10;
-	final static private float maxCurvatureRatio = ( maxCurvature + 1 ) * ( maxCurvature + 1 ) / maxCurvature;
-	final static private float rod = 0.9f;
 	
 	private BlockMatching(){}
 	
@@ -226,16 +226,20 @@ public class BlockMatching
 			final int searchRadiusX,
 			final int searchRadiusY,
 			final float minR,
+			final float rod,
+			final float maxCurvature,
 			final Collection< ? extends Point > sourcePoints,
 			final Collection< PointMatch > sourceMatches )
     {
+    	final float maxCurvatureRatio = ( maxCurvature + 1 ) * ( maxCurvature + 1 ) / maxCurvature;
+    	
     	final int blockWidth = 2 * blockRadiusX + 1;
     	final int blockHeight = 2 * blockRadiusY + 1;
     	
     	int k = 0;
     	int l = 0;
     	final ImageStack rMapStack = new ImageStack( 2 * searchRadiusX + 1, 2 * searchRadiusY + 1 );
-		for ( final Point p : sourcePoints )
+P:		for ( final Point p : sourcePoints )
 		{
 			IJ.showProgress( k++, sourcePoints.size() );
 			
@@ -252,6 +256,8 @@ public class BlockMatching
 			{
 				final float sourceBlockMean = blockMean( source, ptx, pty, blockWidth, blockHeight );
 				final float sourceBlockStd = ( float )Math.sqrt( blockVariance( source, ptx, pty, blockWidth, blockHeight, sourceBlockMean ) );
+				if ( sourceBlockStd == 0 ) continue P;
+				
 				float tx = 0;
 				float ty = 0;
 				float rMax = -Float.MAX_VALUE;
@@ -267,6 +273,7 @@ public class BlockMatching
 						
 						final float targetBlockMean = blockMean( target, iptx, ipty, blockWidth, blockHeight );
 						final float targetBlockStd = ( float )Math.sqrt( blockVariance( target, iptx, ipty, blockWidth, blockHeight, targetBlockMean ) );
+						if ( targetBlockStd == 0 ) continue P;
 						
 						float r = 0;
 						for ( int iy = 0; iy <= blockHeight; ++iy )
@@ -392,7 +399,7 @@ public class BlockMatching
 				rMapStack.addSlice( "" + ++l, rMap );
 			}
 		}
-		new ImagePlus( "r", rMapStack ).show();
+		if ( sourceMatches.size() > 0 ) new ImagePlus( "r", rMapStack ).show();
     }
     
     
@@ -420,12 +427,14 @@ public class BlockMatching
 			FloatProcessor source,
 			final FloatProcessor target,
 			final float scale,
-			final InvertibleCoordinateTransform transform,
+			final CoordinateTransform transform,
 			final int blockRadiusX,
 			final int blockRadiusY,
 			final int searchRadiusX,
 			final int searchRadiusY,
 			final float minR,
+			final float rod,
+			final float maxCurvature,
 			final Collection< ? extends Point > sourcePoints,
 			final Collection< PointMatch > sourceMatches )
 	{
@@ -496,6 +505,8 @@ public class BlockMatching
 				scaledSearchRadiusX,
 				scaledSearchRadiusY,
 				minR,
+				rod,
+				maxCurvature,
 				scaledSourcePoints.keySet(),
 				scaledSourceMatches );
 		
@@ -507,6 +518,54 @@ public class BlockMatching
 			transform.applyInPlace( l );
 			sourceMatches.add( new PointMatch( scaledSourcePoints.get( p.getP1() ), new Point( l ) ) );
 		}
+	}
+    
+    /**
+     * Estimate {@linkplain PointMatch point correspondences} for a
+     * {@link Collection} of {@link Point Points} among two images that are
+     * approximately related by an {@link InvertibleCoordinateTransform} using
+     * the Pearson product-moment correlation coefficient (PMCC) <i>r</i> of
+     * pixel intensities as similarity measure.  Only correspondence candidates
+     * with <i>r</i> >= a given threshold are accepted.
+     *  
+     * @param scaledSource
+     * @param target
+     * @param scale [0,1]
+     * @param transform transfers source into target approximately
+     * @param scaledBlockRadiusX horizontal radius of a block
+     * @param scaledBlockRadiusY vertical radius of a block
+     * @param scaledSearchRadiusX horizontal search radius
+     * @param scaledSearchRadiusY vertical search radius
+     * @param minR minimal accepted Cross-Correlation coefficient
+     * @param sourcePoints
+     * @param sourceMatches
+     */
+    static public void matchByMaximalPMCC(
+			FloatProcessor source,
+			final FloatProcessor target,
+			final float scale,
+			final CoordinateTransform transform,
+			final int blockRadiusX,
+			final int blockRadiusY,
+			final int searchRadiusX,
+			final int searchRadiusY,
+			final Collection< ? extends Point > sourcePoints,
+			final Collection< PointMatch > sourceMatches )
+	{
+    	matchByMaximalPMCC(
+    			source,
+    			target,
+    			scale,
+    			transform,
+    			blockRadiusX,
+    			blockRadiusY,
+    			searchRadiusX,
+    			searchRadiusY,
+    			0.7f,				// minR
+    			0.9f,				// rod
+    			10.0f,				// maxCurvature
+    			sourcePoints,
+    			sourceMatches );
 	}
     
     

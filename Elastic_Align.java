@@ -278,6 +278,8 @@ public class Elastic_Align implements PlugIn, KeyListener
 					searchRadius,
 					searchRadius,
 					0.9f,
+					0.8f,
+					5.0f,
 					v1,
 					pm12 );
 			
@@ -299,6 +301,8 @@ public class Elastic_Align implements PlugIn, KeyListener
 					searchRadius,
 					searchRadius,
 					0.9f,
+					0.8f,
+					5.0f,
 					v2,
 					pm21 );
 			

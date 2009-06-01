@@ -206,6 +206,7 @@ public class Transform_Roi implements PlugIn
 		}
 		
 		final ArrayList< String > titlesList = new ArrayList< String >();
+		final ArrayList< Integer > idsList = new ArrayList< Integer >();
 		String currentTitle = null;
 		for ( int i = 0; i < ids.length; ++i )
 		{
@@ -214,6 +215,7 @@ public class Transform_Roi implements PlugIn
 			if ( roi != null && roi.getType() == Roi.POINT )
 			{
 				titlesList.add( imp.getTitle() );
+				idsList.add( ids[ i ] );
 				if ( imp == WindowManager.getCurrentImage() )
 					currentTitle = imp.getTitle();
 			}	
@@ -242,8 +244,8 @@ public class Transform_Roi implements PlugIn
 		
 		if ( gd.wasCanceled() ) return false;
 		
-		source = WindowManager.getImage( ids[ gd.getNextChoiceIndex() ] );
-		template = WindowManager.getImage( ids[ gd.getNextChoiceIndex() ] );
+		source = WindowManager.getImage( idsList.get( gd.getNextChoiceIndex() ) );
+		template = WindowManager.getImage( idsList.get( gd.getNextChoiceIndex() ) );
 		methodIndex = gd.getNextChoiceIndex();
 		alpha = ( float )gd.getNextNumber();
 		meshResolution = ( int )gd.getNextNumber();
