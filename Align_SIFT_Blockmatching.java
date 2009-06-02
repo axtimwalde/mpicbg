@@ -45,7 +45,7 @@ public class Align_SIFT_Blockmatching implements PlugIn
 		public int desiredModelIndex = 1;
 		public int localModelIndex = 1;
 		
-		public float alpha = 1.0f;
+		public float alpha = 2.0f;
 		public int meshResolution = 32;
 		
 		public float minR = 0.7f;
