@@ -1,22 +1,3 @@
-/**
- * License: GPL
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License 2
- * as published by the Free Software Foundation.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- *
- */
 package mpicbg.models;
 
 import java.io.Serializable;
@@ -29,6 +10,8 @@ import java.util.Collection;
  * 
  * The link is directed, such that each link touches only {@link #p1}.
  *
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @version 0.1b
  */
 public class PointMatch implements Serializable
 {
@@ -207,7 +190,7 @@ public class PointMatch implements Serializable
 	 * 
 	 * @param t
 	 */
-	final public void apply( CoordinateTransform t )
+	final public void apply( final CoordinateTransform t )
 	{
 		p1.apply( t );
 		distance = Point.distance( p1, p2 );
@@ -220,10 +203,44 @@ public class PointMatch implements Serializable
 	 * @param t
 	 * @param amount
 	 */
-	final public void apply( CoordinateTransform t, float amount )
+	final public void apply( final CoordinateTransform t, final float amount )
 	{
 		p1.apply( t, strength * amount );
 		distance = Point.distance( p1, p2 );
+	}
+	
+	/**
+	 * Apply a {@link CoordinateTransform} to {@link #p1} a {@link Collection}
+	 * of {@link PointMatch PointMatches}, update their distances.
+	 * 
+	 * @param matches
+	 * @param t
+	 */
+	static public void apply( final Collection< PointMatch > matches, final CoordinateTransform t )
+	{
+		for ( final PointMatch match : matches )
+			match.apply( t );
+	}
+	
+	/**
+	 * Flip all {@link PointMatch PointMatches} from
+	 * {@linkplain Collection matches} symmetrically and fill
+	 * {@linkplain Collection flippedMatches} with them, weights remain
+	 * unchanged.
+	 * 
+	 * @param matches original set
+	 * @param flippedMatches result set
+	 */
+	final public static void flip(
+			final Collection< PointMatch > matches,
+			final Collection< PointMatch > flippedMatches )
+	{
+		for ( final PointMatch match : matches )
+			flippedMatches.add(
+					new PointMatch(
+							match.p2,
+							match.p1,
+							match.weights ) );
 	}
 	
 	/**
@@ -232,17 +249,30 @@ public class PointMatch implements Serializable
 	 * @param matches
 	 * @return
 	 */
-	final public static ArrayList< PointMatch > flip( Collection< PointMatch > matches )
+	final public static Collection< PointMatch > flip( final Collection< PointMatch > matches )
 	{
-		ArrayList< PointMatch > list = new ArrayList< PointMatch >();
-		for ( PointMatch match : matches )
-		{
-			list.add(
-					new PointMatch(
-							match.p2,
-							match.p1,
-							match.weights ) );
-		}
+		final ArrayList< PointMatch > list = new ArrayList< PointMatch >();
+		flip( matches, list );
 		return list;
-	}	
+	}
+	
+	final public static void sourcePoints( final Collection< PointMatch > matches, final Collection< Point > sourcePoints )
+	{
+		for ( final PointMatch m : matches )
+			sourcePoints.add( m.getP1() );
+	}
+	
+	final public static void targetPoints( final Collection< PointMatch > matches, final Collection< Point > targetPoints )
+	{
+		for ( final PointMatch m : matches )
+			targetPoints.add( m.getP2() );
+	}
+	
+	static public float meanDistance( final Collection< PointMatch > matches )
+	{
+		double d = 0.0;
+		for ( final PointMatch match : matches )
+			d += match.getDistance();
+		return ( float )( d / matches.size() );
+	}
 }
