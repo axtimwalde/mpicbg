@@ -2,7 +2,6 @@ package mpicbg.models;
 
 import java.util.Collections;
 import java.lang.IndexOutOfBoundsException;
-import java.util.ListIterator;
 
 import mpicbg.util.RingBuffer;
 
@@ -46,11 +45,11 @@ public class ErrorStatistic
 	
 	final public void add( double new_value )
 	{
-		if (values.size() > 1 ) slope.add( new_value - values.get( values.lastIndex() ) );
+		if ( values.nextIndex() >= 1 ) slope.add( new_value - values.get( values.lastIndex() ) );
 		else slope.add( 0.0 );
-		mean = ( mean * values.lastIndex() + new_value );
+		mean = ( mean * values.nextIndex() + new_value );
 		values.add( new_value );
-		mean /= values.lastIndex();
+		mean /= ( values.nextIndex() );
 		
 		var0 += new_value * new_value / ( double )( values.lastIndex() );
 		std0 = Math.sqrt( var0 );
