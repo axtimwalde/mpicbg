@@ -102,7 +102,7 @@ public class InverseCoordinateTransformMap2D implements InverseCoordinateTransfo
 		}
 	}
 	
-	final public void export( FileOutputStream fos ) throws IOException
+	public void export( final FileOutputStream fos ) throws IOException
 	{
 		final byte[] header = new byte[ 8 ];
 		
@@ -146,7 +146,7 @@ public class InverseCoordinateTransformMap2D implements InverseCoordinateTransfo
 	}
 
 	//@Override
-	final public float[] applyInverse( final float[] location )
+	public float[] applyInverse( final float[] location )
 	{
 		final float[] t = location.clone();
 		applyInverseInPlace( t );
@@ -154,7 +154,7 @@ public class InverseCoordinateTransformMap2D implements InverseCoordinateTransfo
 	}
 
 	//@Override
-	final public void applyInverseInPlace( final float[] location )
+	public void applyInverseInPlace( final float[] location )
 	{
 		final int ix = 2 * ( int )location[ 0 ];
 		final int iy = ( int )location[ 1 ];

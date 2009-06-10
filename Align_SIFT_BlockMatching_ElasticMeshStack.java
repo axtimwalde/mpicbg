@@ -255,14 +255,18 @@ public class Align_SIFT_BlockMatching_ElasticMeshStack implements PlugIn
 					p.rodR,
 					p.maxCurvatureR,
 					sourcePoints,
-					sourceMatches );
+					sourceMatches,
+					new ErrorStatistic( 1 ) );
 			
 			if  ( sourceMatches.size() >= mlst.getModel().getMinNumMatches() )
 			{	
 				mlst.setAlpha( p.alpha );
-				mlst.setMatches( sourceMatches );
-				
-				ict = mlst;
+				try
+				{
+					mlst.setMatches( sourceMatches );
+					ict = mlst;
+				}
+				catch ( Exception e ) {}
 			}
 		}
 	}

@@ -15,12 +15,19 @@ import mpicbg.ij.InverseMapping;
 import mpicbg.ij.TransformMapping;
 import mpicbg.ij.util.Filter;
 import mpicbg.ij.util.Util;
+import mpicbg.models.AbstractAffineModel2D;
+import mpicbg.models.AffineModel2D;
 import mpicbg.models.CoordinateTransform;
 import mpicbg.models.CoordinateTransformList;
+import mpicbg.models.ErrorStatistic;
 import mpicbg.models.InvertibleCoordinateTransform;
+import mpicbg.models.Model;
+import mpicbg.models.MovingLeastSquaresTransform;
 import mpicbg.models.Point;
 import mpicbg.models.PointMatch;
+import mpicbg.models.RigidModel2D;
 import mpicbg.models.SimilarityModel2D;
+import mpicbg.models.TransformMesh;
 import mpicbg.models.TranslationModel2D;
 
 /**
@@ -158,8 +165,8 @@ public class BlockMatching
 		final InverseMapping< ? > targetMapping = new TransformMapping< CoordinateTransform >( lTarget );
 		targetMapping.mapInverseInterpolated( target, mappedTarget );
 		
-		mappedTarget.setMinAndMax( 0, 1 );
-		new ImagePlus( "Mapped Target", mappedTarget ).show();
+//		mappedTarget.setMinAndMax( 0, 1 );
+//		new ImagePlus( "Mapped Target", mappedTarget ).show();
 		
 		int k = 0;
 		for ( final Point p : sourcePoints )
@@ -425,7 +432,7 @@ P:		for ( final Point p : sourcePoints )
 	 * @param sourceMatches
 	 */
     static public void matchByMaximalPMCC(
-			FloatProcessor source,
+			final FloatProcessor source,
 			final FloatProcessor target,
 			final float scale,
 			final CoordinateTransform transform,
@@ -437,7 +444,8 @@ P:		for ( final Point p : sourcePoints )
 			final float rod,
 			final float maxCurvature,
 			final Collection< ? extends Point > sourcePoints,
-			final Collection< PointMatch > sourceMatches )
+			final Collection< PointMatch > sourceMatches,
+			final ErrorStatistic observer )
 	{
     	final int scaledBlockRadiusX = ( int )Math.ceil( scale * blockRadiusX );
     	final int scaledBlockRadiusY = ( int )Math.ceil( scale * blockRadiusY );
@@ -445,7 +453,7 @@ P:		for ( final Point p : sourcePoints )
     	final int scaledSearchRadiusY = ( int )Math.ceil( scale * searchRadiusY ) + 1; // +1 for 3x3 maximum test
     	
     	/* Scale source */
-    	final FloatProcessor scaledSource = Filter.downsample( source, scale, 0.5f, minSigma );
+    	final FloatProcessor scaledSource = Filter.createDownsampled( source, scale, 0.5f, minSigma );
     	Util.normalizeContrast( scaledSource );
     	
     	/* Smooth target with respect to the desired scale */
@@ -473,10 +481,10 @@ P:		for ( final Point p : sourcePoints )
 		final InverseMapping< ? > targetMapping = new TransformMapping< CoordinateTransform >( lTarget );
 		targetMapping.mapInverseInterpolated( smoothedTarget, mappedScaledTarget );
 		
-		scaledSource.setMinAndMax( 0, 1 );
-		mappedScaledTarget.setMinAndMax( 0, 1 );
-		new ImagePlus( "Scaled Source", scaledSource ).show();
-		new ImagePlus( "Mapped Target", mappedScaledTarget ).show();
+//		scaledSource.setMinAndMax( 0, 1 );
+//		mappedScaledTarget.setMinAndMax( 0, 1 );
+//		new ImagePlus( "Scaled Source", scaledSource ).show();
+//		new ImagePlus( "Mapped Target", mappedScaledTarget ).show();
 		
 		final Map< Point, Point > scaledSourcePoints = new HashMap< Point, Point>();
 		final ArrayList< PointMatch > scaledSourceMatches = new ArrayList< PointMatch >();
@@ -504,11 +512,20 @@ P:		for ( final Point p : sourcePoints )
 		
 		for ( final PointMatch p : scaledSourceMatches )
 		{
-			final float[] l = p.getP2().getL().clone();
-			l[ 0 ] /= scale;
-			l[ 1 ] /= scale;
-			transform.applyInPlace( l );
-			sourceMatches.add( new PointMatch( scaledSourcePoints.get( p.getP1() ), new Point( l ) ) );
+			final float[] l1 = p.getP1().getL().clone();
+			final float[] l2 = p.getP2().getL().clone();
+			l1[ 0 ] /= scale;
+			l1[ 1 ] /= scale;
+			l2[ 0 ] /= scale;
+			l2[ 1 ] /= scale;
+			
+			final float tx = l2[ 0 ] - l1[ 0 ];
+			final float ty = l2[ 1 ] - l1[ 1 ];
+			
+			observer.add( Math.sqrt( tx * tx + ty * ty ) );
+			
+			transform.applyInPlace( l2 );
+			sourceMatches.add( new PointMatch( scaledSourcePoints.get( p.getP1() ), new Point( l2 ) ) );
 		}
 	}
     
@@ -533,7 +550,7 @@ P:		for ( final Point p : sourcePoints )
      * @param sourceMatches
      */
     static public void matchByMaximalPMCC(
-			FloatProcessor source,
+			final FloatProcessor source,
 			final FloatProcessor target,
 			final float scale,
 			final CoordinateTransform transform,
@@ -542,7 +559,8 @@ P:		for ( final Point p : sourcePoints )
 			final int searchRadiusX,
 			final int searchRadiusY,
 			final Collection< ? extends Point > sourcePoints,
-			final Collection< PointMatch > sourceMatches )
+			final Collection< PointMatch > sourceMatches,
+			final ErrorStatistic observer )
 	{
     	matchByMaximalPMCC(
     			source,
@@ -557,7 +575,95 @@ P:		for ( final Point p : sourcePoints )
     			0.9f,				// rod
     			10.0f,				// maxCurvature
     			sourcePoints,
-    			sourceMatches );
+    			sourceMatches,
+    			observer );
+	}
+    
+    public static void findMatches(
+    		final FloatProcessor source,
+    		final FloatProcessor target,
+			final Model< ? > initialModel,
+			final Class< ? extends AbstractAffineModel2D< ? > > localModelClass,
+			final float maxEpsilon,
+			final float maxScale,
+			final float minR,
+			final float rodR,
+			final float maxCurvatureR,
+			final int meshResolution,
+			final float alpha,
+			final Collection< PointMatch > sourceMatches )
+	{
+		CoordinateTransform ict = initialModel;
+		final Collection< Point > sourcePoints = new ArrayList< Point >();
+		
+		final ErrorStatistic observer = new ErrorStatistic( 1 );
+		
+		for ( int n = Math.max( 4, Math.min( ( int )meshResolution, ( int )Math.ceil( source.getWidth() / maxEpsilon / 4 ) ) ); n <= meshResolution; n *= 2 )
+		{
+			n = Math.min( meshResolution, n );
+			
+			final MovingLeastSquaresTransform mlst = new MovingLeastSquaresTransform();
+			try
+			{
+				mlst.setModel( localModelClass );
+			}
+			catch ( Exception e )
+			{
+				IJ.error( "Invalid local model selected." );
+				return;
+			}
+			
+			//if ( sourceMatches )
+			
+			final int searchRadius = observer.n() < mlst.getModel().getMinNumMatches()
+					? ( int )Math.ceil( maxEpsilon )
+					: ( int )Math.ceil( observer.max );
+			final float scale = Math.min(  maxScale, 16.0f / searchRadius );
+			final int blockRadius = ( int )Math.ceil( 32 / scale );
+//			final int blockRadius = Math.max( 16, 3 * p.imp1.getWidth() / n );
+//			final int searchRadius = ( int )( sourceMatches.size() >= mlst.getModel().getMinNumMatches() ? Math.min( p.maxEpsilon + 0.5f, blockRadius / 3 ) : p.maxEpsilon );
+			
+			/* block match forward */
+			sourcePoints.clear();
+			sourceMatches.clear();
+			
+			final TransformMesh mesh = new TransformMesh( n, source.getWidth(), source.getHeight() );
+			PointMatch.sourcePoints( mesh.getVA().keySet(), sourcePoints );
+			observer.clear();
+			BlockMatching.matchByMaximalPMCC(
+					source,
+					target,
+					//512.0f / p.imp1.getWidth(),
+					scale,
+					ict,
+					blockRadius,
+					blockRadius,
+					searchRadius,
+					searchRadius,
+					minR,
+					rodR,
+					maxCurvatureR,
+					sourcePoints,
+					sourceMatches,
+					observer );
+			
+			IJ.log( "Blockmatching at n = " + n );
+			IJ.log( " average offset : " + observer.mean );
+			IJ.log( " minimal offset : " + observer.min );
+			IJ.log( " maximal offset : " + observer.max );
+			
+			if  ( sourceMatches.size() >= mlst.getModel().getMinNumMatches() )
+			{	
+				mlst.setAlpha( alpha );
+				try
+				{
+					mlst.setMatches( sourceMatches );
+					ict = mlst;
+				}
+				catch ( Exception e ) {}
+			}
+		}
+		// TODO refine the search results by rematching at higher resolution with lower search radius
 	}
     
     

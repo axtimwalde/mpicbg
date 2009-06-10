@@ -43,7 +43,7 @@ public class ErrorStatistic
 	public double min = Double.MAX_VALUE;
 	public double max = 0;
 	
-	final public void add( double new_value )
+	final public void add( final double new_value )
 	{
 		if ( values.nextIndex() >= 1 ) slope.add( new_value - values.get( values.lastIndex() ) );
 		else slope.add( 0.0 );
@@ -64,25 +64,25 @@ public class ErrorStatistic
 		if ( new_value > max ) max = new_value;
 	}
 	
-	final public double getWideSlope( int width ) throws IndexOutOfBoundsException
+	final public double getWideSlope( final int width ) throws IndexOutOfBoundsException
 	{
-//		if ( width > values.size() ) throw tooWide;
-//		ListIterator< Double > li = slope.listIterator( slope.size() - 1 );
-//		int i = 0;
-//		double s = 0.0;
-//		while ( i < width && li.hasPrevious() )
-//		{
-//			s += li.previous();
-//			++i;
-//		}
-//		s /= ( double )width;
-//		return s;
-		
 		return ( values.get( values.lastIndex() ) - values.get( values.lastIndex() - width ) ) / width;
 	}
 	
-	public void flush()
+	public int n() { return values.nextIndex(); }
+	
+	public void clear()
 	{
+		values.clear();
+		slope.clear();
+		sortedValues.clear();
+		
+		var0 = 0;		// variance relative to 0
+		var = 0;		// variance relative to mean
+		std0 = 0;		// standard-deviation relative to 0
+		std = 0;		// standard-deviation
+		mean = 0;
+		median = 0;
 		
 	}
 }

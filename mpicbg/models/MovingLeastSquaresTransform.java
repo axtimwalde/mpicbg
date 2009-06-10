@@ -46,10 +46,11 @@ public class MovingLeastSquaresTransform implements CoordinateTransform
 	
 	final protected Set< PointMatch > matches = new HashSet< PointMatch >();
 	final public Set< PointMatch > getMatches(){ return matches; }
-	final public void setMatches( final Collection< PointMatch > matches )
+	final public void setMatches( final Collection< PointMatch > matches ) throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
 		this.matches.clear();
 		this.matches.addAll( matches );
+		model.fit( matches );
 	}
 	
 	final protected double weigh( final double d )

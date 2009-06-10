@@ -281,7 +281,8 @@ public class Elastic_Align implements PlugIn, KeyListener
 					0.8f,
 					5.0f,
 					v1,
-					pm12 );
+					pm12,
+					new ErrorStatistic( 1 ) );
 			
 			final List< Point > s1 = new ArrayList< Point >();
 			PointMatch.sourcePoints( pm12, s1 );
@@ -304,7 +305,8 @@ public class Elastic_Align implements PlugIn, KeyListener
 					0.8f,
 					5.0f,
 					v2,
-					pm21 );
+					pm21,
+					new ErrorStatistic( 1 ) );
 			
 			final List< Point > s2 = new ArrayList< Point >();
 			PointMatch.sourcePoints( pm21, s2 );

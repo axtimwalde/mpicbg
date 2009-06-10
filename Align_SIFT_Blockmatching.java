@@ -52,6 +52,8 @@ public class Align_SIFT_Blockmatching implements PlugIn
 		public float maxCurvatureR = 5f;
 		public float rodR = 0.8f;
 		
+		public float maxScale = 1.0f;
+		
 		Param()
 		{
 			sift.fdSize = 8;
@@ -121,6 +123,30 @@ public class Align_SIFT_Blockmatching implements PlugIn
 			
 			return true;
 		}
+		
+		@Override
+		public Param clone()
+		{
+			final Param p = new Param();
+			
+			p.sift.set( sift );
+			p.imp1 = imp1;
+			p.imp2 = imp2;
+			p.rod = rod;
+			p.maxEpsilon = maxEpsilon;
+			p.minInlierRatio = minInlierRatio;
+			p.expectedModelIndex = expectedModelIndex;
+			p.desiredModelIndex = desiredModelIndex;
+			p.localModelIndex = localModelIndex;
+			p.alpha = alpha;
+			p.meshResolution = meshResolution;
+			p.minR = minR;
+			p.maxCurvatureR = maxCurvatureR;
+			p.rodR = rodR;
+			p.maxScale = maxScale;
+			
+			return p;
+		}
 	}
 	
 	final static private Param p = new Param();
@@ -153,7 +179,9 @@ public class Align_SIFT_Blockmatching implements PlugIn
 			return;
 		}
 		
-		for ( int n = 4; n <= p.meshResolution; n *= 2 )
+		final ErrorStatistic observer = new ErrorStatistic( 1 );
+		
+		for ( int n = Math.max( 8, Math.min( ( int )p.meshResolution, ( int )Math.ceil( p.imp1.getWidth() / p.maxEpsilon / 4 ) ) ); n <= p.meshResolution; n *= 2 )
 		{
 			n = Math.min( p.meshResolution, n );
 			
@@ -168,9 +196,16 @@ public class Align_SIFT_Blockmatching implements PlugIn
 				return;
 			}
 			
-			final int blockRadius = Math.max( 16, p.imp1.getWidth() / n );
+			//if ( sourceMatches )
+			
 			// TODO adapt the search radius to the last search results (largest shift * constant)
-			final int searchRadius = ( int )( sourceMatches.size() >= mlst.getModel().getMinNumMatches() ? Math.min( p.maxEpsilon + 0.5f, blockRadius ) : p.maxEpsilon );
+			final int searchRadius = observer.n() < mlst.getModel().getMinNumMatches()
+					? ( int )Math.ceil( p.maxEpsilon )
+					: ( int )Math.ceil( observer.max );
+			final float scale = Math.min(  p.maxScale, 16.0f / searchRadius );
+			final int blockRadius = ( int )Math.ceil( 32 / scale );
+//			final int blockRadius = Math.max( 16, 3 * p.imp1.getWidth() / n );
+//			final int searchRadius = ( int )( sourceMatches.size() >= mlst.getModel().getMinNumMatches() ? Math.min( p.maxEpsilon + 0.5f, blockRadius / 3 ) : p.maxEpsilon );
 			
 			/* block match forward */
 			sourcePoints.clear();
@@ -178,11 +213,12 @@ public class Align_SIFT_Blockmatching implements PlugIn
 			
 			final TransformMesh mesh = new TransformMesh( n, p.imp1.getWidth(), p.imp1.getHeight() );
 			PointMatch.sourcePoints( mesh.getVA().keySet(), sourcePoints );
+			observer.clear();
 			BlockMatching.matchByMaximalPMCC(
 					( FloatProcessor )p.imp1.getProcessor().convertToFloat().duplicate(),
 					( FloatProcessor )p.imp2.getProcessor().convertToFloat().duplicate(),
 					//512.0f / p.imp1.getWidth(),
-					Math.min(  1.0f, 16.0f / searchRadius ),
+					scale,
 					ict,
 					blockRadius,
 					blockRadius,
@@ -192,14 +228,23 @@ public class Align_SIFT_Blockmatching implements PlugIn
 					p.rodR,
 					p.maxCurvatureR,
 					sourcePoints,
-					sourceMatches );
+					sourceMatches,
+					observer );
+			
+			IJ.log( "Blockmatching at n = " + n );
+			IJ.log( " average offset : " + observer.mean );
+			IJ.log( " minimal offset : " + observer.min );
+			IJ.log( " maximal offset : " + observer.max );
 			
 			if  ( sourceMatches.size() >= mlst.getModel().getMinNumMatches() )
 			{	
 				mlst.setAlpha( p.alpha );
-				mlst.setMatches( sourceMatches );
-				
-				ict = mlst;
+				try
+				{
+					mlst.setMatches( sourceMatches );
+					ict = mlst;
+				}
+				catch ( Exception e ) {}
 				
 				sourcePoints.clear();
 				targetPoints.clear();
@@ -266,8 +311,12 @@ public class Align_SIFT_Blockmatching implements PlugIn
 				return;
 			}
 			
+			final Param pClone = p.clone();
+			PointMatch.apply( matches, model );
+			pClone.maxEpsilon = PointMatch.maxDistance( matches ) * 2;
+			
 			final Collection< PointMatch > sourceMatches = new ArrayList< PointMatch >();
-			findMatches( p, model, sourceMatches );
+			findMatches( pClone, model, sourceMatches );
 		}
 	}
 }

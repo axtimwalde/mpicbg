@@ -334,15 +334,16 @@ public class Filter
 	
 	
 	/**
-	 * Downsample an image
+	 * Create a downsampled {@link FloatProcessor}.
 	 * 
 	 * @param source the source image
 	 * @param scale scaling factor
-	 * @param v vertical kernel
+	 * @param sourceSigma the Gaussian at which the source was sampled (guess 0.5 if you do not know)
+	 * @param targetSigma the Gaussian at which the target will be sampled
 	 * 
-	 * @return convolved image
+	 * @return a new {@link FloatProcessor}
 	 */
-	final static public FloatProcessor downsample(
+	final static public FloatProcessor createDownsampled(
 			final FloatProcessor source,
 			final float scale,
 			final float sourceSigma,

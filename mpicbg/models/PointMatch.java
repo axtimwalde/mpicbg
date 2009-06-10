@@ -275,4 +275,15 @@ public class PointMatch implements Serializable
 			d += match.getDistance();
 		return ( float )( d / matches.size() );
 	}
+	
+	static public float maxDistance( final Collection< PointMatch > matches )
+	{
+		float max = -Float.MAX_VALUE;
+		for ( final PointMatch match : matches )
+		{
+			final float d = match.getDistance();
+			if ( d > max ) max = d;
+		}
+		return max;
+	}
 }

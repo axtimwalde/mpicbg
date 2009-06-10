@@ -180,9 +180,21 @@ public class Transform_Roi implements PlugIn
 			catch ( Exception e ) { return; }
 			t.setAlpha( alpha );
 			
-			t.setMatches( matches );
-			
-			mapping = new TransformMeshMapping( new CoordinateTransformMesh( t, meshResolution, source.getWidth(), source.getHeight() ) );
+			try
+			{
+				t.setMatches( matches );
+				mapping = new TransformMeshMapping( new CoordinateTransformMesh( t, meshResolution, source.getWidth(), source.getHeight() ) );
+			}
+			catch ( NotEnoughDataPointsException e )
+			{
+				IJ.showMessage( "Not enough landmarks selected to find a transformation model." );
+				return;
+			}
+			catch ( IllDefinedDataPointsException e )
+			{
+				IJ.showMessage( "The set of landmarks is ill-defined in terms of the desired transformation." );
+				return;
+			}
 		}
 		
 		if ( interpolate )
