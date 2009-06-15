@@ -18,7 +18,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 
@@ -35,7 +34,6 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Invert
 	protected ImagePlus imp;
 	protected ImageProcessor target;
 	protected ImageProcessor source;
-	final protected AtomicBoolean pleaseRepaint = new AtomicBoolean( false );
 	
 	protected Point[] p;
 	protected Point[] q;
@@ -65,7 +63,6 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Invert
 				imp,
 				source,
 				target,
-				pleaseRepaint,
 				mapping,
 				false );
 		painter.start();
@@ -160,11 +157,7 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Invert
 			try
 			{
 				myModel().fit( m );
-				synchronized ( painter )
-				{
-					if ( pleaseRepaint.compareAndSet( false, true ) )
-						painter.notify();
-				}
+				painter.repaint();
 			}
 			catch ( NotEnoughDataPointsException ex ) { ex.printStackTrace(); }
 			catch ( IllDefinedDataPointsException ex ) { ex.printStackTrace(); }
