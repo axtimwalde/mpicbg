@@ -471,7 +471,7 @@ public class TransformMesh implements InvertibleCoordinateTransform
 	 * @param t
 	 * @return
 	 */
-	static public boolean isInTargetPolygon(
+	static public boolean isInConvexTargetPolygon(
 			final ArrayList< PointMatch > pm,
 			final float[] t )
 	{
@@ -571,7 +571,7 @@ public class TransformMesh implements InvertibleCoordinateTransform
 		for ( final AffineModel2D ai : s )
 		{
 			final ArrayList< PointMatch > pm = av.get( ai );
-			if ( isInTargetPolygon( pm, location ) )
+			if ( isInConvexTargetPolygon( pm, location ) )
 			{
 				ai.applyInverseInPlace( location );
 				return;

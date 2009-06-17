@@ -4,7 +4,10 @@ import ij.process.ImageProcessor;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import mpicbg.models.AffineModel2D;
 import mpicbg.models.PointMatch;
 import mpicbg.models.TransformMesh;
@@ -19,6 +22,131 @@ import mpicbg.models.TransformMesh;
  */
 public class TransformMeshMapping extends InvertibleTransformMapping< TransformMesh >
 {
+	final static private class MapTriangleThread extends Thread
+	{
+		final private AtomicInteger i;
+		final private List< AffineModel2D > triangles;
+		final private TransformMesh transform;
+		final ImageProcessor source, target;
+		MapTriangleThread(
+				final AtomicInteger i,
+				final List< AffineModel2D > triangles,
+				final TransformMesh transform,
+				final ImageProcessor source,
+				final ImageProcessor target )
+		{
+			this.i = i;
+			this.triangles = triangles;
+			this.transform = transform;
+			this.source = source;
+			this.target = target;
+		}
+		
+		final public void run()
+		{
+			int k = i.getAndIncrement();
+			while ( !isInterrupted() && k < triangles.size() )
+			{
+				mapTriangle( transform, triangles.get( k ), source, target );
+				k = i.getAndIncrement();
+			}
+		}
+	}
+	
+	final static private class MapTriangleInterpolatedThread extends Thread
+	{
+		final private AtomicInteger i;
+		final private List< AffineModel2D > triangles;
+		final private TransformMesh transform;
+		final ImageProcessor source, target;
+		MapTriangleInterpolatedThread(
+				final AtomicInteger i,
+				final List< AffineModel2D > triangles,
+				final TransformMesh transform,
+				final ImageProcessor source,
+				final ImageProcessor target )
+		{
+			this.i = i;
+			this.triangles = triangles;
+			this.transform = transform;
+			this.source = source;
+			this.target = target;
+		}
+		
+		final public void run()
+		{
+			int k = i.getAndIncrement();
+			while ( !isInterrupted() && k < triangles.size() )
+			{
+				mapTriangleInterpolated( transform, triangles.get( k ), source, target );
+				k = i.getAndIncrement();
+			}
+		}
+	}
+	
+	final static private class MapTriangleInverseThread extends Thread
+	{
+		final private AtomicInteger i;
+		final private List< AffineModel2D > triangles;
+		final private TransformMesh transform;
+		final ImageProcessor source, target;
+		MapTriangleInverseThread(
+				final AtomicInteger i,
+				final List< AffineModel2D > triangles,
+				final TransformMesh transform,
+				final ImageProcessor source,
+				final ImageProcessor target )
+		{
+			this.i = i;
+			this.triangles = triangles;
+			this.transform = transform;
+			this.source = source;
+			this.target = target;
+		}
+		
+		final public void run()
+		{
+			int k = i.getAndIncrement();
+			while ( !isInterrupted() && k < triangles.size() )
+			{
+				mapTriangleInverse( transform, triangles.get( k ), source, target );
+				k = i.getAndIncrement();
+			}
+		}
+	}
+	
+	final static private class MapTriangleInverseInterpolatedThread extends Thread
+	{
+		final private AtomicInteger i;
+		final private List< AffineModel2D > triangles;
+		final private TransformMesh transform;
+		final ImageProcessor source, target;
+		MapTriangleInverseInterpolatedThread(
+				final AtomicInteger i,
+				final List< AffineModel2D > triangles,
+				final TransformMesh transform,
+				final ImageProcessor source,
+				final ImageProcessor target )
+		{
+			this.i = i;
+			this.triangles = triangles;
+			this.transform = transform;
+			this.source = source;
+			this.target = target;
+		}
+		
+		final public void run()
+		{
+			int k = i.getAndIncrement();
+			while ( !isInterrupted() && k < triangles.size() )
+			{
+				mapTriangleInverseInterpolated( transform, triangles.get( k ), source, target );
+				k = i.getAndIncrement();
+			}
+		}
+	}
+	
+	
 	public TransformMeshMapping( final TransformMesh t )
 	{
 		super( t );
@@ -51,6 +179,50 @@ public class TransformMeshMapping extends InvertibleTransformMapping< TransformM
 		}
 	}
 	
+	
+	/**
+	 * Checks if a location is inside a given triangle.
+	 * 
+	 * @param pm
+	 * @param t
+	 * @return
+	 */
+	final static private boolean isInTriangle(
+			final float ax,
+			final float ay,
+			final float bx,
+			final float by,
+			final float cx,
+			final float cy,
+			final float tx,
+			final float ty )
+	{
+		final boolean d;
+		{
+			final float x1 = bx - ax;
+			final float y1 = by - ay;
+			final float x2 = tx - ax;
+			final float y2 = ty - ay;
+			d = x1 * y2 - y1 * x2 < 0;
+		}
+		{
+			final float x1 = cx - bx;
+			final float y1 = cy - by;
+			final float x2 = tx - bx;
+			final float y2 = ty - by;
+			if ( d ^ x1 * y2 - y1 * x2 < 0 ) return false;
+		}
+		{
+			final float x1 = ax - cx;
+			final float y1 = ay - cy;
+			final float x2 = tx - cx;
+			final float y2 = ty - cy;
+			if ( d ^ x1 * y2 - y1 * x2 < 0 ) return false;
+		}
+		return true;
+	}
+	
+	
 	final static protected void mapTriangle(
 			final TransformMesh m, 
 			final AffineModel2D ai,
@@ -65,15 +237,24 @@ public class TransformMeshMapping extends InvertibleTransformMapping< TransformM
 		final int maxX = ( int )max[ 0 ];
 		final int maxY = ( int )max[ 1 ];
 		
+		final float[] a = pm.get( 0 ).getP2().getW();
+		final float ax = a[ 0 ];
+		final float ay = a[ 1 ];
+		final float[] b = pm.get( 1 ).getP2().getW();
+		final float bx = b[ 0 ];
+		final float by = b[ 1 ];
+		final float[] c = pm.get( 2 ).getP2().getW();
+		final float cx = c[ 0 ];
+		final float cy = c[ 1 ];
 		final float[] t = new float[ 2 ];
 		for ( int y = ( int )min[ 1 ]; y <= maxY; ++y )
 		{
 			for ( int x = ( int )min[ 0 ]; x <= maxX; ++x )
 			{
-				t[ 0 ] = x;
-				t[ 1 ] = y;
-				if ( TransformMesh.isInTargetPolygon( pm, t ) )
+				if ( isInTriangle( ax, ay, bx, by, cx, cy, x, y ) )
 				{
+					t[ 0 ] = x;
+					t[ 1 ] = y;
 					try
 					{
 						ai.applyInverseInPlace( t );
@@ -103,15 +284,24 @@ public class TransformMeshMapping extends InvertibleTransformMapping< TransformM
 		final int maxX = ( int )max[ 0 ];
 		final int maxY = ( int )max[ 1 ];
 		
+		final float[] a = pm.get( 0 ).getP2().getW();
+		final float ax = a[ 0 ];
+		final float ay = a[ 1 ];
+		final float[] b = pm.get( 1 ).getP2().getW();
+		final float bx = b[ 0 ];
+		final float by = b[ 1 ];
+		final float[] c = pm.get( 2 ).getP2().getW();
+		final float cx = c[ 0 ];
+		final float cy = c[ 1 ];
 		final float[] t = new float[ 2 ];
 		for ( int y = ( int )min[ 1 ]; y <= maxY; ++y )
 		{
 			for ( int x = ( int )min[ 0 ]; x <= maxX; ++x )
 			{
-				t[ 0 ] = x;
-				t[ 1 ] = y;
-				if ( TransformMesh.isInTargetPolygon( pm, t ) )
+				if ( isInTriangle( ax, ay, bx, by, cx, cy, x, y ) )
 				{
+					t[ 0 ] = x;
+					t[ 1 ] = y;
 					try
 					{
 						ai.applyInverseInPlace( t );
@@ -127,14 +317,82 @@ public class TransformMeshMapping extends InvertibleTransformMapping< TransformM
 		}
 	}
 	
+	final public void map(
+			final ImageProcessor source,
+			final ImageProcessor target,
+			final int numThreads )
+	{
+		if ( numThreads == 1 )
+		{
+			/* no overhead for thread creation */
+			final Set< AffineModel2D > s = transform.getAV().keySet();
+			for ( final AffineModel2D ai : s )
+				mapTriangle( transform, ai, source, target );
+		}
+		else
+		{
+			final List< AffineModel2D > l = new ArrayList< AffineModel2D >();
+			l.addAll( transform.getAV().keySet() );
+			final AtomicInteger i = new AtomicInteger( 0 );
+			final ArrayList< Thread > threads = new ArrayList< Thread >( numThreads );
+			for ( int k = 0; k < numThreads; ++k )
+			{
+				final Thread mtt = new MapTriangleThread( i, l, transform, source, target );
+				threads.add( mtt );
+				mtt.start();
+			}
+			for ( final Thread mtt : threads )
+			{
+				try
+				{
+					mtt.join();
+				}
+				catch ( InterruptedException e ) {}
+			}
+		}
+	}
+	
 	@Override
 	final public void map(
 			final ImageProcessor source,
 			final ImageProcessor target )
 	{
-		final Set< AffineModel2D > s = transform.getAV().keySet();
-		for ( final AffineModel2D ai : s )
-			mapTriangle( transform, ai, source, target );
+		map( source, target, Runtime.getRuntime().availableProcessors() );
+	}
+	
+	final public void mapInterpolated(
+			final ImageProcessor source,
+			final ImageProcessor target,
+			final int numThreads )
+	{
+		if ( numThreads == 1 )
+		{
+			/* no overhead for thread creation */
+			final Set< AffineModel2D > s = transform.getAV().keySet();
+			for ( final AffineModel2D ai : s )
+				mapTriangleInterpolated( transform, ai, source, target );
+		}
+		else
+		{
+			final List< AffineModel2D > l = new ArrayList< AffineModel2D >();
+			l.addAll( transform.getAV().keySet() );
+			final AtomicInteger i = new AtomicInteger( 0 );
+			final ArrayList< Thread > threads = new ArrayList< Thread >( numThreads );
+			for ( int k = 0; k < numThreads; ++k )
+			{
+				final Thread mtt = new MapTriangleInterpolatedThread( i, l, transform, source, target );
+				threads.add( mtt );
+				mtt.start();
+			}
+			for ( final Thread mtt : threads )
+			{
+				try
+				{
+					mtt.join();
+				}
+				catch ( InterruptedException e ) {}
+			}
+		}
 	}
 	
 	@Override
@@ -142,9 +400,7 @@ public class TransformMeshMapping extends InvertibleTransformMapping< TransformM
 			final ImageProcessor source,
 			final ImageProcessor target )
 	{
-		final Set< AffineModel2D > s = transform.getAV().keySet();
-		for ( final AffineModel2D ai : s )
-			mapTriangleInterpolated( transform, ai, source, target );
+		mapInterpolated( source, target, Runtime.getRuntime().availableProcessors() );
 	}
 	
 	
@@ -189,15 +445,24 @@ public class TransformMeshMapping extends InvertibleTransformMapping< TransformM
 		final int maxX = ( int )max[ 0 ];
 		final int maxY = ( int )max[ 1 ];
 		
+		final float[] a = pm.get( 0 ).getP1().getL();
+		final float ax = a[ 0 ];
+		final float ay = a[ 1 ];
+		final float[] b = pm.get( 1 ).getP1().getL();
+		final float bx = b[ 0 ];
+		final float by = b[ 1 ];
+		final float[] c = pm.get( 2 ).getP1().getL();
+		final float cx = c[ 0 ];
+		final float cy = c[ 1 ];
 		final float[] t = new float[ 2 ];
 		for ( int y = ( int )min[ 1 ]; y <= maxY; ++y )
 		{
 			for ( int x = ( int )min[ 0 ]; x <= maxX; ++x )
 			{
-				t[ 0 ] = x;
-				t[ 1 ] = y;
-				if ( TransformMesh.isInSourcePolygon( pm, t ) )
+				if ( isInTriangle( ax, ay, bx, by, cx, cy, x, y ) )
 				{
+					t[ 0 ] = x;
+					t[ 1 ] = y;
 					ai.applyInPlace( t );
 					target.putPixel( x, y, source.getPixel( ( int )( t[ 0 ] + 0.5f ), ( int )( t[ 1 ] + 0.5f ) ) );
 				}
@@ -219,15 +484,24 @@ public class TransformMeshMapping extends InvertibleTransformMapping< TransformM
 		final int maxX = ( int )max[ 0 ];
 		final int maxY = ( int )max[ 1 ];
 		
+		final float[] a = pm.get( 0 ).getP1().getL();
+		final float ax = a[ 0 ];
+		final float ay = a[ 1 ];
+		final float[] b = pm.get( 1 ).getP1().getL();
+		final float bx = b[ 0 ];
+		final float by = b[ 1 ];
+		final float[] c = pm.get( 2 ).getP1().getL();
+		final float cx = c[ 0 ];
+		final float cy = c[ 1 ];
 		final float[] t = new float[ 2 ];
 		for ( int y = ( int )min[ 1 ]; y <= maxY; ++y )
 		{
 			for ( int x = ( int )min[ 0 ]; x <= maxX; ++x )
 			{
-				t[ 0 ] = x;
-				t[ 1 ] = y;
-				if ( TransformMesh.isInSourcePolygon( pm, t ) )
+				if ( isInTriangle( ax, ay, bx, by, cx, cy, x, y ) )
 				{
+					t[ 0 ] = x;
+					t[ 1 ] = y;
 					ai.applyInPlace( t );
 					target.putPixel( x, y, source.getPixelInterpolated( t[ 0 ], t[ 1 ] ) );
 				}
@@ -235,27 +509,90 @@ public class TransformMeshMapping extends InvertibleTransformMapping< TransformM
 		}
 	}
 	
-	//@Override
+	final public void mapInverse(
+			final ImageProcessor source,
+			final ImageProcessor target,
+			final int numThreads )
+	{
+		if ( numThreads == 1 )
+		{
+			/* no overhead for thread creation */
+			final Set< AffineModel2D > s = transform.getAV().keySet();
+			for ( final AffineModel2D ai : s )
+				mapTriangleInverse( transform, ai, source, target );
+		}
+		else
+		{
+			final List< AffineModel2D > l = new ArrayList< AffineModel2D >();
+			l.addAll( transform.getAV().keySet() );
+			final AtomicInteger i = new AtomicInteger( 0 );
+			final ArrayList< Thread > threads = new ArrayList< Thread >( numThreads );
+			for ( int k = 0; k < numThreads; ++k )
+			{
+				final Thread mtt = new MapTriangleInverseThread( i, l, transform, source, target );
+				threads.add( mtt );
+				mtt.start();
+			}
+			for ( final Thread mtt : threads )
+			{
+				try
+				{
+					mtt.join();
+				}
+				catch ( InterruptedException e ) {}
+			}
+		}
+	}
+	
+	@Override
 	final public void mapInverse(
 			final ImageProcessor source,
 			final ImageProcessor target )
 	{
-		target.setColor( Color.black );
-		target.fill();
-		final Set< AffineModel2D > s = transform.getAV().keySet();
-		for ( final AffineModel2D ai : s )
-			mapTriangleInverse( transform, ai, source, target );
+		mapInverse( source, target, Runtime.getRuntime().availableProcessors() );
 	}
 	
-	//@Override
+	final public void mapInverseInterpolated(
+			final ImageProcessor source,
+			final ImageProcessor target,
+			final int numThreads )
+	{
+		if ( numThreads == 1 )
+		{
+			/* no overhead for thread creation */
+			final Set< AffineModel2D > s = transform.getAV().keySet();
+			for ( final AffineModel2D ai : s )
+				mapTriangleInverseInterpolated( transform, ai, source, target );
+		}
+		else
+		{
+			final List< AffineModel2D > l = new ArrayList< AffineModel2D >();
+			l.addAll( transform.getAV().keySet() );
+			final AtomicInteger i = new AtomicInteger( 0 );
+			final ArrayList< Thread > threads = new ArrayList< Thread >( numThreads );
+			for ( int k = 0; k < numThreads; ++k )
+			{
+				final Thread mtt = new MapTriangleInverseInterpolatedThread( i, l, transform, source, target );
+				threads.add( mtt );
+				mtt.start();
+			}
+			for ( final Thread mtt : threads )
+			{
+				try
+				{
+					mtt.join();
+				}
+				catch ( InterruptedException e ) {}
+			}
+		}
+	}
+	
+	@Override
 	final public void mapInverseInterpolated(
 			final ImageProcessor source,
 			final ImageProcessor target )
 	{
-		target.setColor( Color.black );
-		target.fill();
-		final Set< AffineModel2D > s = transform.getAV().keySet();
-		for ( final AffineModel2D ai : s )
-			mapTriangleInverseInterpolated( transform, ai, source, target );
+		mapInverseInterpolated( source, target, Runtime.getRuntime().availableProcessors() );
 	}
+	
 }
