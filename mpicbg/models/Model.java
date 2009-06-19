@@ -196,6 +196,7 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 	 * @param inliers Remaining after the robust regression filter
 	 * @param maxTrust reject candidates with a cost larger than
 	 *   maxTrust * median cost
+	 * @param minNumInliers minimally required absolute number of inliers 
 	 * 
 	 * @return true if {@link Model} could be estimated and inliers is not
 	 *   empty, false otherwise.  If false, {@link Model} remains unchanged.
@@ -203,7 +204,8 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 	final public boolean filter(
 			final Collection< PointMatch > candidates,
 			final Collection< PointMatch > inliers,
-			final float maxTrust )
+			final float maxTrust,
+			final int minNumInliers )
 		throws NotEnoughDataPointsException
 	{
 		if ( candidates.size() < getMinNumMatches() )
@@ -250,23 +252,35 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 		}
 		while ( numInliers > inliers.size() );
 		
-		if ( numInliers < copy.getMinNumMatches() )
+		if ( numInliers < minNumInliers )
 			return false;
 		
 		set( copy );
 		return true;
 	}
 	
+	/**
+	 * Call {@link #filter(Collection, Collection, float, int)} with minNumInliers = {@link Model#getMinNumMatches()}.
+	 */
+	final public boolean filter(
+			final Collection< PointMatch > candidates,
+			final Collection< PointMatch > inliers,
+			final float maxTrust )
+		throws NotEnoughDataPointsException
+	{
+		return filter( candidates, inliers, maxTrust, getMinNumMatches() );
+	}
+	
 	
 	/**
-	 * Call {@link #filter(Collection, Collection, float)} with maxTrust = 4.
+	 * Call {@link #filter(Collection, Collection, float)} with maxTrust = 4 and minNumInliers = {@link Model#getMinNumMatches()}.
 	 */
 	final public boolean filter(
 			final Collection< PointMatch > candidates,
 			final Collection< PointMatch > inliers )
 		throws NotEnoughDataPointsException
 	{
-		return filter( candidates, inliers, 4f );
+		return filter( candidates, inliers, 4f, getMinNumMatches() );
 	}
 	
 	
@@ -417,7 +431,7 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 						maxEpsilon,
 						minInlierRatio,
 						minNumInliers ) &&
-				filter( temp, inliers, maxTrust ) )
+				filter( temp, inliers, maxTrust, minNumInliers ) )
 			return true;
 		return false;
 	}
