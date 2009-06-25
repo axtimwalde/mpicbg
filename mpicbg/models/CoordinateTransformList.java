@@ -13,15 +13,15 @@ import mpicbg.util.Util;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.4b
  */
-public class CoordinateTransformList implements Boundable
+public class CoordinateTransformList< E extends CoordinateTransform > implements Boundable
 {
 
-	final protected List< CoordinateTransform > l = new ArrayList< CoordinateTransform >();
+	final protected List< E > l = new ArrayList< E >();
 	
-	final public void add( CoordinateTransform t ){ l.add( t ); }
-	final public void remove( CoordinateTransform t ){ l.remove( t ); }
-	final public CoordinateTransform remove( int i ){ return l.remove( i ); }
-	final public CoordinateTransform get( int i ){ return l.get( i ); }
+	final public void add( E t ){ l.add( t ); }
+	final public void remove( E t ){ l.remove( t ); }
+	final public E remove( int i ){ return l.remove( i ); }
+	final public E get( int i ){ return l.get( i ); }
 	final public void clear(){ l.clear(); }
 	
 	//@Override
@@ -35,7 +35,7 @@ public class CoordinateTransformList implements Boundable
 	//@Override
 	final public void applyInPlace( final float[] location )
 	{
-		for ( final CoordinateTransform t : l )
+		for ( final E t : l )
 			t.applyInPlace( location );
 	}
 	
