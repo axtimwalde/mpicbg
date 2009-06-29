@@ -327,7 +327,9 @@ public class SIFT_Align implements PlugIn, KeyListener
 				model.concatenate( currentModel );
 			}
 			
-			ImageProcessor alignedSlice = stack.getProcessor( i + 1 ).duplicate();
+//			ImageProcessor alignedSlice = stack.getProcessor( i + 1 ).duplicate();
+			ImageProcessor alignedSlice = stack.getProcessor( i + 1 ).createProcessor( stack.getWidth(), stack.getHeight() );
+			
 			if ( p.interpolate )
 				mapping.mapInterpolated( stack.getProcessor( i + 1 ), alignedSlice );
 			else
