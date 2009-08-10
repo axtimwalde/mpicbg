@@ -15,5 +15,6 @@ mpicbg_.jar <- mpicbg/**/*.java \
 	Transform_Rigid.java \
 	Transform_Roi.java \
 	Transform_Similarity.java \
+	Transform_SpringMesh.java \
 	plugins.config \
 	LICENSE
