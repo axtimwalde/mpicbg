@@ -176,7 +176,9 @@ public class SIFT_Align implements PlugIn, KeyListener
 					Math.round( vis_scale * stack.getWidth() ),
 					Math.round( vis_scale * stack.getHeight() ) );
 		
-		stackAligned.addSlice( null, stack.getProcessor( 1 ) );
+		final ImageProcessor firstSlice = stack.getProcessor( 1 );
+		stackAligned.addSlice( null, firstSlice.duplicate() );
+		stackAligned.getProcessor( 1 ).setMinAndMax( firstSlice.getMin(), firstSlice.getMax() );
 		ImagePlus impAligned = new ImagePlus( "Aligned 1 of " + stack.getSize(), stackAligned );
 		impAligned.show();
 		
@@ -216,7 +218,7 @@ public class SIFT_Align implements PlugIn, KeyListener
 		default:
 			return;
 		}
-		Mapping mapping = new InverseTransformMapping( model );
+		Mapping mapping = new InverseTransformMapping< AbstractAffineModel2D< ? > >( model );
 		
 		for ( int i = 1; i < stack.getSize(); ++i )
 		{
@@ -327,11 +329,16 @@ public class SIFT_Align implements PlugIn, KeyListener
 				model.concatenate( currentModel );
 			}
 			
-			ImageProcessor alignedSlice = stack.getProcessor( i + 1 ).duplicate();
+//			ImageProcessor alignedSlice = stack.getProcessor( i + 1 ).duplicate();
+			final ImageProcessor originalSlice = stack.getProcessor( i + 1 );
+			originalSlice.setInterpolationMethod( ImageProcessor.BILINEAR );
+			final ImageProcessor alignedSlice = originalSlice.createProcessor( stack.getWidth(), stack.getHeight() );
+			alignedSlice.setMinAndMax( originalSlice.getMin(), originalSlice.getMax() );
+			
 			if ( p.interpolate )
-				mapping.mapInterpolated( stack.getProcessor( i + 1 ), alignedSlice );
+				mapping.mapInterpolated( originalSlice, alignedSlice );
 			else
-				mapping.map( stack.getProcessor( i + 1 ), alignedSlice );
+				mapping.map( originalSlice, alignedSlice );
 			
 			stackAligned.addSlice( null, alignedSlice );
 			if ( p.showInfo )

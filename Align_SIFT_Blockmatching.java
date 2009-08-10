@@ -90,6 +90,9 @@ public class Align_SIFT_Blockmatching implements PlugIn
 			gd.addNumericField( "inlier_ratio :", minInlierRatio, 2 );
 			gd.addChoice( "expected_transformation :", modelStrings, modelStrings[ expectedModelIndex ] );
 			
+			gd.addMessage( "Block Matching" );
+			gd.addNumericField( "minimal R :", minR, 2 );
+			
 			gd.addMessage( "Align" );
 			gd.addChoice( "approximate_transformation :", modelStrings, modelStrings[ desiredModelIndex ] );
 			gd.addNumericField( "alpha :", alpha, 2 );
@@ -115,6 +118,8 @@ public class Align_SIFT_Blockmatching implements PlugIn
 			maxEpsilon = ( float )gd.getNextNumber();
 			minInlierRatio = ( float )gd.getNextNumber();
 			expectedModelIndex = gd.getNextChoiceIndex();
+			
+			minR = ( float )gd.getNextNumber();
 			
 			desiredModelIndex = gd.getNextChoiceIndex();
 			alpha = ( float )gd.getNextNumber();

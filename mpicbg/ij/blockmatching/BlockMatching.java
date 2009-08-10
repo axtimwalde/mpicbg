@@ -226,6 +226,7 @@ public class BlockMatching
 		}
 	}
     
+    
     static protected void matchByMaximalPMCC(
     		final FloatProcessor source,
     		final FloatProcessor target,
@@ -236,8 +237,8 @@ public class BlockMatching
     		final float minR,
     		final float rod,
     		final float maxCurvature,
-    		final Collection< ? extends Point > sourcePoints,
-    		final Collection< PointMatch > sourceMatches )
+    		final Collection< PointMatch > query,
+    		final Collection< PointMatch > results )
 	{
 		final float maxCurvatureRatio = ( maxCurvature + 1 ) * ( maxCurvature + 1 ) / maxCurvature;
 
@@ -249,9 +250,13 @@ public class BlockMatching
 
 		int k = 0;
 		int l = 0;
-P:		for ( final Point p : sourcePoints )
+		
+P:		for ( final PointMatch pm : query )
 		{
-			IJ.showProgress( k++, sourcePoints.size() );
+			IJ.showProgress( k++, query.size() );
+			
+			final Point p = pm.getP1();
+			final Point q = pm.getP2();
 
 			final float[] s = p.getL();
 			final int px = Math.round( s[ 0 ] );
@@ -394,13 +399,13 @@ P:		for ( final Point p : sourcePoints )
 				final float[] t = new float[] { tx + s[ 0 ] + ox, ty + s[ 1 ] + oy };
 				// System.out.println( k + " : " + ( tx + ox ) + ", " + ( ty +
 				// oy ) + " => " + rMax );
-				sourceMatches.add( new PointMatch( p, new Point( t ) ) );
+				results.add( new PointMatch( p, new Point( t ) ) );
 
 				rMap.setMinAndMax( rMap.getMin(), rMap.getMax() );
 				rMapStack.addSlice( "" + ++l, rMap );
 			}
 		}
-		if ( sourceMatches.size() > 0 ) new ImagePlus( "r", rMapStack ).show();
+		if ( results.size() > 0 ) new ImagePlus( "r", rMapStack ).show();
 	}
     
     
@@ -497,6 +502,11 @@ P:		for ( final Point p : sourcePoints )
 			scaledSourcePoints.put( new Point( l ), p );
 		}
 		
+		/* initialize source points and the expected place to search for them temporarily */
+		final Collection< PointMatch > query = new ArrayList< PointMatch >();
+		for ( final Point p : scaledSourcePoints.keySet() )
+			query.add( new PointMatch( p, p.clone()) );
+		
 		matchByMaximalPMCC(
 				scaledSource,
 				mappedScaledTarget,
@@ -507,7 +517,7 @@ P:		for ( final Point p : sourcePoints )
 				minR,
 				rod,
 				maxCurvature,
-				scaledSourcePoints.keySet(),
+				query,
 				scaledSourceMatches );
 		
 		for ( final PointMatch p : scaledSourceMatches )

@@ -31,8 +31,8 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 {
 	static final protected int MIN_NUM_MATCHES = 3;
 	
-	private float m00 = 1.0f, m10 = 0.0f, m01 = 0.0f, m11 = 1.0f, m02 = 0.0f, m12 = 0.0f;
-	private float i00 = 1.0f, i10 = 0.0f, i01 = 0.0f, i11 = 1.0f, i02 = 0.0f, i12 = 0.0f;
+	protected float m00 = 1.0f, m10 = 0.0f, m01 = 0.0f, m11 = 1.0f, m02 = 0.0f, m12 = 0.0f;
+	protected float i00 = 1.0f, i10 = 0.0f, i01 = 0.0f, i11 = 1.0f, i02 = 0.0f, i12 = 0.0f;
 	
 	private boolean isInvertible = true;
 	
@@ -187,7 +187,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	}
 
 	@Override
-	final public AffineModel2D clone()
+	public AffineModel2D clone()
 	{
 		AffineModel2D m = new AffineModel2D();
 		m.m00 = m00;
@@ -205,7 +205,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		return m;
 	}
 	
-	final private void invert()
+	final protected void invert()
 	{
 		final float det = m00 * m11 - m01 * m10;
 		if ( det == 0 )
@@ -322,7 +322,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	 * TODO Not yet tested
 	 */
 	//@Override
-	final public AffineModel2D createInverse()
+	public AffineModel2D createInverse()
 	{
 		final AffineModel2D ict = new AffineModel2D();
 		

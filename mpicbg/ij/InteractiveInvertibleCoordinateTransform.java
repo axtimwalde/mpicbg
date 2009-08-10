@@ -56,6 +56,7 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Invert
 		imp = IJ.getImage();
 		target = imp.getProcessor();
 		source = target.duplicate();
+		source.setInterpolationMethod( ImageProcessor.BILINEAR );
 		
 		mapping = new InverseTransformMapping< InvertibleModel >( myModel() );
 		

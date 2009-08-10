@@ -64,6 +64,7 @@ public abstract class InteractiveMapping implements PlugIn, MouseListener, Mouse
 		imp = IJ.getImage();
 		target = imp.getProcessor();
 		source = target.duplicate();
+		source.setInterpolationMethod( ImageProcessor.BILINEAR );
 		
 		init();
 		

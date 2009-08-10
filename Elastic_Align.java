@@ -284,6 +284,8 @@ public class Elastic_Align implements PlugIn, KeyListener
 					pm12,
 					new ErrorStatistic( 1 ) );
 			
+			IJ.log( "> found " + pm12.size() + " correspondences." );
+			
 			final List< Point > s1 = new ArrayList< Point >();
 			PointMatch.sourcePoints( pm12, s1 );
 			final ImagePlus imp1 = new ImagePlus( i + " >", ip1 );
@@ -308,10 +310,14 @@ public class Elastic_Align implements PlugIn, KeyListener
 					pm21,
 					new ErrorStatistic( 1 ) );
 			
+			IJ.log( "< found " + pm21.size() + " correspondences." );
+			
 			final List< Point > s2 = new ArrayList< Point >();
 			PointMatch.sourcePoints( pm21, s2 );
 			final ImagePlus imp2 = new ImagePlus( i + " <", ip2 );
-			imp2.show();
+			imp2.show();IJ.log( "> found " + pm12.size() + " correspondences." );
+			
+			
 			imp2.getCanvas().setDisplayList( BlockMatching.illustrateMatches( pm21 ), Color.yellow, null );
 			imp2.setRoi( Util.pointsToPointRoi( s2 ) );
 			imp2.updateAndDraw();
@@ -355,6 +361,7 @@ public class Elastic_Align implements PlugIn, KeyListener
 				( e.getKeyCode() == KeyEvent.VK_F1 ) &&
 				( e.getSource() instanceof TextField ) )
 		{
+			
 		}
 	}
 

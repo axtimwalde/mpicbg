@@ -7,16 +7,13 @@ mpicbg_.jar <- mpicbg/**/*.java \
 	Elastic_Align.java \
 	Find_PointRoi.java \
 	MOPS_ExtractPointRoi.java \
-	Optic_Flow.java \
 	SIFT_Align.java \
 	SIFT_ExtractPointRoi.java \
-	SIFT_Test.java \
 	Transform_Affine.java \
 	Transform_MovingLeastSquaresMesh.java \
 	Transform_Perspective.java \
 	Transform_Rigid.java \
-	Transform_Similarity.java \
-	Transform_SpringMesh.java \
 	Transform_Roi.java \
+	Transform_Similarity.java \
 	plugins.config \
 	LICENSE
