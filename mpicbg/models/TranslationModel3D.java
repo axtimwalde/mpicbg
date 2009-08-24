@@ -113,6 +113,13 @@ public class TranslationModel3D extends InvertibleModel< TranslationModel3D >
 		// TODO If you ever need it, please implement it...
 	}
 	
+	final public void set( final float tx, final float ty, final float tz )
+	{
+		translation[ 0 ] = tx;
+		translation[ 1 ] = ty;
+		translation[ 2 ] = tz;
+	}
+	
 	@Override
 	final public void set( final TranslationModel3D m )
 	{
