@@ -11,14 +11,14 @@ import mpicbg.util.Util;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.4b
  */
-public class InvertibleCoordinateTransformList implements InvertibleBoundable
+public class InvertibleCoordinateTransformList< E extends InvertibleCoordinateTransform > implements InvertibleBoundable
 {
-	final protected List< InvertibleCoordinateTransform > l = new ArrayList< InvertibleCoordinateTransform >();
+	final protected List< E > l = new ArrayList< E >();
 	
-	public void add( InvertibleCoordinateTransform t ){ l.add( t ); }
-	public void remove( InvertibleCoordinateTransform t ){ l.remove( t ); }
-	public InvertibleCoordinateTransform remove( int i ){ return l.remove( i ); }
-	public InvertibleCoordinateTransform get( int i ){ return l.get( i ); }
+	public void add( E t ){ l.add( t ); }
+	public void remove( E t ){ l.remove( t ); }
+	public E remove( int i ){ return l.remove( i ); }
+	public E get( int i ){ return l.get( i ); }
 	final public void clear(){ l.clear(); }
 	
 	//@Override
@@ -32,7 +32,7 @@ public class InvertibleCoordinateTransformList implements InvertibleBoundable
 	//@Override
 	final public void applyInPlace( final float[] location )
 	{
-		for ( final CoordinateTransform t : l )
+		for ( final E t : l )
 			t.applyInPlace( location );
 	}
 	
@@ -47,7 +47,7 @@ public class InvertibleCoordinateTransformList implements InvertibleBoundable
 	//@Override
 	final public void applyInverseInPlace( float[] location ) throws NoninvertibleModelException
 	{
-		final ListIterator< InvertibleCoordinateTransform > i = l.listIterator( l.size() );
+		final ListIterator< E > i = l.listIterator( l.size() );
 		while ( i.hasPrevious() )
 			i.previous().applyInverseInPlace( location );
 	}
@@ -175,12 +175,12 @@ public class InvertibleCoordinateTransformList implements InvertibleBoundable
 	}
 	
 	//@Override
-	public InvertibleCoordinateTransformList createInverse()
+	public InvertibleCoordinateTransformList< E > createInverse()
 	{
-		final InvertibleCoordinateTransformList ict = new InvertibleCoordinateTransformList();
-		final ListIterator< InvertibleCoordinateTransform > i = l.listIterator( l.size() );
+		final InvertibleCoordinateTransformList< E > ict = new InvertibleCoordinateTransformList< E >();
+		final ListIterator< E > i = l.listIterator( l.size() );
 		while ( i.hasPrevious() )
-			ict.add( i.previous().createInverse() );
+			ict.add( ( E )i.previous().createInverse() );
 		return ict;
 	}
 }

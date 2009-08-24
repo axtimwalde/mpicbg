@@ -14,15 +14,15 @@ import mpicbg.util.Util;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.4b
  */
-public class InverseCoordinateTransformList implements InverseBoundable
+public class InverseCoordinateTransformList< E extends InverseCoordinateTransform > implements InverseBoundable
 {
 
-	final private List< InverseCoordinateTransform > l = new ArrayList< InverseCoordinateTransform >();
+	final private List< E > l = new ArrayList< E >();
 	
-	final public void add( InverseCoordinateTransform t ){ l.add( t ); }
-	final public void remove( InverseCoordinateTransform t ){ l.remove( t ); }
-	final public InverseCoordinateTransform remove( int i ){ return l.remove( i ); }
-	final public InverseCoordinateTransform get( int i ){ return l.get( i ); }
+	final public void add( E t ){ l.add( t ); }
+	final public void remove( E t ){ l.remove( t ); }
+	final public E remove( int i ){ return l.remove( i ); }
+	final public E get( int i ){ return l.get( i ); }
 	final public void clear(){ l.clear(); }
 	
 	//@Override
@@ -36,7 +36,7 @@ public class InverseCoordinateTransformList implements InverseBoundable
 	//@Override
 	final public void applyInverseInPlace( float[] location ) throws NoninvertibleModelException
 	{
-		final ListIterator< InverseCoordinateTransform > i = l.listIterator( l.size() );
+		final ListIterator< E > i = l.listIterator( l.size() );
 		while ( i.hasPrevious() )
 			i.previous().applyInverseInPlace( location );
 	}
