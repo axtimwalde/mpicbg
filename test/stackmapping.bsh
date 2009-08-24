@@ -1,0 +1,67 @@
+import ij.ImagePlus;
+import ij.process.ImageProcessor;
+import ij.IJ;
+import ij.measure.Calibration;
+import mpicbg.ij.stack.InverseTransformMapping;
+import mpicbg.models.TranslationModel3D;
+import mpicbg.models.AffineModel3D;
+import mpicbg.models.InverseCoordinateTransformList;
+
+//IJ.run( "Bat Cochlea Volume (19K)" );
+IJ.run("Fly Brain (1MB)");
+
+imp = IJ.getImage();
+
+ip = imp.getStack().getProcessor( 1 ).createProcessor( imp.getWidth(), imp.getHeight() );
+
+list = new InverseCoordinateTransformList();
+
+/* un-scale */
+c = imp.getCalibration();
+zFactor = ( float )( c.pixelDepth / c.pixelWidth );
+unScale = new AffineModel3D();
+unScale.set(
+	1.0f, 0.0f, 0.0f, 0.0f,
+	0.0f, 1.0f, 0.0f, 0.0f,
+	0.0f, 0.0f, zFactor, 0.0f );
+
+/* slice shift */
+sliceShift = new TranslationModel3D();
+sliceShift.set( 0, 0, -10 );
+
+/* center shift */
+centerShift = new TranslationModel3D();
+centerShift.set( -imp.getWidth() / 2, -imp.getHeight() / 2, -imp.getStack().getSize() / 2 * zFactor );
+
+/* center un-shift */
+centerUnShift = new TranslationModel3D();
+centerUnShift.set( imp.getWidth() / 2, imp.getHeight() / 2, imp.getStack().getSize() / 2 * zFactor );
+
+/* rotation */
+float cos = ( float )Math.cos( 0.34906585 );
+float sin = ( float )Math.sin( 0.34906585 );
+rotation = new AffineModel3D();
+rotation.set(
+	sin, 0.0f, cos, 0.0f,
+	0.0f, 1.0f, 0.0f, 0.0f,
+	cos, 0.0f, -sin, 0.0f );
+
+list.add( unScale );
+list.add( centerShift );
+list.add( rotation );
+list.add( centerUnShift );
+list.add( sliceShift );
+
+
+mapping = new InverseTransformMapping( list );
+try
+{
+	mapping.mapInterpolated( imp.getStack(), ip );
+}
+catch ( Exception e )
+{
+	e.printStackTrace();
+}
+
+new ImagePlus( "slice", ip ).show();
+

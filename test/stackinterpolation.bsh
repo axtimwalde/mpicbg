@@ -1,0 +1,51 @@
+import ij.process.*;
+import ij.*;
+import mpicbg.ij.stack.*;
+
+bp = new ByteProcessor( 3, 1 );
+bp.set( 0, 0, 0 );
+bp.set( 2, 0, 0xff );
+bimp = new ImagePlus( "byte", bp );
+bimp.show();
+
+bi = new InverseTransformMapping.ByteInterpolator();
+bp.set( 1, 0, bi.interpolate( bp.getPixel( 0, 0 ), bp.getPixel( 2, 0 ), 0.25f ) );
+
+bimp.updateAndDraw();
+
+
+sp = new ShortProcessor( 3, 1 );
+sp.set( 0, 0, 0 );
+sp.set( 2, 0, 0xffff );
+simp = new ImagePlus( "short", sp );
+simp.show();
+
+si = new InverseTransformMapping.ShortInterpolator();
+sp.set( 1, 0, si.interpolate( sp.getPixel( 0, 0 ), sp.getPixel( 2, 0 ), 0.25f ) );
+
+simp.updateAndDraw();
+
+
+fp = new FloatProcessor( 3, 1 );
+fp.set( 0, 0, Float.floatToIntBits( -Float.MAX_VALUE ) );
+fp.set( 2, 0, Float.floatToIntBits( Float.MAX_VALUE ) );
+fimp = new ImagePlus( "float", fp );
+fimp.show();
+
+fi = new InverseTransformMapping.FloatInterpolator();
+fp.set( 1, 0, fi.interpolate( fp.getPixel( 0, 0 ), fp.getPixel( 2, 0 ), 0.25f ) );
+
+fimp.updateAndDraw();
+
+
+cp = new ColorProcessor( 3, 1 );
+cp.set( 0, 0, 0xffff00 );
+cp.set( 2, 0, 0x0000ff );
+cimp = new ImagePlus( "color", cp );
+cimp.show();
+
+ci = new InverseTransformMapping.RGBInterpolator();
+cp.set( 1, 0, ci.interpolate( cp.getPixel( 0, 0 ), cp.getPixel( 2, 0 ), 0.25f ) );
+
+cimp.updateAndDraw();
+
