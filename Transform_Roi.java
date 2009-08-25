@@ -101,7 +101,7 @@ public class Transform_Roi implements PlugIn
 		final ImagePlus target = template.createImagePlus();
 		
 		final ImageProcessor ipSource = source.getProcessor();
-		final ImageProcessor ipTarget = template.getProcessor().createProcessor( template.getWidth(), template.getHeight() );
+		final ImageProcessor ipTarget = source.getProcessor().createProcessor( template.getWidth(), template.getHeight() );
 		
 		/* Collect the PointRois from both images and make PointMatches of them. */
 		final List< Point > sourcePoints = Util.pointRoiToPoints( ( PointRoi )source.getRoi() );
