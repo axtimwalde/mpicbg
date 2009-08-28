@@ -134,5 +134,5 @@ public abstract class AbstractAffineModel2D< M extends AbstractAffineModel2D< M 
 	abstract public void concatenate( final M model );
 	
 	//@Override
-	abstract public AbstractAffineModel2D< M > createInverse();
+	abstract public M createInverse();
 }
