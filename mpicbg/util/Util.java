@@ -88,4 +88,28 @@ final public class Util
 			c *= a;
 		return c;
 	}
+	
+	/**
+	 * Writes min(a,b) into a
+	 * 
+	 * @param a
+	 * @param b
+	 */
+	final static public void min( final float[] a, final float[] b )
+	{
+		for ( int i = 0; i < a.length; ++i )
+			if ( b[ i ] < a[ i ] ) a[ i ] = b[ i ];
+	}
+	
+	/**
+	 * Writes max(a,b) into a
+	 * 
+	 * @param a
+	 * @param b
+	 */
+	final static public void max( final float[] a, final float[] b )
+	{
+		for ( int i = 0; i < a.length; ++i )
+			if ( b[ i ] > a[ i ] ) a[ i ] = b[ i ];
+	}
 }
