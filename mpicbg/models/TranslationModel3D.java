@@ -7,7 +7,7 @@ import java.util.Collection;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.2b
  */
-public class TranslationModel3D extends InvertibleModel< TranslationModel3D >
+public class TranslationModel3D extends InvertibleModel< TranslationModel3D > implements InvertibleBoundable
 {
 	static final protected int MIN_NUM_MATCHES = 1;
 	
@@ -129,7 +129,7 @@ public class TranslationModel3D extends InvertibleModel< TranslationModel3D >
 		cost = m.getCost();
 	}
 	
-	final public TranslationModel3D clone()
+	public TranslationModel3D clone()
 	{
 		final TranslationModel3D m = new TranslationModel3D();
 		m.translation[ 0 ] = translation[ 0 ];
@@ -154,5 +154,17 @@ public class TranslationModel3D extends InvertibleModel< TranslationModel3D >
 		ict.cost = cost;
 		
 		return ict;
+	}
+
+	public void estimateBounds( float[] min, float[] max )
+	{
+		applyInPlace( min );
+		applyInPlace( max );
+	}
+
+	public void estimateInverseBounds( float[] min, float[] max ) throws NoninvertibleModelException
+	{
+		applyInverseInPlace( min );
+		applyInverseInPlace( max );		
 	}
 }
