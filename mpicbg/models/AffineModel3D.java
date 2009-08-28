@@ -3,6 +3,7 @@ package mpicbg.models;
 import java.util.Collection;
 
 import mpicbg.util.Matrix3x3;
+import mpicbg.util.Util;
 
 /**
  * 3d-affine transformation models to be applied to points in 3d-space.
@@ -29,21 +30,21 @@ import mpicbg.util.Matrix3x3;
  * @version 0.1b
  * 
  */
-public class AffineModel3D extends InvertibleModel< AffineModel3D >
+public class AffineModel3D extends InvertibleModel< AffineModel3D > implements InvertibleBoundable
 {
 	static final protected int MIN_NUM_MATCHES = 4;
 	
-	private float
+	protected float
 		m00 = 1.0f, m01 = 0.0f, m02 = 0.0f, m03 = 0.0f, 
 		m10 = 0.0f, m11 = 1.0f, m12 = 0.0f, m13 = 0.0f, 
 		m20 = 0.0f, m21 = 0.0f, m22 = 1.0f, m23 = 0.0f;
 	
-	private float
+	protected float
 		i00 = 1.0f, i01 = 0.0f, i02 = 0.0f, i03 = 0.0f, 
 		i10 = 0.0f, i11 = 1.0f, i12 = 0.0f, i13 = 0.0f, 
 		i20 = 0.0f, i21 = 0.0f, i22 = 1.0f, i23 = 0.0f;
 
-	private boolean isInvertible = true;
+	protected boolean isInvertible = true;
 	
 	@Override
 	final public int getMinNumMatches(){ return MIN_NUM_MATCHES; }
@@ -220,20 +221,25 @@ public class AffineModel3D extends InvertibleModel< AffineModel3D >
 	final public void set( final AffineModel3D m )
 	{
 		m00 = m.m00;
-		m01 = m.m01;
 		m10 = m.m10;
+		m20 = m.m20;
+		m01 = m.m01;
 		m11 = m.m11;
-
+		m21 = m.m21;
 		m02 = m.m02;
 		m12 = m.m12;
+		m22 = m.m22;
+		m03 = m.m03;
+		m13 = m.m13;
+		m23 = m.m23;
+		
+		cost = m.cost;
 		
 		invert();
-
-		cost = m.getCost();
 	}
 
 	@Override
-	final public AffineModel3D clone()
+	public AffineModel3D clone()
 	{
 		AffineModel3D m = new AffineModel3D();
 		m.m00 = m00;
@@ -256,7 +262,7 @@ public class AffineModel3D extends InvertibleModel< AffineModel3D >
 		return m;
 	}
 	
-	final private void invert()
+	protected void invert()
 	{
 		final float det = Matrix3x3.det( m00, m01, m02, m10, m11, m12, m20, m21, m22 );
 		if ( det == 0 )
@@ -354,6 +360,28 @@ public class AffineModel3D extends InvertibleModel< AffineModel3D >
 		invert();
 	}
 	
+	final public void concatenate( final TranslationModel3D model )
+	{
+		final float[] t = model.getTranslation();
+		
+		m03 = m00 * t[ 0 ] + m01 * t[ 1 ] + m02 * t[ 2 ] + m03;
+		m13 = m10 * t[ 0 ] + m11 * t[ 1 ] + m12 * t[ 2 ] + m13;
+		m23 = m20 * t[ 0 ] + m21 * t[ 1 ] + m22 * t[ 2 ] + m23;
+		
+		invert();
+	}
+	
+	final public void preConcatenate( final TranslationModel3D model )
+	{
+		final float[] t = model.getTranslation();
+		
+		m03 += t[ 0 ];
+		m13 += t[ 1 ];
+		m23 += t[ 2 ];
+		
+		invert();
+	}
+	
 	/**
 	 * Initialize the model such that the respective affine transform is:
 	 * 
@@ -415,7 +443,7 @@ public class AffineModel3D extends InvertibleModel< AffineModel3D >
 	 * TODO Not yet tested
 	 */
 	//@Override
-	final public AffineModel3D createInverse()
+	public AffineModel3D createInverse()
 	{
 		final AffineModel3D ict = new AffineModel3D();
 		
@@ -447,6 +475,149 @@ public class AffineModel3D extends InvertibleModel< AffineModel3D >
 		
 		ict.cost = cost;
 		
+		ict.isInvertible = isInvertible;
+		
 		return ict;
+	}
+
+	public void estimateBounds( float[] min, float[] max )
+	{
+		final float[] rMin = new float[]{ Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE };
+		final float[] rMax = new float[]{ -Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE };
+		
+		final float[] f = min.clone();
+		
+		applyInPlace( f );
+		Util.min( rMin, f );
+		Util.max( rMax, f );
+		
+		f[ 0 ] = max[ 0 ];
+		f[ 1 ] = min[ 1 ];
+		f[ 2 ] = min[ 2 ];
+		applyInPlace( f );
+		Util.min( rMin, f );
+		Util.max( rMax, f );
+		
+		f[ 0 ] = min[ 0 ];
+		f[ 1 ] = max[ 1 ];
+		f[ 2 ] = min[ 2 ];
+		applyInPlace( f );
+		Util.min( rMin, f );
+		Util.max( rMax, f );
+		
+		f[ 0 ] = max[ 0 ];
+		f[ 1 ] = max[ 1 ];
+		f[ 2 ] = min[ 2 ];
+		applyInPlace( f );
+		Util.min( rMin, f );
+		Util.max( rMax, f );
+		
+		f[ 0 ] = min[ 0 ];
+		f[ 1 ] = min[ 1 ];
+		f[ 2 ] = max[ 2 ];
+		applyInPlace( f );
+		Util.min( rMin, f );
+		Util.max( rMax, f );
+		
+		f[ 0 ] = max[ 0 ];
+		f[ 1 ] = min[ 1 ];
+		f[ 2 ] = max[ 2 ];
+		applyInPlace( f );
+		Util.min( rMin, f );
+		Util.max( rMax, f );
+		
+		f[ 0 ] = min[ 0 ];
+		f[ 1 ] = max[ 1 ];
+		f[ 2 ] = max[ 2 ];
+		applyInPlace( f );
+		Util.min( rMin, f );
+		Util.max( rMax, f );
+		
+		f[ 0 ] = max[ 0 ];
+		f[ 1 ] = max[ 1 ];
+		f[ 2 ] = max[ 2 ];
+		applyInPlace( f );
+		Util.min( rMin, f );
+		Util.max( rMax, f );
+		
+		min[ 0 ] = rMin[ 0 ];
+		min[ 1 ] = rMin[ 1 ];
+		min[ 2 ] = rMin[ 2 ];
+		
+		max[ 0 ] = rMax[ 0 ];
+		max[ 1 ] = rMax[ 1 ];
+		max[ 2 ] = rMax[ 2 ];
+	}
+
+	/**
+	 * TODO not yet tested!
+	 */
+	public void estimateInverseBounds( float[] min, float[] max ) throws NoninvertibleModelException
+	{
+		final float[] rMin = new float[]{ Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE };
+		final float[] rMax = new float[]{ -Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE };
+		
+		final float[] f = min.clone();
+		
+		applyInverseInPlace( f );
+		Util.min( rMin, f );
+		Util.max( rMax, f );
+		
+		f[ 0 ] = max[ 0 ];
+		f[ 1 ] = min[ 1 ];
+		f[ 2 ] = min[ 2 ];
+		applyInverseInPlace( f );
+		Util.min( rMin, f );
+		Util.max( rMax, f );
+		
+		f[ 0 ] = min[ 0 ];
+		f[ 1 ] = max[ 1 ];
+		f[ 2 ] = min[ 2 ];
+		applyInverseInPlace( f );
+		Util.min( rMin, f );
+		Util.max( rMax, f );
+		
+		f[ 0 ] = max[ 0 ];
+		f[ 1 ] = max[ 1 ];
+		f[ 2 ] = min[ 2 ];
+		applyInverseInPlace( f );
+		Util.min( rMin, f );
+		Util.max( rMax, f );
+		
+		f[ 0 ] = min[ 0 ];
+		f[ 1 ] = min[ 1 ];
+		f[ 2 ] = max[ 2 ];
+		applyInverseInPlace( f );
+		Util.min( rMin, f );
+		Util.max( rMax, f );
+		
+		f[ 0 ] = max[ 0 ];
+		f[ 1 ] = min[ 1 ];
+		f[ 2 ] = max[ 2 ];
+		applyInverseInPlace( f );
+		Util.min( rMin, f );
+		Util.max( rMax, f );
+		
+		f[ 0 ] = min[ 0 ];
+		f[ 1 ] = max[ 1 ];
+		f[ 2 ] = max[ 2 ];
+		applyInverseInPlace( f );
+		Util.min( rMin, f );
+		Util.max( rMax, f );
+		
+		f[ 0 ] = max[ 0 ];
+		f[ 1 ] = max[ 1 ];
+		f[ 2 ] = max[ 2 ];
+		applyInverseInPlace( f );
+		Util.min( rMin, f );
+		Util.max( rMax, f );
+		
+		min[ 0 ] = rMin[ 0 ];
+		min[ 1 ] = rMin[ 1 ];
+		min[ 2 ] = rMin[ 2 ];
+		
+		max[ 0 ] = rMax[ 0 ];
+		max[ 1 ] = rMax[ 1 ];
+		max[ 2 ] = rMax[ 2 ];
 	}
 }
