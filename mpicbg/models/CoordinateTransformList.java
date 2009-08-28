@@ -13,7 +13,7 @@ import mpicbg.util.Util;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.4b
  */
-public class CoordinateTransformList< E extends CoordinateTransform > implements Boundable
+public class CoordinateTransformList< E extends CoordinateTransform > implements Boundable, TransformList< E >
 {
 
 	final protected List< E > l = new ArrayList< E >();

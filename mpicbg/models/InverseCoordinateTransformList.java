@@ -14,7 +14,7 @@ import mpicbg.util.Util;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.4b
  */
-public class InverseCoordinateTransformList< E extends InverseCoordinateTransform > implements InverseBoundable
+public class InverseCoordinateTransformList< E extends InverseCoordinateTransform > implements InverseBoundable, TransformList< E >
 {
 
 	final private List< E > l = new ArrayList< E >();
