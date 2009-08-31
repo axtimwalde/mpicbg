@@ -2,6 +2,7 @@ package mpicbg.ij.util;
 
 import ij.plugin.filter.GaussianBlur;
 import ij.process.FloatProcessor;
+import ij.process.ImageProcessor;
 import mpicbg.util.Util;
 
 /**
@@ -379,5 +380,67 @@ public class Filter
 		}
 		
 		return target;
+	}
+	
+	/**
+	 * Smooth with a Gaussian kernel that represents downsampling at a given
+	 * scale factor and sourceSigma.
+	 */
+	final static public void smoothForScale(
+		final ImageProcessor source,
+		final float scale,
+		final float sourceSigma,
+		final float targetSigma )
+	{
+		if ( scale >= 1.0f ) return;
+		float s = targetSigma / scale;
+		float sigma = ( float )Math.sqrt( s * s - sourceSigma * sourceSigma );
+		new GaussianBlur().blurGaussian( source, sigma, sigma, 0.01 );
+	}
+
+
+	/**
+	 * Create a downsampled ImageProcessor.
+	 * 
+	 * @param source the source image
+	 * @param scale scaling factor
+	 * @param sourceSigma the Gaussian at which the source was sampled (guess 0.5 if you do not know)
+	 * @param targetSigma the Gaussian at which the target will be sampled
+	 * 
+	 * @return a new {@link FloatProcessor}
+	 */
+	final static public ImageProcessor createDownsampled(
+			final ImageProcessor source,
+			final float scale,
+			final float sourceSigma,
+			final float targetSigma )
+	{
+		final int ow = source.getWidth();
+		final int oh = source.getHeight();
+		final int w = Math.round( ow * scale );
+		final int h = Math.round( oh * scale );
+		
+		final ImageProcessor temp = source.duplicate();
+		if ( scale >= 1.0f ) return temp;
+			
+		smoothForScale( temp, scale, sourceSigma, targetSigma );
+		
+		return temp.resize( w, h );
+	}
+	
+	/**
+	 * Scale an image with good quality in both up and down direction
+	 */
+	final static public ImageProcessor scale(
+			final ImageProcessor source,
+			final float scale )
+	{
+		if ( scale == 1.0f ) return source.duplicate();
+		else if ( scale < 1.0f ) return createDownsampled( source, scale, 0.5f, 0.5f );
+		else
+		{
+			source.setInterpolationMethod( ImageProcessor.BILINEAR );
+			return source.resize( Math.round( scale * source.getWidth() ) );
+		}
 	}
 }
