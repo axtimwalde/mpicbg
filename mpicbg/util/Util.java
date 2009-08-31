@@ -8,6 +8,9 @@ package mpicbg.util;
  */
 final public class Util
 {
+	final static public float SQRT1 = ( float )Math.sqrt( 1 );
+	final static public float SQRT2 = ( float )Math.sqrt( 2 );
+	
 	private Util(){}
 	
 	/**
