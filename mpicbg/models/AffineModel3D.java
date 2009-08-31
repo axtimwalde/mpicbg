@@ -43,6 +43,32 @@ public class AffineModel3D extends InvertibleModel< AffineModel3D > implements I
 		i00 = 1.0f, i01 = 0.0f, i02 = 0.0f, i03 = 0.0f, 
 		i10 = 0.0f, i11 = 1.0f, i12 = 0.0f, i13 = 0.0f, 
 		i20 = 0.0f, i21 = 0.0f, i22 = 1.0f, i23 = 0.0f;
+	
+	public float[] getMatrix( final float[] m )
+	{
+		final float[] a;
+		if ( m == null || m.length != 12 )
+			a = new float[ 12 ];
+		else
+			a = m;
+		
+		a[ 0 ] = m00;
+		a[ 1 ] = m01;
+		a[ 2 ] = m02;
+		a[ 3 ] = m03;
+		
+		a[ 4 ] = m10;
+		a[ 5 ] = m11;
+		a[ 6 ] = m12;
+		a[ 7 ] = m13;
+		
+		a[ 8 ] = m20;
+		a[ 9 ] = m21;
+		a[ 10 ] = m22;
+		a[ 11 ] = m23;
+		
+		return a;
+	}
 
 	protected boolean isInvertible = true;
 	
