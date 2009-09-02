@@ -9,7 +9,7 @@ import mpicbg.util.Util;
 /**
  * 
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.4b
+ * @version 0.5b
  */
 public class InvertibleCoordinateTransformList< E extends InvertibleCoordinateTransform > implements InvertibleBoundable, TransformList< E >
 {
@@ -20,6 +20,12 @@ public class InvertibleCoordinateTransformList< E extends InvertibleCoordinateTr
 	public E remove( int i ){ return l.remove( i ); }
 	public E get( int i ){ return l.get( i ); }
 	final public void clear(){ l.clear(); }
+	final public List< E > getList( final List< E > preAllocatedList )
+	{
+		final List< E > returnList = ( preAllocatedList == null ) ? new ArrayList< E >() : preAllocatedList;
+		returnList.addAll( l );
+		return returnList;
+	}
 	
 	//@Override
 	final public float[] apply( final float[] location )

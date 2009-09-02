@@ -1,5 +1,7 @@
 package mpicbg.models;
 
+import java.util.List;
+
 /**
  * A generic list of transforms
  * 
@@ -13,5 +15,5 @@ public interface TransformList< E >
 	E remove( int i );
 	public E get( int i );
 	public void clear();
-
+	public List< E > getList( final List< E > preAllocatedList );
 }
