@@ -13,12 +13,13 @@ JAVACOPTSJARS=$(shell echo "$(EXTJARSMINUSTARGET)" | tr \  $(CPSEP))
 JAVACOPTS=-classpath ../ij.jar$(CPSEP)$(JAVACOPTSJARS) -target 1.5 -source 1.5
 
 JAVAS=$(wildcard \
-    mpicbg/ij/*.java \
+	mpicbg/ij/*.java \
+	mpicbg/ij/stack/*.java \
 	mpicbg/ij/util/*.java \
 	mpicbg/imagefeatures/*.java \
-    mpicbg/models/*.java \
-    mpicbg/trakem2/*.java \
-    mpicbg/util/*.java \
+	mpicbg/models/*.java \
+	mpicbg/trakem2/*.java \
+	mpicbg/util/*.java \
 	MOPS_ExtractPointRoi.java \
 	SIFT_Align.java \
 	SIFT_ExtractPointRoi.java \

@@ -284,49 +284,75 @@ public class AffineModel3D extends InvertibleModel< AffineModel3D >
 		i23 = -i20 * m03 - i21 * m13 - i22 * m23;
 	}
 	
-//	@Override
-//	final public void preConcatenate( final AffineModel3D model )
-//	{
-//		final float a00 = model.m00 * m00 + model.m01 * m10;
-//		final float a01 = model.m00 * m01 + model.m01 * m11;
-//		final float a02 = model.m00 * m02 + model.m01 * m12 + model.m02;
-//		
-//		final float a10 = model.m10 * m00 + model.m11 * m10;
-//		final float a11 = model.m10 * m01 + model.m11 * m11;
-//		final float a12 = model.m10 * m02 + model.m11 * m12 + model.m12;
-//		
-//		m00 = a00;
-//		m01 = a01;
-//		m02 = a02;
-//		
-//		m10 = a10;
-//		m11 = a11;
-//		m12 = a12;
-//		
-//		invert();
-//	}
-//	
-//	@Override
-//	final public void concatenate( final AffineModel3D model )
-//	{
-//		final float a00 = m00 * model.m00 + m01 * model.m10;
-//		final float a01 = m00 * model.m01 + m01 * model.m11;
-//		final float a02 = m00 * model.m02 + m01 * model.m12 + m02;
-//		
-//		final float a10 = m10 * model.m00 + m11 * model.m10;
-//		final float a11 = m10 * model.m01 + m11 * model.m11;
-//		final float a12 = m10 * model.m02 + m11 * model.m12 + m12;
-//		
-//		m00 = a00;
-//		m01 = a01;
-//		m02 = a02;
-//		
-//		m10 = a10;
-//		m11 = a11;
-//		m12 = a12;
-//		
-//		invert();
-//	}
+	final public void preConcatenate( final AffineModel3D model )
+	{
+		final float a00 = model.m00 * m00 + model.m01 * m10 + model.m02 * m20;
+		final float a01 = model.m00 * m01 + model.m01 * m11 + model.m02 * m21;
+		final float a02 = model.m00 * m02 + model.m01 * m12 + model.m02 * m22;
+		final float a03 = model.m00 * m03 + model.m01 * m13 + model.m02 * m23 + model.m03;
+		
+		final float a10 = model.m10 * m00 + model.m11 * m10 + model.m12 * m20;
+		final float a11 = model.m10 * m01 + model.m11 * m11 + model.m12 * m21;
+		final float a12 = model.m10 * m02 + model.m11 * m12 + model.m12 * m22;
+		final float a13 = model.m10 * m03 + model.m11 * m13 + model.m12 * m23 + model.m13;
+		
+		final float a20 = model.m20 * m00 + model.m21 * m10 + model.m22 * m20;
+		final float a21 = model.m20 * m01 + model.m21 * m11 + model.m22 * m21;
+		final float a22 = model.m20 * m02 + model.m21 * m12 + model.m22 * m22;
+		final float a23 = model.m20 * m03 + model.m21 * m13 + model.m22 * m23 + model.m23;
+		
+		m00 = a00;
+		m01 = a01;
+		m02 = a02;
+		m03 = a03;
+		
+		m10 = a10;
+		m11 = a11;
+		m12 = a12;
+		m13 = a13;
+		
+		m20 = a20;
+		m21 = a21;
+		m22 = a22;
+		m23 = a23;
+		
+		invert();
+	}
+	
+	final public void concatenate( final AffineModel3D model )
+	{
+		final float a00 = m00 * model.m00 + m01 * model.m10 + m02 * model.m20;
+		final float a01 = m00 * model.m01 + m01 * model.m11 + m02 * model.m21;
+		final float a02 = m00 * model.m02 + m01 * model.m12 + m02 * model.m22;
+		final float a03 = m00 * model.m03 + m01 * model.m13 + m02 * model.m23 + m03;
+		
+		final float a10 = m10 * model.m00 + m11 * model.m10 + m12 * model.m20;
+		final float a11 = m10 * model.m01 + m11 * model.m11 + m12 * model.m21;
+		final float a12 = m10 * model.m02 + m11 * model.m12 + m12 * model.m22;
+		final float a13 = m10 * model.m03 + m11 * model.m13 + m12 * model.m23 + m13;
+		
+		final float a20 = m20 * model.m00 + m21 * model.m10 + m22 * model.m20;
+		final float a21 = m20 * model.m01 + m21 * model.m11 + m22 * model.m21;
+		final float a22 = m20 * model.m02 + m21 * model.m12 + m22 * model.m22;
+		final float a23 = m20 * model.m03 + m21 * model.m13 + m22 * model.m23 + m23;
+		
+		m00 = a00;
+		m01 = a01;
+		m02 = a02;
+		m03 = a03;
+		
+		m10 = a10;
+		m11 = a11;
+		m12 = a12;
+		m13 = a13;
+		
+		m20 = a20;
+		m21 = a21;
+		m22 = a22;
+		m23 = a23;
+		
+		invert();
+	}
 	
 	/**
 	 * Initialize the model such that the respective affine transform is:

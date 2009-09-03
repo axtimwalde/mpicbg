@@ -44,7 +44,6 @@ public class InverseTransformMapping< T extends InverseCoordinateTransform > imp
 		{
 			final float fa = a & 0xff;
 			final float fb = b & 0xff;
-			System.out.println( fa + ", " + fb );
 			return Math.round( interpolate( fa, fb, da ) );
 		}
 	}
@@ -158,6 +157,7 @@ public class InverseTransformMapping< T extends InverseCoordinateTransform > imp
 		
 		/* ImageJ creates a !NEW! ImageProcessor for each call to getProcessor() */
 		final ImageProcessor slice = source.getProcessor( 1 );
+		slice.setInterpolationMethod( ImageProcessor.BILINEAR );
 		
 		final Interpolator interpolator;
 		if ( ByteProcessor.class.isInstance( slice ) ) interpolator = new ByteInterpolator();
