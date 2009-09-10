@@ -186,7 +186,7 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		float w = ( float )src.width;
 		float h = ( float )src.height;
 		final int max_kernel_size = kernel_diff[ p.steps + 2 ].length;
-		while ( w > Math.max( max_kernel_size, p.minOctaveSize ) && h > Math.max( max_kernel_size, p.minOctaveSize ) )
+		while ( w > Math.max( max_kernel_size, p.minOctaveSize - 1 ) && h > Math.max( max_kernel_size, p.minOctaveSize - 1 ) )
 		{
 			w /= 2.0f;
 			h /= 2.0f;
@@ -786,4 +786,6 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 			kernel_diff[ i ] = Filter.createGaussianKernel( sigma_diff[ i ], true );
 		}
 	}
+	
+	final public int getMaxOctaveSize(){ return p.maxOctaveSize; }
 }
