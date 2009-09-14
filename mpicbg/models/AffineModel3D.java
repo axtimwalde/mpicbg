@@ -646,4 +646,43 @@ public class AffineModel3D extends InvertibleModel< AffineModel3D > implements I
 		max[ 1 ] = rMax[ 1 ];
 		max[ 2 ] = rMax[ 2 ];
 	}
+	
+	/**
+	 * Rotate
+	 * 
+	 * @param axis 0=x, 1=y, 2=z
+	 * @param d angle in radians
+	 * 
+	 * TODO Don't be lazy and do it directly on the values instead of creating another transform
+	 */
+	public void rotate( final int axis, final float d )
+	{
+		final float dcos = ( float )Math.cos( d ); 
+		final float dsin = ( float )Math.sin( d );
+		final AffineModel3D dR = new AffineModel3D();
+		
+		switch ( axis )
+		{
+		case 0:
+			dR.set(
+					1.0f, 0.0f, 0.0f, 0.0f,
+					0.0f, dcos, -dsin, 0.0f,
+					0.0f, dsin, dcos, 0.0f );
+			break;
+		case 1:
+			dR.set(
+					dcos, 0.0f, dsin, 0.0f,
+					0.0f, 1.0f, 0.0f, 0.0f,
+					-dsin, 0.0f, dcos, 0.0f );
+			break;
+		default:
+			dR.set(
+					dcos, -dsin, 0.0f, 0.0f,
+					dsin, dcos, 0.0f, 0.0f,
+					0.0f, 0.0f, 1.0f, 0.0f );
+			break;
+		}
+		
+		preConcatenate( dR );
+	}
 }
