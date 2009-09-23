@@ -168,7 +168,7 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 	}
 	
 	@Override
-	final public SimilarityModel2D clone()
+	public SimilarityModel2D clone()
 	{
 		final SimilarityModel2D m = new SimilarityModel2D();
 		m.scos = scos;
@@ -197,7 +197,7 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 		cost = m.cost;
 	}
 	
-	final private void invert()
+	final protected void invert()
 	{
 		final float det = scos * scos + ssin * ssin;
 		
