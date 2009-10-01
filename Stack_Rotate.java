@@ -391,6 +391,7 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 						{
 							final ImageProcessor ip = source.createProcessor( w, h );
 							aMapping.mapInterpolated( stack, ip );
+//							aMapping.map( stack, ip );
 							result.addSlice( "" + i, ip );
 							a.preConcatenate( sliceShift );
 							IJ.showProgress( i, d );
@@ -426,14 +427,15 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 	 */
 	final private static void reduceAffineTransformList( final InvertibleCoordinateTransformList< ? > ictl, final AffineModel3D affine )
 	{
-		affine.set( 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0 );
+		final AffineModel3D a = new AffineModel3D();
 		for ( final InvertibleCoordinateTransform t : ictl.getList( null ) )
 		{
 			if ( AffineModel3D.class.isInstance( t ) )
-				affine.preConcatenate( ( AffineModel3D )t );
+				a.preConcatenate( ( AffineModel3D )t );
 			else if ( TranslationModel3D.class.isInstance( t ) )
-				affine.preConcatenate( ( TranslationModel3D )t );
+				a.preConcatenate( ( TranslationModel3D )t );
 		}
+		affine.set( a );
 	}
 	
 	public void keyPressed( KeyEvent e )
