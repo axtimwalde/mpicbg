@@ -66,34 +66,34 @@ public class TileConfiguration
 	 * 
 	 * @param t
 	 */
-	final public void addTile( final Tile< ? > t ){ tiles.add( t ); }
+	public void addTile( final Tile< ? > t ){ tiles.add( t ); }
 	
 	/**
 	 * Add a {@link Collection} of {@link Tile Tiles}.
 	 * 
 	 * @param t
 	 */
-	final public void addTiles( final Collection< ? extends Tile< ? > > t ){ tiles.addAll( t ); }
+	public void addTiles( final Collection< ? extends Tile< ? > > t ){ tiles.addAll( t ); }
 	
 	/**
 	 * Add all {@link Tile Tiles} of another {@link TileConfiguration}.
 	 * 
 	 * @param t
 	 */
-	final public void addTiles( final TileConfiguration t ){ tiles.addAll( t.tiles ); }
+	public void addTiles( final TileConfiguration t ){ tiles.addAll( t.tiles ); }
 	
 	/**
 	 * Fix a single {@link Tile}.
 	 * 
 	 * @param t
 	 */
-	final public void fixTile( final Tile< ? > t ){ fixedTiles.add( t ); }
+	public void fixTile( final Tile< ? > t ){ fixedTiles.add( t ); }
 	
 	/**
 	 * Update all {@link PointMatch Correspondences} in all {@link Tile Tiles}
 	 * and estimate the average displacement. 
 	 */
-	final private void update()
+	protected void update()
 	{
 		double cd = 0.0;
 		minError = Double.MAX_VALUE;
@@ -133,12 +133,14 @@ public class TileConfiguration
 		
 		boolean proceed = i < maxIterations;
 		
+		/* initialize the configuration with the current model of each tile */
+		update();
+		
 		while ( proceed )
 		{
 			for ( final Tile< ? > tile : tiles )
 			{
 				if ( fixedTiles.contains( tile ) ) continue;
-				tile.update();
 				tile.fitModel();
 				tile.update();
 			}
