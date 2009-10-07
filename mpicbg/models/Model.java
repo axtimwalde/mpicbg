@@ -287,7 +287,7 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 	/**
 	 * Find the {@link Model} of a set of {@link PointMatch} candidates
 	 * containing a high number of outliers using
-	 * {@link #ransac(Class, List, Collection, int, double, double) RANSAC}
+	 * {@link #ransac(List, Collection, int, double, double, int) RANSAC}
 	 * \citet[{FischlerB81}.
 	 * 
 	 * @param modelClass class of the model to be estimated
@@ -322,7 +322,7 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 		int i = 0;
 		final HashSet< PointMatch > minMatches = new HashSet< PointMatch >();
 		
-		while ( i < iterations )
+A:		while ( i < iterations )
 		{
 			// choose model.MIN_SET_SIZE disjunctive matches randomly
 			minMatches.clear();
@@ -354,7 +354,7 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 				catch ( IllDefinedDataPointsException e )
 				{
 					++i;
-					continue;
+					continue A;
 				}
 				isGood = m.test( candidates, tempInliers, epsilon, minInlierRatio, minNumInliers );
 			}
