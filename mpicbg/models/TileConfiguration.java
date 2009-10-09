@@ -19,8 +19,8 @@ import java.text.DecimalFormatSymbols;
  */
 public class TileConfiguration
 {
-	final static private DecimalFormat decimalFormat = new DecimalFormat();
-	final static private DecimalFormatSymbols decimalFormatSymbols = new DecimalFormatSymbols();
+	final static protected DecimalFormat decimalFormat = new DecimalFormat();
+	final static protected DecimalFormatSymbols decimalFormatSymbols = new DecimalFormatSymbols();
 
 	final private Set< Tile< ? > > tiles = new HashSet< Tile< ? > >();
 	final public Set< Tile< ? > > getTiles(){ return tiles; }
