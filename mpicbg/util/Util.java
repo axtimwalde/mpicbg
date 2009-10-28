@@ -114,4 +114,14 @@ final public class Util
 		for ( int i = 0; i < a.length; ++i )
 			if ( b[ i ] > a[ i ] ) a[ i ] = b[ i ];
 	}
+	
+	/**
+	 * Round a
+	 * 
+	 * @param a
+	 */
+	final static public int round( final float a )
+	{
+		return ( int )( a + Math.signum( a ) * 0.5f );
+	}
 }
