@@ -247,6 +247,22 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		invert();
 	}
 	
+	final public void concatenate( final TranslationModel2D model )
+	{
+		m02 = m00 * model.tx + m01 * model.ty + m02;
+		m12 = m10 * model.tx + m11 * model.ty + m12;
+		
+		invert();
+	}
+	
+	final public void preConcatenate( final TranslationModel2D model )
+	{
+		m02 += model.tx;
+		m12 += model.ty;
+		
+		invert();
+	}
+	
 	@Override
 	final public void concatenate( final AffineModel2D model )
 	{
