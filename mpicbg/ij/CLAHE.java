@@ -47,39 +47,38 @@ import ij.process.ImageProcessor;
  */
 public class CLAHE implements PlugIn
 {
-	static private int blockRadius = 63;
-	static private int bins = 255;
-	static private float slope = 3;
-	
-	final boolean setup()
+	static private int gBlockRadius = 63;
+	static private int gBins = 255;
+	static private float gSlope = 3;
+
+	final static public boolean setup()
 	{
 		final GenericDialog gd = new GenericDialog( "CLAHE" );
-		gd.addNumericField( "blocksize : ", blockRadius * 2 + 1, 0 );
-		gd.addNumericField( "histogram bins : ", bins + 1, 0 );
-		gd.addNumericField( "maximum slope : ", slope, 2 );
+		gd.addNumericField( "blocksize : ", gBlockRadius * 2 + 1, 0 );
+		gd.addNumericField( "histogram bins : ", gBins + 1, 0 );
+		gd.addNumericField( "maximum slope : ", gSlope, 2 );
 		
 		gd.showDialog();
 		
 		if ( gd.wasCanceled() ) return false;
 		
-		blockRadius = ( ( int )gd.getNextNumber() - 1 ) / 2;
-		bins = ( int )gd.getNextNumber() - 1;
-		slope = ( float )gd.getNextNumber();
+		gBlockRadius = ( ( int )gd.getNextNumber() - 1 ) / 2;
+		gBins = ( int )gd.getNextNumber() - 1;
+		gSlope = ( float )gd.getNextNumber();
 		
 		return true;
 	}
-	
+
 	public void run( String arg )
 	{
 		final ImagePlus imp = IJ.getImage();
 		
 		if ( !setup() ) return;
 		
-		run( imp );
+		run( imp, gBlockRadius, gBins, gSlope );
 	}
-		
-	
-	public void run( final ImagePlus imp )
+
+	public void run( final ImagePlus imp, final int blockRadius, final int bins, final float slope )
 	{
 		final ImageProcessor ip;
 		if ( imp.getType() == ImagePlus.COLOR_256 )
@@ -97,7 +96,7 @@ public class CLAHE implements PlugIn
 			src = ( ByteProcessor )ip.convertToByte( true );
 		final ByteProcessor dst = ( ByteProcessor )src.duplicate();
 		
-		dst.snapshot();
+		//dst.snapshot();
 		
 		//imp.setProcessor( imp.getTitle(), dst );
 		for ( int y = 0; y < imp.getHeight(); ++y )
