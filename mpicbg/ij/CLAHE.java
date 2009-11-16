@@ -92,7 +92,6 @@ public class CLAHE implements PlugIn
 			imp.unlock();
 			return;
 		}
-		
 		run( imp );
 		imp.unlock();
 	}
@@ -124,24 +123,17 @@ public class CLAHE implements PlugIn
 			final float slope )
 	{
 		final Roi roi = imp.getRoi();
-		final ByteProcessor mask;
-		final Rectangle roiBox;
 		if ( roi == null )
-		{
-			mask = null;
-			roiBox = new Rectangle( 0, 0, imp.getWidth() - 1, imp.getHeight() - 1 );
-		}
+			run( imp, blockRadius, bins, slope, null, null );
 		else
 		{
-			roiBox = roi.getBounds();
-			final ImageProcessor m = roi.getMask();
-			if ( m != null )
-				mask = ( ByteProcessor )m.convertToByte( false );
+			final Rectangle roiBox = roi.getBounds();
+			final ImageProcessor mask = roi.getMask();
+			if ( mask != null )
+				run( imp, blockRadius, bins, slope, roiBox, ( ByteProcessor )mask.convertToByte( false ) );
 			else
-				mask = null;
+				run( imp, blockRadius, bins, slope, roiBox, null );
 		}
-		
-		run( imp, blockRadius, bins, slope, roiBox, mask );
 	}
 	
 	/**
@@ -219,7 +211,7 @@ public class CLAHE implements PlugIn
 			final int h = yMax - yMin;
 			
 			final int xMin0 = Math.max( 0, box.x - blockRadius );
-			final int xMax0 = Math.min( imp.getWidth(), box.x + blockRadius + 1 );
+			final int xMax0 = Math.min( imp.getWidth() - 1, box.x + blockRadius );
 			
 			/* initially fill histogram */
 			final int[] hist = new int[ bins + 1 ];
@@ -233,8 +225,8 @@ public class CLAHE implements PlugIn
 				final int v = roundPositive( src.get( x, y ) / 255.0f * bins );
 				
 				final int xMin = Math.max( 0, x - blockRadius );
-				final int xMax = Math.min( imp.getWidth(), x + blockRadius + 1 );
-				final int w = xMax - xMin;
+				final int xMax = x + blockRadius + 1;
+				final int w = Math.min( imp.getWidth(), xMax ) - xMin;
 				final int n = h * w;
 				
 				final int limit;
@@ -252,7 +244,7 @@ public class CLAHE implements PlugIn
 				}
 					
 				/* add newly included values to histogram */
-				if ( xMax < imp.getWidth() )
+				if ( xMax <= imp.getWidth() )
 				{
 					final int xMax1 = xMax - 1;
 					for ( int yi = yMin; yi < yMax; ++yi )
@@ -312,7 +304,7 @@ public class CLAHE implements PlugIn
 			final int t = y * imp.getWidth();
 			if ( imp.getType() == ImagePlus.GRAY8 )
 			{
-				for ( int x = box.x; x < imp.getWidth(); ++x )
+				for ( int x = box.x; x < boxXMax; ++x )
 				{
 					final int i = t + x;
 					ip.set( i, dst.get( i ) );
@@ -321,7 +313,7 @@ public class CLAHE implements PlugIn
 			else if ( imp.getType() == ImagePlus.GRAY16 )
 			{
 				final int min = ( int )ip.getMin();
-				for ( int x = 0; x < imp.getWidth(); ++x )
+				for ( int x = box.x; x < boxXMax; ++x )
 				{
 					final int i = t + x;
 					final int v = ip.get( i );
@@ -332,7 +324,7 @@ public class CLAHE implements PlugIn
 			else if ( imp.getType() == ImagePlus.GRAY32 )
 			{
 				final float min = ( float )ip.getMin();
-				for ( int x = 0; x < imp.getWidth(); ++x )
+				for ( int x = box.x; x < boxXMax; ++x )
 				{
 					final int i = t + x;
 					final float v = ip.getf( i );
@@ -342,7 +334,7 @@ public class CLAHE implements PlugIn
 			}
 			else if ( imp.getType() == ImagePlus.COLOR_RGB )
 			{
-				for ( int x = 0; x < imp.getWidth(); ++x )
+				for ( int x = box.x; x < boxXMax; ++x )
 				{
 					final int i = t + x;
 					final int argb = ip.get( i );
