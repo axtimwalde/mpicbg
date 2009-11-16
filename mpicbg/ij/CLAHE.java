@@ -361,5 +361,4 @@ public class CLAHE implements PlugIn
 	{
 		return ( int )( a + 0.5f );
 	}
-
 }
