@@ -46,7 +46,7 @@ import ij.process.ImageProcessor;
  * </pre>
  * 
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.1a
+ * @version 0.1b
  */
 public class CLAHE implements PlugIn
 {
@@ -82,7 +82,7 @@ public class CLAHE implements PlugIn
 				imp.lock();
 			else
 			{
-				IJ.error( "The image '" + imp.getTitle() + "' is being processed currently.\nPlease wait until the process is done and try again." );
+				IJ.error( "The image '" + imp.getTitle() + "' is in use currently.\nPlease wait until the process is done and try again." );
 				return;
 			}
 		}
@@ -92,6 +92,9 @@ public class CLAHE implements PlugIn
 			imp.unlock();
 			return;
 		}
+		
+		Undo.setup( Undo.TRANSFORM, imp );
+		
 		run( imp );
 		imp.unlock();
 	}
@@ -185,16 +188,11 @@ public class CLAHE implements PlugIn
 		final ImageProcessor ip;
 		if ( imp.getType() == ImagePlus.COLOR_256 )
 		{
-			Undo.setup( Undo.TYPE_CONVERSION, imp );
 			ip = imp.getProcessor().convertToRGB();
 			imp.setProcessor( imp.getTitle(), ip );
 		}
 		else
-		{
 			ip = imp.getProcessor();
-			ip.snapshot();
-			Undo.setup( Undo.FILTER, imp );
-		}
 		
 		/* work on ByteProcessors that reflect the user defined intensity range */
 		final ByteProcessor src;
@@ -276,7 +274,7 @@ public class CLAHE implements PlugIn
 					if ( m != 0 )
 					{
 						final int s = bins / m;
-						for ( int i = 0; i <= bins; i += s )
+						for ( int i = s / 2; i <= bins; i += s )
 							++clippedHist[ i ];
 					}
 				}
