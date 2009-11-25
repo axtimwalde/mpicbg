@@ -17,10 +17,12 @@
 package mpicbg.ij;
 
 import java.awt.Rectangle;
+import java.util.ArrayList;
 
 import ij.IJ;
 import ij.ImagePlus;
 import ij.Undo;
+import ij.WindowManager;
 import ij.gui.GenericDialog;
 import ij.gui.Roi;
 import ij.plugin.PlugIn;
@@ -53,14 +55,31 @@ public class CLAHE implements PlugIn
 	static private int blockRadius = 63;
 	static private int bins = 255;
 	static private float slope = 3;
+	static private ByteProcessor mask = null;
 	
-	final static boolean setup()
+	final static boolean setup( final ImagePlus imp )
 	{
+		final ArrayList< Integer > ids = new ArrayList< Integer >();
+		final ArrayList< String > titles = new ArrayList< String >();
+		
+		titles.add( "*None*" );
+		ids.add( -1 );
+		for ( final int id : WindowManager.getIDList() )
+		{
+			final ImagePlus impId = WindowManager.getImage( id );
+			if ( impId.getWidth() == imp.getWidth() && impId.getHeight() == imp.getHeight() )
+			{
+				titles.add( impId.getTitle() );
+				ids.add( id );
+			}
+		}		
+		
 		final GenericDialog gd = new GenericDialog( "CLAHE" );
 		gd.addNumericField( "blocksize : ", blockRadius * 2 + 1, 0 );
 		gd.addNumericField( "histogram bins : ", bins + 1, 0 );
 		gd.addNumericField( "maximum slope : ", slope, 2 );
-		gd.addHelp( "http://pacific.mpi-cbg.de/wiki/index.php/Enhance_Local_Contrast_(CLAHE)" );
+		gd.addChoice( "mask : ", titles.toArray( new String[ 0 ] ),  titles.get( 0 ) );
+        gd.addHelp( "http://pacific.mpi-cbg.de/wiki/index.php/Enhance_Local_Contrast_(CLAHE)" );
 		
 		gd.showDialog();
 		
@@ -69,6 +88,9 @@ public class CLAHE implements PlugIn
 		blockRadius = ( ( int )gd.getNextNumber() - 1 ) / 2;
 		bins = ( int )gd.getNextNumber() - 1;
 		slope = ( float )gd.getNextNumber();
+		final int maskId = ids.get( gd.getNextChoiceIndex() );
+		if ( maskId != -1 ) mask = ( ByteProcessor )WindowManager.getImage( maskId ).getProcessor().convertToByte( true );
+		else mask = null;
 		
 		return true;
 	}
@@ -87,7 +109,7 @@ public class CLAHE implements PlugIn
 			}
 		}
 		
-		if ( !setup() )
+		if ( !setup( imp ) )
 		{
 			imp.unlock();
 			return;
@@ -137,6 +159,105 @@ public class CLAHE implements PlugIn
 			else
 				run( imp, blockRadius, bins, slope, roiBox, null );
 		}
+	}
+	
+	/**
+	 * Clip histogram and redistribute clipped entries.
+	 * 
+	 * @param hist source
+	 * @param clippedHist target 
+	 * @param limit clip limit
+	 * @param bins number of bins
+	 */
+	final static private void clipHistogram(
+			final int[] hist,
+			final int[] clippedHist,
+			final int limit,
+			final int bins )
+	{
+		System.arraycopy( hist, 0, clippedHist, 0, hist.length );
+		int clippedEntries = 0, clippedEntriesBefore;
+		do
+		{
+			clippedEntriesBefore = clippedEntries;
+			clippedEntries = 0;
+			for ( int i = 0; i <= bins; ++i )
+			{
+				final int d = clippedHist[ i ] - limit;
+				if ( d > 0 )
+				{
+					clippedEntries += d;
+					clippedHist[ i ] = limit;
+				}
+			}
+			
+			final int d = clippedEntries / ( bins + 1 );
+			final int m = clippedEntries % ( bins + 1 );
+			for ( int i = 0; i <= bins; ++i)
+				clippedHist[ i ] += d;
+			
+			if ( m != 0 )
+			{
+				final int s = bins / m;
+				for ( int i = s / 2; i <= bins; i += s )
+					++clippedHist[ i ];
+			}
+		}
+		while ( clippedEntries != clippedEntriesBefore );
+	}
+	
+	
+	/**
+	 * Get the CDF entry of a value.
+	 * 
+	 * @param v the value
+	 * @param hist the histogram from which the CDF is collected
+	 * @param bins
+	 * @return
+	 */
+	final static private float transferValue(
+			final int v,
+			final int[] hist,
+			final int bins )
+	{
+		int hMin = bins;
+		for ( int i = 0; i < hMin; ++i )
+			if ( hist[ i ] != 0 ) hMin = i;
+		
+		int cdf = 0;
+		for ( int i = hMin; i <= v; ++i )
+			cdf += hist[ i ];
+		
+		int cdfMax = cdf;
+		for ( int i = v + 1; i <= bins; ++i )
+			cdfMax += hist[ i ];
+		
+		final int cdfMin = hist[ hMin ];
+		
+		return ( cdf - cdfMin ) / ( float )( cdfMax - cdfMin );
+	}
+	
+	
+	/**
+	 * Transfer a value through contrast limited histogram equalization.
+	 * For efficiency, the histograms to be used are passed as parameters.
+	 *  
+	 * @param v
+	 * @param hist
+	 * @param clippedHist
+	 * @param limit
+	 * @param bins
+	 * @return
+	 */
+	final static public float transferValue(
+			final int v,
+			final int[] hist,
+			final int[] clippedHist,
+			final int limit,
+			final int bins )
+	{
+		clipHistogram( hist, clippedHist, limit, bins );
+		return transferValue( v, clippedHist, bins );
 	}
 	
 	/**
@@ -249,53 +370,7 @@ public class CLAHE implements PlugIn
 						++hist[ roundPositive( src.get( xMax1, yi ) / 255.0f * bins ) ];						
 				}
 				
-				/* clip histogram and redistribute clipped entries */
-				System.arraycopy( hist, 0, clippedHist, 0, hist.length );
-				int clippedEntries = 0, clippedEntriesBefore;
-				do
-				{
-					clippedEntriesBefore = clippedEntries;
-					clippedEntries = 0;
-					for ( int i = 0; i <= bins; ++i )
-					{
-						final int d = clippedHist[ i ] - limit;
-						if ( d > 0 )
-						{
-							clippedEntries += d;
-							clippedHist[ i ] = limit;
-						}
-					}
-					
-					final int d = clippedEntries / ( bins + 1 );
-					final int m = clippedEntries % ( bins + 1 );
-					for ( int i = 0; i <= bins; ++i)
-						clippedHist[ i ] += d;
-					
-					if ( m != 0 )
-					{
-						final int s = bins / m;
-						for ( int i = s / 2; i <= bins; i += s )
-							++clippedHist[ i ];
-					}
-				}
-				while ( clippedEntries != clippedEntriesBefore );
-				
-				/* build cdf of clipped histogram */
-				int hMin = bins;
-				for ( int i = 0; i < hMin; ++i )
-					if ( clippedHist[ i ] != 0 ) hMin = i;
-				
-				int cdf = 0;
-				for ( int i = hMin; i <= v; ++i )
-					cdf += clippedHist[ i ];
-				
-				int cdfMax = cdf;
-				for ( int i = v + 1; i <= bins; ++i )
-					cdfMax += clippedHist[ i ];
-				
-				final int cdfMin = clippedHist[ hMin ];
-				
-				dst.set( x, y, roundPositive( ( cdf - cdfMin ) / ( float )( cdfMax - cdfMin ) * 255.0f ) );
+				dst.set( x, y, roundPositive( transferValue( v, hist, clippedHist, limit, bins ) * 255.0f ) );
 			}
 			
 			/* multiply the current row into ip */
