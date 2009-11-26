@@ -57,109 +57,6 @@ public class CLAHE implements PlugIn
 	static private float slope = 3;
 	static private ByteProcessor mask = null;
 	
-	final static boolean setup( final ImagePlus imp )
-	{
-		final ArrayList< Integer > ids = new ArrayList< Integer >();
-		final ArrayList< String > titles = new ArrayList< String >();
-		
-		titles.add( "*None*" );
-		ids.add( -1 );
-		for ( final int id : WindowManager.getIDList() )
-		{
-			final ImagePlus impId = WindowManager.getImage( id );
-			if ( impId.getWidth() == imp.getWidth() && impId.getHeight() == imp.getHeight() )
-			{
-				titles.add( impId.getTitle() );
-				ids.add( id );
-			}
-		}		
-		
-		final GenericDialog gd = new GenericDialog( "CLAHE" );
-		gd.addNumericField( "blocksize : ", blockRadius * 2 + 1, 0 );
-		gd.addNumericField( "histogram bins : ", bins + 1, 0 );
-		gd.addNumericField( "maximum slope : ", slope, 2 );
-		gd.addChoice( "mask : ", titles.toArray( new String[ 0 ] ),  titles.get( 0 ) );
-        gd.addHelp( "http://pacific.mpi-cbg.de/wiki/index.php/Enhance_Local_Contrast_(CLAHE)" );
-		
-		gd.showDialog();
-		
-		if ( gd.wasCanceled() ) return false;
-		
-		blockRadius = ( ( int )gd.getNextNumber() - 1 ) / 2;
-		bins = ( int )gd.getNextNumber() - 1;
-		slope = ( float )gd.getNextNumber();
-		final int maskId = ids.get( gd.getNextChoiceIndex() );
-		if ( maskId != -1 ) mask = ( ByteProcessor )WindowManager.getImage( maskId ).getProcessor().convertToByte( true );
-		else mask = null;
-		
-		return true;
-	}
-	
-	final public void run( final String arg )
-	{
-		final ImagePlus imp = IJ.getImage();
-		synchronized ( imp )
-		{
-			if ( !imp.isLocked() )
-				imp.lock();
-			else
-			{
-				IJ.error( "The image '" + imp.getTitle() + "' is in use currently.\nPlease wait until the process is done and try again." );
-				return;
-			}
-		}
-		
-		if ( !setup( imp ) )
-		{
-			imp.unlock();
-			return;
-		}
-		
-		Undo.setup( Undo.TRANSFORM, imp );
-		
-		run( imp );
-		imp.unlock();
-	}
-	
-	/**
-	 * Process an {@link ImagePlus} with the static parameters.  Create mask
-	 * and bounding box from the {@link Roi} of that {@link ImagePlus}.
-	 * 
-	 * @param imp
-	 */
-	final static public void run( final ImagePlus imp )
-	{
-		run( imp, blockRadius, bins, slope );
-	}
-	
-	/**
-	 * Process and {@link ImagePlus} with a given set of parameters.  Create
-	 * mask and bounding box from the {@link Roi} of that {@link ImagePlus}.
-	 * 
-	 * @param imp
-	 * @param blockRadius
-	 * @param bins
-	 * @param slope
-	 */
-	final static public void run(
-			final ImagePlus imp,
-			final int blockRadius,
-			final int bins,
-			final float slope )
-	{
-		final Roi roi = imp.getRoi();
-		if ( roi == null )
-			run( imp, blockRadius, bins, slope, null, null );
-		else
-		{
-			final Rectangle roiBox = roi.getBounds();
-			final ImageProcessor mask = roi.getMask();
-			if ( mask != null )
-				run( imp, blockRadius, bins, slope, roiBox, ( ByteProcessor )mask.convertToByte( false ) );
-			else
-				run( imp, blockRadius, bins, slope, roiBox, null );
-		}
-	}
 	
 	/**
 	 * Clip histogram and redistribute clipped entries.
@@ -259,6 +156,130 @@ public class CLAHE implements PlugIn
 		clipHistogram( hist, clippedHist, limit, bins );
 		return transferValue( v, clippedHist, bins );
 	}
+	
+	
+	final static private boolean setup( final ImagePlus imp )
+	{
+		final ArrayList< Integer > ids = new ArrayList< Integer >();
+		final ArrayList< String > titles = new ArrayList< String >();
+		
+		titles.add( "*None*" );
+		ids.add( -1 );
+		for ( final int id : WindowManager.getIDList() )
+		{
+			final ImagePlus impId = WindowManager.getImage( id );
+			if ( impId.getWidth() == imp.getWidth() && impId.getHeight() == imp.getHeight() )
+			{
+				titles.add( impId.getTitle() );
+				ids.add( id );
+			}
+		}		
+		
+		final GenericDialog gd = new GenericDialog( "CLAHE" );
+		gd.addNumericField( "blocksize : ", blockRadius * 2 + 1, 0 );
+		gd.addNumericField( "histogram bins : ", bins + 1, 0 );
+		gd.addNumericField( "maximum slope : ", slope, 2 );
+		gd.addChoice( "mask : ", titles.toArray( new String[ 0 ] ),  titles.get( 0 ) );
+        gd.addHelp( "http://pacific.mpi-cbg.de/wiki/index.php/Enhance_Local_Contrast_(CLAHE)" );
+		
+		gd.showDialog();
+		
+		if ( gd.wasCanceled() ) return false;
+		
+		blockRadius = ( ( int )gd.getNextNumber() - 1 ) / 2;
+		bins = ( int )gd.getNextNumber() - 1;
+		slope = ( float )gd.getNextNumber();
+		final int maskId = ids.get( gd.getNextChoiceIndex() );
+		if ( maskId != -1 ) mask = ( ByteProcessor )WindowManager.getImage( maskId ).getProcessor().convertToByte( true );
+		else mask = null;
+		
+		return true;
+	}
+	
+	
+	final public void run( final String arg )
+	{
+		final ImagePlus imp = IJ.getImage();
+		synchronized ( imp )
+		{
+			if ( !imp.isLocked() )
+				imp.lock();
+			else
+			{
+				IJ.error( "The image '" + imp.getTitle() + "' is in use currently.\nPlease wait until the process is done and try again." );
+				return;
+			}
+		}
+		
+		if ( !setup( imp ) )
+		{
+			imp.unlock();
+			return;
+		}
+		
+		Undo.setup( Undo.TRANSFORM, imp );
+		
+		run( imp );
+		imp.unlock();
+	}
+	
+	/**
+	 * Process an {@link ImagePlus} with the static parameters.  Create mask
+	 * and bounding box from the {@link Roi} of that {@link ImagePlus}.
+	 * 
+	 * @param imp
+	 */
+	final static public void run( final ImagePlus imp )
+	{
+		run( imp, blockRadius, bins, slope, mask );
+	}
+	
+	
+	/**
+	 * Process and {@link ImagePlus} with a given set of parameters.  Create
+	 * mask and bounding box from the {@link Roi} of that {@link ImagePlus}.
+	 * 
+	 * @param imp
+	 * @param blockRadius
+	 * @param bins
+	 * @param slope
+	 */
+	final static public void run(
+			final ImagePlus imp,
+			final int blockRadius,
+			final int bins,
+			final float slope,
+			final ByteProcessor mask )
+	{
+		final Roi roi = imp.getRoi();
+		if ( roi == null )
+			run( imp, blockRadius, bins, slope, null, mask );
+		else
+		{
+			final Rectangle roiBox = roi.getBounds();
+			final ImageProcessor roiMask = roi.getMask();
+			if ( mask != null )
+			{
+				final Rectangle oldRoi = mask.getRoi();
+				mask.setRoi( roi );
+				final ByteProcessor cropMask = ( ByteProcessor )mask.crop().convertToByte( true );
+				if ( roiMask != null )
+				{
+					final byte[] roiMaskPixels = ( byte[] )roiMask.getPixels();
+					final byte[] cropMaskPixels = ( byte[] )cropMask.getPixels();
+					for ( int i = 0; i < roiMaskPixels.length; ++i )
+						cropMaskPixels[ i ] = ( byte )roundPositive( ( cropMaskPixels[ i ] & 0xff ) * ( roiMaskPixels[ i ] & 0xff ) / 255.0f );
+				}
+				run( imp, blockRadius, bins, slope, roiBox, cropMask );
+				mask.setRoi( oldRoi );
+			}
+			else if ( roiMask == null )
+				run( imp, blockRadius, bins, slope, roiBox, null );
+			else
+				run( imp, blockRadius, bins, slope, roiBox, ( ByteProcessor )roiMask.convertToByte( false ) );
+		}
+	}
+	
 	
 	/**
 	 * Process and {@link ImagePlus} with a given set of parameters including
