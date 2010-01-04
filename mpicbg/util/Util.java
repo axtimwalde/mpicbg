@@ -124,4 +124,37 @@ final public class Util
 	{
 		return ( int )( a + Math.signum( a ) * 0.5f );
 	}
+	
+	/**
+	 * An equivalent to div for float
+	 * 
+	 * @param a
+	 * @param b
+	 * @return a div b
+	 */
+	final static public float div( final float a, final float b )
+	{
+		final float div = ( int )( a / b );
+		if ( b >= 0 )
+			return div;
+		else
+			return div + 1;
+	}
+	
+	
+	/**
+	 * An equivalent to % for float
+	 * 
+	 * @param a
+	 * @param mod
+	 * @return 0 <= b < mod
+	 */
+	final static public float mod( final float a, final float mod )
+	{
+		final float b = a - mod * ( int )( a / mod );
+		if ( b >= 0 )
+			return b;
+		else
+			return b + mod;
+	}
 }
