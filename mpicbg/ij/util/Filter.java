@@ -1,5 +1,6 @@
 package mpicbg.ij.util;
 
+import ij.ImagePlus;
 import ij.plugin.filter.GaussianBlur;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
@@ -367,16 +368,20 @@ public class Filter
 		final FloatProcessor target = ( FloatProcessor )source.createProcessor( w, h );
 		final float[] targetPixels = ( float[] )target.getPixels();
 		
-		final int[] lut = new int[ l ];
-		for ( int x = 0; x < l; ++x )
-			lut[ x ] = Math.round( x / scale );
+		/* it seems that, in rare cases, the floating point calculation really exceeds the limits---so really make sure */
+		final int[] lutx = new int[ l ];
+		for ( int x = 0; x < w; ++x )
+			lutx[ x ] = Math.min( ow, Math.max( 0, Math.round( x / scale ) ) );
+		final int[] luty = new int[ l ];
+		for ( int y = 0; y < h; ++y )
+			luty[ y ] = Math.min( oh, Math.max( 0, Math.round( y / scale ) ) );
 		
 		for ( int y = 0; y < h; ++y )
 		{
 			final int p = y * w;
-			final int q = lut[ y ] * ow;
+			final int q = luty[ y ] * ow;
 			for ( int x = 0; x < w; ++x )
-				targetPixels[ p + x ] = tempPixels[ q + lut[ x ] ];
+				targetPixels[ p + x ] = tempPixels[ q + lutx[ x ] ];
 		}
 		
 		return target;
