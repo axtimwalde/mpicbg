@@ -368,13 +368,15 @@ public class Filter
 		final FloatProcessor target = ( FloatProcessor )source.createProcessor( w, h );
 		final float[] targetPixels = ( float[] )target.getPixels();
 		
-		/* it seems that, in rare cases, the floating point calculation really exceeds the limits---so really make sure */
+		/* LUT for scaled pixel locations */
+		final int ow1 = ow - 1;
+		final int oh1 = oh - 1;
 		final int[] lutx = new int[ l ];
 		for ( int x = 0; x < w; ++x )
-			lutx[ x ] = Math.min( ow, Math.max( 0, Math.round( x / scale ) ) );
+			lutx[ x ] = Math.min( ow1, Math.max( 0, Math.round( x / scale ) ) );
 		final int[] luty = new int[ l ];
 		for ( int y = 0; y < h; ++y )
-			luty[ y ] = Math.min( oh, Math.max( 0, Math.round( y / scale ) ) );
+			luty[ y ] = Math.min( oh1, Math.max( 0, Math.round( y / scale ) ) );
 		
 		for ( int y = 0; y < h; ++y )
 		{
