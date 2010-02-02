@@ -138,7 +138,6 @@ public class RemoveSaturated implements PlugIn
 					
 				}
 			ip.setPixels( ipTarget.getPixelsCopy() );
-			IJ.log( numSaturatedPixels + " saturated pixels" );
 		}
 		while ( numSaturatedPixels > 0 );
 	}
