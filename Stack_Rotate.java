@@ -379,7 +379,7 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 						/* TODO calculate optimal slice thickness, for now uses the previous x,y spacing isotropicly */
 						final TranslationModel3D sliceShift = new TranslationModel3D();
 						sliceShift.set( 0, 0, -1 );
-						final InverseTransformMapping aMapping = new InverseTransformMapping< AffineModel3D >( a );
+						final InverseTransformMapping< AffineModel3D> aMapping = new InverseTransformMapping< AffineModel3D >( a );
 						
 						final ImageProcessor source = stack.getProcessor( 1 );
 						
