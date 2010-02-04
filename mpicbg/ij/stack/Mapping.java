@@ -36,4 +36,11 @@ public interface Mapping< T extends InverseCoordinateTransform >
 	public void mapInterpolated(
 			ImageStack source,
 			ImageProcessor target );
+	
+	/**
+	 * Set the slice
+	 * 
+	 * @param slice
+	 */
+	public void setSlice( final float slice );
 }

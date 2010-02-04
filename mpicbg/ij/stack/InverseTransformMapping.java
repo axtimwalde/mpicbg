@@ -21,6 +21,8 @@ import mpicbg.models.NoninvertibleModelException;
  */
 public class InverseTransformMapping< T extends InverseCoordinateTransform > implements Mapping< T >
 {
+	private float z = 0;
+	
 	/* Here comes the ugly part as required by ImageJ for interpolation in z */
 	abstract static public class Interpolator
 	{
@@ -119,7 +121,7 @@ public class InverseTransformMapping< T extends InverseCoordinateTransform > imp
 			{
 				t[ 0 ] = x;
 				t[ 1 ] = y;
-				t[ 2 ] = 0;
+				t[ 2 ] = z;
 				try
 				{
 					transform.applyInverseInPlace( t );
@@ -172,7 +174,7 @@ public class InverseTransformMapping< T extends InverseCoordinateTransform > imp
 			{
 				t[ 0 ] = x;
 				t[ 1 ] = y;
-				t[ 2 ] = 0;
+				t[ 2 ] = z;
 				try
 				{
 					transform.applyInverseInPlace( t );
@@ -198,4 +200,7 @@ public class InverseTransformMapping< T extends InverseCoordinateTransform > imp
 			}
 		}
 	}
+	
+	//@Override
+	public void setSlice( final float z ){ this.z = z; }
 }
