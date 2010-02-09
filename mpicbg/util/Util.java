@@ -157,4 +157,157 @@ final public class Util
 		else
 			return b + mod;
 	}
+	
+	
+	/**
+	 * For Java, the fastest way doing memset(x)
+	 * 
+	 * Found at
+	 * 
+	 * http://burks.brighton.ac.uk/burks/language/java/jprogfaq/faq_b.htm
+	 * 
+	 * @param array
+	 * @param value
+	 */
+	final public static void memset( final byte[] array, final byte value )
+	{
+	    final int len = array.length;
+	    if ( len > 0 )
+	    array[ 0 ] = value;
+	    for ( int i = 1; i < len; i += i )
+	        System.arraycopy( array, 0, array, i, ( ( len - i ) < i ) ? ( len - i ) : i );
+	}
+	
+	/**
+	 * For Java, the fastest way doing memset(x)
+	 * 
+	 * Found at
+	 * 
+	 * http://burks.brighton.ac.uk/burks/language/java/jprogfaq/faq_b.htm
+	 * 
+	 * @param array
+	 * @param value
+	 */
+	final public static void memset( final short[] array, final short value )
+	{
+	    final int len = array.length;
+	    if ( len > 0 )
+	    array[ 0 ] = value;
+	    for ( int i = 1; i < len; i += i )
+	        System.arraycopy( array, 0, array, i, ( ( len - i ) < i ) ? ( len - i ) : i );
+	}
+	
+	/**
+	 * For Java, the fastest way doing memset(x)
+	 * 
+	 * Found at
+	 * 
+	 * http://burks.brighton.ac.uk/burks/language/java/jprogfaq/faq_b.htm
+	 * 
+	 * @param array
+	 * @param value
+	 */
+	final public static void memset( final int[] array, final int value )
+	{
+	    final int len = array.length;
+	    if ( len > 0 )
+	    array[ 0 ] = value;
+	    for ( int i = 1; i < len; i += i )
+	        System.arraycopy( array, 0, array, i, ( ( len - i ) < i ) ? ( len - i ) : i );
+	}
+	
+	/**
+	 * For Java, the fastest way doing memset(x)
+	 * 
+	 * Found at
+	 * 
+	 * http://burks.brighton.ac.uk/burks/language/java/jprogfaq/faq_b.htm
+	 * 
+	 * @param array
+	 * @param value
+	 */
+	final public static void memset( final long[] array, final long value )
+	{
+	    final int len = array.length;
+	    if ( len > 0 )
+	    array[ 0 ] = value;
+	    for ( int i = 1; i < len; i += i )
+	        System.arraycopy( array, 0, array, i, ( ( len - i ) < i ) ? ( len - i ) : i );
+	}
+	
+	/**
+	 * For Java, the fastest way doing memset(x)
+	 * 
+	 * Found at
+	 * 
+	 * http://burks.brighton.ac.uk/burks/language/java/jprogfaq/faq_b.htm
+	 * 
+	 * @param array
+	 * @param value
+	 */
+	final public static void memset( final float[] array, final float value )
+	{
+	    final int len = array.length;
+	    if ( len > 0 )
+	    array[ 0 ] = value;
+	    for ( int i = 1; i < len; i += i )
+	        System.arraycopy( array, 0, array, i, ( ( len - i ) < i ) ? ( len - i ) : i );
+	}
+	
+	/**
+	 * For Java, the fastest way doing memset(x)
+	 * 
+	 * Found at
+	 * 
+	 * http://burks.brighton.ac.uk/burks/language/java/jprogfaq/faq_b.htm
+	 * 
+	 * @param array
+	 * @param value
+	 */
+	final public static void memset( final double[] array, final double value )
+	{
+	    final int len = array.length;
+	    if ( len > 0 )
+	    array[ 0 ] = value;
+	    for ( int i = 1; i < len; i += i )
+	        System.arraycopy( array, 0, array, i, ( ( len - i ) < i ) ? ( len - i ) : i );
+	}
+	
+	/**
+	 * For Java, the fastest way doing memset(x)
+	 * 
+	 * Found at
+	 * 
+	 * http://burks.brighton.ac.uk/burks/language/java/jprogfaq/faq_b.htm
+	 * 
+	 * @param array
+	 * @param value
+	 */
+	final public static void memset( final boolean[] array, final boolean value )
+	{
+	    final int len = array.length;
+	    if ( len > 0 )
+	    array[ 0 ] = value;
+	    for ( int i = 1; i < len; i += i )
+	        System.arraycopy( array, 0, array, i, ( ( len - i ) < i ) ? ( len - i ) : i );
+	}
+	
+	/**
+	 * For Java, the fastest way doing memset(x)
+	 * 
+	 * Found at
+	 * 
+	 * http://burks.brighton.ac.uk/burks/language/java/jprogfaq/faq_b.htm
+	 * 
+	 * @param array
+	 * @param value
+	 */
+	final public static void memset( final char[] array, final char value )
+	{
+	    final int len = array.length;
+	    if ( len > 0 )
+	    array[ 0 ] = value;
+	    for ( int i = 1; i < len; i += i )
+	        System.arraycopy( array, 0, array, i, ( ( len - i ) < i ) ? ( len - i ) : i );
+	}	
 }
