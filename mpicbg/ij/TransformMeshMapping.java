@@ -20,7 +20,7 @@ import mpicbg.models.TransformMesh;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.1b
  */
-public class TransformMeshMapping extends InvertibleTransformMapping< TransformMesh >
+public class TransformMeshMapping< T extends TransformMesh > extends InvertibleTransformMapping< T >
 {
 	final static private class MapTriangleThread extends Thread
 	{
@@ -147,7 +147,7 @@ public class TransformMeshMapping extends InvertibleTransformMapping< TransformM
 	}
 	
 	
-	public TransformMeshMapping( final TransformMesh t )
+	public TransformMeshMapping( final T t )
 	{
 		super( t );
 	}
@@ -158,7 +158,7 @@ public class TransformMeshMapping extends InvertibleTransformMapping< TransformM
 	 * @param min x = min[0], y = min[1]
 	 * @param max x = max[0], y = max[1]
 	 */
-	final static private void calculateBoundingBox(
+	final static protected void calculateBoundingBox(
 			final ArrayList< PointMatch > pm,
 			final float[] min,
 			final float[] max )
@@ -187,7 +187,7 @@ public class TransformMeshMapping extends InvertibleTransformMapping< TransformM
 	 * @param t
 	 * @return
 	 */
-	final static private boolean isInTriangle(
+	final static protected boolean isInTriangle(
 			final float ax,
 			final float ay,
 			final float bx,
@@ -410,7 +410,7 @@ public class TransformMeshMapping extends InvertibleTransformMapping< TransformM
 	 * @param min x = min[0], y = min[1]
 	 * @param max x = max[0], y = max[1]
 	 */
-	final static private void calculateBoundingBoxInverse(
+	final static protected void calculateBoundingBoxInverse(
 			final ArrayList< PointMatch > pm,
 			final float[] min,
 			final float[] max )
