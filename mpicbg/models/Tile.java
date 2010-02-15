@@ -131,6 +131,44 @@ public class Tile< M extends Model< M > >
 	
 	/**
 	 * Apply the current {@link Model} to all local point coordinates.
+	 * 
+	 * <em>This method does not recalculate the cost of the tile.</em>
+	 */
+	final public void apply()
+	{
+		for ( final PointMatch match : matches )
+			match.apply( model );
+	}
+	
+	/**
+	 * Update {@link #cost} and {@link #distance}.
+	 */
+	final public void updateCost()
+	{
+		double d = 0.0;
+		double c = 0.0;
+		
+		final int numMatches = matches.size();
+		if ( numMatches > 0 )
+		{
+			double sumWeight = 0.0;
+			for ( final PointMatch match : matches )
+			{
+				final double dl = match.getDistance();
+				d += dl;
+				c += dl * dl * match.getWeight();
+				sumWeight += match.getWeight();
+			}
+			d /= numMatches;
+			c /= sumWeight;
+		}
+		distance = ( float )d;
+		cost = ( float )c;
+		model.setCost( c );
+	}
+	
+	/**
+	 * Apply the current {@link Model} to all local point coordinates.
 	 * Update {@link #cost} and {@link #distance}.
 	 *
 	 */
@@ -189,32 +227,32 @@ public class Tile< M extends Model< M > >
 		model.setCost( c );
 	}
 	
-	/**
-	 * Randomly dice new model until the cost is smaller than the old one
-	 * 
-	 * @param maxNumTries maximal number of tries before returning false (which means "no better model found")
-	 * @param amount strength of shaking
-	 * @return true if a better model was found
-	 */
-	final public boolean diceBetterModel( final int maxNumTries, final float amount )
-	{
-		// store old model
-		final M oldModel = model.clone();
-		
-		for ( int t = 0; t < maxNumTries; ++t )
-		{
-			model.shake( amount );
-			update();
-			if ( model.betterThan( oldModel ) )
-			{
-				return true;
-			}
-			else model.set( oldModel );
-		}
-		// no better model found, so roll back
-		update();
-		return false;
-	}
+//	/**
+//	 * Randomly dice new model until the cost is smaller than the old one
+//	 * 
+//	 * @param maxNumTries maximal number of tries before returning false (which means "no better model found")
+//	 * @param amount strength of shaking
+//	 * @return true if a better model was found
+//	 */
+//	final public boolean diceBetterModel( final int maxNumTries, final float amount )
+//	{
+//		// store old model
+//		final M oldModel = model.clone();
+//		
+//		for ( int t = 0; t < maxNumTries; ++t )
+//		{
+//			model.shake( amount );
+//			update();
+//			if ( model.betterThan( oldModel ) )
+//			{
+//				return true;
+//			}
+//			else model.set( oldModel );
+//		}
+//		// no better model found, so roll back
+//		update();
+//		return false;
+//	}
 	
 	/**
 	 * Update the transformation {@link Model}.  That is, fit it to the

@@ -1,5 +1,6 @@
 package mpicbg.models;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -90,6 +91,88 @@ public class TileConfiguration
 	public void fixTile( final Tile< ? > t ){ fixedTiles.add( t ); }
 	
 	/**
+	 * Apply the model of each {@link Tile} to all its
+	 * {@link PointMatch PointMatches}.
+	 */
+	protected void apply()
+	{
+//		final ArrayList< Thread > threads = new ArrayList< Thread >();
+//		for ( final Tile< ? > t : tiles )
+//		{
+//			final Thread thread = new Thread(
+//							new Runnable()
+//							{
+//								final public void run()
+//								{
+//									t.apply();
+//								}
+//							} );
+//			threads.add( thread );
+//			thread.start();
+//		}
+//		for ( final Thread thread : threads )
+//		{
+//			try { thread.join(); }
+//			catch ( InterruptedException e ){ e.printStackTrace(); }
+//		}
+		for ( final Tile< ? > t : tiles )
+			t.apply();
+	}
+	
+	/**
+	 * Estimate min/max/average displacement of all
+	 * {@link PointMatch PointMatches} in all {@link Tile Tiles}.
+	 */
+	protected void updateErrors()
+	{
+		double cd = 0.0;
+		minError = Double.MAX_VALUE;
+		maxError = 0.0;
+		for ( Tile< ? > t : tiles )
+		{
+			t.updateCost();
+			double d = t.getDistance();
+			if ( d < minError ) minError = d;
+			if ( d > maxError ) maxError = d;
+			cd += d;
+		}
+		cd /= tiles.size();
+		error = cd;
+		
+//		final ArrayList< Thread > threads = new ArrayList< Thread >();
+//		
+//		error = 0.0;
+//		minError = Double.MAX_VALUE;
+//		maxError = 0.0;
+//		for ( final Tile< ? > t : tiles )
+//		{
+//			final Thread thread = new Thread(
+//					new Runnable()
+//					{
+//						final public void run()
+//						{
+//							t.updateCost();
+//							synchronized ( this )
+//							{
+//								double d = t.getDistance();
+//								if ( d < minError ) minError = d;
+//								if ( d > maxError ) maxError = d;
+//								error += d;
+//							}
+//						}
+//					} );
+//			thread.start();
+//			threads.add( thread );
+//		}
+//		for ( final Thread thread : threads )
+//		{
+//			try { thread.join(); }
+//			catch ( InterruptedException e ){ e.printStackTrace(); }
+//		}
+//		error /= tiles.size();
+	}
+	
+	/**
 	 * Update all {@link PointMatch Correspondences} in all {@link Tile Tiles}
 	 * and estimate the average displacement. 
 	 */
@@ -108,6 +191,7 @@ public class TileConfiguration
 		}
 		cd /= tiles.size();
 		error = cd;
+		
 	}
 	
 	/**
@@ -134,7 +218,7 @@ public class TileConfiguration
 		boolean proceed = i < maxIterations;
 		
 		/* initialize the configuration with the current model of each tile */
-		update();
+		apply();
 		
 		while ( proceed )
 		{
@@ -142,9 +226,9 @@ public class TileConfiguration
 			{
 				if ( fixedTiles.contains( tile ) ) continue;
 				tile.fitModel();
-				tile.update();
+				tile.apply();
 			}
-			update();
+			updateErrors();
 			observer.add( error );
 			
 			if ( i > maxPlateauwidth )
