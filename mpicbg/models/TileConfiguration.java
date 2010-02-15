@@ -219,6 +219,7 @@ public class TileConfiguration
 		
 		/* initialize the configuration with the current model of each tile */
 		apply();
+		updateErrors();
 		
 		while ( proceed )
 		{
