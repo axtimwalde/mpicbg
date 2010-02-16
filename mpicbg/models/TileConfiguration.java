@@ -211,6 +211,8 @@ public class TileConfiguration
 			final int maxIterations,
 			final int maxPlateauwidth ) throws NotEnoughDataPointsException, IllDefinedDataPointsException 
 	{
+		println( "Optimizing..." );
+		
 		final ErrorStatistic observer = new ErrorStatistic( maxPlateauwidth + 1 );
 		
 		int i = 0;
@@ -219,7 +221,9 @@ public class TileConfiguration
 		
 		/* initialize the configuration with the current model of each tile */
 		apply();
-		updateErrors();
+		
+		
+		println( "i mean min max" );
 		
 		while ( proceed )
 		{
@@ -248,12 +252,14 @@ public class TileConfiguration
 				}
 			}
 			
+			println( new StringBuffer( i + " " ).append( error ).append( " " ).append( minError ).append( " " ).append( maxError ).toString() );
+			
 			proceed &= ++i < maxIterations;
 		}
 		
-		println( "Successfully optimized configuration of " + tiles.size() + " tiles after " + i + " iterations:" );
-		println( "  average displacement: " + decimalFormat.format( error ) + "px" );
-		println( "  minimal displacement: " + decimalFormat.format( minError ) + "px" );
-		println( "  maximal displacement: " + decimalFormat.format( maxError ) + "px" );
+		println( new StringBuffer( "Successfully optimized configuration of " ).append( tiles.size() ).append( " tiles after " ).append( i ).append( " iterations:" ).toString() );
+		println( new StringBuffer( "  average displacement: " ).append( decimalFormat.format( error ) ).append( "px" ).toString() );
+		println( new StringBuffer( "  minimal displacement: " ).append( decimalFormat.format( minError ) ).append( "px" ).toString() );
+		println( new StringBuffer( "  maximal displacement: " ).append( decimalFormat.format( maxError ) ).append( "px" ).toString() );
 	}
 }
