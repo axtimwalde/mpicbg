@@ -48,8 +48,7 @@ public class PointMatch implements Serializable
 	
 	protected float strength = 1.0f;
 	
-	private float distance;
-	final public float getDistance(){ return distance; }
+	final public float getDistance(){ return Point.distance( p1, p2 ); }
 	
 	/**
 	 * Constructor
@@ -80,8 +79,6 @@ public class PointMatch implements Serializable
 		calculateWeight();
 		
 		this.strength = strength;
-		
-		distance = Point.distance( p1, p2 );
 	}
 	
 	/**
@@ -104,8 +101,6 @@ public class PointMatch implements Serializable
 		
 		this.weights = weights.clone();
 		calculateWeight();
-		
-		distance = Point.distance( p1, p2 );
 	}
 	
 	/**
@@ -127,8 +122,6 @@ public class PointMatch implements Serializable
 		
 		weights = new float[]{ weight };
 		this.weight = weight;
-		
-		distance = Point.distance( p1, p2 );
 	}
 	
 	/**
@@ -159,8 +152,6 @@ public class PointMatch implements Serializable
 		this.weight = weight;
 		
 		this.strength = strength;
-		
-		distance = Point.distance( p1, p2 );
 	}
 	
 	/**
@@ -181,8 +172,6 @@ public class PointMatch implements Serializable
 		
 		weights = new float[]{ 1.0f };
 		weight = 1.0f;
-		
-		distance = Point.distance( p1, p2 );
 	}
 	
 	/**
@@ -193,7 +182,6 @@ public class PointMatch implements Serializable
 	final public void apply( final CoordinateTransform t )
 	{
 		p1.apply( t );
-		distance = Point.distance( p1, p2 );
 	}
 	
 	/**
@@ -206,7 +194,6 @@ public class PointMatch implements Serializable
 	final public void apply( final CoordinateTransform t, final float amount )
 	{
 		p1.apply( t, strength * amount );
-		distance = Point.distance( p1, p2 );
 	}
 	
 	/**
