@@ -65,7 +65,8 @@ public class SIFT extends FeatureTransform< FloatArray2DSIFT >
 	@Override
 	final public void extractFeatures( final ImageProcessor ip, final Collection< Feature > features )
 	{
-		final float maxSize = t.getMaxOctaveSize();
+		/* make sure that integer rounding does not result in an image of t.getMaxOctaveSize() + 1 */
+		final float maxSize = t.getMaxOctaveSize() - 1;
 		float scale = 1.0f;
 		FloatArray2D fa;
 		if ( maxSize < ip.getWidth() || maxSize < ip.getHeight() )
