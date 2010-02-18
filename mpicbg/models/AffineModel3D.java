@@ -234,14 +234,14 @@ public class AffineModel3D extends InvertibleModel< AffineModel3D > implements I
 		invert();
 	}
 
-	/**
-	 * TODO Not yet implemented ...
-	 */
-	@Override
-	final public void shake( final float amount )
-	{
-		// TODO If you ever need it, please implement it...
-	}
+//	/**
+//	 * TODO Not yet implemented ...
+//	 */
+//	@Override
+//	final public void shake( final float amount )
+//	{
+//		// TODO If you ever need it, please implement it...
+//	}
 
 	@Override
 	final public void set( final AffineModel3D m )

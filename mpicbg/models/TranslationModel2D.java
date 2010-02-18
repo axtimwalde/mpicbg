@@ -90,12 +90,12 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 		ty = qcy - pcy;
 	}
 	
-	@Override
-	final public void shake( final float amount )
-	{
-		tx += rnd.nextGaussian() * amount;
-		ty += rnd.nextGaussian() * amount;
-	}
+//	@Override
+//	final public void shake( final float amount )
+//	{
+//		tx += rnd.nextGaussian() * amount;
+//		ty += rnd.nextGaussian() * amount;
+//	}
 
 	@Override
 	public TranslationModel2D clone()

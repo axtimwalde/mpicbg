@@ -104,14 +104,14 @@ public class TranslationModel3D extends InvertibleModel< TranslationModel3D > im
 		translation[ 2 ] = qcz - pcz;
 	}
 	
-	/**
-	 * TODO Not yet implemented ...
-	 */
-	@Override
-	final public void shake( final float amount )
-	{
-		// TODO If you ever need it, please implement it...
-	}
+//	/**
+//	 * TODO Not yet implemented ...
+//	 */
+//	@Override
+//	final public void shake( final float amount )
+//	{
+//		// TODO If you ever need it, please implement it...
+//	}
 	
 	final public void set( final float tx, final float ty, final float tz )
 	{

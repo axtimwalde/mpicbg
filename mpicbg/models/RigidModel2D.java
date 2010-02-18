@@ -146,14 +146,14 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 		invert();
 	}
 	
-	/**
-	 * TODO Not yet implemented ...
-	 */
-	@Override
-	final public void shake( final float amount )
-	{
-		// TODO If you ever need it, please implement it...
-	}
+//	/**
+//	 * TODO Not yet implemented ...
+//	 */
+//	@Override
+//	final public void shake( final float amount )
+//	{
+//		// TODO If you ever need it, please implement it...
+//	}
 	
 	@Override
 	public RigidModel2D clone()

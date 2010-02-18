@@ -107,12 +107,12 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 		return cost < m.cost;
 	}
 
-	/**
-	 * Randomly change the {@link Model} for some amount.
-	 * 
-	 * @param amount
-	 */
-	abstract public void shake( final float amount );
+//	/**
+//	 * Randomly change the {@link Model} for some amount.
+//	 * 
+//	 * @param amount
+//	 */
+//	abstract public void shake( final float amount );
 	
 	/**
 	 * Fit the {@link Model} to a set of data points minimizing the global

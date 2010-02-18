@@ -161,14 +161,14 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		invert();
 	}
 
-	/**
-	 * TODO Not yet implemented ...
-	 */
-	@Override
-	final public void shake( final float amount )
-	{
-		// TODO If you ever need it, please implement it...
-	}
+//	/**
+//	 * TODO Not yet implemented ...
+//	 */
+//	@Override
+//	final public void shake( final float amount )
+//	{
+//		// TODO If you ever need it, please implement it...
+//	}
 
 	@Override
 	final public void set( final AffineModel2D m )

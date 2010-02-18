@@ -158,14 +158,14 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 		invert();
 	}
 	
-	/**
-	 * TODO Not yet implemented ...
-	 */
-	@Override
-	final public void shake( final float amount )
-	{
-		// TODO If you ever need it, please implement it...
-	}
+//	/**
+//	 * TODO Not yet implemented ...
+//	 */
+//	@Override
+//	final public void shake( final float amount )
+//	{
+//		// TODO If you ever need it, please implement it...
+//	}
 	
 	@Override
 	public SimilarityModel2D clone()
