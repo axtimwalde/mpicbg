@@ -17,8 +17,8 @@ import mpicbg.models.TranslationModel3D;
 
 import java.awt.Canvas;
 import java.awt.Event;
+import java.awt.Panel;
 import java.awt.Scrollbar;
-import java.awt.TextField;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
 import java.awt.event.KeyEvent;
@@ -62,7 +62,7 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 		{
 			window = imp.getWindow();
 			canvas = imp.getCanvas();
-			scrollBar = ( Scrollbar )window.getComponent( 1 );
+			scrollBar = ( Scrollbar )( ( Panel )window.getComponent( 1 ) ).getComponent( 1 );
 			scrollBarValue = scrollBar.getValue();
 			scrollBarVisible = scrollBar.getVisibleAmount();
 			scrollBarMin = scrollBar.getMinimum();
@@ -279,7 +279,17 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 		
 		ictl.clear();
 		
-		gui = new GUI( imp );
+		try
+		{
+			gui = new GUI( imp );
+		}
+		catch ( ClassCastException e )
+		{
+			IJ.log( "Could not acquire GUI.  Probably, the AWT components of the stack window changed.  Write an e-mail to saalfed@mpi-cbg.de to fix this." );
+			final StackTraceElement[] stackTraceElements = e.getStackTrace();
+			for ( final StackTraceElement stackTraceElement : stackTraceElements )
+				IJ.log( stackTraceElement.toString() );
+		}
 		
 		final Calibration c = imp.getCalibration();
 		zScale = ( float )( c.pixelDepth / c.pixelWidth );
