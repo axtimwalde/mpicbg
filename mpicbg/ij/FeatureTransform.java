@@ -43,8 +43,7 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 	public void extractFeatures( final ImageProcessor ip, final Collection< Feature > features )
 	{
 		final FloatArray2D fa = new FloatArray2D( ip.getWidth(), ip.getHeight() );
-		ImageArrayConverter.imageProcessorToFloatArray2D( ip, fa );
-		Filter.enhance( fa, 1.0f );
+		ImageArrayConverter.imageProcessorToFloatArray2DCropAndNormalize( ip, fa );
 		
 		t.init( fa );
 	}

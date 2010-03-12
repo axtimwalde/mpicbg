@@ -360,12 +360,14 @@ public class Filter
 		final int l = Math.max( w, h );
 		
 		final FloatProcessor temp = ( FloatProcessor )source.duplicate();
+		temp.setMinAndMax( source.getMin(), source.getMax() );
 		if ( scale == 1.0f ) return temp;
 		
 		smoothForScale( temp, scale, sourceSigma, targetSigma );
 		final float[] tempPixels = ( float[] )temp.getPixels();
 		
-		final FloatProcessor target = ( FloatProcessor )source.createProcessor( w, h );
+		final FloatProcessor target = new FloatProcessor( w, h );
+		target.setMinAndMax( source.getMin(), source.getMax() );
 		final float[] targetPixels = ( float[] )target.getPixels();
 		
 		/* LUT for scaled pixel locations */
@@ -428,11 +430,14 @@ public class Filter
 		final int h = Math.round( oh * scale );
 		
 		final ImageProcessor temp = source.duplicate();
+		temp.setMinAndMax( source.getMin(), source.getMax() );
 		if ( scale >= 1.0f ) return temp;
 			
 		smoothForScale( temp, scale, sourceSigma, targetSigma );
 		
-		return temp.resize( w, h );
+		final ImageProcessor target = temp.resize( w, h );
+		target.setMinAndMax( source.getMin(), source.getMax() );
+		return target;
 	}
 	
 	/**
@@ -442,12 +447,15 @@ public class Filter
 			final ImageProcessor source,
 			final float scale )
 	{
-		if ( scale == 1.0f ) return source.duplicate();
-		else if ( scale < 1.0f ) return createDownsampled( source, scale, 0.5f, 0.5f );
+		final ImageProcessor target;
+		if ( scale == 1.0f ) target = source.duplicate();
+		else if ( scale < 1.0f ) target = createDownsampled( source, scale, 0.5f, 0.5f );
 		else
 		{
 			source.setInterpolationMethod( ImageProcessor.BILINEAR );
-			return source.resize( Math.round( scale * source.getWidth() ) );
+			target = source.resize( Math.round( scale * source.getWidth() ) );
 		}
+		target.setMinAndMax( source.getMin(), source.getMax() );
+		return target;
 	}
 }

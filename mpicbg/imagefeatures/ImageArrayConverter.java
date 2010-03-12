@@ -9,12 +9,9 @@ import ij.process.*;
  * @author Stephan Preibisch and Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 1.4b
  */
-public class ImageArrayConverter
+final public class ImageArrayConverter
 {
-    public static boolean CUTOFF_VALUES = true;
-    public static boolean NORM_VALUES = false;
-    
-    final public static ImagePlus FloatArrayToImagePlus(
+    final static public ImagePlus FloatArrayToImagePlus(
     		final FloatArray2D image,
     		final String name,
     		final float min,
@@ -35,7 +32,7 @@ public class ImageArrayConverter
 	}
 
     
-    final public static void imageProcessorToFloatArray2D( final ImageProcessor ip, final FloatArray2D fa )
+    final static public void imageProcessorToFloatArray2D( final ImageProcessor ip, final FloatArray2D fa )
 	{
 		if ( ip instanceof ByteProcessor )
 		{
@@ -68,8 +65,54 @@ public class ImageArrayConverter
 			}
 		}
 	}
+    
+    
+    /**
+     * Convert an arbitrary {@link ImageProcessor} into a
+     * {@link FloatArray2D} mapping {@link ImageProcessor#getMin() min} and
+     * {@link ImageProcessor#getMax() max} into [0.0,1.0] cropping larger and
+     * smaller values.
+     * 
+     * @param ip
+     * @param fa
+     */
+    final static public void imageProcessorToFloatArray2DCropAndNormalize( final ImageProcessor ip, final FloatArray2D fa )
+	{
+    	final float min = ( float )ip.getMin();
+		final float scale = 1.0f / ( ( float )ip.getMax() - min );
+    	if ( ip instanceof ByteProcessor )
+		{
+			final byte[] pixels = ( byte[] )ip.getPixels();
+			for ( int i = 0; i < pixels.length; ++i )
+				fa.data[ i ] = ( ( pixels[ i ] & 0xff ) - min ) * scale;
+		}
+		else if ( ip instanceof ShortProcessor )
+		{
+			final short[] pixels = ( short[] )ip.getPixels();
+			for ( int i = 0; i < pixels.length; ++i )
+				fa.data[ i ] = ( ( pixels[ i ] & 0xffff ) - min ) * scale;
+		}
+		else if ( ip instanceof FloatProcessor )
+		{
+			final float[] pixels = ( float[] )ip.getPixels();
+			for ( int i = 0; i < pixels.length; ++i )
+				fa.data[ i ] = ( pixels[ i ] - min ) * scale;
+		}
+		else if ( ip instanceof ColorProcessor )
+		{
+			final int[] pixels = ( int[] )ip.getPixels();
+			for ( int i = 0; i < pixels.length; ++i )
+			{
+				final int rgb = pixels[ i ];
+				final int b = rgb & 0xff;
+				final int g = ( rgb >> 8 ) & 0xff;
+				final int r = ( rgb >> 16 ) & 0xff;
+				fa.data[ i ] = ( 0.3f * r + 0.6f * g + 0.1f * b - min ) * scale;
+			}
+		}
+	}
 
-    public static void floatArray2DToFloatProcessor( final FloatArray2D pixels, final FloatProcessor ip )
+    final static public void floatArray2DToFloatProcessor( final FloatArray2D pixels, final FloatProcessor ip )
 	{
 		float[] data = new float[ pixels.width * pixels.height ];
 

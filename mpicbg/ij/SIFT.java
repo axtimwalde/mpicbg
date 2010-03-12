@@ -72,18 +72,18 @@ public class SIFT extends FeatureTransform< FloatArray2DSIFT >
 		if ( maxSize < ip.getWidth() || maxSize < ip.getHeight() )
 		{
 			/* scale the image respectively */
-			scale = ( float )Math.max( maxSize / ip.getWidth(), maxSize / ip.getHeight() );
-			final FloatProcessor ipScaled = mpicbg.ij.util.Filter.createDownsampled( ( FloatProcessor )ip.convertToFloat(), scale, 0.5f, 0.5f );
+			scale = ( float )Math.min( maxSize / ip.getWidth(), maxSize / ip.getHeight() );
+			final FloatProcessor fp = ( FloatProcessor )ip.convertToFloat();
+			fp.setMinAndMax( ip.getMin(), ip.getMax() );
+			final FloatProcessor ipScaled = mpicbg.ij.util.Filter.createDownsampled( fp, scale, 0.5f, 0.5f );
 			fa = new FloatArray2D( ipScaled.getWidth(), ipScaled.getHeight() );
-			fa.data = ( float[] )ipScaled.getPixels();
+			ImageArrayConverter.imageProcessorToFloatArray2DCropAndNormalize( ipScaled, fa );
 		}
 		else
 		{
 			fa = new FloatArray2D( ip.getWidth(), ip.getHeight() );
-			ImageArrayConverter.imageProcessorToFloatArray2D( ip, fa );
+			ImageArrayConverter.imageProcessorToFloatArray2DCropAndNormalize( ip, fa );
 		}
-		
-		Filter.enhance( fa, 1.0f );
 		
 		final float[] initialKernel;
 		
