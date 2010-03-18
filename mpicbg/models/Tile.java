@@ -101,7 +101,29 @@ public class Tile< M extends Model< M > >
 	 */
 	final public boolean removeConnectedTile( final Tile< ? > t )
 	{
-		return connectedTiles.remove( t );
+		if ( connectedTiles.remove( t ) )
+		{
+			/* remove the PointMatches connecting to t */
+			final ArrayList< PointMatch > toBeRemovedHere = new ArrayList< PointMatch >();
+			final ArrayList< PointMatch > toBeRemovedThere = new ArrayList< PointMatch >();
+			for ( final PointMatch p : matches )
+			{
+				for ( final PointMatch m : t.matches )
+				{
+					if ( p.getP2() == m.getP1() )
+					{
+						toBeRemovedHere.add( p );
+						toBeRemovedThere.add( m );
+						break;
+					}
+				}
+			}
+			matches.removeAll( toBeRemovedHere );
+			t.matches.removeAll( toBeRemovedThere );
+			return true;
+		}
+		else
+			return false;
 	}
 	
 	

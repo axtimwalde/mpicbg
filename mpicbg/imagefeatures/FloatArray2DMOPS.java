@@ -640,7 +640,7 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 			List< Feature > fs1,
 			List< Feature > fs2,
 			float max_sd,
-			Model model,
+			Model< ? > model,
 			float max_id,
 			float rod )
 	{

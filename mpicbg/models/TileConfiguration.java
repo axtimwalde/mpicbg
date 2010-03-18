@@ -1,9 +1,7 @@
 package mpicbg.models;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.Set;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -23,11 +21,11 @@ public class TileConfiguration
 	final static protected DecimalFormat decimalFormat = new DecimalFormat();
 	final static protected DecimalFormatSymbols decimalFormatSymbols = new DecimalFormatSymbols();
 
-	final private Set< Tile< ? > > tiles = new HashSet< Tile< ? > >();
-	final public Set< Tile< ? > > getTiles(){ return tiles; }
+	final private HashSet< Tile< ? > > tiles = new HashSet< Tile< ? > >();
+	final public HashSet< Tile< ? > > getTiles(){ return tiles; }
 	
-	final private Set< Tile< ? > > fixedTiles = new HashSet< Tile< ? > >();
-	final public Set< Tile< ? > > getFixedTiles(){ return fixedTiles; }
+	final private HashSet< Tile< ? > > fixedTiles = new HashSet< Tile< ? > >();
+	final public HashSet< Tile< ? > > getFixedTiles(){ return fixedTiles; }
 	
 	private double minError = Double.MAX_VALUE;
 	final public double getMinError() {	return minError; }
