@@ -1,7 +1,18 @@
 javaVersion=1.5
 all <- mpicbg_.jar
 
-mpicbg_.jar <- mpicbg/**/*.java \
+mpicbg.jar <- \
+	mpicbg/util/*.java \
+	mpicbg/ij/*.java \
+	mpicbg/ij/util/*.java \
+	mpicbg/ij/stack/*.java \
+	mpicbg/imagefeatures/*.java \
+	mpicbg/models/*.java \
+	LICENSE
+
+CLASSPATH(mpicbg_.jar)=mpicbg.jar
+mpicbg_.jar <- \
+	mpicbg/ij/plugin/*.java \
 	MOPS_ExtractPointRoi.java \
 	SIFT_Align.java \
 	SIFT_ExtractPointRoi.java \
@@ -14,3 +25,4 @@ mpicbg_.jar <- mpicbg/**/*.java \
 	Transform_Similarity.java \
 	plugins.config \
 	LICENSE
+
