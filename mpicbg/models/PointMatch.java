@@ -249,10 +249,22 @@ public class PointMatch implements Serializable
 			sourcePoints.add( m.getP1() );
 	}
 	
+	final public static void cloneSourcePoints( final Collection< PointMatch > matches, final Collection< Point > sourcePoints )
+	{
+		for ( final PointMatch m : matches )
+			sourcePoints.add( m.getP1().clone() );
+	}
+	
 	final public static void targetPoints( final Collection< PointMatch > matches, final Collection< Point > targetPoints )
 	{
 		for ( final PointMatch m : matches )
 			targetPoints.add( m.getP2() );
+	}
+	
+	final public static void cloneTargetPoints( final Collection< PointMatch > matches, final Collection< Point > targetPoints )
+	{
+		for ( final PointMatch m : matches )
+			targetPoints.add( m.getP2().clone() );
 	}
 	
 	static public float meanDistance( final Collection< PointMatch > matches )
