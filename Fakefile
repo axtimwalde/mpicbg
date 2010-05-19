@@ -2,12 +2,13 @@ javaVersion=1.5
 all <- mpicbg_.jar
 
 mpicbg.jar <- \
-	mpicbg/util/*.java \
 	mpicbg/ij/*.java \
-	mpicbg/ij/util/*.java \
 	mpicbg/ij/stack/*.java \
+	mpicbg/ij/util/*.java \
+	mpicbg/ij/visualization/*.java \
 	mpicbg/imagefeatures/*.java \
 	mpicbg/models/*.java \
+	mpicbg/util/*.java \
 	LICENSE
 
 CLASSPATH(mpicbg_.jar)=mpicbg.jar

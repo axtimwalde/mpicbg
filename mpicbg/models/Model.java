@@ -1,10 +1,22 @@
 package mpicbg.models;
 
+import ij.IJ;
+import ij.ImagePlus;
+import ij.ImageStack;
+import ij.process.Blitter;
+import ij.process.ColorProcessor;
+
+import java.awt.Color;
+import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.List;
 import java.util.Collection;
+
+import mpicbg.ij.InverseTransformMapping;
+import mpicbg.ij.visualization.PointVis;
+import mpicbg.util.Util;
 
 /**
  * Abstract class for arbitrary transformation models to be applied
@@ -55,6 +67,15 @@ import java.util.Collection;
  */
 public abstract class Model< M extends Model< M > > implements CoordinateTransform
 {
+	/* <visualization> */
+	protected ImagePlus impSrc;
+	protected ImagePlus impDst;
+	final public ImagePlus getImpSrc(){ return impSrc; }
+	final public ImagePlus getImpDst(){ return impDst; }
+	final public void setImpSrc( final ImagePlus impSrc ){ this.impSrc = impSrc; }
+	final public void setImpDst( final ImagePlus impDst ){ this.impDst = impDst; }
+	/* </visualization> */
+	
 	
 	/**
 	 * @returns the minimal number of {@link PointMatch PointMatches} required
@@ -211,6 +232,36 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 		if ( candidates.size() < getMinNumMatches() )
 			throw new NotEnoughDataPointsException( candidates.size() + " data points are not enough to solve the Model, at least " + getMinNumMatches() + " data points required." );
 		
+		/* <visualization> */
+		/* repeatable results */
+		rnd.setSeed( 69997 );
+		
+		ColorProcessor ipBgSrc = null;
+		ColorProcessor ipBgDst = null;
+		ColorProcessor errorPlotBg = null;
+		ImageStack stack = null;
+		double eScale = 1.0;
+		
+		if ( impSrc != null && impDst != null )
+		{
+			ipBgSrc = ( ColorProcessor )impSrc.getProcessor().convertToRGB();
+			ipBgSrc.setMinAndMax( -127, 383 );
+			
+			ipBgDst = ( ColorProcessor )impDst.getProcessor().convertToRGB();
+			ipBgDst.setMinAndMax( -127, 383 );
+		
+			eScale = 1.1 * 25; // TODO (no epsilon known)
+			errorPlotBg = new ColorProcessor( impSrc.getWidth(), impSrc.getHeight() );
+			PointVis.drawEpsilonCoordinates( errorPlotBg, Color.GRAY, 1 );
+			
+			stack = new ImageStack(
+					2 * impSrc.getWidth() + impDst.getWidth() + 4,
+					Math.max( impSrc.getHeight(), impDst.getHeight() ) );
+		}
+		
+		int i = 0;
+		/* </visualization> */
+		
 		final M copy = clone();
 		
 		inliers.clear();
@@ -234,12 +285,93 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 			{
 				return false;
 			}
+			
 			final ErrorStatistic observer = new ErrorStatistic( temp.size() );
 			for ( final PointMatch m : temp )
 			{
 				m.apply( copy );
 				observer.add( m.getDistance() );
 			}
+			
+			/* <visualization> */
+			if ( impSrc != null && impDst != null )
+			{
+				/* impSrc */
+				final ColorProcessor ipSrc;
+				
+				if ( InverseCoordinateTransform.class.isInstance( copy ) )
+				{
+					ipSrc = new ColorProcessor( impSrc.getWidth(), impSrc.getHeight() );
+//					ipSrc.setColor( Color.GRAY );
+//					ipSrc.fill();
+					final InverseTransformMapping< ? > mapping = new InverseTransformMapping< InverseCoordinateTransform >( ( InverseCoordinateTransform )copy );
+					mapping.mapInterpolated( ipBgSrc, ipSrc );
+				}
+				else
+					ipSrc = ( ColorProcessor )ipBgSrc.duplicate();
+				
+				
+				final ArrayList< Point > candidatesPointsSrc = new ArrayList< Point >();
+				PointMatch.cloneSourcePoints( candidates, candidatesPointsSrc );
+				Point.apply( copy, candidatesPointsSrc );
+				PointVis.drawWorldPoints( ipSrc, candidatesPointsSrc, Color.BLACK, 3 );
+				
+				final ArrayList< Point > tempInliersPointsSrc = new ArrayList< Point >();
+				PointMatch.cloneSourcePoints( inliers, tempInliersPointsSrc );
+				Point.apply( copy, tempInliersPointsSrc );
+				PointVis.drawWorldPoints( ipSrc, tempInliersPointsSrc, Color.GREEN, 3 );
+				
+				
+				/* impDst */
+				final ColorProcessor ipDst = ( ColorProcessor )ipBgDst.duplicate();
+				final ArrayList< Point > candidatesPointsDst = new ArrayList< Point >();
+				PointMatch.targetPoints( candidates, candidatesPointsDst );
+				PointVis.drawLocalPoints( ipDst, candidatesPointsDst, Color.BLACK, 3 );
+				
+				final ArrayList< Point > tempInliersPointsDst = new ArrayList< Point >();
+				PointMatch.targetPoints( inliers, tempInliersPointsDst );
+				PointVis.drawLocalPoints( ipDst, tempInliersPointsDst, Color.GREEN, 3 );
+				
+				/* error plot */
+				final ColorProcessor ipPlot = ( ColorProcessor )errorPlotBg.duplicate();
+				for ( final PointMatch pm : inliers )
+				{
+					final float[] l = pm.getP1().getL().clone();
+					final float[] w = pm.getP2().getL();
+					copy.applyInPlace( l );
+					
+					ipPlot.setColor( Color.GREEN );
+					ipPlot.setLineWidth( 3 );
+					final double x = ( ( w[ 0 ] - l[ 0 ] ) / eScale + 1 ) * ipPlot.getWidth() / 2;
+					final double y = ( ( w[ 1 ] - l[ 1 ] ) / eScale + 1 ) * ipPlot.getHeight() / 2;
+					ipPlot.drawDot( Util.round( x ), Util.round( y ) );	
+				}
+				
+				final int d = Util.round( observer.getMedian() * maxTrust / eScale * ipPlot.getWidth() );
+				
+				ipPlot.setColor( Color.MAGENTA );
+				ipPlot.setLineWidth( 1 );
+				ipPlot.drawOval( ( ipPlot.getWidth() - d ) / 2, ( ipPlot.getHeight() - d ) / 2, d, d );
+				
+				final ColorProcessor ipPanels = new ColorProcessor( stack.getWidth(), stack.getHeight() );
+				ipPanels.copyBits( ipSrc, 0, 0, Blitter.COPY );
+				ipPanels.copyBits( ipDst, ipSrc.getWidth() + 2, 0, Blitter.COPY );
+				ipPanels.copyBits( ipPlot, ipSrc.getWidth() + ipDst.getWidth() + 4, 0, Blitter.COPY );
+				
+				PointVis.drawWorldPointMatchLines(
+						ipPanels,
+						inliers,
+						Color.GREEN,
+						1,
+						new Rectangle( 0, 0, impSrc.getWidth(), impSrc.getHeight() ),
+						new Rectangle( impSrc.getWidth() + 2, 0, impDst.getWidth(), impDst.getHeight() ),
+						1.0,
+						1.0 );
+				
+				stack.addSlice( "" + ++i, ipPanels );
+			}
+			/* </visualization> */
+			
 			inliers.clear();
 			final double t = observer.getMedian() * maxTrust;
 			for ( final PointMatch m : temp )
@@ -254,6 +386,16 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 		
 		if ( numInliers < minNumInliers )
 			return false;
+		
+		/* <visualization> */
+		if ( impSrc != null && impDst != null )
+		{
+			final ImagePlus impVis = new ImagePlus( impSrc.getTitle() + " Robust Regression", stack );
+			impVis.show();
+		}
+		IJ.log( "filtered after " + i + " iterations");
+		
+		/* </visualization> */
 		
 		set( copy );
 		return true;
@@ -311,6 +453,36 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 			final int minNumInliers )
 		throws NotEnoughDataPointsException
 	{
+		/* <visualization> */
+		/* repeatable results */
+		rnd.setSeed( 69997 );
+		
+		ColorProcessor ipBgSrc = null;
+		ColorProcessor ipBgDst = null;
+		ColorProcessor errorPlotBg = null;
+		ImageStack stack = null;
+		double eScale = 1.0;
+		
+		if ( impSrc != null && impDst != null )
+		{
+			ipBgSrc = ( ColorProcessor )impSrc.getProcessor().convertToRGB();
+			ipBgSrc.setMinAndMax( -127, 383 );
+			
+			ipBgDst = ( ColorProcessor )impDst.getProcessor().convertToRGB();
+			ipBgDst.setMinAndMax( -127, 383 );
+		
+			eScale = 1.1 * epsilon;
+			errorPlotBg = new ColorProcessor( impSrc.getWidth(), impSrc.getHeight() );
+			PointVis.drawEpsilonCoordinates( errorPlotBg, Color.GRAY, 1 );
+			
+			stack = new ImageStack(
+					2 * impSrc.getWidth() + impDst.getWidth() + 4,
+					Math.max( impSrc.getHeight(), impDst.getHeight() ) );
+		}
+		
+		int bestI = -1;
+		/* </visualization> */
+			
 		if ( candidates.size() < getMinNumMatches() )
 			throw new NotEnoughDataPointsException( candidates.size() + " data points are not enough to solve the Model, at least " + getMinNumMatches() + " data points required." );
 		
@@ -366,9 +538,99 @@ A:		while ( i < iterations )
 				copy.set( m );
 				inliers.clear();
 				inliers.addAll( tempInliers );
+				bestI = i;
 			}
 			++i;
+			
+			/* <visualization> */
+			if ( impSrc != null && impDst != null )
+			{
+				if ( isGood )
+				{
+					try { m.fit( tempInliers ); }
+					catch ( IllDefinedDataPointsException e )
+					{
+						++i;
+						continue A;
+					}
+				}
+				/* impSrc */
+				final ColorProcessor ipSrc = ( ColorProcessor )ipBgSrc.duplicate();
+				
+				final ArrayList< Point > candidatesPointsSrc = new ArrayList< Point >();
+				PointMatch.sourcePoints( candidates, candidatesPointsSrc );
+				PointVis.drawLocalPoints( ipSrc, candidatesPointsSrc, Color.BLACK, 3 );
+				
+				final ArrayList< Point > tempInliersPointsSrc = new ArrayList< Point >();
+				PointMatch.sourcePoints( tempInliers, tempInliersPointsSrc );
+				PointVis.drawLocalPoints( ipSrc, tempInliersPointsSrc, Color.GREEN, 3 );
+				
+				final ArrayList< Point > minMatchesPointsSrc = new ArrayList< Point >();
+				PointMatch.sourcePoints( minMatches, minMatchesPointsSrc );
+				PointVis.drawLocalPoints( ipSrc, minMatchesPointsSrc, Color.WHITE, 3 );
+				
+				
+				/* impDst */
+				final ColorProcessor ipDst = ( ColorProcessor )ipBgDst.duplicate();
+				final ArrayList< Point > candidatesPointsDst = new ArrayList< Point >();
+				PointMatch.targetPoints( candidates, candidatesPointsDst );
+				PointVis.drawLocalPoints( ipDst, candidatesPointsDst, Color.BLACK, 3 );
+				
+				final ArrayList< Point > tempInliersPointsDst = new ArrayList< Point >();
+				PointMatch.targetPoints( tempInliers, tempInliersPointsDst );
+				PointVis.drawLocalPoints( ipDst, tempInliersPointsDst, Color.GREEN, 3 );
+				
+				final ArrayList< Point > minMatchesPointsDst = new ArrayList< Point >();
+				PointMatch.targetPoints( minMatches, minMatchesPointsDst );
+				PointVis.drawLocalPoints( ipDst, minMatchesPointsDst, Color.WHITE, 3 );
+				
+				
+				/* error plot */
+				final ColorProcessor ipPlot = ( ColorProcessor )errorPlotBg.duplicate();
+				for ( final PointMatch pm : tempInliers )
+				{
+					final float[] l = pm.getP1().getL().clone();
+					final float[] w = pm.getP2().getL();
+					m.applyInPlace( l );
+					
+					ipPlot.setColor( Color.GREEN );
+					ipPlot.setLineWidth( 3 );
+					final double x = ( ( w[ 0 ] - l[ 0 ] ) / eScale + 1 ) * ipPlot.getWidth() / 2;
+					final double y = ( ( w[ 1 ] - l[ 1 ] ) / eScale + 1 ) * ipPlot.getHeight() / 2;
+					ipPlot.drawDot( Util.round( x ), Util.round( y ) );	
+				}
+				
+				final ColorProcessor ipPanels = new ColorProcessor( stack.getWidth(), stack.getHeight() );
+				ipPanels.copyBits( ipSrc, 0, 0, Blitter.COPY );
+				ipPanels.copyBits( ipDst, ipSrc.getWidth() + 2, 0, Blitter.COPY );
+				ipPanels.copyBits( ipPlot, ipSrc.getWidth() + ipDst.getWidth() + 4, 0, Blitter.COPY );
+				
+				PointVis.drawLocalPointMatchLines(
+						ipPanels,
+						tempInliers,
+						Color.GREEN,
+						1,
+						new Rectangle( 0, 0, impSrc.getWidth(), impSrc.getHeight() ),
+						new Rectangle( impSrc.getWidth() + 2, 0, impDst.getWidth(), impDst.getHeight() ),
+						1.0,
+						1.0 );
+				
+				stack.addSlice( "" + i, ipPanels );
+			}
+			/* </visualization> */
+			
 		}
+		
+		/* <visualization> */
+		if ( impSrc != null && impDst != null )
+		{
+			final ImagePlus impVis = new ImagePlus( impSrc.getTitle() + " RANSAC", stack );
+			impVis.show();
+		}
+		IJ.log( "best i: " + bestI );
+		
+		/* </visualization> */
+		
 		if ( inliers.size() == 0 )
 			return false;
 		
