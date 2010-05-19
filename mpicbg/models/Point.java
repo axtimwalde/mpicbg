@@ -145,4 +145,34 @@ public class Point implements Serializable
 			p.w[ i ] = w[ i ];
 		return p;
 	}
+	
+	/**
+	 * Apply a {@link CoordinateTransform} to an {@link Iterable} collection of
+	 * {@link Point Points}.
+	 * 
+	 * For each {@link Point}, transfers the {@link #l local coordinates} to
+	 * new {@link #w world coordinates}.
+	 * 
+	 * @param t
+	 */
+	static public void apply( final CoordinateTransform t, final Iterable< Point > points )
+	{
+		for ( final Point p : points )
+			p.apply( t );
+	}
+	
+	/**
+	 * Apply an {@link InverseCoordinateTransform} to an {@link Iterable} collection of
+	 * {@link Point Points}.
+	 * 
+	 * For each {@link Point}, transfers the {@link #l local coordinates} to
+	 * new {@link #w world coordinates}.
+	 * 
+	 * @param t
+	 */
+	static public void applyInverse( final InverseCoordinateTransform t, final Iterable< Point > points ) throws NoninvertibleModelException
+	{
+		for ( final Point p : points )
+			p.applyInverse( t );
+	}
 }
