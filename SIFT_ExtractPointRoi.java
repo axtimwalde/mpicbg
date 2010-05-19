@@ -1,17 +1,12 @@
 import mpicbg.ij.FeatureTransform;
 import mpicbg.ij.SIFT;
-import mpicbg.ij.visualization.PointVis;
 import mpicbg.imagefeatures.*;
 import mpicbg.models.*;
 
 import ij.plugin.*;
-import ij.process.Blitter;
-import ij.process.ColorProcessor;
 import ij.gui.*;
 import ij.*;
 
-import java.awt.Color;
-import java.awt.Rectangle;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
@@ -205,17 +200,8 @@ public class SIFT_ExtractPointRoi implements PlugIn
 	}
 
 	/** Execute with default parameters (model is Rigid) */
-	public void exec(final ImagePlus imp1, final ImagePlus imp2)
-	{
-		/* <visualization> */
-		final ColorProcessor ipBgSrc = ( ColorProcessor )imp1.getProcessor().convertToRGB();
-		ipBgSrc.setMinAndMax( -127, 383 );
-		
-		final ColorProcessor ipBgDst = ( ColorProcessor )imp2.getProcessor().convertToRGB();
-		ipBgDst.setMinAndMax( -127, 383 );
-		/* </visualization> */
-		
-		
+	public void exec(final ImagePlus imp1, final ImagePlus imp2) {
+
 		FloatArray2DSIFT sift = new FloatArray2DSIFT( p.sift );
 		SIFT ijSIFT = new SIFT( sift );
 		
@@ -231,67 +217,12 @@ public class SIFT_ExtractPointRoi implements PlugIn
 		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );
 		IJ.log( fs2.size() + " features extracted." );
 		
-		/* <visualization> */
-		final ColorProcessor ipFeatures = new ColorProcessor( imp1.getWidth() + imp2.getWidth() + 2, Math.max( imp1.getHeight(), imp2.getHeight() ) );
-		ipFeatures.copyBits( ipBgSrc, 0, 0, Blitter.COPY );
-		ipFeatures.copyBits( ipBgDst, ipBgSrc.getWidth() + 2, 0, Blitter.COPY );
-		
-		PointVis.drawFeaturePoints( ipFeatures, fs1, Color.BLACK, 3 );
-		PointVis.drawFeaturePoints(
-				ipFeatures,
-				fs2,
-				Color.BLACK,
-				3,
-				new Rectangle( imp1.getWidth() + 2, 0, imp2.getWidth(), imp2.getHeight() ),
-				1 );
-		
-		final ImagePlus impFeatures = new ImagePlus( imp1.getTitle() + " " + imp2.getTitle() + " Feature Detections", ipFeatures );
-		impFeatures.show(); 
-		/* </visualization> */
-		
-		
 		start_time = System.currentTimeMillis();
 		IJ.log( "Identifying correspondence candidates using brute force ..." );
 		final List< PointMatch > candidates = new ArrayList< PointMatch >();
 		FeatureTransform.matchFeatures( fs1, fs2, candidates, p.rod );
 		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );	
 		IJ.log( candidates.size() + " potentially corresponding features identified." );
-		
-		/* <visualization> */
-		final ColorProcessor ipCandidates = ( ColorProcessor )ipFeatures.duplicate();
-//		ipCandidates.copyBits( ipBgSrc, 0, 0, Blitter.COPY );
-//		ipCandidates.copyBits( ipBgDst, ipBgSrc.getWidth() + 2, 0, Blitter.COPY );
-		
-		final ArrayList< Point > candidatesPointsSrc = new ArrayList< Point >();
-		PointMatch.sourcePoints( candidates, candidatesPointsSrc );
-		PointVis.drawLocalPoints( ipCandidates, candidatesPointsSrc, Color.GREEN, 3 );
-		
-		final ArrayList< Point > candidatesPointsDst = new ArrayList< Point >();
-		PointMatch.targetPoints( candidates, candidatesPointsDst );
-		PointVis.drawLocalPoints(
-				ipCandidates,
-				candidatesPointsDst,
-				Color.GREEN,
-				3,
-				new Rectangle( imp1.getWidth() + 2, 0, imp2.getWidth(), imp2.getHeight() ),
-				1 );
-		
-		PointVis.drawLocalPointMatchLines(
-				ipCandidates,
-				candidates,
-				Color.GREEN,
-				1,
-				new Rectangle( 0, 0, imp1.getWidth(), imp1.getHeight() ),
-				new Rectangle( imp1.getWidth() + 2, 0, imp2.getWidth(), imp2.getHeight() ),
-				1.0,
-				1.0 );
-		
-		final ImagePlus impCandidates = new ImagePlus( imp1.getTitle() + " " + imp2.getTitle() + " Correspondence Candidates", ipCandidates );
-		impCandidates.show(); 
-		
-		
-		/* </visualization> */
-		
 			
 		start_time = System.currentTimeMillis();
 		IJ.log( "Filtering correspondence candidates by geometric consensus ..." );
@@ -315,8 +246,6 @@ public class SIFT_ExtractPointRoi implements PlugIn
 		default:
 			return;
 		}
-		model.setImpSrc( imp1 );
-		model.setImpDst( imp2 );
 		
 		boolean modelFound;
 		try
