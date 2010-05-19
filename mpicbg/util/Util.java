@@ -126,6 +126,16 @@ final public class Util
 	}
 	
 	/**
+	 * Round a
+	 * 
+	 * @param a
+	 */
+	final static public int round( final double a )
+	{
+		return ( int )( a + Math.signum( a ) * 0.5f );
+	}
+	
+	/**
 	 * An equivalent to div for float
 	 * 
 	 * @param a
