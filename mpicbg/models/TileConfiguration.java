@@ -21,19 +21,19 @@ public class TileConfiguration
 	final static protected DecimalFormat decimalFormat = new DecimalFormat();
 	final static protected DecimalFormatSymbols decimalFormatSymbols = new DecimalFormatSymbols();
 
-	final private HashSet< Tile< ? > > tiles = new HashSet< Tile< ? > >();
+	final protected HashSet< Tile< ? > > tiles = new HashSet< Tile< ? > >();
 	final public HashSet< Tile< ? > > getTiles(){ return tiles; }
 	
-	final private HashSet< Tile< ? > > fixedTiles = new HashSet< Tile< ? > >();
+	final protected HashSet< Tile< ? > > fixedTiles = new HashSet< Tile< ? > >();
 	final public HashSet< Tile< ? > > getFixedTiles(){ return fixedTiles; }
 	
-	private double minError = Double.MAX_VALUE;
+	protected double minError = Double.MAX_VALUE;
 	final public double getMinError() {	return minError; }
 	
-	private double maxError = 0.0;
+	protected double maxError = 0.0;
 	final public double getMaxError() { return maxError; }
 	
-	private double error = Double.MAX_VALUE;
+	protected double error = Double.MAX_VALUE;
 	final public double getError() { return error; }
 
 	public TileConfiguration()
