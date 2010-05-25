@@ -356,11 +356,19 @@ public class SIFT_Align implements PlugIn, KeyListener
 					impInfo.show();
 				}
 				impInfo.setStack( "Alignment info", stackInfo );
+				final int currentSlice = impInfo.getSlice();
+				impInfo.setSlice( stackInfo.getSize() );
+				impInfo.setSlice( currentSlice );
 				impInfo.updateAndDraw();
 			}
 			impAligned.setStack( "Aligned " + stackAligned.getSize() + " of " + stack.getSize(), stackAligned );
+			final int currentSlice = impAligned.getSlice();
+			impAligned.setSlice( stack.getSize() );
+			impAligned.setSlice( currentSlice );
 			impAligned.updateAndDraw();
 		}
+		
+		IJ.log( "Done." );
 	}
 
 	public void keyPressed(KeyEvent e)
