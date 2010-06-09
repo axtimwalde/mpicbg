@@ -72,7 +72,7 @@ public class Align_SIFT_BlockMatching_ElasticMeshStack implements PlugIn
 		
 		
 		public float alpha = 2.0f;
-		public int meshResolution = 32;
+		public int meshResolution = 16;
 		
 		public float minR = 0.7f;
 		public float maxCurvatureR = 5f;
