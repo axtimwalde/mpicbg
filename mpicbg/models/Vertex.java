@@ -31,6 +31,14 @@ public class Vertex extends Point
 	 * @return conntected vertices
 	 */
 	public Set< Vertex > getConnectedVertices(){ return springs.keySet(); }
+	/**
+	 * Get the {@link Spring} that connects this {@link Vertex} to a given
+	 * other {@link Vertex} if any.
+	 * 
+	 * @param vertex
+	 * @return
+	 */
+	public Spring getSpring( final Vertex vertex ){ return springs.get( vertex ); }
 	
 	/**
 	 * Add a {@link Spring} connecting this {@link Vertex} with another
