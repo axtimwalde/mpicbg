@@ -673,4 +673,27 @@ public class TransformMesh implements InvertibleCoordinateTransform
 			updateAffines();
 		}
 	}
+	
+	/**
+	 * Calculate bounding box
+	 * 
+	 * @param min
+	 * @param max
+	 */
+	public void bounds( final float[] min, final float[] max )
+	{
+		min[ 0 ] = min[ 1 ] = Float.MAX_VALUE;
+		max[ 0 ] = max[ 1 ] = -Float.MAX_VALUE;
+		
+		final Set< PointMatch > vertices = va.keySet();
+		for ( final PointMatch vertex : vertices )
+		{
+			final float[] w = vertex.getP2().getW();
+			
+			if ( w[ 0 ] < min[ 0 ] ) min[ 0 ] = w[ 0 ];
+			if ( w[ 0 ] > max[ 0 ] ) max[ 0 ] = w[ 0 ];
+			if ( w[ 1 ] < min[ 1 ] ) min[ 1 ] = w[ 1 ];
+			if ( w[ 1 ] > max[ 1 ] ) max[ 1 ] = w[ 1 ];
+		}
+	}
 }
