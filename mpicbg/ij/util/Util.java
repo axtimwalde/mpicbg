@@ -1,5 +1,6 @@
 package mpicbg.ij.util;
 
+import java.awt.Color;
 import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -97,4 +98,45 @@ public class Util
     	for ( int i = 0; i < data.length; ++i )
     		data[ i ] = s * ( data[ i ] - min );
     }
+    
+    
+    /**
+     * Create a saturated color in a periodic interval
+     * 
+     * @param i
+     * @param interval
+     * 
+     * @return
+     */
+    final static public Color createSaturatedColor( float i, float interval )
+	{
+		float o = i / interval * 6;
+		
+		final float r, g, b;
+		
+		final float a = 1;
+		
+		if ( o < 3 )
+			r = Math.min( 1.0f, Math.max( 0.0f, 2.0f - o ) ) * a;
+		else
+			r = Math.min( 1.0f, Math.max( 0.0f, o - 4.0f ) ) * a;
+		
+		o += 2;
+		if ( o >= 6 ) o -= 6;
+		
+		if ( o < 3 )
+			g = Math.min( 1.0f, Math.max( 0.0f, 2.0f - o ) ) * a;
+		else
+			g = Math.min( 1.0f, Math.max( 0.0f, o - 4.0f ) ) * a;
+		
+		o += 2;
+		if ( o >= 6 ) o -= 6;
+		
+		if ( o < 3 )
+			b = Math.min( 1.0f, Math.max( 0.0f, 2.0f - o ) ) * a;
+		else
+			b = Math.min( 1.0f, Math.max( 0.0f, o - 4.0f ) ) * a;
+		
+		return new Color( r, g, b );
+	}
 }
