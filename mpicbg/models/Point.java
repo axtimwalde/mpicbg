@@ -155,9 +155,9 @@ public class Point implements Serializable
 	 * 
 	 * @param t
 	 */
-	static public void apply( final CoordinateTransform t, final Iterable< Point > points )
+	static public < P extends Point >void apply( final CoordinateTransform t, final Iterable< P > points )
 	{
-		for ( final Point p : points )
+		for ( final P p : points )
 			p.apply( t );
 	}
 	
