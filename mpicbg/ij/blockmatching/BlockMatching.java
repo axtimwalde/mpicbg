@@ -246,7 +246,9 @@ public class BlockMatching
 		final int blockHeight = 2 * blockRadiusY + 1;
 
 		/* Visualization of PMCC(x,y) */
+		/* <visualisation> */
 		final ImageStack rMapStack = new ImageStack( 2 * searchRadiusX + 1, 2 * searchRadiusY + 1 );
+		/* </visualisation> */
 
 		int k = 0;
 		int l = 0;
@@ -405,7 +407,9 @@ P:		for ( final PointMatch pm : query )
 				rMapStack.addSlice( "" + ++l, rMap );
 			}
 		}
-		if ( results.size() > 0 ) new ImagePlus( "r", rMapStack ).show();
+		/* <visualisation> */
+//		if ( results.size() > 0 ) new ImagePlus( "r", rMapStack ).show();
+		/* </visualisation> */
 	}
     
     
@@ -478,7 +482,7 @@ P:		for ( final PointMatch pm : query )
 		sTarget.set( 1.0f / scale, 0, 0, 0 );
 		
 		/* Combined transformation */
-		final CoordinateTransformList lTarget = new CoordinateTransformList();
+		final CoordinateTransformList< CoordinateTransform > lTarget = new CoordinateTransformList< CoordinateTransform >();
 		lTarget.add( sTarget );
 		lTarget.add( tTarget );
 		lTarget.add( transform );
