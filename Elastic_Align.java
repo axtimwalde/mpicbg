@@ -1,11 +1,10 @@
-import mpicbg.ij.Mapping;
 import mpicbg.ij.InverseTransformMapping;
 import mpicbg.ij.SIFT;
 import mpicbg.ij.TransformMeshMapping;
 import mpicbg.ij.blockmatching.BlockMatching;
-import mpicbg.ij.util.Util;
 import mpicbg.imagefeatures.*;
 import mpicbg.models.*;
+import mpicbg.util.Util;
 
 import ij.plugin.*;
 import ij.gui.*;
@@ -15,8 +14,8 @@ import ij.process.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.Vector;
-import java.awt.Color;
 import java.awt.TextField;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -56,7 +55,7 @@ public class Elastic_Align implements PlugIn, KeyListener
 		public float stiffness = 0.1f;
 		public float springMeshDamp = 0.6f;
 		public float maxStretch = 2000.0f;
-		public int maxIterations = 100000;
+		public int maxIterations = 2000;
 		public int maxPlateauwidth = 200;
 		
 		public boolean interpolate = true;
@@ -123,7 +122,7 @@ public class Elastic_Align implements PlugIn, KeyListener
 		ImageStack stack = imp.getStack();
 		ImageStack stackAligned = new ImageStack( stack.getWidth(), stack.getHeight() );
 		
-		final List< InvertibleCoordinateTransform > transforms = new ArrayList< InvertibleCoordinateTransform >( stack.getSize() - 1 );
+		final ArrayList< InvertibleCoordinateTransform > transforms = new ArrayList< InvertibleCoordinateTransform >( stack.getSize() - 1 );
 		
 		stackAligned.addSlice( null, stack.getProcessor( 1 ).duplicate() );
 		ImagePlus impAligned = new ImagePlus( "Aligned 1 of " + stack.getSize(), stackAligned );
@@ -160,9 +159,9 @@ public class Elastic_Align implements PlugIn, KeyListener
 			return;
 		}
 		
-		Mapping mapping = new InverseTransformMapping< AbstractAffineModel2D< ? > >( model );
+		InverseTransformMapping< AbstractAffineModel2D< ? > > mapping = new InverseTransformMapping< AbstractAffineModel2D< ? > >( model );
 		
-		final List< SpringMesh > meshes = new ArrayList< SpringMesh >( stack.getSize() );		
+		final ArrayList< SpringMesh > meshes = new ArrayList< SpringMesh >( stack.getSize() );		
 		meshes.add( new SpringMesh( p.springMeshResolution, stack.getWidth(), stack.getHeight(), p.stiffness, p.maxStretch, p.springMeshDamp ) ); 
 		
 		/* Linear alignment */
@@ -271,7 +270,7 @@ public class Elastic_Align implements PlugIn, KeyListener
 			BlockMatching.matchByMaximalPMCC(
 					ip1,
 					ip2,
-					512.0f / ip1.getWidth(),
+					Math.min( 1.0f, 512.0f / ip1.getWidth() ),
 					transforms.get( i - 1 ).createInverse(),
 					blockRadius,
 					blockRadius,
@@ -286,18 +285,20 @@ public class Elastic_Align implements PlugIn, KeyListener
 			
 			IJ.log( "> found " + pm12.size() + " correspondences." );
 			
-			final List< Point > s1 = new ArrayList< Point >();
-			PointMatch.sourcePoints( pm12, s1 );
-			final ImagePlus imp1 = new ImagePlus( i + " >", ip1 );
-			imp1.show();
-			imp1.getCanvas().setDisplayList( BlockMatching.illustrateMatches( pm12 ), Color.yellow, null );
-			imp1.setRoi( Util.pointsToPointRoi( s1 ) );
-			imp1.updateAndDraw();
+			/* <visualisation> */
+//			final List< Point > s1 = new ArrayList< Point >();
+//			PointMatch.sourcePoints( pm12, s1 );
+//			final ImagePlus imp1 = new ImagePlus( i + " >", ip1 );
+//			imp1.show();
+//			imp1.setOverlay( BlockMatching.illustrateMatches( pm12 ), Color.yellow, null );
+//			imp1.setRoi( Util.pointsToPointRoi( s1 ) );
+//			imp1.updateAndDraw();
+			/* </visualisation> */
 			
 			BlockMatching.matchByMaximalPMCC(
 					ip2,
 					ip1,
-					512.0f / ip1.getWidth(),
+					Math.min( 1.0f, 512.0f / ip1.getWidth() ),
 					transforms.get( i - 1 ),
 					blockRadius,
 					blockRadius,
@@ -312,15 +313,15 @@ public class Elastic_Align implements PlugIn, KeyListener
 			
 			IJ.log( "< found " + pm21.size() + " correspondences." );
 			
-			final List< Point > s2 = new ArrayList< Point >();
-			PointMatch.sourcePoints( pm21, s2 );
-			final ImagePlus imp2 = new ImagePlus( i + " <", ip2 );
-			imp2.show();IJ.log( "> found " + pm12.size() + " correspondences." );
-			
-			
-			imp2.getCanvas().setDisplayList( BlockMatching.illustrateMatches( pm21 ), Color.yellow, null );
-			imp2.setRoi( Util.pointsToPointRoi( s2 ) );
-			imp2.updateAndDraw();
+			/* <visualisation> */
+//			final List< Point > s2 = new ArrayList< Point >();
+//			PointMatch.sourcePoints( pm21, s2 );
+//			final ImagePlus imp2 = new ImagePlus( i + " <", ip2 );
+//			imp2.show();
+//			imp2.setOverlay( BlockMatching.illustrateMatches( pm21 ), Color.yellow, null );
+//			imp2.setRoi( Util.pointsToPointRoi( s2 ) );
+//			imp2.updateAndDraw();
+			/* </visualisation> */
 			
 			for ( final PointMatch pm : pm12 )
 			{
@@ -339,20 +340,60 @@ public class Elastic_Align implements PlugIn, KeyListener
 			}
 		}
 		
+		/* initialize meshes */
+		/* TODO this is accumulative and thus not perfect, change to analytical concatenation later */
+		for ( int i = 1; i < stack.getSize(); ++i )
+		{
+			final CoordinateTransformList< CoordinateTransform > ctl = new CoordinateTransformList< CoordinateTransform >();
+			for ( int j = i - 1; j >= 0; --j )
+				ctl.add( transforms.get( j ) );
+			meshes.get( i ).init( ctl );
+		}
+		
+		/* optimize */
 		try { SpringMesh.optimizeMeshes( meshes, p.maxEpsilon, p.maxIterations, p.maxPlateauwidth ); }
 		catch ( NotEnoughDataPointsException e ) { e.printStackTrace(); }
 		
-		for ( int i = 1; i <= stack.getSize(); ++i )
+		/* calculate bounding box */
+		final float[] min = new float[ 2 ];
+		final float[] max = new float[ 2 ];
+		for ( final SpringMesh mesh : meshes )
 		{
-			final Mapping meshMapping = new TransformMeshMapping( meshes.get( i - 1 ) );
-			if ( p.interpolate )
-				meshMapping.mapInterpolated( stack.getProcessor( i ), stackAligned.getProcessor( i ) );
-			else
-				meshMapping.map( stack.getProcessor( i ), stackAligned.getProcessor( i ) );
+			final float[] meshMin = new float[ 2 ];
+			final float[] meshMax = new float[ 2 ];
 			
+			mesh.bounds( meshMin, meshMax );
+			
+			Util.min( min, meshMin );
+			Util.max( max, meshMax );
 		}
 		
-		impAligned.updateAndDraw();
+		/* translate relative to bounding box */
+		for ( final SpringMesh mesh : meshes )
+		{
+			for ( final Vertex vertex : mesh.getVertices() )
+			{
+				final float[] w = vertex.getW();
+				w[ 0 ] -= min[ 0 ];
+				w[ 1 ] -= min[ 1 ];
+			}
+			mesh.updateAffines();
+			mesh.updatePassiveVertices();
+		}
+		
+		final ImageStack stackAlignedMeshes = new ImageStack( ( int )Math.ceil( max[ 0 ] - min[ 0 ] ), ( int )Math.ceil( max[ 1 ] - min[ 1 ] ) );
+		for ( int i = 1; i <= stack.getSize(); ++i )
+		{
+			final TransformMeshMapping< SpringMesh > meshMapping = new TransformMeshMapping< SpringMesh >( meshes.get( i - 1 ) );
+			final ImageProcessor ip = stack.getProcessor( i ).createProcessor( stackAlignedMeshes.getWidth(), stackAlignedMeshes.getHeight() ); 
+			if ( p.interpolate )
+				meshMapping.mapInterpolated( stack.getProcessor( i ), ip );
+			else
+				meshMapping.map( stack.getProcessor( i ), ip );
+			stackAlignedMeshes.addSlice( "" + i, ip );
+		}
+		
+		new ImagePlus( "Aligned meshes", stackAlignedMeshes ).show();
 	}
 
 	public void keyPressed(KeyEvent e)
