@@ -1,7 +1,16 @@
 package mpicbg.models;
 
+import ij.IJ;
+import ij.ImagePlus;
+import ij.ImageStack;
+import ij.process.ColorProcessor;
+
+import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.Shape;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.GeneralPath;
+import java.awt.image.BufferedImage;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
@@ -10,6 +19,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Map.Entry;
+
+import mpicbg.ij.util.Util;
 
 /**
  * A {@link TransformMesh} with all Vertices being interconnected by springs.
@@ -169,6 +180,8 @@ public class SpringMesh extends TransformMesh
 	{
 		return 1.0f / ( float )Math.pow( d, alpha );
 	}
+	
+	static protected void println( String s ){ IJ.log( s ); }
 	
 	/**
 	 * Find the closest {@link Vertex} to a given coordinate in terms of its
@@ -406,6 +419,58 @@ public class SpringMesh extends TransformMesh
 		System.out.println( "  maximal force: " + decimalFormat.format( maxForce ) + "N" );
 	}
 	
+	
+	/* <visualization> */
+	final static public ColorProcessor paintMeshes( final Collection< SpringMesh > meshes, final float scale )
+	{
+		final int width = ( int )( meshes.iterator().next().getWidth() * scale );
+		final int height = ( int )( meshes.iterator().next().getHeight() * scale );
+		final ColorProcessor ip = new ColorProcessor( width, height );
+		final BufferedImage bi = ip.getBufferedImage();
+		final Graphics2D g = bi.createGraphics();
+		g.setBackground( Color.WHITE );
+		g.clearRect( 0, 0, width, height );
+		g.setTransform( new AffineTransform( scale, 0, 0, scale, 0, 0 ) );
+		int i = 0;
+		for ( final SpringMesh m : meshes )
+		{
+			final Shape shape = m.illustrateMesh();
+			g.setColor( Util.createSaturatedColor( i++, meshes.size() ) );
+			g.draw( shape );
+		}
+		return new ColorProcessor( bi );
+	}
+	/* </visualization> */
+	
+	
+	/* <visualization> */
+	final static public ColorProcessor paintSprings( final Collection< SpringMesh > meshes, final float scale, final float maxStretch )
+	{
+		final int width = mpicbg.util.Util.round( meshes.iterator().next().getWidth() * scale );
+		final int height = mpicbg.util.Util.round( meshes.iterator().next().getHeight() * scale );
+		final ColorProcessor ip = new ColorProcessor( width, height );
+		
+		/* estimate maximal spring stretch */
+		float maxSpringStretch = 0;
+		for ( final SpringMesh m : meshes )
+			for ( final Vertex vertex : m.getVertices() )
+			{
+				for ( final Vertex v : vertex.getConnectedVertices() )
+				{
+					final Spring spring = vertex.getSpring( v );
+					final float stretch = Math.abs( Point.distance( vertex, v ) - spring.getLength() );
+					if ( stretch > maxSpringStretch ) maxSpringStretch = stretch;
+				}
+			}
+		
+		for ( final SpringMesh m : meshes )
+			m.illustrateSprings( ip, scale, maxSpringStretch );
+		
+		return ip;
+	}
+	/* </visualization> */
+	
+	
 	/**
 	 * Optimize a {@link Collection} of connected {@link SpringMesh SpringMeshes}.
 	 * 
@@ -434,11 +499,32 @@ public class SpringMesh extends TransformMesh
 		
 		boolean proceed = i < maxIterations;
 		
+		/* <visualization> */
+		final float width = meshes.iterator().next().getWidth();
+		final float height = meshes.iterator().next().getHeight();
+		final float scale = Math.min(  1.0f, 512.0f / Math.max( width, height ) );
+		final ImageStack stackAnimation = new ImageStack( mpicbg.util.Util.round( width * scale ), mpicbg.util.Util.round( height * scale ) );
+		final ImagePlus impAnimation = new ImagePlus();
+		/* </visualization> */
+		
+		println( "i mean min max" );
+		
 		while ( proceed )
 		{
 			force = 0;
 			maxForce = -Double.MAX_VALUE;
 			minForce = Double.MAX_VALUE;
+			
+			/* <visualization> */
+//			stackAnimation.addSlice( "" + i, paintMeshes( meshes, scale ) );
+			stackAnimation.addSlice( "" + i, paintSprings( meshes, scale, maxError ) );
+			impAnimation.setStack( stackAnimation );
+			impAnimation.updateAndDraw();
+			if ( i == 1 )
+			{
+				impAnimation.show();
+			}
+			/* </visualization> */
 			
 			for ( final SpringMesh mesh : meshes )
 			{
@@ -450,6 +536,8 @@ public class SpringMesh extends TransformMesh
 				if ( meshMinForce < minForce ) minForce = meshMinForce;
 			}
 			observer.add( force / meshes.size() );
+			
+			println( new StringBuffer( i + " " ).append( force / meshes.size() ).append( " " ).append( minForce ).append( " " ).append( maxForce ).toString() );
 			
 			if ( i > maxPlateauwidth )
 			{
@@ -503,6 +591,40 @@ public class SpringMesh extends TransformMesh
 		}
 		return path;
 	}
+	
+	
+	/**
+	 * Paint all {@Spring Springs} into a {@link ColorProcessor}.
+	 * 
+	 * @return illustration
+	 */
+	public void illustrateSprings( final ColorProcessor ip, final float scale, final float maxStretch )
+	{
+		for ( final Vertex vertex : vertices )
+		{
+			final float[] v1 = vertex.getW();
+			for ( final Vertex v : vertex.getConnectedVertices() )
+			{
+				final Spring spring = vertex.getSpring( v );
+				//final float stretch = mpicbg.util.Util.pow( Math.min( 1.0f, Math.abs( Point.distance( vertex, v ) - spring.getLength() ) / maxStretch ), 2 );
+				final float stretch = Math.min( 1.0f, Math.abs( Point.distance( vertex, v ) - spring.getLength() ) / maxStretch );
+				
+				final float r = Math.min( 1, stretch * 2 );
+				final float g = Math.min( 1, 2 - stretch * 2 );
+				
+				ip.setColor( new Color( r, g, 0 ) );
+				
+				final float[] v2 = v.getW();
+				
+				ip.drawLine(
+						mpicbg.util.Util.round( scale * v1[ 0 ] ),
+						mpicbg.util.Util.round( scale * v1[ 1 ] ),
+						mpicbg.util.Util.round( scale * v2[ 0 ] ),
+						mpicbg.util.Util.round( scale * v2[ 1 ] ) );
+			}
+		}
+	}
+	
 	
 	/**
 	 * Create a Shape that illustrates the mesh.
