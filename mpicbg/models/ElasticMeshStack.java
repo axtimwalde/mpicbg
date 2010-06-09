@@ -4,7 +4,12 @@ package mpicbg.models;
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.process.ByteProcessor;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Shape;
+import java.awt.image.BufferedImage;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
@@ -65,6 +70,22 @@ public class ElasticMeshStack< M extends AbstractAffineModel2D< M > >
 			m.optimizeIteration();
 	}
 	
+	final public ByteProcessor paintMeshIteration( final ImagePlus src )
+	{
+		final ByteProcessor ip = new ByteProcessor( src.getWidth(), src.getHeight() );
+		for ( final ElasticMovingLeastSquaresMesh< M > m : meshes )
+		{
+			final Shape shape = m.illustrateMesh();
+			final BufferedImage bi = ip.getBufferedImage();
+			final Graphics2D g = bi.createGraphics();
+			g.setBackground( Color.WHITE );
+			g.clearRect( 0, 0, src.getWidth(), src.getHeight() );
+			g.setColor( Color.BLUE );
+			g.draw( shape );
+		}
+		return ip;
+	}
+	
 	/**
 	 * Minimize the displacement of all PointMatches of all tiles.
 	 * 
@@ -74,11 +95,6 @@ public class ElasticMeshStack< M extends AbstractAffineModel2D< M > >
 	 * @param maxPlateauwidth convergence is reached if the average slope in
 	 *   an interval of this size is 0.0 (in double accuracy).  This prevents
 	 *   the algorithm from stopping at plateaus smaller than this value.
-	 * 
-	 * TODO  Johannes Schindelin suggested to start from a good guess, which is
-	 *   e.g. the propagated unoptimized pose of a tile relative to its
-	 *   connected tile that was already identified during RANSAC
-	 *   correspondence check.  Thank you, Johannes, great hint!
 	 */
 	final public void optimize(
 			final float maxAllowedError,
@@ -92,14 +108,28 @@ public class ElasticMeshStack< M extends AbstractAffineModel2D< M > >
 		final ErrorStatistic observer = new ErrorStatistic( maxPlateauwidth + 1 );
 		int i = 0;
 		
+		/* <visualization> */
+		final ImageStack stackAnimation = new ImageStack( src.getWidth(), src.getHeight() );
+		final ImagePlus impAnimation = new ImagePlus();
+		/* </visualization> */
+		
 		while ( i < maxIterations )  // do not run forever
 		{
+			/* <visualization> */
+			stackAnimation.addSlice( "" + i, paintMeshIteration( imp ) );
+			impAnimation.setStack( stackAnimation );
+			impAnimation.updateAndDraw();
+			if ( i == 1 )
+			{
+				impAnimation.show();
+			}
+			/* </visualization> */
+			
 			optimizeIteration();
 			update( 0.5f );
 			//update( 1f );
 			observer.add( error );
 			
-			//paint( src, trg );
 			//imp.updateAndDraw();
 			
 			double wideSlope = 0;			
