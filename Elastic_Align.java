@@ -120,13 +120,13 @@ public class Elastic_Align implements PlugIn, KeyListener
 		if ( !p.setup() ) return;
 		
 		ImageStack stack = imp.getStack();
-		ImageStack stackAligned = new ImageStack( stack.getWidth(), stack.getHeight() );
+		//ImageStack stackAligned = new ImageStack( stack.getWidth(), stack.getHeight() );
 		
 		final ArrayList< InvertibleCoordinateTransform > transforms = new ArrayList< InvertibleCoordinateTransform >( stack.getSize() - 1 );
 		
-		stackAligned.addSlice( null, stack.getProcessor( 1 ).duplicate() );
-		ImagePlus impAligned = new ImagePlus( "Aligned 1 of " + stack.getSize(), stackAligned );
-		impAligned.show();
+		//stackAligned.addSlice( null, stack.getProcessor( 1 ).duplicate() );
+		//ImagePlus impAligned = new ImagePlus( "Aligned 1 of " + stack.getSize(), stackAligned );
+		//impAligned.show();
 		
 		final List< Feature > fs1 = new ArrayList< Feature >(); 
 		final List< Feature > fs2 = new ArrayList< Feature >();
@@ -238,10 +238,12 @@ public class Elastic_Align implements PlugIn, KeyListener
 			else
 				mapping.map( ip, approximatelyAlignedSlice );
 			
-			stackAligned.addSlice( null, approximatelyAlignedSlice );
+			IJ.save( new ImagePlus( "linear " + i, approximatelyAlignedSlice ), "linear-" + String.format( "%04d", i ) + ".tif" );
 			
-			impAligned.setStack( "Aligned " + stackAligned.getSize() + " of " + stack.getSize(), stackAligned );
-			impAligned.updateAndDraw();
+//			stackAligned.addSlice( null, approximatelyAlignedSlice );
+//			
+//			impAligned.setStack( "Aligned " + stackAligned.getSize() + " of " + stack.getSize(), stackAligned );
+//			impAligned.updateAndDraw();
 			
 			final SpringMesh m2 = new SpringMesh( p.springMeshResolution, stack.getWidth(), stack.getHeight(), p.stiffness, p.maxStretch, p.springMeshDamp );
 			//m2.init( model );
@@ -381,19 +383,23 @@ public class Elastic_Align implements PlugIn, KeyListener
 			mesh.updatePassiveVertices();
 		}
 		
-		final ImageStack stackAlignedMeshes = new ImageStack( ( int )Math.ceil( max[ 0 ] - min[ 0 ] ), ( int )Math.ceil( max[ 1 ] - min[ 1 ] ) );
+		//final ImageStack stackAlignedMeshes = new ImageStack( ( int )Math.ceil( max[ 0 ] - min[ 0 ] ), ( int )Math.ceil( max[ 1 ] - min[ 1 ] ) );
+		final int width = ( int )Math.ceil( max[ 0 ] - min[ 0 ] );
+		final int height = ( int )Math.ceil( max[ 1 ] - min[ 1 ] );
 		for ( int i = 1; i <= stack.getSize(); ++i )
 		{
 			final TransformMeshMapping< SpringMesh > meshMapping = new TransformMeshMapping< SpringMesh >( meshes.get( i - 1 ) );
-			final ImageProcessor ip = stack.getProcessor( i ).createProcessor( stackAlignedMeshes.getWidth(), stackAlignedMeshes.getHeight() ); 
+			final ImageProcessor ip = stack.getProcessor( i ).createProcessor( width, height );
 			if ( p.interpolate )
 				meshMapping.mapInterpolated( stack.getProcessor( i ), ip );
 			else
 				meshMapping.map( stack.getProcessor( i ), ip );
-			stackAlignedMeshes.addSlice( "" + i, ip );
+			IJ.save( new ImagePlus( "elastic " + i, ip ), "elastic-" + String.format( "%04d", i ) + ".tif" );
+			
+			//stackAlignedMeshes.addSlice( "" + i, ip );
 		}
 		
-		new ImagePlus( "Aligned meshes", stackAlignedMeshes ).show();
+		IJ.log( "Done." );
 	}
 
 	public void keyPressed(KeyEvent e)
