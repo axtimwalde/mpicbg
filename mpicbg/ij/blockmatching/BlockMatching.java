@@ -427,13 +427,13 @@ P:		for ( final PointMatch pm : query )
 	 *            [0,1]
 	 * @param transform
 	 *            transfers source into target approximately
-	 * @param scaledBlockRadiusX
+	 * @param blockRadiusX
 	 *            horizontal radius of a block
-	 * @param scaledBlockRadiusY
+	 * @param blockRadiusY
 	 *            vertical radius of a block
-	 * @param scaledSearchRadiusX
+	 * @param searchRadiusX
 	 *            horizontal search radius
-	 * @param scaledSearchRadiusY
+	 * @param searchRadiusY
 	 *            vertical search radius
 	 * @param minR
 	 *            minimal accepted Cross-Correlation coefficient
