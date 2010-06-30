@@ -51,6 +51,10 @@ public class Elastic_Align implements PlugIn, KeyListener
 		final static public String[] modelStrings = new String[]{ "Translation", "Rigid", "Similarity", "Affine" };
 		public int modelIndex = 1;
 		
+		public float minR = 0.7f;
+		public float maxCurvatureR = 5f;
+		public float rodR = 0.8f;
+		
 		public int springMeshResolution = 16;
 		public float stiffness = 0.1f;
 		public float springMeshDamp = 0.6f;
@@ -75,6 +79,11 @@ public class Elastic_Align implements PlugIn, KeyListener
 			gd.addNumericField( "inlier_ratio :", p.minInlierRatio, 2 );
 			gd.addChoice( "approximate_transformation :", Param.modelStrings, Param.modelStrings[ p.modelIndex ] );
 			
+			gd.addMessage( "Block Matching:" );
+			gd.addNumericField( "minimal R :", minR, 2 );
+			gd.addNumericField( "maximal curvature factor :", maxCurvatureR, 2 );
+			gd.addNumericField( "closest/next_closest_ratio :", p.rodR, 2 );
+			
 			gd.addMessage( "Spring Mesh:" );
 			gd.addNumericField( "resolution :", springMeshResolution, 0 );
 			gd.addNumericField( "stiffness :", stiffness, 2 );
@@ -95,6 +104,10 @@ public class Elastic_Align implements PlugIn, KeyListener
 			p.maxEpsilon = ( float )gd.getNextNumber();
 			p.minInlierRatio = ( float )gd.getNextNumber();
 			p.modelIndex = gd.getNextChoiceIndex();
+			
+			p.minR = ( float )gd.getNextNumber();
+			p.maxCurvatureR = ( float )gd.getNextNumber();
+			p.rodR = ( float )gd.getNextNumber();
 			
 			p.springMeshResolution = ( int )gd.getNextNumber();
 			p.stiffness = ( float )gd.getNextNumber();
@@ -272,15 +285,15 @@ public class Elastic_Align implements PlugIn, KeyListener
 			BlockMatching.matchByMaximalPMCC(
 					ip1,
 					ip2,
-					Math.min( 1.0f, 512.0f / ip1.getWidth() ),
+					Math.min( 1.0f, ( float )p.sift.maxOctaveSize / ip1.getWidth() ),
 					transforms.get( i - 1 ).createInverse(),
 					blockRadius,
 					blockRadius,
 					searchRadius,
 					searchRadius,
-					0.9f,
-					0.8f,
-					5.0f,
+					p.minR,
+					p.rodR,
+					p.maxCurvatureR,
 					v1,
 					pm12,
 					new ErrorStatistic( 1 ) );
@@ -300,7 +313,7 @@ public class Elastic_Align implements PlugIn, KeyListener
 			BlockMatching.matchByMaximalPMCC(
 					ip2,
 					ip1,
-					Math.min( 1.0f, 512.0f / ip1.getWidth() ),
+					Math.min( 1.0f, ( float )p.sift.maxOctaveSize / ip1.getWidth() ),
 					transforms.get( i - 1 ),
 					blockRadius,
 					blockRadius,
