@@ -314,6 +314,8 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 		if ( candidates.size() < getMinNumMatches() )
 			throw new NotEnoughDataPointsException( candidates.size() + " data points are not enough to solve the Model, at least " + getMinNumMatches() + " data points required." );
 		
+		cost = Double.MAX_VALUE;
+		
 		final M copy = clone();
 		final M m = clone();
 		
