@@ -221,7 +221,7 @@ public class TileConfiguration
 		apply();
 		
 		
-		println( "i mean min max" );
+//		println( "i mean min max" );
 		
 		while ( proceed )
 		{
@@ -250,7 +250,7 @@ public class TileConfiguration
 				}
 			}
 			
-			println( new StringBuffer( i + " " ).append( error ).append( " " ).append( minError ).append( " " ).append( maxError ).toString() );
+//			println( new StringBuffer( i + " " ).append( error ).append( " " ).append( minError ).append( " " ).append( maxError ).toString() );
 			
 			proceed &= ++i < maxIterations;
 		}
