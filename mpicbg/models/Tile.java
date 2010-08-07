@@ -128,6 +128,33 @@ public class Tile< M extends Model< M > >
 	
 	
 	/**
+	 * Try to find the tile which is connected by a particular
+	 * {@link PointMatch}.
+	 * 
+	 * Note that this method searches only the known connected tiles to limit
+	 * the cost of that anyway expensive search.
+	 * 
+	 * @param match
+	 * 
+	 * @return connectedTile or null
+	 */
+	public Tile< ? > findConnectedTile( final PointMatch match )
+	{
+		final Point p = match.getP2();
+		for ( final mpicbg.models.Tile< ? > t : connectedTiles )
+		{
+			for ( final PointMatch m : t.getMatches() )
+			{
+				if ( p == m.getP1() ) return t;
+			}
+		}
+		return null;
+	}
+	
+	
+	
+	
+	/**
 	 * The transfer error of this {@link Tile Tile's} {@link Model} as
 	 * estimated from weighted square point correspondence displacement.
 	 */
