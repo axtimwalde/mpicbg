@@ -270,9 +270,28 @@ public class TileConfiguration
 			final int maxIterations,
 			final int maxPlateauwidth ) throws NotEnoughDataPointsException, IllDefinedDataPointsException 
 	{
-		println( "Optimizing..." );
-		
 		final ErrorStatistic observer = new ErrorStatistic( maxPlateauwidth + 1 );
+		
+		optimize( observer, maxAllowedError, maxIterations, maxPlateauwidth );
+	}
+	
+	/**
+	 * Minimize the displacement of all {@link PointMatch Correspondence pairs}
+	 * of all {@link Tile Tiles} and tell about it.
+	 *   
+	 * @param maxAllowedError
+	 * @param maxIterations
+	 * @param maxPlateauwidth
+	 * @throws NotEnoughDataPointsException
+	 * @throws IllDefinedDataPointsException
+	 */
+	public void optimize(
+			final ErrorStatistic observer,
+			final float maxAllowedError,
+			final int maxIterations,
+			final int maxPlateauwidth ) throws NotEnoughDataPointsException, IllDefinedDataPointsException 
+	{
+		println( "Optimizing..." );
 		
 		optimizeSilently( observer, maxAllowedError, maxIterations, maxPlateauwidth );
 		
@@ -294,7 +313,7 @@ public class TileConfiguration
 		{
 			final ErrorStatistic observer = new ErrorStatistic( maxPlateauwidth + 1 );
 			
-			optimizeSilently( observer, maxAllowedError, maxIterations, maxPlateauwidth );
+			optimize( observer, maxAllowedError, maxIterations, maxPlateauwidth );
 			
 			/* get all transfer errors */
 			final RealSum sum = new RealSum();
