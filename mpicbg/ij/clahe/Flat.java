@@ -204,7 +204,6 @@ public class Flat
 						++hist[ Util.roundPositive( src.get( xMax1, yi ) / 255.0f * bins ) ];						
 				}
 				
-				/* transfer value and set to dst */
 				dst.set( x, y, Util.roundPositive( Util.transferValue( v, hist, clippedHist, limit, bins ) * 255.0f ) );
 			}
 			
@@ -225,7 +224,12 @@ public class Flat
 				{
 					final int i = t + x;
 					final int v = ip.get( i );
-					final float a = ( float )dst.get( i ) / src.get( i );
+					final float vSrc = src.get( i );
+					final float a;
+					if ( vSrc == 0 )
+						a = 1.0f;
+					else
+						a = ( float )dst.get( i ) / vSrc;
 					ip.set( i, Math.max( 0, Math.min( 65535, Util.roundPositive( a * ( v - min ) + min ) ) ) );
 				}
 			}
@@ -236,7 +240,12 @@ public class Flat
 				{
 					final int i = t + x;
 					final float v = ip.getf( i );
-					final float a = ( float )dst.get( i ) / src.get( i );
+					final float vSrc = src.get( i );
+					final float a;
+					if ( vSrc == 0 )
+						a = 1.0f;
+					else
+						a = ( float )dst.get( i ) / vSrc;
 					ip.setf( i, a * ( v - min ) + min );
 				}
 			}
@@ -246,7 +255,12 @@ public class Flat
 				{
 					final int i = t + x;
 					final int argb = ip.get( i );
-					final float a = ( float )dst.get( i ) / src.get( i );
+					final float vSrc = src.get( i );
+					final float a;
+					if ( vSrc == 0 )
+						a = 1.0f;
+					else
+						a = ( float )dst.get( i ) / vSrc;
 					final int r = Math.max( 0, Math.min( 255, Util.roundPositive( a * ( ( argb >> 16 ) & 0xff ) ) ) );  
 					final int g = Math.max( 0, Math.min( 255, Util.roundPositive( a * ( ( argb >> 8 ) & 0xff ) ) ) );
 					final int b = Math.max( 0, Math.min( 255, Util.roundPositive( a * ( argb & 0xff ) ) ) );
