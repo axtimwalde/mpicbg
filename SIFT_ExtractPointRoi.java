@@ -1,5 +1,6 @@
 import mpicbg.ij.FeatureTransform;
 import mpicbg.ij.SIFT;
+import mpicbg.ij.util.Util;
 import mpicbg.imagefeatures.*;
 import mpicbg.models.*;
 
@@ -69,6 +70,8 @@ public class SIFT_ExtractPointRoi implements PlugIn
 		 */
 		public float rod = 0.92f;
 		
+		public boolean useGeometricConsensusFilter = true;
+		
 		/**
 		 * Maximal allowed alignment error in px
 		 */
@@ -78,6 +81,11 @@ public class SIFT_ExtractPointRoi implements PlugIn
 		 * Inlier/candidates ratio
 		 */
 		public float minInlierRatio = 0.05f;
+		
+		/**
+		 * Minimal absolute number of inliers
+		 */
+		public int minNumInliers = 7;
 		
 		/**
 		 * Implemeted transformation models for choice
@@ -137,8 +145,10 @@ public class SIFT_ExtractPointRoi implements PlugIn
 		gd.addNumericField( "closest/next_closest_ratio :", p.rod, 2 );
 		
 		gd.addMessage( "Geometric Consensus Filter:" );
+		gd.addCheckbox( "filter matches by geometric consensus", p.useGeometricConsensusFilter );
 		gd.addNumericField( "maximal_alignment_error :", p.maxEpsilon, 2, 6, "px" );
-		gd.addNumericField( "inlier_ratio :", p.minInlierRatio, 2 );
+		gd.addNumericField( "minimal_inlier_ratio :", p.minInlierRatio, 2 );
+		gd.addNumericField( "minimal_number_of_inliers :", p.minNumInliers, 0 );
 		gd.addChoice( "expected_transformation :", Param.modelStrings, Param.modelStrings[ p.modelIndex ] );
 		
 		gd.showDialog();
@@ -157,8 +167,10 @@ public class SIFT_ExtractPointRoi implements PlugIn
 		p.sift.fdBins = ( int )gd.getNextNumber();
 		p.rod = ( float )gd.getNextNumber();
 		
+		p.useGeometricConsensusFilter = gd.getNextBoolean();
 		p.maxEpsilon = ( float )gd.getNextNumber();
 		p.minInlierRatio = ( float )gd.getNextNumber();
+		p.minNumInliers = ( int )gd.getNextNumber();
 		p.modelIndex = gd.getNextChoiceIndex();
 
 		exec(imp1, imp2);
@@ -181,8 +193,10 @@ public class SIFT_ExtractPointRoi implements PlugIn
 		p.sift.fdBins = fdBins;
 		p.rod = rod;
 
+		p.useGeometricConsensusFilter = true;
 		p.maxEpsilon = maxEpsilon;
 		p.minInlierRatio = minInlierRatio;
+		p.minNumInliers = 7;
 		p.modelIndex = modelIndex;
 
 		exec( imp1, imp2 );
@@ -222,83 +236,99 @@ public class SIFT_ExtractPointRoi implements PlugIn
 		final List< PointMatch > candidates = new ArrayList< PointMatch >();
 		FeatureTransform.matchFeatures( fs1, fs2, candidates, p.rod );
 		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );	
-		IJ.log( candidates.size() + " potentially corresponding features identified." );
-			
-		start_time = System.currentTimeMillis();
-		IJ.log( "Filtering correspondence candidates by geometric consensus ..." );
-		List< PointMatch > inliers = new ArrayList< PointMatch >();
 		
-		Model< ? > model;
-		switch ( p.modelIndex )
+		if ( p.useGeometricConsensusFilter )
 		{
-		case 0:
-			model = new TranslationModel2D();
-			break;
-		case 1:
-			model = new RigidModel2D();
-			break;
-		case 2:
-			model = new SimilarityModel2D();
-			break;
-		case 3:
-			model = new AffineModel2D();
-			break;
-		default:
-			return;
-		}
-		
-		boolean modelFound;
-		try
-		{
-			modelFound = model.filterRansac(
-					candidates,
-					inliers,
-					1000,
-					p.maxEpsilon,
-					p.minInlierRatio );
-		}
-		catch ( NotEnoughDataPointsException e )
-		{
-			modelFound = false;
-		}
+			IJ.log( candidates.size() + " potentially corresponding features identified." );
 			
-		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );	
-		
-		if ( modelFound )
-		{
-			int x1[] = new int[ inliers.size() ];
-			int y1[] = new int[ inliers.size() ];
-			int x2[] = new int[ inliers.size() ];
-			int y2[] = new int[ inliers.size() ];
+			start_time = System.currentTimeMillis();
+			IJ.log( "Filtering correspondence candidates by geometric consensus ..." );
+			List< PointMatch > inliers = new ArrayList< PointMatch >();
 			
-			int i = 0;
-			
-			for ( PointMatch m : inliers )
+			Model< ? > model;
+			switch ( p.modelIndex )
 			{
-				float[] m_p1 = m.getP1().getL(); 
-				float[] m_p2 = m.getP2().getL();
-				
-				x1[ i ] = Math.round( m_p1[ 0 ] );
-				y1[ i ] = Math.round( m_p1[ 1 ] );
-				x2[ i ] = Math.round( m_p2[ 0 ] );
-				y2[ i ] = Math.round( m_p2[ 1 ] );
-				
-				++i;
+			case 0:
+				model = new TranslationModel2D();
+				break;
+			case 1:
+				model = new RigidModel2D();
+				break;
+			case 2:
+				model = new SimilarityModel2D();
+				break;
+			case 3:
+				model = new AffineModel2D();
+				break;
+			default:
+				return;
 			}
-		
-			PointRoi pr1 = new PointRoi( x1, y1, inliers.size() );
-			PointRoi pr2 = new PointRoi( x2, y2, inliers.size() );
 			
-			imp1.setRoi( pr1 );
-			imp2.setRoi( pr2 );
+			boolean modelFound;
+			try
+			{
+				modelFound = model.filterRansac(
+						candidates,
+						inliers,
+						1000,
+						p.maxEpsilon,
+						p.minInlierRatio,
+						p.minNumInliers );
+			}
+			catch ( NotEnoughDataPointsException e )
+			{
+				modelFound = false;
+			}
+				
+			IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );	
 			
-			IJ.log( inliers.size() + " corresponding features with an average displacement of " + decimalFormat.format( model.getCost() ) + "px identified." );
-			IJ.log( "Estimated transformation model: " + model );
+			if ( modelFound )
+			{
+				int x1[] = new int[ inliers.size() ];
+				int y1[] = new int[ inliers.size() ];
+				int x2[] = new int[ inliers.size() ];
+				int y2[] = new int[ inliers.size() ];
+				
+				int i = 0;
+				
+				for ( PointMatch m : inliers )
+				{
+					float[] m_p1 = m.getP1().getL(); 
+					float[] m_p2 = m.getP2().getL();
+					
+					x1[ i ] = Math.round( m_p1[ 0 ] );
+					y1[ i ] = Math.round( m_p1[ 1 ] );
+					x2[ i ] = Math.round( m_p2[ 0 ] );
+					y2[ i ] = Math.round( m_p2[ 1 ] );
+					
+					++i;
+				}
+			
+				PointRoi pr1 = new PointRoi( x1, y1, inliers.size() );
+				PointRoi pr2 = new PointRoi( x2, y2, inliers.size() );
+				
+				imp1.setRoi( pr1 );
+				imp2.setRoi( pr2 );
+				
+				PointMatch.apply( inliers, model );
+				
+				IJ.log( inliers.size() + " corresponding features with an average displacement of " + decimalFormat.format( PointMatch.meanDistance( inliers ) ) + "px identified." );
+				IJ.log( "Estimated transformation model: " + model );
+			}
+			else
+			{
+				IJ.log( "No correspondences found." );
+			}
 		}
 		else
 		{
-			IJ.log( "No correspondences found." );
+			final ArrayList< Point > p1 = new ArrayList< Point >();
+			final ArrayList< Point > p2 = new ArrayList< Point >();
+			PointMatch.sourcePoints( candidates, p1 );
+			PointMatch.targetPoints( candidates, p2 );
+			imp1.setRoi( Util.pointsToPointRoi( p1 ) );
+			imp2.setRoi( Util.pointsToPointRoi( p2 ) );
+			IJ.log( candidates.size() + " corresponding features identified." );
 		}
-
 	}
 }
