@@ -18,8 +18,6 @@ package mpicbg.ij.clahe;
 
 import java.util.ArrayList;
 
-import mpicbg.util.Util;
-
 import ij.IJ;
 import ij.ImagePlus;
 import ij.Undo;

@@ -16,8 +16,6 @@
  */
 package mpicbg.ij.clahe;
 
-import ij.IJ;
-
 /**
  * &lsquot;Contrast Limited Adaptive Histogram Equalization&rsquot; as
  * described in
