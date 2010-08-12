@@ -16,6 +16,8 @@
  */
 package mpicbg.ij.clahe;
 
+import ij.IJ;
+
 /**
  * &lsquot;Contrast Limited Adaptive Histogram Equalization&rsquot; as
  * described in
@@ -93,17 +95,17 @@ public class Util
 		
 		int hMin = hist.length - 1;
 		for ( int i = 0; i < hMin; ++i )
-			if ( hist[ i ] != 0 ) hMin = i;
+			if ( cdfs[ i ] != 0 ) hMin = i;
 		
 		int cdf = 0;
 		for ( int i = hMin; i < hist.length; ++i )
 		{
-			cdf += hist[ i ];
+			cdf += cdfs[ i ];
 			cdfs[ i ] = cdf;
 		}
 		
-		final int cdfMin = hist[ hMin ];
-		final int cdfMax = hist[ hist.length - 1 ];
+		final int cdfMin = cdfs[ hMin ];
+		final int cdfMax = cdfs[ hist.length - 1 ];
 		
 		final float[] transfer = new float[ hist.length ];
 		for ( int i = 0; i < transfer.length; ++i )

@@ -337,7 +337,6 @@ public class FastFlat
 				final int v = Util.roundPositive( src.get( x, y ) / 255.0f * bins );
 				
 				hist = createHistogram( blockRadius, bins, boxXMin, boxYMin, boxXMax, boxYMax, x, y, src );
-				final int[] clippedHist = new int[ hist.length ];
 				
 				final int n = sum( hist );
 				final int l;
@@ -346,7 +345,9 @@ public class FastFlat
 				else
 					l = ( int )( ( 1 + mask.get( x, y ) / 255.0f * ( slope - 1 ) ) * n / bins + 0.5f );
 				
-				dst.set( x, y, Util.roundPositive( Util.transferValue( v, hist, clippedHist, l ) * 255.0f ) );
+				final float[] transfer = Util.createTransfer( hist, l );
+				
+				dst.set( x, y, Util.roundPositive( transfer[ v ] * 255.0f ) );
 			}
 			
 			/* multiply the current row into ip */
