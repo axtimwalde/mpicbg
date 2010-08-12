@@ -1,5 +1,5 @@
 javaVersion=1.5
-all <- mpicbg_.jar
+all <- mpicbg_.jar clahe_.jar
 
 mpicbg.jar <- \
 	mpicbg/ij/*.java \
@@ -27,3 +27,7 @@ mpicbg_.jar <- \
 	plugins.config \
 	LICENSE
 
+clahe_.jar <- \
+	mpicbg/ij/clahe/*.java \
+	plugins.config[clahe.config] \
+	LICENSE[LICENSE.GPL]
