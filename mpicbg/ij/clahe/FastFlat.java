@@ -235,6 +235,100 @@ public class FastFlat
 			final ByteProcessor mask,
 			final ImageProcessor ip )
 	{
+		int[] hist;
+		float[] tl;
+		float[] tr;
+		float[] bl;
+		float[] br;
+		
+		final int blockSize = 2 * blockRadius + 1;
+		final int limit = ( int )( slope * blockSize * blockSize / bins + 0.5f );
+		
+		/* div */
+		final int nc = src.getWidth() / blockSize;
+		final int nr = src.getHeight() / blockSize;
+		
+		/* % */
+		final int cm = src.getWidth() - nc * blockSize;
+		final int[] cs;
+		switch ( cm )
+		{
+		case 0:
+			cs = new int[ nc ];
+			for ( int i = 0; i < nc; ++i )
+				cs[ i ] = i * blockSize + blockRadius + 1;
+			break;
+		case 1:
+			cs = new int[ nc + 1 ];
+			for ( int i = 0; i < nc; ++i )
+				cs[ i ] = i * blockSize + blockRadius + 1;
+			cs[ nc ] = src.getWidth() - blockRadius - 1;
+			break;
+		default:
+			cs = new int[ nc + 2 ];
+			cs[ 0 ] = blockRadius + 1;
+			for ( int i = 1; i <= nc; ++i )
+				cs[ i ] = i * blockSize + blockRadius + 1 + cm / 2;
+			cs[ nc + 1 ] = src.getWidth() - blockRadius - 1;
+		}
+		
+		final int rm = src.getHeight() - nr * blockSize;
+		final int[] rs;
+		switch ( rm )
+		{
+		case 0:
+			rs = new int[ nr ];
+			for ( int i = 0; i < nr; ++i )
+				rs[ i ] = i * blockSize + blockRadius + 1;
+			break;
+		case 1:
+			rs = new int[ nr + 1 ];
+			for ( int i = 0; i < nr; ++i )
+				rs[ i ] = i * blockSize + blockRadius + 1;
+			rs[ nr ] = src.getHeight() - blockRadius - 1;
+			break;
+		default:
+			rs = new int[ nr + 2 ];
+			rs[ 0 ] = blockRadius + 1;
+			for ( int i = 1; i <= nr; ++i )
+				rs[ i ] = i * blockSize + blockRadius + 1 + rm / 2;
+			rs[ nr + 1 ] = src.getHeight() - blockRadius - 1;
+		}
+		
+		for ( int r = 1; r < rs.length; ++r )
+		{
+			final int r1 = r - 1;
+			final int dr = rs[ r ] - rs[ r1 ];
+			
+			hist = createHistogram( blockRadius, bins, boxXMin, boxYMin, boxXMax, boxYMax, cs[ 0 ], rs[ r1 ], src );
+			tr = Util.createTransfer( hist, limit );
+			
+			hist = createHistogram( blockRadius, bins, boxXMin, boxYMin, boxXMax, boxYMax, cs[ 0 ], rs[ r ], src );
+			br = Util.createTransfer( hist, limit );
+			
+			for ( int c = 1; c < cs.length; ++c )
+			{
+				final int c1 = c - 1;
+				final int dc = cs[ c ] - cs[ c1 ];
+				
+				tl = tr;
+				bl = br;
+				
+				hist = createHistogram( blockRadius, bins, boxXMin, boxYMin, boxXMax, boxYMax, cs[ c ], rs[ r1 ], src );
+				tr = Util.createTransfer( hist, limit );
+				
+				hist = createHistogram( blockRadius, bins, boxXMin, boxYMin, boxXMax, boxYMax, cs[ c ], rs[ r ], src );
+				br = Util.createTransfer( hist, limit );
+				
+				for ( int y = rs[ r1 ]; y < rs[ r ]; ++y )
+				{
+					for ( int x = cs[ c1 ]; x < cs[ c ]; ++x )
+					{
+						//dst.set( x, y, Util.roundPositive( Util.transferValue( v, hist, clippedHist, limit, bins ) * 255.0f ) );
+					}
+				}
+			}
+		}
 		
 		for ( int y = boxYMin; y < boxYMax; ++y )
 		{
@@ -242,17 +336,17 @@ public class FastFlat
 			{
 				final int v = Util.roundPositive( src.get( x, y ) / 255.0f * bins );
 				
-				final int[] hist = createHistogram( blockRadius, bins, boxXMin, boxYMin, boxXMax, boxYMax, x, y, src );
+				hist = createHistogram( blockRadius, bins, boxXMin, boxYMin, boxXMax, boxYMax, x, y, src );
 				final int[] clippedHist = new int[ hist.length ];
 				
 				final int n = sum( hist );
-				final int limit;
+				final int l;
 				if ( mask == null )
-					limit = ( int )( slope * n / bins + 0.5f );
+					l = ( int )( slope * n / bins + 0.5f );
 				else
-					limit = ( int )( ( 1 + mask.get( x, y ) / 255.0f * ( slope - 1 ) ) * n / bins + 0.5f );
+					l = ( int )( ( 1 + mask.get( x, y ) / 255.0f * ( slope - 1 ) ) * n / bins + 0.5f );
 				
-				dst.set( x, y, Util.roundPositive( Util.transferValue( v, hist, clippedHist, limit, bins ) * 255.0f ) );
+				dst.set( x, y, Util.roundPositive( Util.transferValue( v, hist, clippedHist, l ) * 255.0f ) );
 			}
 			
 			/* multiply the current row into ip */

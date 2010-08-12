@@ -47,11 +47,10 @@ public class Util
 	 * @param limit clip limit
 	 * @param bins number of bins
 	 */
-	final static private void clipHistogram(
+	final static void clipHistogram(
 			final int[] hist,
 			final int[] clippedHist,
-			final int limit,
-			final int bins )
+			final int limit )
 	{
 		System.arraycopy( hist, 0, clippedHist, 0, hist.length );
 		int clippedEntries = 0, clippedEntriesBefore;
@@ -59,7 +58,7 @@ public class Util
 		{
 			clippedEntriesBefore = clippedEntries;
 			clippedEntries = 0;
-			for ( int i = 0; i <= bins; ++i )
+			for ( int i = 0; i < hist.length; ++i )
 			{
 				final int d = clippedHist[ i ] - limit;
 				if ( d > 0 )
@@ -69,19 +68,48 @@ public class Util
 				}
 			}
 			
-			final int d = clippedEntries / ( bins + 1 );
-			final int m = clippedEntries % ( bins + 1 );
-			for ( int i = 0; i <= bins; ++i)
+			final int d = clippedEntries / ( hist.length );
+			final int m = clippedEntries % ( hist.length );
+			for ( int i = 0; i < hist.length; ++i)
 				clippedHist[ i ] += d;
 			
 			if ( m != 0 )
 			{
-				final int s = bins / m;
-				for ( int i = s / 2; i <= bins; i += s )
+				final int s = ( hist.length - 1 ) / m;
+				for ( int i = s / 2; i < hist.length; i += s )
 					++clippedHist[ i ];
 			}
 		}
 		while ( clippedEntries != clippedEntriesBefore );
+	}
+	
+	
+	final static float[] createTransfer(
+			final int[] hist,
+			final int limit )
+	{
+		final int[] cdfs = new int[ hist.length ];
+		clipHistogram( hist, cdfs, limit );
+		
+		int hMin = hist.length - 1;
+		for ( int i = 0; i < hMin; ++i )
+			if ( hist[ i ] != 0 ) hMin = i;
+		
+		int cdf = 0;
+		for ( int i = hMin; i < hist.length; ++i )
+		{
+			cdf += hist[ i ];
+			cdfs[ i ] = cdf;
+		}
+		
+		final int cdfMin = hist[ hMin ];
+		final int cdfMax = hist[ hist.length - 1 ];
+		
+		final float[] transfer = new float[ hist.length ];
+		for ( int i = 0; i < transfer.length; ++i )
+			transfer[ i ] = ( cdfs[ i ] - cdfMin ) / ( float )( cdfMax - cdfMin );
+		
+		return transfer;
 	}
 	
 	
@@ -95,10 +123,9 @@ public class Util
 	 */
 	final static private float transferValue(
 			final int v,
-			final int[] hist,
-			final int bins )
+			final int[] hist )
 	{
-		int hMin = bins;
+		int hMin = hist.length - 1;
 		for ( int i = 0; i < hMin; ++i )
 			if ( hist[ i ] != 0 ) hMin = i;
 		
@@ -107,7 +134,7 @@ public class Util
 			cdf += hist[ i ];
 		
 		int cdfMax = cdf;
-		for ( int i = v + 1; i <= bins; ++i )
+		for ( int i = v + 1; i < hist.length; ++i )
 			cdfMax += hist[ i ];
 		
 		final int cdfMin = hist[ hMin ];
@@ -131,11 +158,22 @@ public class Util
 			final int v,
 			final int[] hist,
 			final int[] clippedHist,
-			final int limit,
+			final int limit )
+	{
+		clipHistogram( hist, clippedHist, limit );
+		return transferValue( v, clippedHist );
+	}
+	
+	
+	final static float transferAndInterpolateValue(
+			final int v,
+			final int[] tl,
+			final int[] tr,
+			final int[] bl,
+			final int[] br,
 			final int bins )
 	{
-		clipHistogram( hist, clippedHist, limit, bins );
-		return transferValue( v, clippedHist, bins );
+		return 0;
 	}
 	
 	final static int roundPositive( float a )

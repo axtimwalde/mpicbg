@@ -204,7 +204,7 @@ public class Flat
 						++hist[ Util.roundPositive( src.get( xMax1, yi ) / 255.0f * bins ) ];						
 				}
 				
-				dst.set( x, y, Util.roundPositive( Util.transferValue( v, hist, clippedHist, limit, bins ) * 255.0f ) );
+				dst.set( x, y, Util.roundPositive( Util.transferValue( v, hist, clippedHist, limit ) * 255.0f ) );
 			}
 			
 			/* multiply the current row into ip */
