@@ -47,7 +47,7 @@ import ij.process.ByteProcessor;
  * </pre>
  * 
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.1b
+ * @version 0.2b
  */
 public class PlugIn implements ij.plugin.PlugIn
 {
@@ -55,18 +55,7 @@ public class PlugIn implements ij.plugin.PlugIn
 	static private int bins = 255;
 	static private float slope = 3;
 	static private ByteProcessor mask = null;
-	final static private String[] projections = new String[]{
-			"Flat",
-			"Equirectangular" };
-	final static public int FLAT = 0;
-	final static public int EQUIRECTANGULAR = 1;
-	static private int projection;
-	
-	/* equirectangular projection */
-	static private float minLambda = 0;
-	static private float minPhi = 0;
-	static private float hfov = 2 * ( float )Math.PI;
-	static private float vfov = ( float )Math.PI;
+	static private boolean fast = true;
 	
 	/**
 	 * Get setting through a dialog
@@ -96,8 +85,7 @@ public class PlugIn implements ij.plugin.PlugIn
 		gd.addNumericField( "histogram bins : ", bins + 1, 0 );
 		gd.addNumericField( "maximum slope : ", slope, 2 );
 		gd.addChoice( "mask : ", titles.toArray( new String[ 0 ] ),  titles.get( 0 ) );
-		gd.addChoice( "projection : ", projections,  projections[ projection ] );
-        
+		gd.addCheckbox( "fast_(less_accurate)", fast );
 		gd.addHelp( "http://pacific.mpi-cbg.de/wiki/index.php/Enhance_Local_Contrast_(CLAHE)" );
 		
 		gd.showDialog();
@@ -110,31 +98,7 @@ public class PlugIn implements ij.plugin.PlugIn
 		final int maskId = ids.get( gd.getNextChoiceIndex() );
 		if ( maskId != -1 ) mask = ( ByteProcessor )WindowManager.getImage( maskId ).getProcessor().convertToByte( true );
 		else mask = null;
-		projection = gd.getNextChoiceIndex();
-		
-		final GenericDialog gdp;
-		if ( projection == EQUIRECTANGULAR )
-		{
-			gdp = new GenericDialog( "Projection" );
-			gdp.addNumericField( "min lambda : ", minLambda / Math.PI * 180, 2 );
-			gdp.addNumericField( "min phi : ", minPhi / Math.PI * 180, 2 );
-			gdp.addNumericField( "hfov : ", hfov / Math.PI * 180, 2 );
-			gdp.addNumericField( "vfov : ", vfov / Math.PI * 180, 2 );	
-			
-			gdp.addHelp( "http://pacific.mpi-cbg.de/wiki/index.php/Enhance_Local_Contrast_(CLAHE)" );
-			
-			gdp.showDialog();
-			
-			if ( gdp.wasCanceled() ) return false;
-			
-			minLambda = ( float )( Util.mod( ( float )gdp.getNextNumber(), 360 ) / 180 * Math.PI );
-			minPhi = ( float )( Util.mod( ( float )gdp.getNextNumber(), 180 ) / 180 * Math.PI );
-			hfov = Math.min( ( float )( Math.PI * 2 - minLambda ), ( float )( Util.mod( ( float )gdp.getNextNumber(), 360 ) / 180 * Math.PI ) );
-			vfov = Math.min( ( float )( Math.PI - minPhi ), ( float )( Util.mod( ( float )gdp.getNextNumber(), 180 ) / 180 * Math.PI ) );
-			
-			if ( hfov == 0 ) hfov = ( float )( 2 * Math.PI );
-			if ( vfov == 0 ) vfov = ( float )Math.PI;
-		}
+		fast = gd.getNextBoolean();
 		
 		return true;
 	}
@@ -181,14 +145,9 @@ public class PlugIn implements ij.plugin.PlugIn
 	 */
 	final static public void run( final ImagePlus imp )
 	{
-		switch ( projection )
-		{
-		case FLAT:
+		if ( fast )
+			FastFlat.run( imp, blockRadius, bins, slope, mask );
+		else
 			Flat.run( imp, blockRadius, bins, slope, mask );
-			break;
-		case EQUIRECTANGULAR:
-			Nonsense.run( imp, blockRadius, bins, slope, mask, minLambda, minPhi, hfov, vfov );
-			break;
-		}
 	}
 }

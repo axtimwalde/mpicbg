@@ -49,7 +49,7 @@ public class Util
 	 * @param limit clip limit
 	 * @param bins number of bins
 	 */
-	final static void clipHistogram(
+	final static private void clipHistogram(
 			final int[] hist,
 			final int[] clippedHist,
 			final int limit )
@@ -86,6 +86,13 @@ public class Util
 	}
 	
 	
+	/**
+	 * Create the full transfer function as a LUT
+	 * 
+	 * @param v the value
+	 * @param hist the histogram from which the function is generated
+	 * @return
+	 */
 	final static float[] createTransfer(
 			final int[] hist,
 			final int limit )
@@ -116,30 +123,30 @@ public class Util
 	
 	
 	/**
-	 * Get the CDF entry of a value.
+	 * Transfer a value.
 	 * 
 	 * @param v the value
-	 * @param hist the histogram from which the CDF is collected
-	 * @param bins
+	 * @param clippedHist the clipped histogram from which the transfer
+	 *        function is generated
 	 * @return
 	 */
-	final static private float transferValue(
+	final static public float transferValue(
 			final int v,
-			final int[] hist )
+			final int[] clippedHist )
 	{
-		int hMin = hist.length - 1;
+		int hMin = clippedHist.length - 1;
 		for ( int i = 0; i < hMin; ++i )
-			if ( hist[ i ] != 0 ) hMin = i;
+			if ( clippedHist[ i ] != 0 ) hMin = i;
 		
 		int cdf = 0;
 		for ( int i = hMin; i <= v; ++i )
-			cdf += hist[ i ];
+			cdf += clippedHist[ i ];
 		
 		int cdfMax = cdf;
-		for ( int i = v + 1; i < hist.length; ++i )
-			cdfMax += hist[ i ];
+		for ( int i = v + 1; i < clippedHist.length; ++i )
+			cdfMax += clippedHist[ i ];
 		
-		final int cdfMin = hist[ hMin ];
+		final int cdfMin = clippedHist[ hMin ];
 		
 		return ( cdf - cdfMin ) / ( float )( cdfMax - cdfMin );
 	}
@@ -153,7 +160,6 @@ public class Util
 	 * @param hist
 	 * @param clippedHist
 	 * @param limit
-	 * @param bins
 	 * @return
 	 */
 	final static public float transferValue(
@@ -166,17 +172,6 @@ public class Util
 		return transferValue( v, clippedHist );
 	}
 	
-	
-	final static float transferAndInterpolateValue(
-			final int v,
-			final int[] tl,
-			final int[] tr,
-			final int[] bl,
-			final int[] br,
-			final int bins )
-	{
-		return 0;
-	}
 	
 	final static int roundPositive( float a )
 	{
