@@ -28,6 +28,10 @@ mpicbg_.jar <- \
 	LICENSE
 
 clahe_.jar <- \
-	mpicbg/ij/clahe/*.java \
+	mpicbg/ij/clahe/FastFlat.java \
+	mpicbg/ij/clahe/Flat.java \
+	mpicbg/ij/clahe/PlugIn.java \
+	mpicbg/ij/clahe/Util.java \
+	mpicbg/util/Util.java \
 	plugins.config[clahe.config] \
 	LICENSE[LICENSE.GPL]
