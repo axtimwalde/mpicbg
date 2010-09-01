@@ -45,7 +45,7 @@ import ij.process.ByteProcessor;
  * </pre>
  * 
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.2b
+ * @version 0.3b
  */
 public class PlugIn implements ij.plugin.PlugIn
 {
@@ -54,6 +54,7 @@ public class PlugIn implements ij.plugin.PlugIn
 	static private float slope = 3;
 	static private ByteProcessor mask = null;
 	static private boolean fast = true;
+	static private boolean composite = true;
 	
 	/**
 	 * Get setting through a dialog
@@ -84,6 +85,10 @@ public class PlugIn implements ij.plugin.PlugIn
 		gd.addNumericField( "maximum slope : ", slope, 2 );
 		gd.addChoice( "mask : ", titles.toArray( new String[ 0 ] ),  titles.get( 0 ) );
 		gd.addCheckbox( "fast_(less_accurate)", fast );
+		
+		if ( imp.getNChannels() > 1 )
+			gd.addCheckbox( "process_as_composite", composite );
+		
 		gd.addHelp( "http://pacific.mpi-cbg.de/wiki/index.php/Enhance_Local_Contrast_(CLAHE)" );
 		
 		gd.showDialog();
@@ -97,17 +102,19 @@ public class PlugIn implements ij.plugin.PlugIn
 		if ( maskId != -1 ) mask = ( ByteProcessor )WindowManager.getImage( maskId ).getProcessor().convertToByte( true );
 		else mask = null;
 		fast = gd.getNextBoolean();
+		if ( imp.isComposite() )
+			composite = gd.getNextBoolean();
 		
 		return true;
 	}
 	
 	
-//	@Override
 	/**
 	 * {@link PlugIn} access
 	 * 
 	 * @param arg not yet used
 	 */
+	@Override
 	final public void run( final String arg )
 	{
 		final ImagePlus imp = IJ.getImage();
@@ -144,8 +151,8 @@ public class PlugIn implements ij.plugin.PlugIn
 	final static public void run( final ImagePlus imp )
 	{
 		if ( fast )
-			FastFlat.run( imp, blockRadius, bins, slope, mask );
+			FastFlat.getInstance().run( imp, blockRadius, bins, slope, mask, composite );
 		else
-			Flat.run( imp, blockRadius, bins, slope, mask );
+			Flat.getInstance().run( imp, blockRadius, bins, slope, mask, composite );
 	}
 }

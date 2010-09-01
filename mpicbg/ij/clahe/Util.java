@@ -35,7 +35,7 @@ package mpicbg.ij.clahe;
  * </pre>
  * 
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.1b
+ * @version 0.3b
  */
 public class Util
 {

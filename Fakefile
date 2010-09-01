@@ -28,9 +28,15 @@ mpicbg_.jar <- \
 	LICENSE
 
 clahe_.jar <- \
+	mpicbg/ij/clahe/Apply.java \
+	mpicbg/ij/clahe/ByteApply.java \
+	mpicbg/ij/clahe/FastByteApply.java \
 	mpicbg/ij/clahe/FastFlat.java \
 	mpicbg/ij/clahe/Flat.java \
+	mpicbg/ij/clahe/FloatApply.java \
 	mpicbg/ij/clahe/PlugIn.java \
+	mpicbg/ij/clahe/RGBApply.java \
+	mpicbg/ij/clahe/ShortApply.java \
 	mpicbg/ij/clahe/Util.java \
 	mpicbg/util/Util.java \
 	plugins.config[clahe.config] \

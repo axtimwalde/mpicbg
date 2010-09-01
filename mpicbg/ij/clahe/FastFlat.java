@@ -16,17 +16,13 @@
  */
 package mpicbg.ij.clahe;
 
-import java.awt.Rectangle;
+import java.util.ArrayList;
 
-import ij.IJ;
+import ij.CompositeImage;
 import ij.ImagePlus;
 import ij.gui.Roi;
-import ij.process.Blitter;
 import ij.process.ByteProcessor;
-import ij.process.ColorProcessor;
-import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
-import ij.process.ShortProcessor;
 
 /**
  * &lsquot;Contrast Limited Adaptive Histogram Equalization&rsquot; as
@@ -50,379 +46,39 @@ import ij.process.ShortProcessor;
  * the respective CDF for each pixel location in between.
  * 
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.1b
+ * @version 0.3b
  */
-public class FastFlat
+public class FastFlat extends Flat
 {
-	static abstract private class Apply< T extends ImageProcessor >
-	{
-		final protected T ip;
-		final protected int width;
-		final protected int height;
-		
-		final protected byte[] srcPixels;
-		final protected byte[] dstPixels;
-		final protected byte[] maskPixels;
-		
-		final protected int boxXMin, boxYMin, boxXMax, boxYMax;
-		
-		Apply(
-				final T ip,
-				final ByteProcessor src,
-				final ByteProcessor dst,
-				final ByteProcessor mask,
-				final int boxXMin,
-				final int boxYMin,
-				final int boxXMax,
-				final int boxYMax ) throws Exception
-		{
-			this.ip = ip;
-			width = ip.getWidth();
-			height = ip.getHeight();
-			
-			this.boxXMin = boxXMin;
-			this.boxYMin = boxYMin;
-			this.boxXMax = boxXMax;
-			this.boxYMax = boxYMax;
-			
-			if ( !(
-					src.getWidth() == width && src.getHeight() == height &&
-					dst.getWidth() == width && dst.getHeight() == height ) )
-				throw new Exception( "Image sizes do not match." );
-			
-			srcPixels = ( byte[] )src.getPixels();
-			dstPixels = ( byte[] )dst.getPixels();
-			if ( mask == null )
-			{
-				maskPixels = new byte[ srcPixels.length ];
-				mpicbg.util.Util.memset( maskPixels, ( byte )255 );
-			}
-			else
-			{
-				if (
-						boxXMin == 0 &&
-						boxYMin == 0 &&
-						boxXMax == mask.getWidth() &&
-						boxYMax == mask.getHeight() )
-					maskPixels = ( byte[] )mask.getPixels();
-				else
-				{
-					final ByteProcessor extendedMask = new ByteProcessor( width, height );
-					extendedMask.copyBits( mask, boxXMin, boxYMin, Blitter.COPY );
-					maskPixels = ( byte[] )extendedMask.getPixels();
-				}
-			}
-		}
-		
-		abstract public void apply( final int xMin, final int yMin, final int xMax, final int yMax );
-	}
+	protected FastFlat(){}
+	final static private FastFlat instance = new FastFlat();
+	static public FastFlat getInstance(){ return instance; }
 	
-	final static private class ByteApply extends Apply< ByteProcessor >
-	{
-		final protected byte[] ipPixels;
-		           
-		public ByteApply(
-				final ByteProcessor ip,
-				final ByteProcessor src,
-				final ByteProcessor dst,
-				final ByteProcessor mask,
-				final int boxXMin,
-				final int boxYMin,
-				final int boxXMax,
-				final int boxYMax ) throws Exception
-		{
-			super( ip, src, dst, mask, boxXMin, boxYMin, boxXMax, boxYMax );
-			ipPixels = ( byte[] )ip.getPixels();
-		}
-		
-		@Override
-		final public void apply( final int cellXMin, final int cellYMin, final int cellXMax, final int cellYMax )
-		{
-			final int xMin = Math.max( boxXMin, cellXMin );
-			final int yMin = Math.max( boxYMin, cellYMin );
-			final int xMax = Math.min( boxXMax, cellXMax );
-			final int yMax = Math.min( boxYMax, cellYMax );
-			
-			for ( int y = yMin; y < yMax; ++y )
-			{
-				final int t = y * width;
-				for ( int x = xMin; x < xMax; ++x )
-				{
-					final int i = t + x;
-					final float m = ( maskPixels[ i ] & 0xff ) / 255.0f;
-					final float v = srcPixels[ i ] & 0xff;
-					final float a = dstPixels[ i ] & 0xff;
-					final float b = m * a + ( 1.0f - m ) * v;
-					ipPixels[ i ] = ( byte )Util.roundPositive( b );
-				}
-			}
-		}
-	}
-	
-	final static private class ShortApply extends Apply< ShortProcessor >
-	{
-		final protected short[] ipPixels;
-		           
-		public ShortApply(
-				final ShortProcessor ip,
-				final ByteProcessor src,
-				final ByteProcessor dst,
-				final ByteProcessor mask,
-				final int boxXMin,
-				final int boxYMin,
-				final int boxXMax,
-				final int boxYMax ) throws Exception
-		{
-			super( ip, src, dst, mask, boxXMin, boxYMin, boxXMax, boxYMax );
-			ipPixels = ( short[] )ip.getPixels();
-		}
-		
-		@Override
-		final public void apply( final int cellXMin, final int cellYMin, final int cellXMax, final int cellYMax )
-		{
-			final int xMin = Math.max( boxXMin, cellXMin );
-			final int yMin = Math.max( boxYMin, cellYMin );
-			final int xMax = Math.min( boxXMax, cellXMax );
-			final int yMax = Math.min( boxYMax, cellYMax );
-		
-			final int min = ( int )ip.getMin();
-			for ( int y = yMin; y < yMax; ++y )
-			{
-				final int t = y * width;
-				for ( int x = xMin; x < xMax; ++x )
-				{
-					final int i = t + x;
-					final float m = ( maskPixels[ i ] & 0xff ) / 255.0f;
-					final int v = ipPixels[ i ] & 0xffff;
-					final float vSrc = srcPixels[ i ] & 0xff;
-					final float a;
-					if ( vSrc == 0 )
-						a = 1.0f;
-					else
-						a = ( float )( dstPixels[ i ] & 0xff ) / vSrc;
-					final float b = m * ( a * ( v - min ) + min - v ) + v;
-					ipPixels[ i ] =  ( short )Math.max( 0, Math.min( 65535, Util.roundPositive( b ) ) );
-				}
-			}
-		}
-	}
-	
-	final static private class FloatApply extends Apply< FloatProcessor >
-	{
-		final protected float[] ipPixels;
-		           
-		public FloatApply(
-				final FloatProcessor ip,
-				final ByteProcessor src,
-				final ByteProcessor dst,
-				final ByteProcessor mask,
-				final int boxXMin,
-				final int boxYMin,
-				final int boxXMax,
-				final int boxYMax ) throws Exception
-		{
-			super( ip, src, dst, mask, boxXMin, boxYMin, boxXMax, boxYMax );
-			ipPixels = ( float[] )ip.getPixels();
-		}
-		
-		@Override
-		final public void apply( final int cellXMin, final int cellYMin, final int cellXMax, final int cellYMax )
-		{
-			final int xMin = Math.max( boxXMin, cellXMin );
-			final int yMin = Math.max( boxYMin, cellYMin );
-			final int xMax = Math.min( boxXMax, cellXMax );
-			final int yMax = Math.min( boxYMax, cellYMax );
-		
-			final float min = ( float )ip.getMin();
-			for ( int y = yMin; y < yMax; ++y )
-			{
-				final int t = y * width;
-				for ( int x = xMin; x < xMax; ++x )
-				{
-					final int i = t + x;
-					final float m = ( maskPixels[ i ] & 0xff ) / 255.0f;
-					final float v = ipPixels[ i ];
-					final float vSrc = srcPixels[ i ] & 0xff;
-					final float a;
-					if ( vSrc == 0 )
-						a = 1.0f;
-					else
-						a = ( float )( dstPixels[ i ] & 0xff ) / vSrc;
-					ipPixels[ i ] = m * ( a * ( v - min ) + min - v ) + v;
-				}
-			}
-		}
-	}
-	
-	final static private class RGBApply extends Apply< ColorProcessor >
-	{
-		final protected int[] ipPixels;
-		           
-		public RGBApply(
-				final ColorProcessor ip,
-				final ByteProcessor src,
-				final ByteProcessor dst,
-				final ByteProcessor mask,
-				final int boxXMin,
-				final int boxYMin,
-				final int boxXMax,
-				final int boxYMax ) throws Exception
-		{
-			super( ip, src, dst, mask, boxXMin, boxYMin, boxXMax, boxYMax );
-			ipPixels = ( int[] )ip.getPixels();
-		}
-		
-		@Override
-		final public void apply( final int cellXMin, final int cellYMin, final int cellXMax, final int cellYMax )
-		{
-			final int xMin = Math.max( boxXMin, cellXMin );
-			final int yMin = Math.max( boxYMin, cellYMin );
-			final int xMax = Math.min( boxXMax, cellXMax );
-			final int yMax = Math.min( boxYMax, cellYMax );
-		
-			for ( int y = yMin; y < yMax; ++y )
-			{
-				final int t = y * width;
-				for ( int x = xMin; x < xMax; ++x )
-				{
-					final int i = t + x;
-					final float m = ( maskPixels[ i ] & 0xff ) / 255.0f;
-					final int argb = ipPixels[ i ];
-					final float vr = ( argb >> 16 ) & 0xff;
-					final float vg = ( argb >> 8 ) & 0xff;
-					final float vb = argb & 0xff;
-					final float vSrc = srcPixels[ i ] & 0xff;
-					final float a;
-					if ( vSrc == 0 )
-						a = 1.0f;
-					else
-						a = ( float )( dstPixels[ i ] & 0xff ) / vSrc;
-					final float br = vr * ( 1.0f + m * ( a - 1.0f ) );
-					final float bg = vg * ( 1.0f + m * ( a - 1.0f ) );
-					final float bb = vb * ( 1.0f + m * ( a - 1.0f ) );
-					
-					final int r = Math.max( 0, Math.min( 255, Util.roundPositive( br ) ) );  
-					final int g = Math.max( 0, Math.min( 255, Util.roundPositive( bg ) ) );
-					final int b = Math.max( 0, Math.min( 255, Util.roundPositive( bb ) ) );
-					ipPixels[ i ] = ( r << 16 ) | ( g << 8 ) | b;
-				}
-			}
-		}
-	}
-	
-		
 	/**
-	 * Process and {@link ImagePlus} with a given set of parameters.  Create
+	 * Process an {@link ImagePlus} with a given set of parameters.  Create
 	 * mask and bounding box from the {@link Roi} of that {@link ImagePlus} and
-	 * the passed mask if any.
+	 * the passed mask if any.  Process {@link CompositeImage CompositeImages}
+	 * as such.
 	 * 
 	 * @param imp
 	 * @param blockRadius
 	 * @param bins
 	 * @param slope
 	 * @param mask can be null
-	 */
-	final static public void run(
-			final ImagePlus imp,
-			final int blockRadius,
-			final int bins,
-			final float slope,
-			final ByteProcessor mask )
-	{
-		final Roi roi = imp.getRoi();
-		if ( roi == null )
-			run( imp, blockRadius, bins, slope, null, mask );
-		else
-		{
-			final Rectangle roiBox = roi.getBounds();
-			final ImageProcessor roiMask = roi.getMask();
-			if ( mask != null )
-			{
-				final Rectangle oldRoi = mask.getRoi();
-				mask.setRoi( roi );
-				final ByteProcessor cropMask = ( ByteProcessor )mask.crop().convertToByte( true );
-				if ( roiMask != null )
-				{
-					final byte[] roiMaskPixels = ( byte[] )roiMask.getPixels();
-					final byte[] cropMaskPixels = ( byte[] )cropMask.getPixels();
-					for ( int i = 0; i < roiMaskPixels.length; ++i )
-						cropMaskPixels[ i ] = ( byte )Util.roundPositive( ( cropMaskPixels[ i ] & 0xff ) * ( roiMaskPixels[ i ] & 0xff ) / 255.0f );
-				}
-				run( imp, blockRadius, bins, slope, roiBox, cropMask );
-				mask.setRoi( oldRoi );
-			}
-			else if ( roiMask == null )
-				run( imp, blockRadius, bins, slope, roiBox, null );
-			else
-				run( imp, blockRadius, bins, slope, roiBox, ( ByteProcessor )roiMask.convertToByte( false ) );
-		}
-	}
-	
-	
-	/**
-	 * Process and {@link ImagePlus} with a given set of parameters including
-	 * the bounding box and mask.
 	 * 
-	 * @param imp
-	 * @param blockRadius
-	 * @param bins
-	 * @param slope
-	 * @param roiBox can be null
-	 * @param mask can be null
+	 * @deprecated Use the instance method
+	 *   {@link #getInstance()}.{@link #run(ImagePlus, int, int, float, ByteProcessor, boolean)}
+	 *   instead.
 	 */
-	final static public void run(
+	@Deprecated
+	static public void run(
 			final ImagePlus imp,
 			final int blockRadius,
 			final int bins,
 			final float slope,
-			final java.awt.Rectangle roiBox,
 			final ByteProcessor mask )
 	{
-		/* initialize box if necessary */
-		final Rectangle box;
-		if ( roiBox == null )
-		{
-			if ( mask == null )
-				box = new Rectangle( 0, 0, imp.getWidth(), imp.getHeight() );
-			else
-				box = new Rectangle( 0, 0, Math.min( imp.getWidth(), mask.getWidth() ), Math.min( imp.getHeight(), mask.getHeight() ) );
-		}
-		else
-			box = roiBox;
-		
-		/* make sure that the box is not larger than the mask */
-		if ( mask != null )
-		{
-			box.width = Math.min( mask.getWidth(), box.width );
-			box.height = Math.min( mask.getHeight(), box.height );
-		}
-		
-		/* make sure that the box is not larger than the image */
-		box.width = Math.min( imp.getWidth() - box.x, box.width );
-		box.height = Math.min( imp.getHeight() - box.y, box.height );
-		
-		final int boxXMax = box.x + box.width;
-		final int boxYMax = box.y + box.height;
-		
-		/* convert 8bit processors with a LUT to RGB and create Undo-step */
-		final ImageProcessor ip;
-		if ( imp.getType() == ImagePlus.COLOR_256 )
-		{
-			ip = imp.getProcessor().convertToRGB();
-			imp.setProcessor( imp.getTitle(), ip );
-		}
-		else
-			ip = imp.getProcessor();
-		
-		/* work on ByteProcessors that reflect the user defined intensity range */
-		final ByteProcessor src;
-		if ( imp.getType() == ImagePlus.GRAY8 )
-			src = ( ByteProcessor )ip.convertToByte( true ).duplicate();
-		else
-			src = ( ByteProcessor )ip.convertToByte( true );
-		final ByteProcessor dst = ( ByteProcessor )src.duplicate();
-		
-		run( imp, blockRadius, bins, slope, box.x, box.y, boxXMax, boxYMax, src, dst, mask, ip );
+		getInstance().run( imp, blockRadius, bins, slope, mask, true );
 	}
 	
 	
@@ -469,7 +125,8 @@ public class FastFlat
 	 * @param mask
 	 * @param ip
 	 */
-	final static private void run(
+	@Override
+	final protected void run(
 			final ImagePlus imp,
 			final int blockRadius,
 			final int bins,
@@ -481,8 +138,13 @@ public class FastFlat
 			final ByteProcessor src,
 			final ByteProcessor dst,
 			final ByteProcessor mask,
-			final ImageProcessor ip )
+			final ImageProcessor ip,
+			final boolean composite,
+			final ArrayList< Apply< ? > > appliers )
 	{
+		final boolean updatePerRow = imp.isVisible();
+		final boolean updatePerCell = updatePerRow & !composite; //!< CompositeImage.updateAndDraw() is very slow
+		
 		int[] hist;
 		float[] tl;
 		float[] tr;
@@ -543,33 +205,6 @@ public class FastFlat
 			rs[ nr + 1 ] = src.getHeight() - blockRadius - 1;
 		}
 		
-		final Apply< ? > apply;
-		try
-		{
-			switch ( imp.getType() )
-			{
-			case ImagePlus.GRAY8:
-				apply = new ByteApply( ( ByteProcessor )ip, src, dst, mask, boxXMin, boxYMin, boxXMax, boxYMax );
-				break;
-			case ImagePlus.GRAY16:
-				apply = new ShortApply( ( ShortProcessor )ip, src, dst, mask, boxXMin, boxYMin, boxXMax, boxYMax );
-				break;
-			case ImagePlus.GRAY32:
-				apply = new FloatApply( ( FloatProcessor )ip, src, dst, mask, boxXMin, boxYMin, boxXMax, boxYMax );
-				break;
-			case ImagePlus.COLOR_RGB:
-				apply = new RGBApply( ( ColorProcessor )ip, src, dst, mask, boxXMin, boxYMin, boxXMax, boxYMax );
-				break;
-			default:
-				apply = null;	
-			}
-		}
-		catch ( Exception e )
-		{
-			IJ.error( e.getMessage() );
-			return;
-		}
-		
 		for ( int r = 0; r <= rs.length; ++r )
 		{
 			final int r0 = Math.max( 0, r - 1 );
@@ -585,6 +220,9 @@ public class FastFlat
 				hist = createHistogram( blockRadius, bins, cs[ 0 ], rs[ r1 ], src );
 				br = Util.createTransfer( hist, limit );
 			}
+			
+			final int yMin = ( r == 0 ? 0 : rs[ r0 ] );
+			final int yMax = ( r < rs.length ? rs[ r1 ] : ip.getHeight() - 1 );
 			
 			for ( int c = 0; c <= cs.length; ++c )
 			{
@@ -609,9 +247,7 @@ public class FastFlat
 				}
 				
 				final int xMin = ( c == 0 ? 0 : cs[ c0 ] );
-				final int yMin = ( r == 0 ? 0 : rs[ r0 ] );
 				final int xMax = ( c < cs.length ? cs[ c1 ] : ip.getWidth() - 1 );
-				final int yMax = ( r < rs.length ? rs[ r1 ] : ip.getHeight() - 1 );
 				
 				for ( int y = yMin; y < yMax; ++y )
 				{
@@ -649,14 +285,39 @@ public class FastFlat
 						dst.set( o + x, Math.max( 0, Math.min( 255, Util.roundPositive( t * 255.0f ) ) ) );
 					}
 				}
-				/* multiply the current cell into ip */
-				apply.apply(
-						xMin,
+				
+				/* multiply the current cell into ip or the respective composite channels */
+				if ( updatePerCell )
+				{
+					for ( final Apply< ? > apply : appliers )
+						apply.apply(
+							xMin,
+							yMin,
+							xMax,
+							yMax );
+					imp.updateAndDraw();
+				}
+			}
+			if ( updatePerRow && !updatePerCell )
+			{
+				for ( final Apply< ? > apply : appliers )
+					apply.apply(
+						boxXMin,
 						yMin,
-						xMax,
+						boxXMax,
 						yMax );
 				imp.updateAndDraw();
 			}
+		}
+		if ( !updatePerRow )
+		{
+			for ( final Apply< ? > apply : appliers )
+				apply.apply(
+					boxXMin,
+					boxYMin,
+					boxXMax,
+					boxYMax );
+			imp.updateAndDraw();
 		}
 	}
 }

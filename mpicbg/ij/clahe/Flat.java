@@ -17,11 +17,17 @@
 package mpicbg.ij.clahe;
 
 import java.awt.Rectangle;
+import java.util.ArrayList;
 
+import ij.CompositeImage;
+import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.Roi;
 import ij.process.ByteProcessor;
+import ij.process.ColorProcessor;
+import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
+import ij.process.ShortProcessor;
 
 /**
  * &lsquot;Contrast Limited Adaptive Histogram Equalization&rsquot; as
@@ -42,10 +48,41 @@ import ij.process.ImageProcessor;
  * </pre>
  * 
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.1b
+ * @version 0.3b
  */
 public class Flat
 {
+	protected Flat(){}
+	final static private Flat instance = new Flat();
+	static public Flat getInstance(){ return instance; }
+	
+	/**
+	 * Process an {@link ImagePlus} with a given set of parameters.  Create
+	 * mask and bounding box from the {@link Roi} of that {@link ImagePlus} and
+	 * the passed mask if any.  Process {@link CompositeImage CompositeImages}
+	 * as such.
+	 * 
+	 * @param imp
+	 * @param blockRadius
+	 * @param bins
+	 * @param slope
+	 * @param mask can be null
+	 * 
+	 * @deprecated Use the instance method
+	 *   {@link #getInstance()}.{@link #run(ImagePlus, int, int, float, ByteProcessor, boolean)}
+	 *   instead.
+	 */
+	@Deprecated
+	static public void run(
+			final ImagePlus imp,
+			final int blockRadius,
+			final int bins,
+			final float slope,
+			final ByteProcessor mask )
+	{
+		getInstance().run( imp, blockRadius, bins, slope, mask, true );
+	}
+	
 	/**
 	 * Process and {@link ImagePlus} with a given set of parameters.  Create
 	 * mask and bounding box from the {@link Roi} of that {@link ImagePlus} and
@@ -56,17 +93,23 @@ public class Flat
 	 * @param bins
 	 * @param slope
 	 * @param mask can be null
+	 * @param composite how to process {@link CompositeImage CompositeImages}
+	 *   true: interpret the displayed image as luminance channel for estimating the
+	 *     contrast transfer function
+	 *   false: process the active channel only as for non-composite images
 	 */
-	final static public void run(
+	final public void run(
 			final ImagePlus imp,
 			final int blockRadius,
 			final int bins,
 			final float slope,
-			final ByteProcessor mask )
+			final ByteProcessor mask,
+			final boolean composite )
+	
 	{
 		final Roi roi = imp.getRoi();
 		if ( roi == null )
-			run( imp, blockRadius, bins, slope, null, mask );
+			run( imp, blockRadius, bins, slope, null, mask, composite );
 		else
 		{
 			final Rectangle roiBox = roi.getBounds();
@@ -83,13 +126,13 @@ public class Flat
 					for ( int i = 0; i < roiMaskPixels.length; ++i )
 						cropMaskPixels[ i ] = ( byte )Util.roundPositive( ( cropMaskPixels[ i ] & 0xff ) * ( roiMaskPixels[ i ] & 0xff ) / 255.0f );
 				}
-				run( imp, blockRadius, bins, slope, roiBox, cropMask );
+				run( imp, blockRadius, bins, slope, roiBox, cropMask, composite );
 				mask.setRoi( oldRoi );
 			}
 			else if ( roiMask == null )
-				run( imp, blockRadius, bins, slope, roiBox, null );
+				run( imp, blockRadius, bins, slope, roiBox, null, composite );
 			else
-				run( imp, blockRadius, bins, slope, roiBox, ( ByteProcessor )roiMask.convertToByte( false ) );
+				run( imp, blockRadius, bins, slope, roiBox, ( ByteProcessor )roiMask.convertToByte( false ), composite );
 		}
 	}
 	
@@ -104,15 +147,22 @@ public class Flat
 	 * @param slope
 	 * @param roiBox can be null
 	 * @param mask can be null
+	 * @param composite how to process {@link CompositeImage CompositeImages}
+	 *   true: interpret the displayed image as luminance channel for estimating the
+	 *     contrast transfer function
+	 *   false: process the active channel only as for non-composite images
 	 */
-	final static public void run(
+	final public void run(
 			final ImagePlus imp,
 			final int blockRadius,
 			final int bins,
 			final float slope,
 			final java.awt.Rectangle roiBox,
-			final ByteProcessor mask )
+			final ByteProcessor mask,
+			boolean composite )
 	{
+		composite = composite & imp.getNChannels() > 1;
+		
 		/* initialize box if necessary */
 		final Rectangle box;
 		if ( roiBox == null )
@@ -139,7 +189,7 @@ public class Flat
 		final int boxXMax = box.x + box.width;
 		final int boxYMax = box.y + box.height;
 		
-		/* convert 8bit processors with a LUT to RGB and create Undo-step */
+		/* convert 8bit processors with a LUT to RGB */
 		final ImageProcessor ip;
 		if ( imp.getType() == ImagePlus.COLOR_256 )
 		{
@@ -150,21 +200,116 @@ public class Flat
 			ip = imp.getProcessor();
 		
 		/* work on ByteProcessors that reflect the user defined intensity range */
+		/* for CompositeImages with composite checked, this is the image as displayed in the window */
 		final ByteProcessor src;
-		if ( imp.getType() == ImagePlus.GRAY8 )
+		if ( composite )
+			src = ( ByteProcessor )new ColorProcessor( imp.getImage() ).convertToByte( true );
+		else if ( imp.getType() == ImagePlus.GRAY8 )
 			src = ( ByteProcessor )ip.convertToByte( true ).duplicate();
 		else
 			src = ( ByteProcessor )ip.convertToByte( true );
+		
 		final ByteProcessor dst = ( ByteProcessor )src.duplicate();
 		
-		for ( int y = box.y; y < boxYMax; ++y )
+		final ArrayList< Apply< ? > > appliers = new ArrayList< Apply< ? > >();
+		try
+		{
+			if ( composite )
+			{
+				/* ignore ip and create Appliers for each channel, assuming that there is no COLOR_256 included */
+				for ( int n = 0; n < imp.getNChannels(); ++n )
+				{
+					final int channelIndex = imp.getStackIndex( n + 1, imp.getSlice(), imp.getFrame() );
+					final ImageProcessor cp = imp.getStack().getProcessor( channelIndex );
+					switch ( imp.getType() )
+					{
+					case ImagePlus.GRAY8:
+						appliers.add( new ByteApply( ( ByteProcessor )cp, src, dst, mask, box.x, box.y, boxXMax, boxYMax ) );
+						break;
+					case ImagePlus.GRAY16:
+						appliers.add( new ShortApply( ( ShortProcessor )cp, src, dst, mask, box.x, box.y, boxXMax, boxYMax ) );
+						break;
+					case ImagePlus.GRAY32:
+						appliers.add( new FloatApply( ( FloatProcessor )cp, src, dst, mask, box.x, box.y, boxXMax, boxYMax ) );
+						break;
+					case ImagePlus.COLOR_RGB:
+						appliers.add( new RGBApply( ( ColorProcessor )cp, src, dst, mask, box.x, box.y, boxXMax, boxYMax ) );
+						break;
+					}
+				}
+			}
+			else
+			{
+				switch ( imp.getType() )
+				{
+				case ImagePlus.GRAY8:
+					appliers.add( new FastByteApply( ( ByteProcessor )ip, src, dst, mask, box.x, box.y, boxXMax, boxYMax ) );
+					break;
+				case ImagePlus.GRAY16:
+					appliers.add( new ShortApply( ( ShortProcessor )ip, src, dst, mask, box.x, box.y, boxXMax, boxYMax ) );
+					break;
+				case ImagePlus.GRAY32:
+					appliers.add( new FloatApply( ( FloatProcessor )ip, src, dst, mask, box.x, box.y, boxXMax, boxYMax ) );
+					break;
+				case ImagePlus.COLOR_RGB:
+					appliers.add( new RGBApply( ( ColorProcessor )ip, src, dst, mask, box.x, box.y, boxXMax, boxYMax ) );
+					break;
+				}
+			}
+		}
+		catch ( Exception e )
+		{
+			IJ.error( e.getMessage() );
+			return;
+		}
+		
+		run( imp, blockRadius, bins, slope, box.x, box.y, boxXMax, boxYMax, src, dst, mask, ip, composite, appliers );
+	}
+	
+	
+	/**
+	 * The actual implementation
+	 * 
+	 * @param imp
+	 * @param blockRadius
+	 * @param bins
+	 * @param slope
+	 * @param boxXMin
+	 * @param boxYMin
+	 * @param boxXMax
+	 * @param boxYMax
+	 * @param src
+	 * @param dst
+	 * @param mask
+	 * @param ip
+	 */
+	protected void run(
+			final ImagePlus imp,
+			final int blockRadius,
+			final int bins,
+			final float slope,
+			final int boxXMin,
+			final int boxYMin,
+			final int boxXMax,
+			final int boxYMax,
+			final ByteProcessor src,
+			final ByteProcessor dst,
+			final ByteProcessor mask,
+			final ImageProcessor ip,
+			final boolean composite,
+			final ArrayList< Apply< ? > > appliers )
+	{
+		final boolean updatePerRow = imp.isVisible();
+		
+		for ( int y = boxYMin; y < boxYMax; ++y )
 		{
 			final int yMin = Math.max( 0, y - blockRadius );
 			final int yMax = Math.min( imp.getHeight(), y + blockRadius + 1 );
 			final int h = yMax - yMin;
 			
-			final int xMin0 = Math.max( 0, box.x - blockRadius );
-			final int xMax0 = Math.min( imp.getWidth() - 1, box.x + blockRadius );
+			/* initialization at x-1 */
+			final int xMin0 = Math.max( 0, boxXMin - blockRadius - 1 );
+			final int xMax0 = Math.min( imp.getWidth() - 1, boxXMin + blockRadius );
 			
 			/* initially fill histogram */
 			final int[] hist = new int[ bins + 1 ];
@@ -173,7 +318,7 @@ public class Flat
 				for ( int xi = xMin0; xi < xMax0; ++xi )
 					++hist[ Util.roundPositive( src.get( xi, yi ) / 255.0f * bins ) ];
 			
-			for ( int x = box.x; x < boxXMax; ++x )
+			for ( int x = boxXMin; x < boxXMax; ++x )
 			{
 				final int v = Util.roundPositive( src.get( x, y ) / 255.0f * bins );
 				
@@ -186,7 +331,7 @@ public class Flat
 				if ( mask == null )
 					limit = ( int )( slope * n / bins + 0.5f );
 				else
-					limit = ( int )( ( 1 + mask.get( x - box.x,  y - box.y ) / 255.0f * ( slope - 1 ) ) * n / bins + 0.5f );
+					limit = ( int )( ( 1 + mask.get( x - boxXMin,  y - boxYMin ) / 255.0f * ( slope - 1 ) ) * n / bins + 0.5f );
 				
 				/* remove left behind values from histogram */
 				if ( xMin > 0 )
@@ -207,66 +352,26 @@ public class Flat
 				dst.set( x, y, Util.roundPositive( Util.transferValue( v, hist, clippedHist, limit ) * 255.0f ) );
 			}
 			
-			/* multiply the current row into ip */
-			final int t = y * imp.getWidth();
-			if ( imp.getType() == ImagePlus.GRAY8 )
+			/* multiply the current row into ip or the respective channel */
+			if ( updatePerRow )
 			{
-				for ( int x = box.x; x < boxXMax; ++x )
-				{
-					final int i = t + x;
-					ip.set( i, dst.get( i ) );
-				}
+				for ( final Apply< ? > apply : appliers )
+					apply.apply(
+						boxXMin,
+						y,
+						boxXMax,
+						y + 1 );
+				imp.updateAndDraw();
 			}
-			else if ( imp.getType() == ImagePlus.GRAY16 )
-			{
-				final int min = ( int )ip.getMin();
-				for ( int x = box.x; x < boxXMax; ++x )
-				{
-					final int i = t + x;
-					final int v = ip.get( i );
-					final float vSrc = src.get( i );
-					final float a;
-					if ( vSrc == 0 )
-						a = 1.0f;
-					else
-						a = ( float )dst.get( i ) / vSrc;
-					ip.set( i, Math.max( 0, Math.min( 65535, Util.roundPositive( a * ( v - min ) + min ) ) ) );
-				}
-			}
-			else if ( imp.getType() == ImagePlus.GRAY32 )
-			{
-				final float min = ( float )ip.getMin();
-				for ( int x = box.x; x < boxXMax; ++x )
-				{
-					final int i = t + x;
-					final float v = ip.getf( i );
-					final float vSrc = src.get( i );
-					final float a;
-					if ( vSrc == 0 )
-						a = 1.0f;
-					else
-						a = ( float )dst.get( i ) / vSrc;
-					ip.setf( i, a * ( v - min ) + min );
-				}
-			}
-			else if ( imp.getType() == ImagePlus.COLOR_RGB )
-			{
-				for ( int x = box.x; x < boxXMax; ++x )
-				{
-					final int i = t + x;
-					final int argb = ip.get( i );
-					final float vSrc = src.get( i );
-					final float a;
-					if ( vSrc == 0 )
-						a = 1.0f;
-					else
-						a = ( float )dst.get( i ) / vSrc;
-					final int r = Math.max( 0, Math.min( 255, Util.roundPositive( a * ( ( argb >> 16 ) & 0xff ) ) ) );  
-					final int g = Math.max( 0, Math.min( 255, Util.roundPositive( a * ( ( argb >> 8 ) & 0xff ) ) ) );
-					final int b = Math.max( 0, Math.min( 255, Util.roundPositive( a * ( argb & 0xff ) ) ) );
-					ip.set( i, ( r << 16 ) | ( g << 8 ) | b );
-				}
-			}
+		}
+		if ( !updatePerRow )
+		{
+			for ( final Apply< ? > apply : appliers )
+				apply.apply(
+					boxXMin,
+					boxYMin,
+					boxXMax,
+					boxYMax );
 			imp.updateAndDraw();
 		}
 	}
