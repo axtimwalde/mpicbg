@@ -160,4 +160,48 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 		
 		return ict;
 	}
+	
+	@Override
+	public void toArray( float[] data )
+	{
+		data[ 0 ] = 1;
+		data[ 1 ] = 0;
+		data[ 2 ] = 1;
+		data[ 3 ] = 0;
+		data[ 4 ] = tx;
+		data[ 5 ] = ty;
+	}
+
+	@Override
+	public void toArray( double[] data )
+	{
+		data[ 0 ] = 1;
+		data[ 1 ] = 0;
+		data[ 2 ] = 1;
+		data[ 3 ] = 0;
+		data[ 4 ] = tx;
+		data[ 5 ] = ty;
+	}
+
+	@Override
+	public void toMatrix( float[][] data )
+	{
+		data[ 0 ][ 0 ] = 1;
+		data[ 0 ][ 1 ] = 0;
+		data[ 0 ][ 2 ] = tx;
+		data[ 1 ][ 0 ] = 0;
+		data[ 1 ][ 1 ] = 1;
+		data[ 1 ][ 1 ] = ty;
+	}
+
+	@Override
+	public void toMatrix( double[][] data )
+	{
+		data[ 0 ][ 0 ] = 1;
+		data[ 0 ][ 1 ] = 0;
+		data[ 0 ][ 2 ] = tx;
+		data[ 1 ][ 0 ] = 0;
+		data[ 1 ][ 1 ] = 1;
+		data[ 1 ][ 1 ] = ty;
+	}
 }

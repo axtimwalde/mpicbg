@@ -300,4 +300,48 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 		
 		return ict;
 	}
+	
+	@Override
+	public void toArray( float[] data )
+	{
+		data[ 0 ] = scos;
+		data[ 1 ] = ssin;
+		data[ 2 ] = -ssin;
+		data[ 3 ] = scos;
+		data[ 4 ] = tx;
+		data[ 5 ] = ty;
+	}
+
+	@Override
+	public void toArray( double[] data )
+	{
+		data[ 0 ] = scos;
+		data[ 1 ] = ssin;
+		data[ 2 ] = -ssin;
+		data[ 3 ] = scos;
+		data[ 4 ] = tx;
+		data[ 5 ] = ty;
+	}
+
+	@Override
+	public void toMatrix( float[][] data )
+	{
+		data[ 0 ][ 0 ] = scos;
+		data[ 0 ][ 1 ] = -ssin;
+		data[ 0 ][ 2 ] = tx;
+		data[ 1 ][ 0 ] = ssin;
+		data[ 1 ][ 1 ] = scos;
+		data[ 1 ][ 1 ] = ty;
+	}
+
+	@Override
+	public void toMatrix( double[][] data )
+	{
+		data[ 0 ][ 0 ] = scos;
+		data[ 0 ][ 1 ] = -ssin;
+		data[ 0 ][ 2 ] = tx;
+		data[ 1 ][ 0 ] = ssin;
+		data[ 1 ][ 1 ] = scos;
+		data[ 1 ][ 1 ] = ty;
+	}
 }

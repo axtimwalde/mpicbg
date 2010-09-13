@@ -30,7 +30,7 @@ import mpicbg.util.Util;
  * @version 0.1b
  * 
  */
-public class AffineModel3D extends InvertibleModel< AffineModel3D > implements InvertibleBoundable
+public class AffineModel3D extends InvertibleModel< AffineModel3D > implements Affine3D< AffineModel3D >, InvertibleBoundable
 {
 	static final protected int MIN_NUM_MATCHES = 4;
 	
@@ -684,5 +684,73 @@ public class AffineModel3D extends InvertibleModel< AffineModel3D > implements I
 		}
 		
 		preConcatenate( dR );
+	}
+
+	@Override
+	public void toArray( float[] data )
+	{
+		data[ 0 ] = m00;
+		data[ 1 ] = m10;
+		data[ 2 ] = m20;
+		data[ 3 ] = m01;
+		data[ 4 ] = m11;
+		data[ 5 ] = m21;
+		data[ 6 ] = m02;
+		data[ 7 ] = m12;
+		data[ 8 ] = m22;
+		data[ 9 ] = m03;
+		data[ 10 ] = m13;
+		data[ 11 ] = m23;
+	}
+
+	@Override
+	public void toArray( double[] data )
+	{
+		data[ 0 ] = m00;
+		data[ 1 ] = m10;
+		data[ 2 ] = m20;
+		data[ 3 ] = m01;
+		data[ 4 ] = m11;
+		data[ 5 ] = m21;
+		data[ 6 ] = m02;
+		data[ 7 ] = m12;
+		data[ 8 ] = m22;
+		data[ 9 ] = m03;
+		data[ 10 ] = m13;
+		data[ 11 ] = m23;
+	}
+
+	@Override
+	public void toMatrix( float[][] data )
+	{
+		data[ 0 ][ 0 ] = m00;
+		data[ 0 ][ 1 ] = m01;
+		data[ 0 ][ 2 ] = m02;
+		data[ 0 ][ 3 ] = m03;
+		data[ 1 ][ 0 ] = m10;
+		data[ 1 ][ 1 ] = m11;
+		data[ 1 ][ 2 ] = m12;
+		data[ 1 ][ 3 ] = m13;
+		data[ 2 ][ 0 ] = m20;
+		data[ 2 ][ 1 ] = m21;
+		data[ 2 ][ 2 ] = m22;
+		data[ 2 ][ 3 ] = m23;
+	}
+
+	@Override
+	public void toMatrix( double[][] data )
+	{
+		data[ 0 ][ 0 ] = m00;
+		data[ 0 ][ 1 ] = m01;
+		data[ 0 ][ 2 ] = m02;
+		data[ 0 ][ 3 ] = m03;
+		data[ 1 ][ 0 ] = m10;
+		data[ 1 ][ 1 ] = m11;
+		data[ 1 ][ 2 ] = m12;
+		data[ 1 ][ 3 ] = m13;
+		data[ 2 ][ 0 ] = m20;
+		data[ 2 ][ 1 ] = m21;
+		data[ 2 ][ 2 ] = m22;
+		data[ 2 ][ 3 ] = m23;
 	}
 }

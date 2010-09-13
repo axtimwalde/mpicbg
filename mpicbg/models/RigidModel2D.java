@@ -276,4 +276,48 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 		
 		return ict;
 	}
+
+	@Override
+	public void toArray( float[] data )
+	{
+		data[ 0 ] = cos;
+		data[ 1 ] = sin;
+		data[ 2 ] = -sin;
+		data[ 3 ] = cos;
+		data[ 4 ] = tx;
+		data[ 5 ] = ty;
+	}
+
+	@Override
+	public void toArray( double[] data )
+	{
+		data[ 0 ] = cos;
+		data[ 1 ] = sin;
+		data[ 2 ] = -sin;
+		data[ 3 ] = cos;
+		data[ 4 ] = tx;
+		data[ 5 ] = ty;
+	}
+
+	@Override
+	public void toMatrix( float[][] data )
+	{
+		data[ 0 ][ 0 ] = cos;
+		data[ 0 ][ 1 ] = -sin;
+		data[ 0 ][ 2 ] = tx;
+		data[ 1 ][ 0 ] = sin;
+		data[ 1 ][ 1 ] = cos;
+		data[ 1 ][ 1 ] = ty;
+	}
+
+	@Override
+	public void toMatrix( double[][] data )
+	{
+		data[ 0 ][ 0 ] = cos;
+		data[ 0 ][ 1 ] = -sin;
+		data[ 0 ][ 2 ] = tx;
+		data[ 1 ][ 0 ] = sin;
+		data[ 1 ][ 1 ] = cos;
+		data[ 1 ][ 1 ] = ty;
+	}
 }

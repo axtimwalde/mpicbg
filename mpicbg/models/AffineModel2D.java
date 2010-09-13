@@ -161,15 +161,6 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		invert();
 	}
 
-//	/**
-//	 * TODO Not yet implemented ...
-//	 */
-//	@Override
-//	final public void shake( final float amount )
-//	{
-//		// TODO If you ever need it, please implement it...
-//	}
-
 	@Override
 	final public void set( final AffineModel2D m )
 	{
@@ -359,5 +350,49 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		ict.cost = cost;
 		
 		return ict;
+	}
+
+	@Override
+	public void toArray( float[] data )
+	{
+		data[ 0 ] = m00;
+		data[ 1 ] = m10;
+		data[ 2 ] = m01;
+		data[ 3 ] = m11;
+		data[ 4 ] = m02;
+		data[ 5 ] = m12;
+	}
+
+	@Override
+	public void toArray( double[] data )
+	{
+		data[ 0 ] = m00;
+		data[ 1 ] = m10;
+		data[ 2 ] = m01;
+		data[ 3 ] = m11;
+		data[ 4 ] = m02;
+		data[ 5 ] = m12;
+	}
+
+	@Override
+	public void toMatrix( float[][] data )
+	{
+		data[ 0 ][ 0 ] = m00;
+		data[ 0 ][ 1 ] = m01;
+		data[ 0 ][ 2 ] = m02;
+		data[ 1 ][ 0 ] = m10;
+		data[ 1 ][ 1 ] = m11;
+		data[ 1 ][ 1 ] = m12;
+	}
+
+	@Override
+	public void toMatrix( double[][] data )
+	{
+		data[ 0 ][ 0 ] = m00;
+		data[ 0 ][ 1 ] = m01;
+		data[ 0 ][ 2 ] = m02;
+		data[ 1 ][ 0 ] = m10;
+		data[ 1 ][ 1 ] = m11;
+		data[ 1 ][ 1 ] = m12;
 	}
 }
