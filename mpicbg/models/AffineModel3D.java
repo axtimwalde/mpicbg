@@ -30,7 +30,7 @@ import mpicbg.util.Util;
  * @version 0.1b
  * 
  */
-public class AffineModel3D extends InvertibleModel< AffineModel3D > implements Affine3D< AffineModel3D >, InvertibleBoundable
+public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implements InvertibleBoundable
 {
 	static final protected int MIN_NUM_MATCHES = 4;
 	
@@ -44,6 +44,7 @@ public class AffineModel3D extends InvertibleModel< AffineModel3D > implements A
 		i10 = 0.0f, i11 = 1.0f, i12 = 0.0f, i13 = 0.0f, 
 		i20 = 0.0f, i21 = 0.0f, i22 = 1.0f, i23 = 0.0f;
 	
+	@Override
 	public float[] getMatrix( final float[] m )
 	{
 		final float[] a;

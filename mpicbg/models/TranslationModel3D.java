@@ -7,7 +7,7 @@ import java.util.Collection;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.2b
  */
-public class TranslationModel3D extends InvertibleModel< TranslationModel3D > implements InvertibleBoundable
+public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3D > implements InvertibleBoundable
 {
 	static final protected int MIN_NUM_MATCHES = 1;
 	
@@ -167,4 +167,111 @@ public class TranslationModel3D extends InvertibleModel< TranslationModel3D > im
 		applyInverseInPlace( min );
 		applyInverseInPlace( max );		
 	}
+
+	@Override
+	public void preConcatenate( final TranslationModel3D model )  { concatenate( model ); }
+
+	@Override
+	public void concatenate( final TranslationModel3D model ) 
+	{
+		translation[ 0 ] += model.translation[ 0 ];
+		translation[ 1 ] += model.translation[ 1 ];
+		translation[ 2 ] += model.translation[ 2 ];
+	}
+
+	@Override
+	public void toArray( final float[] data ) 
+	{
+		data[ 0 ] = 0;
+		data[ 1 ] = 0;
+		data[ 2 ] = 0;
+		data[ 3 ] = 0;
+		data[ 4 ] = 0;
+		data[ 5 ] = 0;
+		data[ 6 ] = 0;
+		data[ 7 ] = 0;
+		data[ 8 ] = 0;
+		data[ 9 ] = translation[ 0 ];
+		data[ 10 ] = translation[ 1 ];
+		data[ 11 ] = translation[ 2 ];
+	}
+
+	@Override
+	public void toArray( final double[] data ) 
+	{
+		data[ 0 ] = 0;
+		data[ 1 ] = 0;
+		data[ 2 ] = 0;
+		data[ 3 ] = 0;
+		data[ 4 ] = 0;
+		data[ 5 ] = 0;
+		data[ 6 ] = 0;
+		data[ 7 ] = 0;
+		data[ 8 ] = 0;
+		data[ 9 ] = translation[ 0 ];
+		data[ 10 ] = translation[ 1 ];
+		data[ 11 ] = translation[ 2 ];
+	}
+	
+	@Override
+	public float[] getMatrix( final float[] m )
+	{
+		final float[] a;
+		if ( m == null || m.length != 12 )
+			a = new float[ 12 ];
+		else
+			a = m;
+		
+		a[ 0 ] = 0;
+		a[ 1 ] = 0;
+		a[ 2 ] = 0;
+		a[ 3 ] = translation[ 0 ];
+		
+		a[ 4 ] = 0;
+		a[ 5 ] = 0;
+		a[ 6 ] = 0;
+		a[ 7 ] = translation[ 1 ];
+		
+		a[ 8 ] = 0;
+		a[ 9 ] = 0;
+		a[ 10 ] = 0;
+		a[ 11 ] = translation[ 2 ];
+		
+		return a;
+	}
+
+	@Override
+	public void toMatrix( final float[][] data ) 
+	{
+		data[ 0 ][ 0 ] = 0;
+		data[ 0 ][ 1 ] = 0;
+		data[ 0 ][ 2 ] = 0;
+		data[ 0 ][ 3 ] = translation[ 0 ];
+		data[ 1 ][ 0 ] = 0;
+		data[ 1 ][ 1 ] = 0;
+		data[ 1 ][ 2 ] = 0;
+		data[ 1 ][ 3 ] = translation[ 1 ];
+		data[ 2 ][ 0 ] = 0;
+		data[ 2 ][ 1 ] = 0;
+		data[ 2 ][ 2 ] = 0;
+		data[ 2 ][ 3 ] = translation[ 2 ];
+	}
+
+	@Override
+	public void toMatrix( final double[][] data ) 
+	{
+		data[ 0 ][ 0 ] = 0;
+		data[ 0 ][ 1 ] = 0;
+		data[ 0 ][ 2 ] = 0;
+		data[ 0 ][ 3 ] = translation[ 0 ];
+		data[ 1 ][ 0 ] = 0;
+		data[ 1 ][ 1 ] = 0;
+		data[ 1 ][ 2 ] = 0;
+		data[ 1 ][ 3 ] = translation[ 1 ];
+		data[ 2 ][ 0 ] = 0;
+		data[ 2 ][ 1 ] = 0;
+		data[ 2 ][ 2 ] = 0;
+		data[ 2 ][ 3 ] = translation[ 2 ];
+	}
+
 }
