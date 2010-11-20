@@ -7,17 +7,17 @@ import java.util.Set;
 
 /**
  *
- * @param <M> the {@linkplain Model transformation model} of the tile.
+ * @param <M> the {@linkplain AbstractModel transformation model} of the tile.
  * 
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.1b
  */
-public class Tile< M extends Model< M > >
+public class Tile< M extends AbstractModel< M > >
 {
 	/**
-	 * The transformation {@link Model} of the {@link Tile}.  All local
+	 * The transformation {@link AbstractModel} of the {@link Tile}.  All local
 	 * {@link Point Points} in the {@link Tile} share (and thus determine)
-	 * this common {@link Model}.
+	 * this common {@link AbstractModel}.
 	 */
 	final protected M model;
 	final public M getModel() { return model; }
@@ -155,7 +155,7 @@ public class Tile< M extends Model< M > >
 	
 	
 	/**
-	 * The transfer error of this {@link Tile Tile's} {@link Model} as
+	 * The transfer error of this {@link Tile Tile's} {@link AbstractModel} as
 	 * estimated from weighted square point correspondence displacement.
 	 */
 	protected double cost;
@@ -171,7 +171,7 @@ public class Tile< M extends Model< M > >
 	/**
 	 * Constructor
 	 * 
-	 * @param model the transformation {@link Model} of the {@link Tile}.
+	 * @param model the transformation {@link AbstractModel} of the {@link Tile}.
 	 */
 	public Tile( final M model )
 	{
@@ -179,7 +179,7 @@ public class Tile< M extends Model< M > >
 	}
 	
 	/**
-	 * Apply the current {@link Model} to all local point coordinates.
+	 * Apply the current {@link AbstractModel} to all local point coordinates.
 	 * 
 	 * <em>This method does not recalculate the cost of the tile.</em>
 	 */
@@ -217,7 +217,7 @@ public class Tile< M extends Model< M > >
 	}
 	
 	/**
-	 * Apply the current {@link Model} to all local point coordinates.
+	 * Apply the current {@link AbstractModel} to all local point coordinates.
 	 * Update {@link #cost} and {@link #distance}.
 	 *
 	 */
@@ -247,7 +247,7 @@ public class Tile< M extends Model< M > >
 	}
 	
 	/**
-	 * Apply the current {@link Model} to all local point coordinates by weight.
+	 * Apply the current {@link AbstractModel} to all local point coordinates by weight.
 	 * Update {@link #cost} and {@link #distance}.
 	 *
 	 */
@@ -304,7 +304,7 @@ public class Tile< M extends Model< M > >
 //	}
 	
 	/**
-	 * Update the transformation {@link Model}.  That is, fit it to the
+	 * Update the transformation {@link AbstractModel}.  That is, fit it to the
 	 * current set of {@link PointMatch PointMatches}.
 	 */
 	final public void fitModel() throws NotEnoughDataPointsException, IllDefinedDataPointsException
@@ -333,14 +333,14 @@ public class Tile< M extends Model< M > >
 	 * Connect two tiles by a set of point correspondences
 	 * 
 	 * @param o
-	 * @param matches
+	 * @param m
 	 */
 	final public void connect(
 			final Tile< ? > o,
-			final Collection< PointMatch > matches )
+			final Collection< PointMatch > m )
 	{
-		this.addMatches( matches );
-		o.addMatches( PointMatch.flip( matches ) );
+		this.addMatches( m );
+		o.addMatches( PointMatch.flip( m ) );
 		
 		this.addConnectedTile( o );
 		o.addConnectedTile( this );

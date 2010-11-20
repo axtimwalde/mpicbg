@@ -17,7 +17,7 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 	final protected float[] translation = new float[ 3 ];
 	final public float[] getTranslation(){ return translation; }
 	
-	//@Override
+	@Override
 	final public float[] apply( final float[] point )
 	{
 		assert point.length == 3 : "3d translations can be applied to 3d points only.";
@@ -28,7 +28,7 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 			point[ 2 ] + translation[ 2 ] };
 	}
 	
-	//@Override
+	@Override
 	final public void applyInPlace( final float[] point )
 	{
 		assert point.length == 3 : "3d translations can be applied to 3d points only.";
@@ -38,7 +38,7 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 		point[ 2 ] += translation[ 2 ];
 	}
 	
-	//@Override
+	@Override
 	final public float[] applyInverse( final float[] point )
 	{
 		assert point.length == 3 : "3d translations can be applied to 3d points only.";
@@ -49,7 +49,7 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 				point[ 2 ] - translation[ 2 ] };
 	}
 
-	//@Override
+	@Override
 	final public void applyInverseInPlace( final float[] point )
 	{
 		assert point.length == 3 : "3d translations can be applied to 3d points only.";
@@ -67,7 +67,7 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 	}
 
 	@Override
-	final public void fit( final Collection< PointMatch > matches ) throws NotEnoughDataPointsException
+	final public < P extends PointMatch >void fit( final Collection< P > matches ) throws NotEnoughDataPointsException
 	{
 		if ( matches.size() < MIN_NUM_MATCHES ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 3d translation model, at least " + MIN_NUM_MATCHES + " data points required." );
 		
@@ -77,7 +77,7 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 		
 		double ws = 0.0;
 		
-		for ( final PointMatch m : matches )
+		for ( final P m : matches )
 		{
 			final float[] p = m.getP1().getL(); 
 			final float[] q = m.getP2().getW(); 
@@ -129,7 +129,7 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 		cost = m.getCost();
 	}
 	
-	public TranslationModel3D clone()
+	public TranslationModel3D copy()
 	{
 		final TranslationModel3D m = new TranslationModel3D();
 		m.translation[ 0 ] = translation[ 0 ];

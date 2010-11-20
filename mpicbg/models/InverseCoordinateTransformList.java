@@ -17,17 +17,17 @@ import mpicbg.util.Util;
 public class InverseCoordinateTransformList< E extends InverseCoordinateTransform > implements InverseBoundable, TransformList< E >
 {
 
-	final private List< E > l = new ArrayList< E >();
+	final private List< E > transforms = new ArrayList< E >();
 	
-	final public void add( E t ){ l.add( t ); }
-	final public void remove( E t ){ l.remove( t ); }
-	final public E remove( int i ){ return l.remove( i ); }
-	final public E get( int i ){ return l.get( i ); }
-	final public void clear(){ l.clear(); }
+	final public void add( E t ){ transforms.add( t ); }
+	final public void remove( E t ){ transforms.remove( t ); }
+	final public E remove( int i ){ return transforms.remove( i ); }
+	final public E get( int i ){ return transforms.get( i ); }
+	final public void clear(){ transforms.clear(); }
 	final public List< E > getList( final List< E > preAllocatedList )
 	{
 		final List< E > returnList = ( preAllocatedList == null ) ? new ArrayList< E >() : preAllocatedList;
-		returnList.addAll( l );
+		returnList.addAll( transforms );
 		return returnList;
 	}
 	
@@ -42,7 +42,7 @@ public class InverseCoordinateTransformList< E extends InverseCoordinateTransfor
 	//@Override
 	final public void applyInverseInPlace( float[] location ) throws NoninvertibleModelException
 	{
-		final ListIterator< E > i = l.listIterator( l.size() );
+		final ListIterator< E > i = transforms.listIterator( transforms.size() );
 		while ( i.hasPrevious() )
 			i.previous().applyInverseInPlace( location );
 	}

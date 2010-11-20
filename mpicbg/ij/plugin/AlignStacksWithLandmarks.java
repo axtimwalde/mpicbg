@@ -5,7 +5,7 @@ import mpicbg.ij.stack.InverseTransformMapping;
 import mpicbg.models.AffineModel3D;
 import mpicbg.models.IllDefinedDataPointsException;
 import mpicbg.models.InverseCoordinateTransform;
-import mpicbg.models.Model;
+import mpicbg.models.AbstractModel;
 import mpicbg.models.NotEnoughDataPointsException;
 import mpicbg.models.PointMatch;
 import mpicbg.models.TranslationModel3D;
@@ -43,7 +43,7 @@ import ij.process.ImageProcessor;
  */
 public class AlignStacksWithLandmarks implements PlugIn
 {
-	final static public < M extends Model< M > & InverseCoordinateTransform > ImagePlus createAlignedStack(
+	final static public < M extends AbstractModel< M > & InverseCoordinateTransform > ImagePlus createAlignedStack(
 			final ImagePlus source,
 			final ImagePlus target,
 			final Collection< PointMatch > pointMatches,

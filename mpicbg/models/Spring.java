@@ -52,11 +52,11 @@ public class Spring
 		this.weights = weights.clone();
 		calculateWeight();
 	}
-	public void addWeight( final float weight )
+	public void addWeight( final float w )
 	{
 		final float[] newWeights = new float[ weights.length + 1 ];
 		System.arraycopy( weights, 0, newWeights, 0, weights.length );
-		newWeights[ weights.length ] = weight;
+		newWeights[ weights.length ] = w;
 		weights = newWeights;
 		calculateWeight();
 	}

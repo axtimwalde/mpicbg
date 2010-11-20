@@ -4,7 +4,7 @@ import java.lang.Exception;
 
 /**
  * Signalizes that there were not enough data points available to estimate the
- * {@link Model}.
+ * {@link AbstractModel}.
  * 
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.1b

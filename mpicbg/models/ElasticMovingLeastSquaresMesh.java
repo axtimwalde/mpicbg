@@ -18,7 +18,7 @@ import java.util.Set;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.1b
  */
-public class ElasticMovingLeastSquaresMesh< M extends Model< M > > extends MovingLeastSquaresMesh< M >
+public class ElasticMovingLeastSquaresMesh< M extends AbstractModel< M > > extends MovingLeastSquaresMesh< M >
 {
 	final protected HashSet< Tile< M > > fixedTiles = new HashSet< Tile< M > >();
 	

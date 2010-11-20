@@ -5,7 +5,7 @@ import java.util.Collection;
 import mpicbg.util.Matrix3x3;
 
 /**
- * 2d-homography {@link Model} to be applied to points in 2d-space.
+ * 2d-homography {@link AbstractModel} to be applied to points in 2d-space.
  * 
  * This code is partially based on the following book:
  * 
@@ -26,7 +26,7 @@ import mpicbg.util.Matrix3x3;
  * @version 0.3b
  * 
  */
-public class HomographyModel2D extends InvertibleModel< HomographyModel2D > implements InvertibleBoundable
+public class HomographyModel2D extends AbstractModel< HomographyModel2D > implements InvertibleModel< HomographyModel2D >, InvertibleBoundable
 {
 	static final protected int MIN_NUM_MATCHES = 4;
 	
@@ -200,7 +200,7 @@ public class HomographyModel2D extends InvertibleModel< HomographyModel2D > impl
 	}
 	
 	@Override
-	final public HomographyModel2D clone()
+	final public HomographyModel2D copy()
 	{
 		final HomographyModel2D m = new HomographyModel2D();
 		
@@ -235,7 +235,7 @@ public class HomographyModel2D extends InvertibleModel< HomographyModel2D > impl
 	}
 
 	@Override
-	final public void fit( final Collection< PointMatch > matches ) throws NotEnoughDataPointsException, IllDefinedDataPointsException
+	final public < P extends PointMatch >void fit( final Collection< P > matches ) throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
 		if ( matches.size() < MIN_NUM_MATCHES ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d homography model, at least " + MIN_NUM_MATCHES + " data points required." );
 		

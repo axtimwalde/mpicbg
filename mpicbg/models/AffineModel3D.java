@@ -127,7 +127,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 	 * \citet{SchaeferAl06}.
 	 */
 	@Override
-	final public void fit( final Collection< PointMatch > matches )
+	final public < P extends PointMatch >void fit( final Collection< P > matches )
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
 		if ( matches.size() < MIN_NUM_MATCHES )
@@ -138,7 +138,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 		
 		double ws = 0.0;
 		
-		for ( final PointMatch m : matches )
+		for ( final P m : matches )
 		{
 			final float[] p = m.getP1().getL(); 
 			final float[] q = m.getP2().getW(); 
@@ -170,7 +170,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 			b20, b21, b22;
 		
 		a00 = a01 = a02 = a11 = a12 = a22 = b00 = b01 = b02 = b10 = b11 = b12 = b20 = b21 = b22 = 0;
-		for ( final PointMatch m : matches )
+		for ( final P m : matches )
 		{
 			final float[] p = m.getP1().getL();
 			final float[] q = m.getP2().getW();
@@ -266,7 +266,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 	}
 
 	@Override
-	public AffineModel3D clone()
+	public AffineModel3D copy()
 	{
 		AffineModel3D m = new AffineModel3D();
 		m.m00 = m00;
@@ -457,6 +457,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 		invert();
 	}
 	
+	@Override
 	final public String toString()
 	{
 		return
@@ -469,7 +470,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 	/**
 	 * TODO Not yet tested
 	 */
-	//@Override
+	@Override
 	public AffineModel3D createInverse()
 	{
 		final AffineModel3D ict = new AffineModel3D();

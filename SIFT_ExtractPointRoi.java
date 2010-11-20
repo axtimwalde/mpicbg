@@ -245,7 +245,7 @@ public class SIFT_ExtractPointRoi implements PlugIn
 			IJ.log( "Filtering correspondence candidates by geometric consensus ..." );
 			List< PointMatch > inliers = new ArrayList< PointMatch >();
 			
-			Model< ? > model;
+			AbstractModel< ? > model;
 			switch ( p.modelIndex )
 			{
 			case 0:
