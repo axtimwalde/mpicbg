@@ -29,7 +29,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.2b
  */
-public abstract class InteractiveInvertibleCoordinateTransform< M extends InvertibleModel< M > > implements PlugIn, MouseListener, MouseMotionListener, KeyListener, ImageListener
+public abstract class InteractiveInvertibleCoordinateTransform< M extends Model< M > & InvertibleCoordinateTransform > implements PlugIn, MouseListener, MouseMotionListener, KeyListener, ImageListener
 {
 	protected InverseTransformMapping mapping;
 	protected ImagePlus imp;
@@ -60,7 +60,7 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Invert
 		source = target.duplicate();
 		source.setInterpolationMethod( ImageProcessor.BILINEAR );
 		
-		mapping = new InverseTransformMapping< InvertibleModel >( myModel() );
+		mapping = new InverseTransformMapping< M >( myModel() );
 		
 		painter = new MappingThread(
 				imp,

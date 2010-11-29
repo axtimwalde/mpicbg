@@ -26,7 +26,7 @@ import mpicbg.util.Matrix3x3;
  * @version 0.3b
  * 
  */
-public class HomographyModel2D extends AbstractModel< HomographyModel2D > implements InvertibleModel< HomographyModel2D >, InvertibleBoundable
+public class HomographyModel2D extends AbstractModel< HomographyModel2D > implements Model< HomographyModel2D >, InvertibleBoundable
 {
 	static final protected int MIN_NUM_MATCHES = 4;
 	

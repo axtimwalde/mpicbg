@@ -198,7 +198,10 @@ public class Transform_Roi implements PlugIn
 		}
 		
 		if ( interpolate )
+		{
+			ipSource.setInterpolationMethod( ImageProcessor.BILINEAR );
 			mapping.mapInterpolated( ipSource, ipTarget );
+		}
 		else
 			mapping.map( ipSource, ipTarget );
 		
