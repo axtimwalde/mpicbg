@@ -90,7 +90,7 @@ public class SIFT_ExtractPointRoi implements PlugIn
 		/**
 		 * Implemeted transformation models for choice
 		 */
-		final static public String[] modelStrings = new String[]{ "Translation", "Rigid", "Similarity", "Affine" };
+		final static public String[] modelStrings = new String[]{ "Translation", "Rigid", "Similarity", "Affine", "Perspective" };
 		public int modelIndex = 1;
 	}
 	
@@ -259,6 +259,9 @@ public class SIFT_ExtractPointRoi implements PlugIn
 				break;
 			case 3:
 				model = new AffineModel2D();
+				break;
+			case 4:
+				model = new HomographyModel2D();
 				break;
 			default:
 				return;
