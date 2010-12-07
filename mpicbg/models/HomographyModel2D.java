@@ -50,7 +50,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 		this.m01 = m01;
 		this.m02 = m02;
 		
-		this.m10 = m00;
+		this.m10 = m10;
 		this.m11 = m11;
 		this.m12 = m12;
 		
@@ -86,7 +86,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 		i22 = ( m00 * m11 - m01 * m10 ) / det;
 	}
 	
-	final private float[] fitToUnitSquare(
+	final static private float[] fitToUnitSquare(
 		final float[] p1,
 		final float[] p2,
 		final float[] p3,
@@ -178,7 +178,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 		m01 = m.m01;
 		m02 = m.m02;
 		
-		m10 = m.m00;
+		m10 = m.m10;
 		m11 = m.m11;
 		m12 = m.m12;
 		
@@ -191,7 +191,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 		i01 = m.i01;
 		i02 = m.i02;
 		
-		i10 = m.i00;
+		i10 = m.i10;
 		i11 = m.i11;
 		i12 = m.i12;
 		
@@ -211,7 +211,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 		m.m01 = m01;
 		m.m02 = m02;
 		
-		m.m10 = m00;
+		m.m10 = m10;
 		m.m11 = m11;
 		m.m12 = m12;
 		
@@ -224,7 +224,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 		m.i01 = i01;
 		m.i02 = i02;
 		
-		m.i10 = i00;
+		m.i10 = i10;
 		m.i11 = i11;
 		m.i12 = i12;
 		
@@ -360,10 +360,10 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 				"| " + m20 + " " + m21 + " " + m22 + " |";
 	}
 	
-	//@Override
+	@Override
 	public void estimateBounds( final float[] min, final float[] max )
 	{
-		assert min.length == 2 && max.length == 2 : "2d affine transformations can be applied to 2d points only.";
+		assert min.length == 2 && max.length == 2 : "2d homographies can be applied to 2d points only.";
 		
 		float minX = Float.MAX_VALUE, minY = Float.MAX_VALUE;
 		float maxX = -Float.MAX_VALUE, maxY = -Float.MAX_VALUE;
@@ -409,7 +409,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 		max[ 1 ] = maxY;
 	}
 	
-	//@Override
+	@Override
 	public void estimateInverseBounds( final float[] min, final float[] max ) throws NoninvertibleModelException
 	{
 		assert min.length == 2 && max.length == 2 : "2d affine transformations can be applied to 2d points only.";
