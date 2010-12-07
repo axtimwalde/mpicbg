@@ -3,7 +3,6 @@ package mpicbg.models;
 import java.util.Collection;
 
 import mpicbg.util.Matrix3x3;
-import mpicbg.util.Util;
 
 /**
  * 3d-affine transformation models to be applied to points in 3d-space.
@@ -76,7 +75,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 	@Override
 	final public int getMinNumMatches(){ return MIN_NUM_MATCHES; }
 	
-	//@Override
+	@Override
 	final public float[] apply( final float[] l )
 	{
 		final float[] transformed = l.clone();
@@ -84,7 +83,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 		return transformed;
 	}
 	
-	//@Override
+	@Override
 	final public void applyInPlace( final float[] l )
 	{
 		assert l.length == 3 : "3d affine transformations can be applied to 3d points only.";
@@ -96,7 +95,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 		l[ 2 ] = l0 * m20 + l1 * m21 + l[ 2 ] * m22 + m23;
 	}
 	
-	//@Override
+	@Override
 	final public float[] applyInverse( final float[] l ) throws NoninvertibleModelException
 	{
 		final float[] transformed = l.clone();
@@ -105,7 +104,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 	}
 
 
-	//@Override
+	@Override
 	final public void applyInverseInPlace( final float[] l ) throws NoninvertibleModelException
 	{
 		assert l.length == 3 : "3d affine transformations can be applied to 3d points only.";
