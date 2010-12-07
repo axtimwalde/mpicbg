@@ -2,11 +2,13 @@ import mpicbg.ij.InverseTransformMapping;
 import mpicbg.ij.Mapping;
 import mpicbg.ij.TransformMeshMapping;
 import mpicbg.ij.util.Util;
-import mpicbg.models.AbstractAffineModel2D;
 import mpicbg.models.AffineModel2D;
 import mpicbg.models.CoordinateTransform;
 import mpicbg.models.CoordinateTransformMesh;
+import mpicbg.models.HomographyModel2D;
 import mpicbg.models.IllDefinedDataPointsException;
+import mpicbg.models.InverseCoordinateTransform;
+import mpicbg.models.Model;
 import mpicbg.models.MovingLeastSquaresTransform;
 import mpicbg.models.NotEnoughDataPointsException;
 import mpicbg.models.Point;
@@ -37,13 +39,13 @@ public class Transform_Roi implements PlugIn
 	final static private DecimalFormat decimalFormat = new DecimalFormat();
 	final static private DecimalFormatSymbols decimalFormatSymbols = new DecimalFormatSymbols();
 	
-	final static private String[] methods = new String[]{ "Least Squares (linear)", "Moving Least Squares (non-linear)" };
+	final static private String[] methods = new String[]{ "Least Squares", "Moving Least Squares (non-linear)" };
 	static private int methodIndex = 0;
 	
 	static float alpha = 1.0f;
 	static int meshResolution = 32;
 	
-	final static private String[] modelClasses = new String[]{ "Translation", "Rigid", "Similarity", "Affine" };
+	final static private String[] modelClasses = new String[]{ "Translation", "Rigid", "Similarity", "Affine", "Perspective" };
 	static private int modelClassIndex = 1;
 	
 	static private boolean interpolate = true;
@@ -117,20 +119,34 @@ public class Transform_Roi implements PlugIn
 		if ( methodIndex == 0 )
 		{
 			/* TODO Implement other models for choice */
-			AbstractAffineModel2D< ? > model;
+			Model< ? > model;
+			InverseCoordinateTransform ict;
 			switch ( modelClassIndex )
 			{
 			case 0:
-				model = new TranslationModel2D();
+				final TranslationModel2D t = new TranslationModel2D();
+				model = t;
+				ict = t;
 				break;
 			case 1:
-				model = new RigidModel2D();
+				final RigidModel2D r = new RigidModel2D();
+				model = r;
+				ict = r;
 				break;
 			case 2:
-				model = new SimilarityModel2D();
+				final SimilarityModel2D s = new SimilarityModel2D();
+				model = s;
+				ict = s;
 				break;
 			case 3:
-				model = new AffineModel2D();
+				final AffineModel2D a = new AffineModel2D();
+				model = a;
+				ict = a;
+				break;
+			case 4:
+				final HomographyModel2D h = new HomographyModel2D();
+				model = h;
+				ict = h;
 				break;
 			default:
 				return;
@@ -151,7 +167,7 @@ public class Transform_Roi implements PlugIn
 				return;
 			}
 			
-			mapping = new InverseTransformMapping< AbstractAffineModel2D< ? > >( model );
+			mapping = new InverseTransformMapping< InverseCoordinateTransform >( ict );
 		}
 		else
 		{
@@ -173,6 +189,11 @@ public class Transform_Roi implements PlugIn
 				case 3:
 					t.setModel( AffineModel2D.class );
 					break;
+				case 4:
+					IJ.error( "Perspective transformation is not yet supported for Moving Least Squares.  Using Affine instead." );
+					//t.setModel( HomographyModel2D.class );
+					t.setModel( AffineModel2D.class );
+					break;
 				default:
 					return;
 				}
@@ -183,7 +204,7 @@ public class Transform_Roi implements PlugIn
 			try
 			{
 				t.setMatches( matches );
-				mapping = new TransformMeshMapping( new CoordinateTransformMesh( t, meshResolution, source.getWidth(), source.getHeight() ) );
+				mapping = new TransformMeshMapping< CoordinateTransformMesh >( new CoordinateTransformMesh( t, meshResolution, source.getWidth(), source.getHeight() ) );
 			}
 			catch ( NotEnoughDataPointsException e )
 			{
