@@ -25,6 +25,15 @@ import mpicbg.util.Matrix3x3;
  * }
  * </pre>
  * 
+ * and the lecture notes:
+ * 
+ * CSE 252B: Computer Vision II
+ * Lecturer: Serge Belongie
+ * Scribe: Dave Berlin, Jefferson Ng
+ * LECTURE 2
+ * Homogeneous Linear Least Squares
+ * Problems, Two View Geometry
+ * 
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.3b
  * 
