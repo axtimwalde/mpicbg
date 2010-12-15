@@ -151,7 +151,7 @@ public class PlugIn implements ij.plugin.PlugIn
 	final static public void run( final ImagePlus imp )
 	{
 		if ( fast )
-			FastFlat.getInstance().run( imp, blockRadius, bins, slope, mask, composite );
+			Flat.getFastInstance().run( imp, blockRadius, bins, slope, mask, composite );
 		else
 			Flat.getInstance().run( imp, blockRadius, bins, slope, mask, composite );
 	}
