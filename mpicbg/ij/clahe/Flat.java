@@ -52,9 +52,10 @@ import ij.process.ShortProcessor;
  */
 public class Flat
 {
-	protected Flat(){}
 	final static private Flat instance = new Flat();
+	final static private FastFlat fastInstance = new FastFlat();
 	static public Flat getInstance(){ return instance; }
+	static public FastFlat getFastInstance(){ return fastInstance; }
 	
 	/**
 	 * Process an {@link ImagePlus} with a given set of parameters.  Create

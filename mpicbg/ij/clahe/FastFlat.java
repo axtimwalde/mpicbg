@@ -50,10 +50,6 @@ import ij.process.ImageProcessor;
  */
 public class FastFlat extends Flat
 {
-	protected FastFlat(){}
-	final static private FastFlat instance = new FastFlat();
-	static public FastFlat getInstance(){ return instance; }
-	
 	/**
 	 * Process an {@link ImagePlus} with a given set of parameters.  Create
 	 * mask and bounding box from the {@link Roi} of that {@link ImagePlus} and
@@ -78,7 +74,7 @@ public class FastFlat extends Flat
 			final float slope,
 			final ByteProcessor mask )
 	{
-		getInstance().run( imp, blockRadius, bins, slope, mask, true );
+		getFastInstance().run( imp, blockRadius, bins, slope, mask, true );
 	}
 	
 	
