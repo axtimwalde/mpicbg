@@ -11,7 +11,7 @@ mpicbg.jar <- \
 	mpicbg/util/*.java \
 	LICENSE
 
-CLASSPATH(mpicbg_.jar)=mpicbg.jar
+CLASSPATH(mpicbg_.jar)=$CLASSPATH:mpicbg.jar
 mpicbg_.jar <- \
 	mpicbg/ij/plugin/*.java \
 	MOPS_ExtractPointRoi.java \
