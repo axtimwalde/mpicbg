@@ -1,13 +1,13 @@
 package mpicbg.ij;
 
+import ij.CompositeImage;
+import ij.ImagePlus;
+import ij.ImageStack;
+import ij.process.ImageProcessor;
+
 import java.awt.Canvas;
 import java.awt.Cursor;
 import java.util.concurrent.atomic.AtomicBoolean;
-
-import ij.IJ;
-import ij.ImagePlus;
-import ij.gui.Toolbar;
-import ij.process.ImageProcessor;
 
 /**
  * 
@@ -21,8 +21,9 @@ public class MappingThread extends Thread
 	final protected ImageProcessor target;
 	final protected ImageProcessor temp;
 	final protected AtomicBoolean pleaseRepaint;
-	final protected Mapping mapping;
+	final protected Mapping< ? > mapping;
 	final protected boolean interpolate;
+	final protected int stackIndex;
 	
 	public MappingThread(
 			final ImagePlus imp,
@@ -30,7 +31,8 @@ public class MappingThread extends Thread
 			final ImageProcessor target,
 			final AtomicBoolean pleaseRepaint,
 			final Mapping< ? > mapping,
-			final boolean interpolate )
+			final boolean interpolate,
+			final int stackIndex )
 	{
 		this.imp = imp;
 		this.source = source;
@@ -41,15 +43,28 @@ public class MappingThread extends Thread
 		this.mapping = mapping;
 		this.interpolate = interpolate;
 		this.setName( "MappingThread" );
+		this.stackIndex = stackIndex;
+	}
+	
+	public MappingThread(
+			final ImagePlus imp,
+			final ImageProcessor source,
+			final ImageProcessor target,
+			final AtomicBoolean pleaseRepaint,
+			final Mapping< ? > mapping,
+			final boolean interpolate )
+	{
+		this( imp, source, target, pleaseRepaint, mapping, interpolate, 0 );
 	}
 	
 	@Override
 	public void run()
 	{
+		final ImageStack stack = imp.getStack();
 		while ( !isInterrupted() )
 		{
 			final Canvas canvas = imp.getCanvas();
-			final Cursor cursor = canvas == null ? canvas.getCursor() : Cursor.getDefaultCursor();
+			final Cursor cursor = canvas == null ? Cursor.getDefaultCursor() : canvas.getCursor();
 			try
 			{
 				if ( pleaseRepaint.getAndSet( false ) )
@@ -66,6 +81,12 @@ public class MappingThread extends Thread
 						final Object targetPixels = target.getPixels();
 						target.setPixels( temp.getPixels() );
 						temp.setPixels( targetPixels );
+						if ( stackIndex > 0 && imp.isComposite() )
+						{
+							final CompositeImage cimp = ( CompositeImage )imp;
+							stack.setPixels( target.getPixels(), stackIndex );
+							cimp.setChannelsUpdated();
+						}
 						imp.updateAndDraw();
 					}
 				}

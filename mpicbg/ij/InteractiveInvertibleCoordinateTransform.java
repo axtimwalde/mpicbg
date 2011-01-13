@@ -1,8 +1,10 @@
 package mpicbg.ij;
 
+import ij.CompositeImage;
 import ij.IJ;
 import ij.ImageListener;
 import ij.ImagePlus;
+import ij.ImageStack;
 import ij.WindowManager;
 import ij.plugin.PlugIn;
 import ij.process.*;
@@ -18,7 +20,10 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 
@@ -31,18 +36,28 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public abstract class InteractiveInvertibleCoordinateTransform< M extends Model< M > & InvertibleCoordinateTransform > implements PlugIn, MouseListener, MouseMotionListener, KeyListener, ImageListener
 {
-	protected InverseTransformMapping mapping;
+	static public class Tuple
+	{
+		final public ImageProcessor source;
+		final public ImageProcessor target;
+		final public AtomicBoolean pleaseRepaint = new AtomicBoolean( false );
+		public MappingThread painter = null;
+		
+		Tuple( final ImageProcessor source, final ImageProcessor target )
+		{
+			this.source = source;
+			this.target = target;
+		}
+	}
+	
+	protected InverseTransformMapping< M > mapping;
 	protected ImagePlus imp;
-	protected ImageProcessor target;
-	protected ImageProcessor source;
-	final protected AtomicBoolean pleaseRepaint = new AtomicBoolean( false );
+	final protected ArrayList< Tuple > tuples = new ArrayList< Tuple >();
 	
 	protected Point[] p;
 	protected Point[] q;
 	final protected ArrayList< PointMatch > m = new ArrayList< PointMatch >();
 	protected PointRoi handles;
-	
-	protected MappingThread painter;
 	
 	protected int targetIndex = -1;
 	
@@ -54,22 +69,43 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Model<
     {
 		// cleanup
 		m.clear();
+		tuples.clear();
 		
 		imp = IJ.getImage();
-		target = imp.getProcessor();
-		source = target.duplicate();
-		source.setInterpolationMethod( ImageProcessor.BILINEAR );
+		if ( imp.isComposite() && ( ( CompositeImage )imp ).getMode() == CompositeImage.COMPOSITE )
+		{
+			final int z = imp.getSlice();
+			final int t = imp.getFrame();
+			for ( int c = 1; c <= imp.getNChannels(); ++c )
+			{
+				final int i = imp.getStackIndex( c, z, t );
+				final ImageProcessor target = imp.getStack().getProcessor( i );
+				final ImageProcessor source = target.duplicate();
+				source.setInterpolationMethod( ImageProcessor.BILINEAR );
+				tuples.add( new Tuple( source, target ) );
+			}
+		}
+		else
+		{
+			final ImageProcessor target = imp.getProcessor();
+			final ImageProcessor source = target.duplicate();
+			source.setInterpolationMethod( ImageProcessor.BILINEAR );
+			tuples.add( new Tuple( source, target ) );
+		}		
 		
 		mapping = new InverseTransformMapping< M >( myModel() );
-		
-		painter = new MappingThread(
-				imp,
-				source,
-				target,
-				pleaseRepaint,
-				mapping,
-				false );
-		painter.start();
+		for ( final Tuple tuple : tuples )
+		{
+			tuple.painter = new MappingThread(
+					imp,
+					tuple.source,
+					tuple.target,
+					tuple.pleaseRepaint,
+					mapping,
+					false,
+					imp.getStackIndex( imp.getChannel(), imp.getSlice(), imp.getFrame() ) );
+			tuple.painter.start();
+		}
 		
 		setHandles();
 		
@@ -83,7 +119,8 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Model<
 	public void imageClosed( ImagePlus imp )
 	{
 		if ( imp == this.imp )
-			painter.interrupt();
+			for ( final Tuple tuple : tuples )
+				tuple.painter.interrupt();
 	}
 	public void imageOpened( ImagePlus imp ){}
 	public void imageUpdated( ImagePlus imp ){}
@@ -92,7 +129,8 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Model<
 	{
 		if ( e.getKeyCode() == KeyEvent.VK_ESCAPE || e.getKeyCode() == KeyEvent.VK_ENTER )
 		{
-			painter.interrupt();
+			for ( final Tuple tuple : tuples )
+				tuple.painter.interrupt();
 			if ( imp != null )
 			{
 				imp.getCanvas().removeMouseListener( this );
@@ -101,14 +139,54 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Model<
 				imp.getCanvas().setDisplayList( null );
 				imp.setRoi( ( Roi )null );
 			}
-			if ( e.getKeyCode() == KeyEvent.VK_ESCAPE )
+			
+			/* reset pixels */
+			final int z = imp.getSlice();
+			final int t = imp.getFrame();
+			if ( imp.isComposite() && ( ( CompositeImage )imp ).getMode() == CompositeImage.COMPOSITE )
 			{
-				imp.setProcessor( null, source );
+				for ( int c = 1; c <= imp.getNChannels(); ++c )
+				{
+					final int i = imp.getStackIndex( c, z, t );
+					final ImageProcessor ip = tuples.get( c - 1 ).source;
+					imp.getStack().setPixels( ip.getPixels(), i );
+					if ( c == imp.getChannel() )
+						imp.setProcessor( ip );
+				}
 			}
 			else
 			{
-				mapping.mapInterpolated( source, target );
-				imp.updateAndDraw();
+				final ImageProcessor ip = tuples.get( 0 ).source;
+				imp.setProcessor( ip );
+				imp.getStack().setPixels( ip.getPixels(), imp.getStackIndex( imp.getChannel(), z, t ) );
+			}
+			if ( e.getKeyCode() == KeyEvent.VK_ENTER )
+			{
+				final Thread thread = new Thread(
+						new Runnable()
+						{
+							@Override
+							public void run()
+							{
+								final int si = imp.getStackIndex( imp.getChannel(), imp.getSlice(), imp.getFrame() );
+								final ImageStack stack = imp.getStack();
+								for ( int i = 1; i <= stack.getSize(); ++i )
+								{
+									final ImageProcessor source = stack.getProcessor( i ).duplicate();
+									final ImageProcessor target = source.createProcessor( source.getWidth(), source.getHeight() );
+									source.setInterpolationMethod( ImageProcessor.BILINEAR );
+									mapping.mapInterpolated( source, target );
+									if ( i == si )
+										imp.getProcessor().setPixels( target.getPixels() );
+									stack.setPixels( target.getPixels(), i );
+									IJ.showProgress( i, stack.getSize() );
+								}
+								if ( imp.isComposite() )
+									( ( CompositeImage )imp ).setChannelsUpdated();
+								imp.updateAndDraw();
+							}
+						} );
+				thread.start();
 			}
 		}
 		else if (
@@ -161,10 +239,13 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Model<
 			try
 			{
 				myModel().fit( m );
-				synchronized ( painter )
+				for ( final Tuple tuple : tuples )
 				{
-					if ( pleaseRepaint.compareAndSet( false, true ) )
-						painter.notify();
+					synchronized ( tuple.painter )
+					{
+						tuple.pleaseRepaint.set( true );
+						tuple.painter.notify();
+					}
 				}
 			}
 			catch ( NotEnoughDataPointsException ex ) { ex.printStackTrace(); }
