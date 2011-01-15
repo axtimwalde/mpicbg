@@ -13,8 +13,8 @@ public class Transform_Similarity extends InteractiveInvertibleCoordinateTransfo
 	@Override
 	final protected void setHandles()
 	{
-		int[] x = new int[]{ target.getWidth() / 4, 3 * target.getWidth() / 4 };
-		int[] y = new int[]{ target.getHeight() / 2, target.getHeight() / 2 };
+		int[] x = new int[]{ imp.getWidth() / 4, 3 * imp.getWidth() / 4 };
+		int[] y = new int[]{ imp.getHeight() / 2, imp.getHeight() / 2 };
 		
 		p = new Point[]{
 				new Point( new float[]{ ( float )x[ 0 ], ( float )y[ 0 ] } ),

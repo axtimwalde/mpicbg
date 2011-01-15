@@ -43,7 +43,7 @@ public class ElasticMeshStack< M extends AbstractAffineModel2D< M > >
 	final public void update( final float amount )
 	{
 		double cd = 0.0;
-		for ( final ElasticMovingLeastSquaresMesh m : meshes )
+		for ( final ElasticMovingLeastSquaresMesh< M > m : meshes )
 		{
 			m.update( amount );
 			cd += m.getError();

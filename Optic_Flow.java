@@ -14,8 +14,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de> and Pavel Tomancak <tomancak@mpi-cbg.de>
- * @version 0.1b
  */
 import ij.plugin.*;
 import ij.plugin.filter.GaussianBlur;
@@ -28,8 +26,18 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 /**
- * Transfer an image sequence into optic flow.
+ * <h1>Transfer an image sequence into an optic flow field<h1>
  * 
+ * <p>Flow fields are calculated for each pair <em>(t,t+1)</em> of the sequence
+ * independently.  The motion vector for each pixel in image t is estimated by
+ * searching the most similar looking pixel in image <em>t+1</em>.  The
+ * similarity measure is the sum of differences of all pixels in a local
+ * vicinity.  The local vicinity is defined by a Gaussian.  Both the standard
+ * deviation of the Gaussian (the size of the local vicinity) and the search
+ * radius are parameters of the method.</p>
+ * 
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de> and Pavel Tomancak <tomancak@mpi-cbg.de>
+ * @version 0.1b
  */ 
 public class Optic_Flow implements PlugIn, KeyListener
 {
@@ -39,21 +47,28 @@ public class Optic_Flow implements PlugIn, KeyListener
 	
 	final static protected GaussianBlur filter = new GaussianBlur();
 	
-	/**
-	 * Return an unsigned integer that bounces in a ping pong manner in the
-	 * range [0 ... mod - 1]
-	 *
-	 * @param a the value to be flipped
-	 * @param range the size of the range
-	 * @return a flipped in range like a ping pong ball
-	 */
-	final static protected int pingPong( int a, final int mod )
+	final static protected int pingPong( final int a, final int mod )
 	{
+		int x = a;
 		final int p = 2 * mod;
-		if ( a < 0 ) a = p + a % p;
-		if ( a >= p ) a = a % p;
-		if ( a >= mod ) a = mod - a % mod - 1;
-		return a;
+		if ( x < 0 ) x = -x;
+		if ( x >= mod )
+		{
+			if ( x <= p )
+				x = p - x;
+			else
+			{
+				/* catches mod == 1 to no additional cost */
+				try
+				{
+					x %= p;
+					if ( x >= mod )
+						x = p - x;
+				}
+				catch ( ArithmeticException e ){ x = 0; }
+			}
+		}
+		return x;
 	}
 	
 	final static protected void colorCircle( ColorProcessor ip )
@@ -77,7 +92,61 @@ public class Optic_Flow implements PlugIn, KeyListener
 		}
 	}
 	
-	final static protected int colorVector( float xs, float ys )
+	final static private void algebraicToPolarAndColor(
+			final byte[] ipXPixels,
+			final byte[] ipYPixels,
+			final float[] ipRPixels,
+			final float[] ipPhiPixels,
+			final int[] ipColorPixels,
+			final double max )
+	{
+		final int n = ipXPixels.length;
+		for ( int i = 0; i < n; ++i )
+		{
+			final double x = ipXPixels[ i ] / max;
+			final double y = ipYPixels[ i ] / max;
+			
+			final double r = Math.sqrt( x * x + y * y );
+			final double phi = Math.atan2( x / r, y / r );
+			
+			ipRPixels[ i ] = ( float )r;
+			ipPhiPixels[ i ] = ( float )phi;
+			
+			if ( r == 0.0 )
+				ipColorPixels[ i ] = 0;
+			else
+			{
+				final double red, green, blue;
+			
+				double o = ( phi + Math.PI ) / Math.PI * 3;
+				
+				if ( o < 3 )
+					red = Math.min( 1.0, Math.max( 0.0, 2.0 - o ) ) * r;
+				else
+					red = Math.min( 1.0, Math.max( 0.0, o - 4.0 ) ) * r;
+				
+				o += 2;
+				if ( o >= 6 ) o -= 6;
+				
+				if ( o < 3 )
+					green = Math.min( 1.0, Math.max( 0.0, 2.0 - o ) ) * r;
+				else
+					green = Math.min( 1.0, Math.max( 0.0, o - 4.0 ) ) * r;
+				
+				o += 2;
+				if ( o >= 6 ) o -= 6;
+				
+				if ( o < 3 )
+					blue = Math.min( 1.0, Math.max( 0.0, 2.0 - o ) ) * r;
+				else
+					blue = Math.min( 1.0, Math.max( 0.0, o - 4.0 ) ) * r;
+				
+				ipColorPixels[ i ] =  ( ( ( int )( red * 255 ) << 8 ) | ( int )( green * 255 ) << 8 ) | ( int )( blue * 255 );
+			}
+		}
+	}
+	
+	final static private int colorVector( float xs, float ys )
 	{
 		xs /= maxDistance;
 		ys /= maxDistance;
@@ -112,7 +181,7 @@ public class Optic_Flow implements PlugIn, KeyListener
 		return ( ( ( int )( r * 255 ) << 8 ) + ( int )( g * 255 ) << 8 ) + ( int )( b * 255 );
 	}
 	
-	final static protected void subtractShifted(
+	final static private void subtractShifted(
 			final FloatProcessor a,
 			final FloatProcessor b,
 			final FloatProcessor c,
@@ -130,7 +199,7 @@ public class Optic_Flow implements PlugIn, KeyListener
 		{
 			int yb = y + yo;
 			if ( yb < 0 || yb >= h )
-				yb = pingPong( yb, h );
+				yb = pingPong( yb, h - 1 );
 			final int yAdd = y * w;
 			final int ybAdd = yb * w;
 			
@@ -138,7 +207,7 @@ public class Optic_Flow implements PlugIn, KeyListener
 			{
 				int xb = x + xo;
 				if ( xb < 0 || xb >= w )
-					xb = pingPong( xb, w );
+					xb = pingPong( xb, w - 1 );
 				
 				final int i = yAdd + x;
 				final float d = bf[ ybAdd + xb ] - af[ i ];
@@ -147,10 +216,13 @@ public class Optic_Flow implements PlugIn, KeyListener
 		}
 	}
 	
-	final static ImageProcessor createOpticFlow( final FloatProcessor ip1, final FloatProcessor ip2 )
+	final static private void opticFlow(
+			final FloatProcessor ip1,
+			final FloatProcessor ip2,
+			final FloatProcessor r,
+			final FloatProcessor phi,
+			final ColorProcessor of )
 	{
-		final ImageProcessor of = new ColorProcessor( ip1.getWidth(), ip1.getHeight() );
-		
 		final ByteProcessor ipX = new ByteProcessor( ip1.getWidth(), ip1.getHeight() );
 		final ByteProcessor ipY = new ByteProcessor( ip1.getWidth(), ip1.getHeight() );
 		final FloatProcessor ipD = new FloatProcessor( ip1.getWidth(), ip1.getHeight() );
@@ -160,7 +232,7 @@ public class Optic_Flow implements PlugIn, KeyListener
 		for ( int i = 0; i < ipDMinInitPixels.length; ++i )
 			ipDMinInitPixels[ i ] = Float.MAX_VALUE;
 		
-		for ( byte yo = ( byte )-maxDistance; yo <= maxDistance; ++yo ) // HAHAHA!
+		for ( byte yo = ( byte )-maxDistance; yo <= maxDistance; ++yo )
 		{
 			for ( byte xo = ( byte )-maxDistance; xo <= maxDistance; ++xo )
 			{
@@ -189,14 +261,14 @@ public class Optic_Flow implements PlugIn, KeyListener
 				}
 			}
 		}
-		final byte[] ipXPixels = ( byte[] )ipX.getPixels();
-		final byte[] ipYPixels = ( byte[] )ipY.getPixels();
-		final int[] ipOfPixels = ( int[] )of.getPixels();
 		
-		for ( int i = 0; i < ipOfPixels.length; ++i )
-			ipOfPixels[ i ] = colorVector( ipXPixels[ i ], ipYPixels[ i ] );
-		
-		return of;
+		algebraicToPolarAndColor(
+				( byte[] )ipX.getPixels(),
+				( byte[] )ipY.getPixels(),
+				( float[] )r.getPixels(),
+				( float[] )phi.getPixels(),
+				( int[] )of.getPixels(),
+				maxDistance );
 	}
 	
 	final public void run( final String args )
@@ -229,12 +301,14 @@ public class Optic_Flow implements PlugIn, KeyListener
 		
 		
 		ImageStack seq = imp.getStack();
-		ImageStack seqOpticFlow = new ImageStack( seq.getWidth(), seq.getHeight() );
+		ImageStack seqOpticFlow = new ImageStack( imp.getWidth(), imp.getHeight(), seq.getSize() - 1 );
+		ImageStack seqFlowVectors = new ImageStack( imp.getWidth(), imp.getHeight(), 2 * seq.getSize() - 2 );
 		
 		FloatProcessor ip1;
 		FloatProcessor ip2 = ( FloatProcessor )seq.getProcessor( 1 ).convertToFloat();
 		
 		ImagePlus impOpticFlow = null;
+		CompositeImage impFlowVectors = null;
 		
 		for ( int i = 1; i < seq.getSize(); ++i )
 		{
@@ -243,18 +317,46 @@ public class Optic_Flow implements PlugIn, KeyListener
 			
 			IJ.log( "Processing slice " + i );
 			
-			seqOpticFlow.addSlice( "" + i, createOpticFlow( ip1, ip2 ) );
+			final FloatProcessor seqFlowVectorRSlice = new FloatProcessor( imp.getWidth(), imp.getHeight() );
+			final FloatProcessor seqFlowVectorPhiSlice = new FloatProcessor( imp.getWidth(), imp.getHeight() );
+			final ColorProcessor seqOpticFlowSlice = new ColorProcessor( imp.getWidth(), imp.getHeight() );
 			
-			if ( seqOpticFlow.getSize() == 1 )
+			opticFlow( ip1, ip2, seqFlowVectorRSlice, seqFlowVectorPhiSlice, seqOpticFlowSlice );
+			
+			seqFlowVectors.setPixels( seqFlowVectorRSlice.getPixels(), 2 * i - 1 );
+			seqFlowVectors.setSliceLabel( "r " + i, 2 * i - 1 );
+			seqFlowVectors.setPixels( seqFlowVectorPhiSlice.getPixels(), 2 * i );
+			seqFlowVectors.setSliceLabel( "phi " + i, 2 * i );
+			seqOpticFlow.setPixels( seqOpticFlowSlice.getPixels(), i );
+			seqOpticFlow.setSliceLabel( "" + i, i );
+			
+			if ( i == 1 )
 			{
 				impOpticFlow = new ImagePlus( imp.getTitle() + " optic flow", seqOpticFlow );
+				impOpticFlow.setOpenAsHyperStack( true );
+				impOpticFlow.setCalibration( imp.getCalibration() );
+				impOpticFlow.setDimensions( 1, 1, seq.getSize() - 1 );
 				impOpticFlow.show();
+				
+				final ImagePlus notYetComposite = new ImagePlus( imp.getTitle() + " flow vectors", seqFlowVectors );
+				notYetComposite.setOpenAsHyperStack( true );
+				notYetComposite.setCalibration( imp.getCalibration() );
+				notYetComposite.setDimensions( 2, 1, seq.getSize() - 1 );				
+				
+				impFlowVectors = new CompositeImage( notYetComposite, CompositeImage.GRAYSCALE );
+				impFlowVectors.setOpenAsHyperStack( true );
+				impFlowVectors.setDimensions( 2, 1, seq.getSize() - 1 );
+				impFlowVectors.show();
+				
+				impFlowVectors.setPosition( 1, 1, 1 );
+				impFlowVectors.setDisplayRange( 0, 1 );
+				impFlowVectors.setPosition( 2, 1, 1 );
+				impFlowVectors.setDisplayRange( -Math.PI, Math.PI );
 			}
-			else
-				impOpticFlow.setStack( null, seqOpticFlow );
 			
 			IJ.showProgress( i, seq.getSize() );
 			impOpticFlow.setSlice( i );
+			impFlowVectors.setPosition( 1, 1, i );
 			imp.setSlice( i + 1 );
 		}
 	}

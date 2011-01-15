@@ -2,10 +2,13 @@ package mpicbg.models;
 
 import java.util.Collection;
 
+import Jama.Matrix;
+import Jama.SingularValueDecomposition;
+
 import mpicbg.util.Matrix3x3;
 
 /**
- * 2d-homography {@link Model} to be applied to points in 2d-space.
+ * 2d-homography {@link AbstractModel} to be applied to points in 2d-space.
  * 
  * This code is partially based on the following book:
  * 
@@ -22,11 +25,20 @@ import mpicbg.util.Matrix3x3;
  * }
  * </pre>
  * 
+ * and the lecture notes:
+ * 
+ * CSE 252B: Computer Vision II
+ * Lecturer: Serge Belongie
+ * Scribe: Dave Berlin, Jefferson Ng
+ * LECTURE 2
+ * Homogeneous Linear Least Squares
+ * Problems, Two View Geometry
+ * 
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.3b
  * 
  */
-public class HomographyModel2D extends InvertibleModel< HomographyModel2D > implements InvertibleBoundable
+public class HomographyModel2D extends AbstractModel< HomographyModel2D > implements Model< HomographyModel2D >, InvertibleBoundable
 {
 	static final protected int MIN_NUM_MATCHES = 4;
 	
@@ -47,7 +59,7 @@ public class HomographyModel2D extends InvertibleModel< HomographyModel2D > impl
 		this.m01 = m01;
 		this.m02 = m02;
 		
-		this.m10 = m00;
+		this.m10 = m10;
 		this.m11 = m11;
 		this.m12 = m12;
 		
@@ -59,9 +71,9 @@ public class HomographyModel2D extends InvertibleModel< HomographyModel2D > impl
 	}
 	
 	protected float
-			i00, i01, i02,
-			i10, i11, i12,
-			i20, i21, i22;
+			i00 = 1, i01 = 0, i02 = 0,
+			i10 = 0, i11 = 1, i12 = 0,
+			i20 = 0, i21 = 0, i22 = 1;
 	
 	final private void invert()
 	{
@@ -83,7 +95,7 @@ public class HomographyModel2D extends InvertibleModel< HomographyModel2D > impl
 		i22 = ( m00 * m11 - m01 * m10 ) / det;
 	}
 	
-	final private float[] fitToUnitSquare(
+	final static private float[] fitToUnitSquare(
 		final float[] p1,
 		final float[] p2,
 		final float[] p3,
@@ -175,7 +187,7 @@ public class HomographyModel2D extends InvertibleModel< HomographyModel2D > impl
 		m01 = m.m01;
 		m02 = m.m02;
 		
-		m10 = m.m00;
+		m10 = m.m10;
 		m11 = m.m11;
 		m12 = m.m12;
 		
@@ -188,7 +200,7 @@ public class HomographyModel2D extends InvertibleModel< HomographyModel2D > impl
 		i01 = m.i01;
 		i02 = m.i02;
 		
-		i10 = m.i00;
+		i10 = m.i10;
 		i11 = m.i11;
 		i12 = m.i12;
 		
@@ -200,7 +212,7 @@ public class HomographyModel2D extends InvertibleModel< HomographyModel2D > impl
 	}
 	
 	@Override
-	final public HomographyModel2D clone()
+	final public HomographyModel2D copy()
 	{
 		final HomographyModel2D m = new HomographyModel2D();
 		
@@ -208,7 +220,7 @@ public class HomographyModel2D extends InvertibleModel< HomographyModel2D > impl
 		m.m01 = m01;
 		m.m02 = m02;
 		
-		m.m10 = m00;
+		m.m10 = m10;
 		m.m11 = m11;
 		m.m12 = m12;
 		
@@ -221,7 +233,7 @@ public class HomographyModel2D extends InvertibleModel< HomographyModel2D > impl
 		m.i01 = i01;
 		m.i02 = i02;
 		
-		m.i10 = i00;
+		m.i10 = i10;
 		m.i11 = i11;
 		m.i12 = i12;
 		
@@ -235,7 +247,7 @@ public class HomographyModel2D extends InvertibleModel< HomographyModel2D > impl
 	}
 
 	@Override
-	final public void fit( final Collection< PointMatch > matches ) throws NotEnoughDataPointsException, IllDefinedDataPointsException
+	final public < P extends PointMatch >void fit( final Collection< P > matches ) throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
 		if ( matches.size() < MIN_NUM_MATCHES ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d homography model, at least " + MIN_NUM_MATCHES + " data points required." );
 		
@@ -280,7 +292,58 @@ public class HomographyModel2D extends InvertibleModel< HomographyModel2D > impl
 				throw new IllDefinedDataPointsException();
 			}
 		}
-		else throw new NotEnoughDataPointsException( "Sorry---we did not implement an optimal homography solver for more than four correspondences.  If you have time, sit down and do it ;)" );
+		else
+		{
+			final int n = matches.size() * 2;
+			final double[][] a = new double[ n ][ 9 ];
+			int i = 0;
+			
+			for ( final P pm : matches )
+			{	
+				final float[] p = pm.getP1().getL();
+				final float[] q = pm.getP2().getW();
+				
+				final double px = p[ 0 ];
+				final double py = p[ 1 ];
+				final double qx = q[ 0 ];
+				final double qy = q[ 1 ];
+				
+				a[ i ][ 0 ] = -px;
+				a[ i ][ 1 ] = -py;
+				a[ i ][ 2 ] = -1;
+				a[ i ][ 6 ] = qx * px;
+				a[ i ][ 7 ] = qx * py;
+				a[ i++ ][ 8 ] = qx;
+				
+				a[ i ][ 3 ] = -px;
+				a[ i ][ 4 ] = -py;
+				a[ i ][ 5 ] = -1;
+				a[ i ][ 6 ] = qy * px;
+				a[ i ][ 7 ] = qy * py;
+				a[ i++ ][ 8 ] = qy;
+			}
+			
+			final Matrix mA = new Matrix( a );
+			final SingularValueDecomposition svd = new SingularValueDecomposition( mA );
+			final Matrix s = svd.getS();
+			final Matrix v = svd.getV();
+			
+			cost = s.get( 8, 8 );
+			
+			m00 = ( float )v.get( 0, 8 );
+			m01 = ( float )v.get( 1, 8 );
+			m02 = ( float )v.get( 2, 8 );
+			m10 = ( float )v.get( 3, 8 );
+			m11 = ( float )v.get( 4, 8 );
+			m12 = ( float )v.get( 5, 8 );
+			m20 = ( float )v.get( 6, 8 );
+			m21 = ( float )v.get( 7, 8 );
+			m22 = ( float )v.get( 8, 8 );
+			
+			invert();
+			
+//			throw new NotEnoughDataPointsException( "Sorry---we did not implement an optimal homography solver for more than four correspondences.  If you have time, sit down and do it ;)" );
+		}
 	}
 
 //	/**
@@ -300,13 +363,16 @@ public class HomographyModel2D extends InvertibleModel< HomographyModel2D > impl
 //				"| " + b[ 0 ][ 0 ] + " " + b[ 1 ][ 0 ] + " " + b[ 2 ][ 0 ] + " |\n" +
 //				"| " + b[ 0 ][ 1 ] + " " + b[ 1 ][ 1 ] + " " + b[ 2 ][ 1 ] + " |\n" +
 //				"| " + b[ 0 ][ 2 ] + " " + b[ 1 ][ 2 ] + " " + b[ 2 ][ 2 ] + " |" );
-		return "";
+		return 
+				"| " + m00 + " " + m01 + " " + m02 + " |\n" +
+				"| " + m10 + " " + m11 + " " + m12 + " |\n" +
+				"| " + m20 + " " + m21 + " " + m22 + " |";
 	}
 	
-	//@Override
+	@Override
 	public void estimateBounds( final float[] min, final float[] max )
 	{
-		assert min.length == 2 && max.length == 2 : "2d affine transformations can be applied to 2d points only.";
+		assert min.length == 2 && max.length == 2 : "2d homographies can be applied to 2d points only.";
 		
 		float minX = Float.MAX_VALUE, minY = Float.MAX_VALUE;
 		float maxX = -Float.MAX_VALUE, maxY = -Float.MAX_VALUE;
@@ -352,7 +418,7 @@ public class HomographyModel2D extends InvertibleModel< HomographyModel2D > impl
 		max[ 1 ] = maxY;
 	}
 	
-	//@Override
+	@Override
 	public void estimateInverseBounds( final float[] min, final float[] max ) throws NoninvertibleModelException
 	{
 		assert min.length == 2 && max.length == 2 : "2d affine transformations can be applied to 2d points only.";

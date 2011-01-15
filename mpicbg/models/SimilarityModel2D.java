@@ -98,7 +98,7 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 	 * \citet{SchaeferAl06} and implemented by Johannes Schindelin.
 	 */
 	@Override
-	final public void fit( final Collection< PointMatch > matches )
+	final public < P extends PointMatch >void fit( final Collection< P > matches )
 		throws NotEnoughDataPointsException
 	{
 		if ( matches.size() < MIN_NUM_MATCHES ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d rigid model, at least " + MIN_NUM_MATCHES + " data points required." );
@@ -108,7 +108,7 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 		
 		double ws = 0.0f;
 		
-		for ( final PointMatch m : matches )
+		for ( final P m : matches )
 		{
 			final float[] p = m.getP1().getL(); 
 			final float[] q = m.getP2().getW();
@@ -134,7 +134,7 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 		
 		ws = 0.0f;
 		
-		for ( final PointMatch m : matches )
+		for ( final P m : matches )
 		{
 			final float[] p = m.getP1().getL(); 
 			final float[] q = m.getP2().getW();
@@ -168,7 +168,7 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 //	}
 	
 	@Override
-	public SimilarityModel2D clone()
+	public SimilarityModel2D copy()
 	{
 		final SimilarityModel2D m = new SimilarityModel2D();
 		m.scos = scos;
@@ -299,5 +299,49 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 		ict.cost = cost;
 		
 		return ict;
+	}
+	
+	@Override
+	public void toArray( float[] data )
+	{
+		data[ 0 ] = scos;
+		data[ 1 ] = ssin;
+		data[ 2 ] = -ssin;
+		data[ 3 ] = scos;
+		data[ 4 ] = tx;
+		data[ 5 ] = ty;
+	}
+
+	@Override
+	public void toArray( double[] data )
+	{
+		data[ 0 ] = scos;
+		data[ 1 ] = ssin;
+		data[ 2 ] = -ssin;
+		data[ 3 ] = scos;
+		data[ 4 ] = tx;
+		data[ 5 ] = ty;
+	}
+
+	@Override
+	public void toMatrix( float[][] data )
+	{
+		data[ 0 ][ 0 ] = scos;
+		data[ 0 ][ 1 ] = -ssin;
+		data[ 0 ][ 2 ] = tx;
+		data[ 1 ][ 0 ] = ssin;
+		data[ 1 ][ 1 ] = scos;
+		data[ 1 ][ 1 ] = ty;
+	}
+
+	@Override
+	public void toMatrix( double[][] data )
+	{
+		data[ 0 ][ 0 ] = scos;
+		data[ 0 ][ 1 ] = -ssin;
+		data[ 0 ][ 2 ] = tx;
+		data[ 1 ][ 0 ] = ssin;
+		data[ 1 ][ 1 ] = scos;
+		data[ 1 ][ 1 ] = ty;
 	}
 }

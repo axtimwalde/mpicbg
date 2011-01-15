@@ -28,7 +28,7 @@ import java.util.Set;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.1b
  */
-public class MovingLeastSquaresMesh< M extends Model< M > > extends TransformMesh
+public class MovingLeastSquaresMesh< M extends AbstractModel< M > > extends TransformMesh
 {
 	/**
 	 * Tiles are a collection of PointMatches that share a common

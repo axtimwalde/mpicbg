@@ -639,7 +639,7 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 			List< Feature > fs1,
 			List< Feature > fs2,
 			float max_sd,
-			Model< ? > model,
+			AbstractModel< ? > model,
 			float max_id,
 			float rod )
 	{

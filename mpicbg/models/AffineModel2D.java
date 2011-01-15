@@ -96,7 +96,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	 * \citet{SchaeferAl06}.
 	 */
 	@Override
-	final public void fit( final Collection< PointMatch > matches )
+	final public < P extends PointMatch >void fit( final Collection< P > matches )
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
 		if ( matches.size() < MIN_NUM_MATCHES )
@@ -107,7 +107,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		
 		double ws = 0.0;
 		
-		for ( final PointMatch m : matches )
+		for ( final P m : matches )
 		{
 			final float[] p = m.getP1().getL(); 
 			final float[] q = m.getP2().getW(); 
@@ -128,7 +128,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		float a00, a01, a11;
 		float b00, b01, b10, b11;
 		a00 = a01 = a11 = b00 = b01 = b10 = b11 = 0;
-		for ( final PointMatch m : matches )
+		for ( final P m : matches )
 		{
 			final float[] p = m.getP1().getL();
 			final float[] q = m.getP2().getW();
@@ -161,15 +161,6 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		invert();
 	}
 
-//	/**
-//	 * TODO Not yet implemented ...
-//	 */
-//	@Override
-//	final public void shake( final float amount )
-//	{
-//		// TODO If you ever need it, please implement it...
-//	}
-
 	@Override
 	final public void set( final AffineModel2D m )
 	{
@@ -187,7 +178,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	}
 
 	@Override
-	public AffineModel2D clone()
+	public AffineModel2D copy()
 	{
 		AffineModel2D m = new AffineModel2D();
 		m.m00 = m00;
@@ -359,5 +350,49 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		ict.cost = cost;
 		
 		return ict;
+	}
+
+	@Override
+	public void toArray( float[] data )
+	{
+		data[ 0 ] = m00;
+		data[ 1 ] = m10;
+		data[ 2 ] = m01;
+		data[ 3 ] = m11;
+		data[ 4 ] = m02;
+		data[ 5 ] = m12;
+	}
+
+	@Override
+	public void toArray( double[] data )
+	{
+		data[ 0 ] = m00;
+		data[ 1 ] = m10;
+		data[ 2 ] = m01;
+		data[ 3 ] = m11;
+		data[ 4 ] = m02;
+		data[ 5 ] = m12;
+	}
+
+	@Override
+	public void toMatrix( float[][] data )
+	{
+		data[ 0 ][ 0 ] = m00;
+		data[ 0 ][ 1 ] = m01;
+		data[ 0 ][ 2 ] = m02;
+		data[ 1 ][ 0 ] = m10;
+		data[ 1 ][ 1 ] = m11;
+		data[ 1 ][ 1 ] = m12;
+	}
+
+	@Override
+	public void toMatrix( double[][] data )
+	{
+		data[ 0 ][ 0 ] = m00;
+		data[ 0 ][ 1 ] = m01;
+		data[ 0 ][ 2 ] = m02;
+		data[ 1 ][ 0 ] = m10;
+		data[ 1 ][ 1 ] = m11;
+		data[ 1 ][ 1 ] = m12;
 	}
 }

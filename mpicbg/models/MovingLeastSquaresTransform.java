@@ -32,10 +32,10 @@ import java.util.Set;
  */
 public class MovingLeastSquaresTransform implements CoordinateTransform
 {
-	protected Model< ? > model = null;
-	final public Model< ? > getModel(){ return model; }
-	final public void setModel( final Model< ? > model ){ this.model = model; }
-	final public void setModel( final Class< ? extends Model< ? > > modelClass ) throws Exception
+	protected AbstractModel< ? > model = null;
+	final public AbstractModel< ? > getModel(){ return model; }
+	final public void setModel( final AbstractModel< ? > model ){ this.model = model; }
+	final public void setModel( final Class< ? extends AbstractModel< ? > > modelClass ) throws Exception
 	{
 		model = modelClass.newInstance();
 	}

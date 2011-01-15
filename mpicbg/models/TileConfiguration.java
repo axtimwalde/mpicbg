@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 
+import mpicbg.util.RealSum;
+
 
 /**
  * A configuration of tiles.
@@ -204,15 +206,12 @@ public class TileConfiguration
 	 *   0.0001 (in double accuracy).  This is assumed to prevent the algorithm
 	 *   from stopping at plateaus smaller than this value.
 	 */
-	public void optimize(
+	public void optimizeSilently(
+			final ErrorStatistic observer,
 			final float maxAllowedError,
 			final int maxIterations,
 			final int maxPlateauwidth ) throws NotEnoughDataPointsException, IllDefinedDataPointsException 
 	{
-		println( "Optimizing..." );
-		
-		final ErrorStatistic observer = new ErrorStatistic( maxPlateauwidth + 1 );
-		
 		int i = 0;
 		
 		boolean proceed = i < maxIterations;
@@ -221,7 +220,7 @@ public class TileConfiguration
 		apply();
 		
 		
-		println( "i mean min max" );
+//		println( "i mean min max" );
 		
 		while ( proceed )
 		{
@@ -250,14 +249,115 @@ public class TileConfiguration
 				}
 			}
 			
-			println( new StringBuffer( i + " " ).append( error ).append( " " ).append( minError ).append( " " ).append( maxError ).toString() );
+//			println( new StringBuffer( i + " " ).append( error ).append( " " ).append( minError ).append( " " ).append( maxError ).toString() );
 			
 			proceed &= ++i < maxIterations;
 		}
+	}
+	
+	/**
+	 * Minimize the displacement of all {@link PointMatch Correspondence pairs}
+	 * of all {@link Tile Tiles} and tell about it.
+	 *   
+	 * @param maxAllowedError
+	 * @param maxIterations
+	 * @param maxPlateauwidth
+	 * @throws NotEnoughDataPointsException
+	 * @throws IllDefinedDataPointsException
+	 */
+	public void optimize(
+			final float maxAllowedError,
+			final int maxIterations,
+			final int maxPlateauwidth ) throws NotEnoughDataPointsException, IllDefinedDataPointsException 
+	{
+		final ErrorStatistic observer = new ErrorStatistic( maxPlateauwidth + 1 );
 		
-		println( new StringBuffer( "Successfully optimized configuration of " ).append( tiles.size() ).append( " tiles after " ).append( i ).append( " iterations:" ).toString() );
+		optimize( observer, maxAllowedError, maxIterations, maxPlateauwidth );
+	}
+	
+	/**
+	 * Minimize the displacement of all {@link PointMatch Correspondence pairs}
+	 * of all {@link Tile Tiles} and tell about it.
+	 *   
+	 * @param maxAllowedError
+	 * @param maxIterations
+	 * @param maxPlateauwidth
+	 * @throws NotEnoughDataPointsException
+	 * @throws IllDefinedDataPointsException
+	 */
+	public void optimize(
+			final ErrorStatistic observer,
+			final float maxAllowedError,
+			final int maxIterations,
+			final int maxPlateauwidth ) throws NotEnoughDataPointsException, IllDefinedDataPointsException 
+	{
+		println( "Optimizing..." );
+		
+		optimizeSilently( observer, maxAllowedError, maxIterations, maxPlateauwidth );
+		
+		println( new StringBuffer( "Successfully optimized configuration of " ).append( tiles.size() ).append( " tiles after " ).append( observer.n() ).append( " iterations:" ).toString() );
 		println( new StringBuffer( "  average displacement: " ).append( decimalFormat.format( error ) ).append( "px" ).toString() );
 		println( new StringBuffer( "  minimal displacement: " ).append( decimalFormat.format( minError ) ).append( "px" ).toString() );
 		println( new StringBuffer( "  maximal displacement: " ).append( decimalFormat.format( maxError ) ).append( "px" ).toString() );
+	}
+	
+	
+	public void optimizeAndFilter(
+			final float maxAllowedError,
+			final int maxIterations,
+			final int maxPlateauwidth,
+			final float maxMeanFactor ) throws NotEnoughDataPointsException, IllDefinedDataPointsException
+	{
+		boolean proceed = true;
+		while ( proceed )
+		{
+			final ErrorStatistic observer = new ErrorStatistic( maxPlateauwidth + 1 );
+			
+			optimize( observer, maxAllowedError, maxIterations, maxPlateauwidth );
+			
+			/* get all transfer errors */
+			final RealSum sum = new RealSum();
+			final RealSum weights = new RealSum();
+			
+			float dMax = 0;
+			
+			for ( final Tile< ? > t : tiles )
+				t.update();
+			
+			for ( final Tile< ? > t : tiles )
+			{
+				for ( final PointMatch p : t.getMatches() )
+				{
+					final float d = p.getDistance();
+					final float w = p.getWeight();
+					sum.add( d * w  );
+					weights.add( w );
+					if ( d > dMax ) dMax = d;
+				}
+			}
+			
+			println( "Filter outliers..." );
+			
+			/* remove the worst if there is one */
+			if ( dMax > maxMeanFactor * sum.getSum() / weights.getSum() )
+			{
+A:				for ( final Tile< ? > t : tiles )
+				{
+					for ( final PointMatch p : t.getMatches() )
+					{
+						if ( p.getDistance() >= dMax )
+						{
+							final Tile< ? > o = t.findConnectedTile( p );
+							t.removeConnectedTile( o );
+							o.removeConnectedTile( t );
+							println( "Removing bad tile connection from configuration, error = " + dMax );
+							break A;
+						}
+					}
+				}
+			}
+			else	
+				proceed = false;
+		}
 	}
 }

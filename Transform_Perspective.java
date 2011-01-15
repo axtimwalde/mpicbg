@@ -13,8 +13,8 @@ public class Transform_Perspective extends InteractiveInvertibleCoordinateTransf
 	@Override
 	final protected void setHandles()
 	{
-		int[] x = new int[]{ target.getWidth() / 4, 3 * target.getWidth() / 4, 3 * target.getWidth() / 4, target.getWidth() / 4 };
-		int[] y = new int[]{ target.getHeight() / 4, target.getHeight() / 4, 3 * target.getHeight() / 4, 3 * target.getHeight() / 4 };
+		int[] x = new int[]{ imp.getWidth() / 4, 3 * imp.getWidth() / 4, 3 * imp.getWidth() / 4, imp.getWidth() / 4 };
+		int[] y = new int[]{ imp.getHeight() / 4, imp.getHeight() / 4, 3 * imp.getHeight() / 4, 3 * imp.getHeight() / 4 };
 		
 		p = new Point[]{
 				new Point( new float[]{ ( float )x[ 0 ], ( float )y[ 0 ] } ),

@@ -118,7 +118,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		/**
 		 * Implemeted transformation models for choice
 		 */
-		final static public String[] modelStrings = new String[]{ "Translation", "Rigid", "Similarity", "Affine" };
+		final static public String[] modelStrings = new String[]{ "Translation", "Rigid", "Similarity", "Affine", "Perspective" };
 		public int modelIndex = 1;
 	}
 	
@@ -232,7 +232,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		IJ.log( "Filtering correspondence candidates by geometric consensus ..." );
 		List< PointMatch > inliers = new ArrayList< PointMatch >();
 		
-		Model< ? > model;
+		AbstractModel< ? > model;
 		switch ( p.modelIndex )
 		{
 		case 0:
@@ -246,6 +246,9 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 			break;
 		case 3:
 			model = new AffineModel2D();
+			break;
+		case 4:
+			model = new HomographyModel2D();
 			break;
 		default:
 			return;

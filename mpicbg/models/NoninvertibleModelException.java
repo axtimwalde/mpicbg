@@ -3,7 +3,7 @@ package mpicbg.models;
 import java.lang.Exception;
 
 /**
- * Signalizes that a {@link Model} is not invertible.
+ * Signalizes that a {@link AbstractModel} is not invertible.
  * 
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.1b

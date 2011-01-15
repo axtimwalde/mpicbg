@@ -16,17 +16,17 @@ import mpicbg.util.Util;
 public class CoordinateTransformList< E extends CoordinateTransform > implements Boundable, TransformList< E >
 {
 
-	final protected List< E > l = new ArrayList< E >();
+	final protected List< E > transforms = new ArrayList< E >();
 	
-	final public void add( E t ){ l.add( t ); }
-	final public void remove( E t ){ l.remove( t ); }
-	final public E remove( int i ){ return l.remove( i ); }
-	final public E get( int i ){ return l.get( i ); }
-	final public void clear(){ l.clear(); }
+	final public void add( E t ){ transforms.add( t ); }
+	final public void remove( E t ){ transforms.remove( t ); }
+	final public E remove( int i ){ return transforms.remove( i ); }
+	final public E get( int i ){ return transforms.get( i ); }
+	final public void clear(){ transforms.clear(); }
 	final public List< E > getList( final List< E > preAllocatedList )
 	{
 		final List< E > returnList = ( preAllocatedList == null ) ? new ArrayList< E >() : preAllocatedList;
-		returnList.addAll( l );
+		returnList.addAll( transforms );
 		return returnList;
 	}
 	
@@ -41,7 +41,7 @@ public class CoordinateTransformList< E extends CoordinateTransform > implements
 	//@Override
 	final public void applyInPlace( final float[] location )
 	{
-		for ( final E t : l )
+		for ( final E t : transforms )
 			t.applyInPlace( location );
 	}
 	

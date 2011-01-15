@@ -8,7 +8,7 @@ import java.awt.geom.AffineTransform;
  * @version 0.2b
  * 
  */
-public abstract class AbstractAffineModel2D< M extends AbstractAffineModel2D< M > > extends InvertibleModel< M > implements InvertibleBoundable
+public abstract class AbstractAffineModel2D< M extends AbstractAffineModel2D< M > > extends AbstractModel< M > implements InvertibleBoundable, InvertibleCoordinateTransform, Affine2D< M >
 {
 	/**
 	 * Create an {@link AffineTransform} representing the current parameters

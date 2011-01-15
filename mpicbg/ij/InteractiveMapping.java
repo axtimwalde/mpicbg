@@ -18,6 +18,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * An interactive parent class for point based image deformation.
@@ -41,6 +42,7 @@ public abstract class InteractiveMapping implements PlugIn, MouseListener, Mouse
 	
 	protected Mapping mapping;
 	protected MappingThread painter;
+	final protected AtomicBoolean pleaseRepaint = new AtomicBoolean( false );
 	
 	static protected boolean showIllustration = false;
 	static protected boolean showPreview = false;
@@ -74,6 +76,7 @@ public abstract class InteractiveMapping implements PlugIn, MouseListener, Mouse
 				imp,
 				source,
 				target,
+				pleaseRepaint,
 				mapping,
 				interpolate );
 		painter.start();
@@ -182,7 +185,12 @@ public abstract class InteractiveMapping implements PlugIn, MouseListener, Mouse
 			try
 			{
 				updateMapping();
-				painter.repaint();
+				synchronized ( painter )
+				{
+					//if ( !pleaseRepaint.getAndSet( true ) )
+					pleaseRepaint.set( true );
+					painter.notify();
+				}
 			}
 			catch ( NotEnoughDataPointsException ex ){}
 			catch ( IllDefinedDataPointsException ex ){}
@@ -208,7 +216,12 @@ public abstract class InteractiveMapping implements PlugIn, MouseListener, Mouse
 				updateMapping();
 				if ( showPreview )
 				{
-					painter.repaint();
+					synchronized ( painter )
+					{
+						//if ( !pleaseRepaint.getAndSet( true ) )
+						pleaseRepaint.set( true );
+						painter.notify();
+					}
 				}
 			}
 			catch ( NotEnoughDataPointsException ex ){}

@@ -1,9 +1,10 @@
 javaVersion=1.5
-all <- mpicbg_.jar
+all <- mpicbg_.jar clahe_.jar
 
 mpicbg.jar <- \
 	mpicbg/ij/*.java \
 	mpicbg/ij/blockmatching/*.java \
+	mpicbg/ij/clahe/*.java \
 	mpicbg/ij/stack/*.java \
 	mpicbg/ij/util/*.java \
 	mpicbg/ij/visualization/*.java \
@@ -12,7 +13,7 @@ mpicbg.jar <- \
 	mpicbg/util/*.java \
 	LICENSE
 
-CLASSPATH(mpicbg_.jar)=mpicbg.jar
+CLASSPATH(mpicbg_.jar)=$CLASSPATH:mpicbg.jar
 mpicbg_.jar <- \
 	mpicbg/ij/plugin/*.java \
 	Align_SIFT_BlockMatching_ElasticMeshStack.java \
@@ -33,3 +34,17 @@ mpicbg_.jar <- \
 	plugins.config \
 	LICENSE
 
+clahe_.jar <- \
+	mpicbg/ij/clahe/Apply.java \
+	mpicbg/ij/clahe/ByteApply.java \
+	mpicbg/ij/clahe/FastByteApply.java \
+	mpicbg/ij/clahe/FastFlat.java \
+	mpicbg/ij/clahe/Flat.java \
+	mpicbg/ij/clahe/FloatApply.java \
+	mpicbg/ij/clahe/PlugIn.java \
+	mpicbg/ij/clahe/RGBApply.java \
+	mpicbg/ij/clahe/ShortApply.java \
+	mpicbg/ij/clahe/Util.java \
+	mpicbg/util/Util.java \
+	plugins.config[clahe.config] \
+	LICENSE[LICENSE.GPL]

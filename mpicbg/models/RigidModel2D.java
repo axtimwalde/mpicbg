@@ -90,7 +90,7 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	 * \citet{SchaeferAl06} and implemented by Johannes Schindelin.
 	 */
 	@Override
-	final public void fit( final Collection< PointMatch > matches )
+	final public < P extends PointMatch >void fit( final Collection< P > matches )
 		throws NotEnoughDataPointsException
 	{
 		if ( matches.size() < MIN_NUM_MATCHES ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d rigid model, at least " + MIN_NUM_MATCHES + " data points required." );
@@ -100,7 +100,7 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 		
 		double ws = 0.0f;
 		
-		for ( final PointMatch m : matches )
+		for ( final P m : matches )
 		{
 			final float[] p = m.getP1().getL(); 
 			final float[] q = m.getP2().getW();
@@ -123,7 +123,7 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 		
 		cos = 0;
 		sin = 0;
-		for ( final PointMatch m : matches )
+		for ( final P m : matches )
 		{
 			final float[] p = m.getP1().getL(); 
 			final float[] q = m.getP2().getW();
@@ -156,7 +156,7 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 //	}
 	
 	@Override
-	public RigidModel2D clone()
+	public RigidModel2D copy()
 	{
 		final RigidModel2D m = new RigidModel2D();
 		m.cos = cos;
@@ -275,5 +275,49 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 		ict.cost = cost;
 		
 		return ict;
+	}
+
+	@Override
+	public void toArray( float[] data )
+	{
+		data[ 0 ] = cos;
+		data[ 1 ] = sin;
+		data[ 2 ] = -sin;
+		data[ 3 ] = cos;
+		data[ 4 ] = tx;
+		data[ 5 ] = ty;
+	}
+
+	@Override
+	public void toArray( double[] data )
+	{
+		data[ 0 ] = cos;
+		data[ 1 ] = sin;
+		data[ 2 ] = -sin;
+		data[ 3 ] = cos;
+		data[ 4 ] = tx;
+		data[ 5 ] = ty;
+	}
+
+	@Override
+	public void toMatrix( float[][] data )
+	{
+		data[ 0 ][ 0 ] = cos;
+		data[ 0 ][ 1 ] = -sin;
+		data[ 0 ][ 2 ] = tx;
+		data[ 1 ][ 0 ] = sin;
+		data[ 1 ][ 1 ] = cos;
+		data[ 1 ][ 1 ] = ty;
+	}
+
+	@Override
+	public void toMatrix( double[][] data )
+	{
+		data[ 0 ][ 0 ] = cos;
+		data[ 0 ][ 1 ] = -sin;
+		data[ 0 ][ 2 ] = tx;
+		data[ 1 ][ 0 ] = sin;
+		data[ 1 ][ 1 ] = cos;
+		data[ 1 ][ 1 ] = ty;
 	}
 }

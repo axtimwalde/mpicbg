@@ -100,6 +100,32 @@ public class Point implements Serializable
 	}
 	
 	/**
+	 * Estimate the square distance of local and world coordinates.
+	 *  
+	 * @return square distance
+	 */
+	public float squareDistance()
+	{
+		double sum = 0.0;
+		for ( int i = 0; i < l.length; ++i )
+		{
+			final double d = w[ i ] - l[ i ];
+			sum += d * d;
+		}
+		return ( float )sum;
+	}
+	
+	/**
+	 * Estimate the Euclidean distance of local and world coordinates.
+	 *  
+	 * @return square distance
+	 */
+	public float distance()
+	{
+		return ( float )Math.sqrt( squareDistance() );
+	}
+	
+	/**
 	 * Estimate the square distance of two {@link Point Points} in the world.
 	 *  
 	 * @param p1

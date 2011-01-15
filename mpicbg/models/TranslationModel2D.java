@@ -4,7 +4,7 @@ import java.awt.geom.AffineTransform;
 import java.util.Collection;
 
 /**
- * 2d-translation {@link Model} to be applied to points in 2d-space.
+ * 2d-translation {@link AbstractModel} to be applied to points in 2d-space.
  * 
  * @version 0.2b
  */
@@ -23,7 +23,7 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 	@Override
 	final public AffineTransform createInverseAffine(){ return new AffineTransform( 1, 0, 0, 1, -tx, -ty ); }
 	
-	//@Override
+	@Override
 	final public float[] apply( final float[] l )
 	{
 		assert l.length == 2 : "2d translation transformations can be applied to 2d points only.";
@@ -31,7 +31,7 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 		return new float[]{ l[ 0 ] + tx, l[ 1 ] + ty };
 	}
 	
-	//@Override
+	@Override
 	final public void applyInPlace( final float[] l )
 	{
 		assert l.length == 2 : "2d translation transformations can be applied to 2d points only.";
@@ -40,7 +40,7 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 		l[ 1 ] += ty;
 	}
 	
-	//@Override
+	@Override
 	final public float[] applyInverse( final float[] l )
 	{
 		assert l.length == 2 : "2d translation transformations can be applied to 2d points only.";
@@ -48,7 +48,7 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 		return new float[]{ l[ 0 ] - tx, l[ 1 ] - ty };
 	}
 
-	//@Override
+	@Override
 	final public void applyInverseInPlace( final float[] l )
 	{
 		assert l.length == 2 : "2d translation transformations can be applied to 2d points only.";
@@ -58,7 +58,7 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 	}
 	
 	@Override
-	final public void fit( final Collection< PointMatch > matches ) throws NotEnoughDataPointsException
+	final public < P extends PointMatch >void fit( final Collection< P > matches ) throws NotEnoughDataPointsException
 	{
 		if ( matches.size() < MIN_NUM_MATCHES ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d translation model, at least " + MIN_NUM_MATCHES + " data points required." );
 		
@@ -68,7 +68,7 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 		
 		float ws = 0.0f;
 		
-		for ( final PointMatch m : matches )
+		for ( final P m : matches )
 		{
 			final float[] p = m.getP1().getL(); 
 			final float[] q = m.getP2().getW(); 
@@ -98,7 +98,7 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 //	}
 
 	@Override
-	public TranslationModel2D clone()
+	public TranslationModel2D copy()
 	{
 		final TranslationModel2D m = new TranslationModel2D();
 		m.tx = tx;
@@ -159,5 +159,49 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 		ict.cost = cost;
 		
 		return ict;
+	}
+	
+	@Override
+	public void toArray( float[] data )
+	{
+		data[ 0 ] = 1;
+		data[ 1 ] = 0;
+		data[ 2 ] = 1;
+		data[ 3 ] = 0;
+		data[ 4 ] = tx;
+		data[ 5 ] = ty;
+	}
+
+	@Override
+	public void toArray( double[] data )
+	{
+		data[ 0 ] = 1;
+		data[ 1 ] = 0;
+		data[ 2 ] = 1;
+		data[ 3 ] = 0;
+		data[ 4 ] = tx;
+		data[ 5 ] = ty;
+	}
+
+	@Override
+	public void toMatrix( float[][] data )
+	{
+		data[ 0 ][ 0 ] = 1;
+		data[ 0 ][ 1 ] = 0;
+		data[ 0 ][ 2 ] = tx;
+		data[ 1 ][ 0 ] = 0;
+		data[ 1 ][ 1 ] = 1;
+		data[ 1 ][ 1 ] = ty;
+	}
+
+	@Override
+	public void toMatrix( double[][] data )
+	{
+		data[ 0 ][ 0 ] = 1;
+		data[ 0 ][ 1 ] = 0;
+		data[ 0 ][ 2 ] = tx;
+		data[ 1 ][ 0 ] = 0;
+		data[ 1 ][ 1 ] = 1;
+		data[ 1 ][ 1 ] = ty;
 	}
 }

@@ -7,7 +7,7 @@ import java.util.Collection;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.2b
  */
-public class TranslationModel3D extends InvertibleModel< TranslationModel3D > implements InvertibleBoundable
+public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3D > implements InvertibleBoundable
 {
 	static final protected int MIN_NUM_MATCHES = 1;
 	
@@ -17,7 +17,7 @@ public class TranslationModel3D extends InvertibleModel< TranslationModel3D > im
 	final protected float[] translation = new float[ 3 ];
 	final public float[] getTranslation(){ return translation; }
 	
-	//@Override
+	@Override
 	final public float[] apply( final float[] point )
 	{
 		assert point.length == 3 : "3d translations can be applied to 3d points only.";
@@ -28,7 +28,7 @@ public class TranslationModel3D extends InvertibleModel< TranslationModel3D > im
 			point[ 2 ] + translation[ 2 ] };
 	}
 	
-	//@Override
+	@Override
 	final public void applyInPlace( final float[] point )
 	{
 		assert point.length == 3 : "3d translations can be applied to 3d points only.";
@@ -38,7 +38,7 @@ public class TranslationModel3D extends InvertibleModel< TranslationModel3D > im
 		point[ 2 ] += translation[ 2 ];
 	}
 	
-	//@Override
+	@Override
 	final public float[] applyInverse( final float[] point )
 	{
 		assert point.length == 3 : "3d translations can be applied to 3d points only.";
@@ -49,7 +49,7 @@ public class TranslationModel3D extends InvertibleModel< TranslationModel3D > im
 				point[ 2 ] - translation[ 2 ] };
 	}
 
-	//@Override
+	@Override
 	final public void applyInverseInPlace( final float[] point )
 	{
 		assert point.length == 3 : "3d translations can be applied to 3d points only.";
@@ -67,7 +67,7 @@ public class TranslationModel3D extends InvertibleModel< TranslationModel3D > im
 	}
 
 	@Override
-	final public void fit( final Collection< PointMatch > matches ) throws NotEnoughDataPointsException
+	final public < P extends PointMatch >void fit( final Collection< P > matches ) throws NotEnoughDataPointsException
 	{
 		if ( matches.size() < MIN_NUM_MATCHES ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 3d translation model, at least " + MIN_NUM_MATCHES + " data points required." );
 		
@@ -77,7 +77,7 @@ public class TranslationModel3D extends InvertibleModel< TranslationModel3D > im
 		
 		double ws = 0.0;
 		
-		for ( final PointMatch m : matches )
+		for ( final P m : matches )
 		{
 			final float[] p = m.getP1().getL(); 
 			final float[] q = m.getP2().getW(); 
@@ -129,7 +129,7 @@ public class TranslationModel3D extends InvertibleModel< TranslationModel3D > im
 		cost = m.getCost();
 	}
 	
-	public TranslationModel3D clone()
+	public TranslationModel3D copy()
 	{
 		final TranslationModel3D m = new TranslationModel3D();
 		m.translation[ 0 ] = translation[ 0 ];
@@ -167,4 +167,111 @@ public class TranslationModel3D extends InvertibleModel< TranslationModel3D > im
 		applyInverseInPlace( min );
 		applyInverseInPlace( max );		
 	}
+
+	@Override
+	public void preConcatenate( final TranslationModel3D model )  { concatenate( model ); }
+
+	@Override
+	public void concatenate( final TranslationModel3D model ) 
+	{
+		translation[ 0 ] += model.translation[ 0 ];
+		translation[ 1 ] += model.translation[ 1 ];
+		translation[ 2 ] += model.translation[ 2 ];
+	}
+
+	@Override
+	public void toArray( final float[] data ) 
+	{
+		data[ 0 ] = 0;
+		data[ 1 ] = 0;
+		data[ 2 ] = 0;
+		data[ 3 ] = 0;
+		data[ 4 ] = 0;
+		data[ 5 ] = 0;
+		data[ 6 ] = 0;
+		data[ 7 ] = 0;
+		data[ 8 ] = 0;
+		data[ 9 ] = translation[ 0 ];
+		data[ 10 ] = translation[ 1 ];
+		data[ 11 ] = translation[ 2 ];
+	}
+
+	@Override
+	public void toArray( final double[] data ) 
+	{
+		data[ 0 ] = 0;
+		data[ 1 ] = 0;
+		data[ 2 ] = 0;
+		data[ 3 ] = 0;
+		data[ 4 ] = 0;
+		data[ 5 ] = 0;
+		data[ 6 ] = 0;
+		data[ 7 ] = 0;
+		data[ 8 ] = 0;
+		data[ 9 ] = translation[ 0 ];
+		data[ 10 ] = translation[ 1 ];
+		data[ 11 ] = translation[ 2 ];
+	}
+	
+	@Override
+	public float[] getMatrix( final float[] m )
+	{
+		final float[] a;
+		if ( m == null || m.length != 12 )
+			a = new float[ 12 ];
+		else
+			a = m;
+		
+		a[ 0 ] = 0;
+		a[ 1 ] = 0;
+		a[ 2 ] = 0;
+		a[ 3 ] = translation[ 0 ];
+		
+		a[ 4 ] = 0;
+		a[ 5 ] = 0;
+		a[ 6 ] = 0;
+		a[ 7 ] = translation[ 1 ];
+		
+		a[ 8 ] = 0;
+		a[ 9 ] = 0;
+		a[ 10 ] = 0;
+		a[ 11 ] = translation[ 2 ];
+		
+		return a;
+	}
+
+	@Override
+	public void toMatrix( final float[][] data ) 
+	{
+		data[ 0 ][ 0 ] = 0;
+		data[ 0 ][ 1 ] = 0;
+		data[ 0 ][ 2 ] = 0;
+		data[ 0 ][ 3 ] = translation[ 0 ];
+		data[ 1 ][ 0 ] = 0;
+		data[ 1 ][ 1 ] = 0;
+		data[ 1 ][ 2 ] = 0;
+		data[ 1 ][ 3 ] = translation[ 1 ];
+		data[ 2 ][ 0 ] = 0;
+		data[ 2 ][ 1 ] = 0;
+		data[ 2 ][ 2 ] = 0;
+		data[ 2 ][ 3 ] = translation[ 2 ];
+	}
+
+	@Override
+	public void toMatrix( final double[][] data ) 
+	{
+		data[ 0 ][ 0 ] = 0;
+		data[ 0 ][ 1 ] = 0;
+		data[ 0 ][ 2 ] = 0;
+		data[ 0 ][ 3 ] = translation[ 0 ];
+		data[ 1 ][ 0 ] = 0;
+		data[ 1 ][ 1 ] = 0;
+		data[ 1 ][ 2 ] = 0;
+		data[ 1 ][ 3 ] = translation[ 1 ];
+		data[ 2 ][ 0 ] = 0;
+		data[ 2 ][ 1 ] = 0;
+		data[ 2 ][ 2 ] = 0;
+		data[ 2 ][ 3 ] = translation[ 2 ];
+	}
+
 }

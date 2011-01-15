@@ -1,43 +1,38 @@
 package mpicbg.models;
-
+/**
+ * License: GPL
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License 2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * 
+ * @author Johannes Schindelin, Stephan Preibisch <preibisch@mpi-cbg.de>
+ *
+ */
 import java.util.Collection;
 
 import mpicbg.util.Matrix3x3;
+import Jama.EigenvalueDecomposition;
+import Jama.Matrix;
 
-/**
- * 3d-affine transformation models to be applied to points in 3d-space.
- * This model includes the closed form weighted least squares solution as
- * described by \citet{SchaeferAl06} transferred to 3d  
- * 
- * BibTeX:
- * <pre>
- * &#64;article{SchaeferAl06,
- *   author    = {Scott Schaefer and Travis McPhail and Joe Warren},
- *   title     = {Image deformation using moving least squares},
- *   journal   = {ACM Transactions on Graphics},
- *   volume    = {25},
- *   number    = {3},
- *   year      = {2006},
- *   pages     = {533--540},
- *   publisher = {ACM},
- *   address   = {New York, NY, USA},
- *   url       = {http://faculty.cs.tamu.edu/schaefer/research/mls.pdf},
- * }
- * </pre>
- * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de> and Johannes Schindelin
- * @version 0.1b
- * 
- */
-public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implements InvertibleBoundable
+public class RigidModel3D extends AbstractAffineModel3D< RigidModel3D > implements InvertibleBoundable
 {
-	static final protected int MIN_NUM_MATCHES = 4;
+	static final protected int MIN_NUM_MATCHES = 3;
 	
 	protected float
-		m00 = 1.0f, m01 = 0.0f, m02 = 0.0f, m03 = 0.0f, 
-		m10 = 0.0f, m11 = 1.0f, m12 = 0.0f, m13 = 0.0f, 
-		m20 = 0.0f, m21 = 0.0f, m22 = 1.0f, m23 = 0.0f;
-	
+	m00 = 1.0f, m01 = 0.0f, m02 = 0.0f, m03 = 0.0f, 
+	m10 = 0.0f, m11 = 1.0f, m12 = 0.0f, m13 = 0.0f, 
+	m20 = 0.0f, m21 = 0.0f, m22 = 1.0f, m23 = 0.0f;
+
 	protected float
 		i00 = 1.0f, i01 = 0.0f, i02 = 0.0f, i03 = 0.0f, 
 		i10 = 0.0f, i11 = 1.0f, i12 = 0.0f, i13 = 0.0f, 
@@ -69,7 +64,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 		
 		return a;
 	}
-
+	
 	protected boolean isInvertible = true;
 	
 	@Override
@@ -102,8 +97,8 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 		applyInverseInPlace( transformed );
 		return transformed;
 	}
-
-
+	
+	
 	@Override
 	final public void applyInverseInPlace( final float[] l ) throws NoninvertibleModelException
 	{
@@ -120,131 +115,131 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 		else
 			throw new NoninvertibleModelException( "Model not invertible." );
 	}
-	
-	/**
-	 * Closed form weighted least squares solution as described by
-	 * \citet{SchaeferAl06}.
-	 */
+
 	@Override
-	final public < P extends PointMatch >void fit( final Collection< P > matches )
-		throws NotEnoughDataPointsException, IllDefinedDataPointsException
+	final public String toString()
 	{
-		if ( matches.size() < MIN_NUM_MATCHES )
-			throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
+		return
+			"3d-rigid: (" +
+			m00 + ", " + m01 + ", " + m02 + ", " + m03 + ", " +
+			m10 + ", " + m11 + ", " + m12 + ", " + m13 + ", " +
+			m20 + ", " + m21 + ", " + m22 + ", " + m23 + ")";
+	}
+
+	@Override
+	final public <P extends PointMatch> void fit( final Collection< P > matches ) throws NotEnoughDataPointsException, IllDefinedDataPointsException
+	{
+		if ( matches.size() < MIN_NUM_MATCHES ) 
+			throw new NotEnoughDataPointsException( 
+					matches.size() + " data points are not enough to estimate a 3d rigid transformation model, at least " + MIN_NUM_MATCHES + " data points required." );
 		
 		float pcx = 0, pcy = 0, pcz = 0;
 		float qcx = 0, qcy = 0, qcz = 0;
 		
-		double ws = 0.0;
+		float sumW = 0;
 		
-		for ( final P m : matches )
+		for ( final P pm : matches )
 		{
-			final float[] p = m.getP1().getL(); 
-			final float[] q = m.getP2().getW(); 
+			final float[] p1 = pm.getP1().getL();
+			final float[] p2 = pm.getP2().getL();
+			final float w = pm.getWeight();
 			
-			final float w = m.getWeight();
-			ws += w;
-			
-			pcx += w * p[ 0 ];
-			pcy += w * p[ 1 ];
-			pcz += w * p[ 2 ];
-			qcx += w * q[ 0 ];
-			qcy += w * q[ 1 ];
-			qcz += w * q[ 2 ];
+			pcx += p1[ 0 ] * w;
+			pcy += p1[ 1 ] * w;
+			pcz += p1[ 2 ] * w;
+			qcx += p2[ 0 ] * w;
+			qcy += p2[ 1 ] * w;
+			qcz += p2[ 2 ] * w;
+			sumW += w;			
 		}
-		pcx /= ws;
-		pcy /= ws;
-		pcz /= ws;
-		qcx /= ws;
-		qcy /= ws;
-		qcz /= ws;
-		
-		float
-			a00, a01, a02,
-			     a11, a12,
-			          a22;
-		float
-			b00, b01, b02,
-			b10, b11, b12,
-			b20, b21, b22;
-		
-		a00 = a01 = a02 = a11 = a12 = a22 = b00 = b01 = b02 = b10 = b11 = b12 = b20 = b21 = b22 = 0;
-		for ( final P m : matches )
+
+		pcx /= sumW;
+		pcy /= sumW;
+		pcz /= sumW;
+		qcx /= sumW;
+		qcy /= sumW;
+		qcz /= sumW;
+
+		// calculate N
+		float Sxx = 0, Sxy = 0, Sxz = 0, Syx = 0, Syy = 0, Syz = 0, Szx = 0, Szy = 0, Szz = 0;
+
+		for ( final P pm : matches )
 		{
-			final float[] p = m.getP1().getL();
-			final float[] q = m.getP2().getW();
-			final float w = m.getWeight();
-			
-			final float px = p[ 0 ] - pcx, py = p[ 1 ] - pcy, pz = p[ 2 ] - pcz;
-			final float qx = q[ 0 ] - qcx, qy = q[ 1 ] - qcy, qz = q[ 2 ] - qcz;
-			a00 += w * px * px;
-			a01 += w * px * py;
-			a02 += w * px * pz;
-			a11 += w * py * py;
-			a12 += w * py * pz;
-			a22 += w * pz * pz;
-			
-			b00 += w * px * qx;
-			b01 += w * px * qy;
-			b02 += w * px * qz;	
-			b10 += w * py * qx;
-			b11 += w * py * qy;
-			b12 += w * py * qz;
-			b20 += w * pz * qx;
-			b21 += w * pz * qy;
-			b22 += w * pz * qz;
+			final float[] p1 = pm.getP1().getL();
+			final float[] p2 = pm.getP2().getL();
+			final float w = pm.getWeight();
+
+			final float x1 = (p1[ 0 ] - pcx) * w;
+			final float y1 = (p1[ 1 ] - pcy) * w;
+			final float z1 = (p1[ 2 ] - pcz) * w;
+			final float x2 = (p2[ 0 ] - qcx) * w;
+			final float y2 = (p2[ 1 ] - qcy) * w;
+			final float z2 = (p2[ 2 ] - qcz) * w;
+			Sxx += x1 * x2;
+			Sxy += x1 * y2;
+			Sxz += x1 * z2;
+			Syx += y1 * x2;
+			Syy += y1 * y2;
+			Syz += y1 * z2;
+			Szx += z1 * x2;
+			Szy += z1 * y2;
+			Szz += z1 * z2;
 		}
 		
-		final float det =
-			a00 * a11 * a22 +
-			a01 * a12 * a02 +
-			a02 * a01 * a12 -
-			a02 * a11 * a02 -
-			a12 * a12 * a00 -
-			a22 * a01 * a01;
+		final double[][] N = new double[ 4 ][ 4 ];
+		N[0][0] = Sxx + Syy + Szz;
+		N[0][1] = Syz - Szy;
+		N[0][2] = Szx - Sxz;
+		N[0][3] = Sxy - Syx;
+		N[1][0] = Syz - Szy;
+		N[1][1] = Sxx - Syy - Szz;
+		N[1][2] = Sxy + Syx;
+		N[1][3] = Szx + Sxz;
+		N[2][0] = Szx - Sxz;
+		N[2][1] = Sxy + Syx;
+		N[2][2] = -Sxx + Syy - Szz;
+		N[2][3] = Syz + Szy;
+		N[3][0] = Sxy - Syx;
+		N[3][1] = Szx + Sxz;
+		N[3][2] = Syz + Szy;
+		N[3][3] = -Sxx - Syy + Szz;
+
+		// calculate eigenvector with maximal eigenvalue
+		final EigenvalueDecomposition evd = new EigenvalueDecomposition( new Matrix( N ) );
 		
-		if ( det == 0 )
-			throw new IllDefinedDataPointsException();
+		final double[] eigenvalues = evd.getRealEigenvalues();
+		final Matrix eigenVectors = evd.getV();
+
+		int index = 0;
+		for (int i = 1; i < 4; i++)
+			if (eigenvalues[i] > eigenvalues[index])
+				index = i;
+
+		final float q0 = (float)eigenVectors.get( 0, index ); 
+		final float qx = (float)eigenVectors.get( 1, index );
+		final float qy = (float)eigenVectors.get( 2, index );
+		final float qz = (float)eigenVectors.get( 3, index );
+
+		// set result
+		m00 = q0 * q0 + qx * qx - qy * qy - qz * qz;
+		m01 = 2 * (qx * qy - q0 * qz);
+		m02 = 2 * (qx * qz + q0 * qy);
+		m10 = 2 * (qy * qx + q0 * qz);
+		m11 = (q0 * q0 - qx * qx + qy * qy - qz * qz);
+		m12 = 2 * (qy * qz - q0 * qx);
+		m20 = 2 * (qz * qx - q0 * qy);
+		m21 = 2 * (qz * qy + q0 * qx);
+		m22 = (q0 * q0 - qx * qx - qy * qy + qz * qz);
 		
-		final float idet = 1f / det;
-		
-		final float ai00 = ( a11 * a22 - a12 * a12 ) * idet;
-		final float ai01 = ( a02 * a12 - a01 * a22 ) * idet;
-		final float ai02 = ( a01 * a12 - a02 * a11 ) * idet;
-		final float ai11 = ( a00 * a22 - a02 * a02 ) * idet;
-		final float ai12 = ( a02 * a01 - a00 * a12 ) * idet;
-		final float ai22 = ( a00 * a11 - a01 * a01 ) * idet;
-		
-		m00 = ai00 * b00 + ai01 * b10 + ai02 * b20;
-		m01 = ai01 * b00 + ai11 * b10 + ai12 * b20;
-		m02 = ai02 * b00 + ai12 * b10 + ai22 * b20;
-		
-		m10 = ai00 * b01 + ai01 * b11 + ai02 * b21;
-		m11 = ai01 * b01 + ai11 * b11 + ai12 * b21;
-		m12 = ai02 * b01 + ai12 * b11 + ai22 * b21;
-		
-		m20 = ai00 * b02 + ai01 * b12 + ai02 * b22;
-		m21 = ai01 * b02 + ai11 * b12 + ai12 * b22;
-		m22 = ai02 * b02 + ai12 * b12 + ai22 * b22;
-		
+		// translational part
 		m03 = qcx - m00 * pcx - m01 * pcy - m02 * pcz;
 		m13 = qcy - m10 * pcx - m11 * pcy - m12 * pcz;
 		m23 = qcz - m20 * pcx - m21 * pcy - m22 * pcz;
 		
 		invert();
 	}
-
-//	/**
-//	 * TODO Not yet implemented ...
-//	 */
-//	@Override
-//	final public void shake( final float amount )
-//	{
-//		// TODO If you ever need it, please implement it...
-//	}
-
 	@Override
-	final public void set( final AffineModel3D m )
+	final public void set( final RigidModel3D m )
 	{
 		m00 = m.m00;
 		m10 = m.m10;
@@ -265,9 +260,9 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 	}
 
 	@Override
-	public AffineModel3D copy()
+	public RigidModel3D copy()
 	{
-		AffineModel3D m = new AffineModel3D();
+		RigidModel3D m = new RigidModel3D();
 		m.m00 = m00;
 		m.m10 = m10;
 		m.m20 = m20;
@@ -316,7 +311,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 		i23 = -i20 * m03 - i21 * m13 - i22 * m23;
 	}
 	
-	final public void preConcatenate( final AffineModel3D model )
+	final public void preConcatenate( final RigidModel3D model )
 	{
 		final float a00 = model.m00 * m00 + model.m01 * m10 + model.m02 * m20;
 		final float a01 = model.m00 * m01 + model.m01 * m11 + model.m02 * m21;
@@ -351,7 +346,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 		invert();
 	}
 	
-	final public void concatenate( final AffineModel3D model )
+	final public void concatenate( final RigidModel3D model )
 	{
 		final float a00 = m00 * model.m00 + m01 * model.m10 + m02 * model.m20;
 		final float a01 = m00 * model.m01 + m01 * model.m11 + m02 * model.m21;
@@ -455,24 +450,14 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 
 		invert();
 	}
-	
-	@Override
-	final public String toString()
-	{
-		return
-			"3d-affine: (" +
-			m00 + ", " + m01 + ", " + m02 + ", " + m03 + ", " +
-			m10 + ", " + m11 + ", " + m12 + ", " + m13 + ", " +
-			m20 + ", " + m21 + ", " + m22 + ", " + m23 + ")";
-	}
-	
+
 	/**
 	 * TODO Not yet tested
 	 */
 	@Override
-	public AffineModel3D createInverse()
+	public RigidModel3D createInverse()
 	{
-		final AffineModel3D ict = new AffineModel3D();
+		final RigidModel3D ict = new RigidModel3D();
 		
 		ict.m00 = i00;
 		ict.m10 = i10;
@@ -519,7 +504,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 	{
 		final float dcos = ( float )Math.cos( d ); 
 		final float dsin = ( float )Math.sin( d );
-		final AffineModel3D dR = new AffineModel3D();
+		final RigidModel3D dR = new RigidModel3D();
 		
 		switch ( axis )
 		{
@@ -613,4 +598,5 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 		data[ 2 ][ 2 ] = m22;
 		data[ 2 ][ 3 ] = m23;
 	}
+	
 }

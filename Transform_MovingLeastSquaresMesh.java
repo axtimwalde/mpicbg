@@ -57,7 +57,7 @@ public class Transform_MovingLeastSquaresMesh extends InteractiveMapping
 	final static private String[] methods = new String[]{ "Translation", "Rigid", "Similarity", "Affine" };
 	static private int method = 1;
 	
-	protected MovingLeastSquaresMesh< ? extends AbstractAffineModel2D > mesh;
+	protected MovingLeastSquaresMesh< ? extends AbstractModel< ? > > mesh;
 	
 	@Override
 	final protected void createMapping()
@@ -79,7 +79,7 @@ public class Transform_MovingLeastSquaresMesh extends InteractiveMapping
 		float[] l = new float[]{ x, y };
 		synchronized ( mesh )
 		{
-			InvertibleModel m = ( InvertibleModel )mesh.findClosest( l ).getModel();
+			InvertibleCoordinateTransform m = ( InvertibleCoordinateTransform )mesh.findClosest( l ).getModel();
 			try
 			{
 				m.applyInverseInPlace( l );

@@ -1,26 +1,16 @@
 package mpicbg.models;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Random;
 import java.util.List;
 import java.util.Collection;
 
 /**
- * Abstract class for arbitrary transformation models to be applied
- * to {@link Point Points} in n-dimensional space.
- * 
- * Model: R^n --> R^n 
+ * {@link CoordinateTransform} whose parameters can be estimated through
+ * a least-squares(like) fit.
  * 
  * Provides methods for generic optimization and model extraction algorithms.
  * Currently, the Random Sample Consensus \cite{FischlerB81}, a robust
  * regression method and the Iterative Closest Point Algorithm \cite{Zhang94}
  * are implemented.
- *  
- * TODO: A model is planned to be a generic transformation pipeline to be
- *   applied to images, volumes or arbitrary sets of n-dimensional points.
- *   E.g. lens transformation of camera images, pose and location of mosaic
- *   tiles, non-rigid bending of confocal stacks etc.
  *  
  * 
  * BibTeX:
@@ -53,46 +43,34 @@ import java.util.Collection;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.4b
  */
-public abstract class Model< M extends Model< M > > implements CoordinateTransform
+public interface Model< M extends Model< M > > extends CoordinateTransform
 {
-	
 	/**
 	 * @returns the minimal number of {@link PointMatch PointMatches} required
 	 *   to solve the model.
 	 */
-	abstract public int getMinNumMatches();
+	public int getMinNumMatches();
 	
 	/**
 	 * @deprecated "getMinSetSize" doesn't mean anything---use the more
 	 *   speaking {@link #getMinNumMatches()} instead.  
 	 */
 	@Deprecated
-	final public int getMinSetSize(){ return getMinNumMatches(); }
+	public int getMinSetSize();
 	
-	// real random
-	//final Random random = new Random( System.currentTimeMillis() );
-	// repeatable results
-	final static protected Random rnd = new Random( 69997 );
-
-	
-	/**
-	 * The cost depends on what kind of algorithm is running.  It is always
-	 * true that a smaller cost is better than large cost
-	 */
-	protected double cost = Double.MAX_VALUE;
-	final public double getCost(){ return cost; }
-	final public void setCost( final double c ){ cost = c; }
+	public double getCost();
+	public void setCost( final double c );
 
 	/**
 	 * @deprecated The term Error may be missleading---use {@link #getCost()} instead
 	 */
 	@Deprecated
-	final public double getError(){ return getCost(); }
+	public double getError();
 	/**
 	 * @deprecated The term Error may be missleading---use {@link #getCost()} instead
 	 */
 	@Deprecated
-	final public void setError( final double e ){ setCost( e ); }
+	public void setError( final double e );
 
 	/**
 	 * "Less than" operater to make {@link Model Models} comparable.
@@ -101,18 +79,7 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 	 * @return false for {@link #cost} < 0.0, otherwise true if
 	 *   {@link #cost this.cost} is smaller than {@link #cost m.cost}
 	 */
-	final public boolean betterThan( final Model< M > m )
-	{
-		if ( cost < 0 ) return false;
-		return cost < m.cost;
-	}
-
-//	/**
-//	 * Randomly change the {@link Model} for some amount.
-//	 * 
-//	 * @param amount
-//	 */
-//	abstract public void shake( final float amount );
+	public boolean betterThan( final M m );
 	
 	/**
 	 * Fit the {@link Model} to a set of data points minimizing the global
@@ -130,7 +97,7 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 	 *   {@link IllDefinedDataPointsException} if the set of data points is
 	 *   inappropriate to solve the Model
 	 */
-	abstract public void fit( final Collection< PointMatch > matches )
+	public < P extends PointMatch >void fit( final Collection< P > matches )
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException;
 
 	/**
@@ -148,39 +115,22 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 	 * @param minInlierRatio minimal ratio |inliers| / |candidates| (0.0 => 0%, 1.0 => 100%)
 	 * @param minNumInliers minimally required absolute number of inliers
 	 */
-	final public boolean test(
-			final Collection< PointMatch > candidates,
-			final Collection< PointMatch > inliers,
+	public < P extends PointMatch >boolean test(
+			final Collection< P > candidates,
+			final Collection< P > inliers,
 			final double epsilon,
 			final double minInlierRatio,
-			final int minNumInliers )
-	{
-		inliers.clear();
-		
-		for ( PointMatch m : candidates )
-		{
-			m.apply( this );
-			if ( m.getDistance() < epsilon ) inliers.add( m );
-		}
-		
-		final float ir = ( float )inliers.size() / ( float )candidates.size();
-		setCost( Math.max( 0.0, Math.min( 1.0, 1.0 - ir ) ) );
-		
-		return ( inliers.size() >= minNumInliers && ir > minInlierRatio );
-	}
-	
+			final int minNumInliers );
+
 	/**
 	 * Call {@link #test(Collection, Collection, double, double, int)} with
 	 * minNumInliers = {@link #getMinNumMatches()}.
 	 */
-	final public boolean test(
-			final Collection< PointMatch > candidates,
-			final Collection< PointMatch > inliers,
+	public < P extends PointMatch >boolean test(
+			final Collection< P > candidates,
+			final Collection< P > inliers,
 			final double epsilon,
-			final double minInlierRatio )
-	{
-		return test( candidates, inliers, epsilon, minInlierRatio, getMinNumMatches() );
-	}
+			final double minInlierRatio );
 		
 	/**
 	 * Estimate the {@link Model} and filter potential outliers by robust
@@ -201,87 +151,29 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 	 * @return true if {@link Model} could be estimated and inliers is not
 	 *   empty, false otherwise.  If false, {@link Model} remains unchanged.
 	 */
-	final public boolean filter(
-			final Collection< PointMatch > candidates,
-			final Collection< PointMatch > inliers,
+	public < P extends PointMatch >boolean filter(
+			final Collection< P > candidates,
+			final Collection< P > inliers,
 			final float maxTrust,
 			final int minNumInliers )
-		throws NotEnoughDataPointsException
-	{
-		if ( candidates.size() < getMinNumMatches() )
-			throw new NotEnoughDataPointsException( candidates.size() + " data points are not enough to solve the Model, at least " + getMinNumMatches() + " data points required." );
-		
-		final M copy = clone();
-		
-		inliers.clear();
-		inliers.addAll( candidates );
-		final ArrayList< PointMatch > temp = new ArrayList< PointMatch >();
-		int numInliers;
-		do
-		{
-			temp.clear();
-			temp.addAll( inliers );
-			numInliers = inliers.size(); 
-			try
-			{
-				copy.fit( inliers );
-			}
-			catch ( NotEnoughDataPointsException e )
-			{
-				return false;
-			}
-			catch ( IllDefinedDataPointsException e )
-			{
-				return false;
-			}
-			final ErrorStatistic observer = new ErrorStatistic( temp.size() );
-			for ( final PointMatch m : temp )
-			{
-				m.apply( copy );
-				observer.add( m.getDistance() );
-			}
-			inliers.clear();
-			final double t = observer.getMedian() * maxTrust;
-			for ( final PointMatch m : temp )
-			{
-				if ( m.getDistance() <= t )
-					inliers.add( m );
-			}
-			
-			copy.cost = observer.mean;
-		}
-		while ( numInliers > inliers.size() );
-		
-		if ( numInliers < minNumInliers )
-			return false;
-		
-		set( copy );
-		return true;
-	}
+		throws NotEnoughDataPointsException;
 	
 	/**
 	 * Call {@link #filter(Collection, Collection, float, int)} with minNumInliers = {@link Model#getMinNumMatches()}.
 	 */
-	final public boolean filter(
-			final Collection< PointMatch > candidates,
-			final Collection< PointMatch > inliers,
+	public < P extends PointMatch >boolean filter(
+			final Collection< P > candidates,
+			final Collection< P > inliers,
 			final float maxTrust )
-		throws NotEnoughDataPointsException
-	{
-		return filter( candidates, inliers, maxTrust, getMinNumMatches() );
-	}
-	
+		throws NotEnoughDataPointsException;
 	
 	/**
 	 * Call {@link #filter(Collection, Collection, float)} with maxTrust = 4 and minNumInliers = {@link Model#getMinNumMatches()}.
 	 */
-	final public boolean filter(
-			final Collection< PointMatch > candidates,
-			final Collection< PointMatch > inliers )
-		throws NotEnoughDataPointsException
-	{
-		return filter( candidates, inliers, 4f, getMinNumMatches() );
-	}
+	public < P extends PointMatch >boolean filter(
+			final Collection< P > candidates,
+			final Collection< P > inliers )
+		throws NotEnoughDataPointsException;
 	
 	
 	/**
@@ -302,94 +194,26 @@ public abstract class Model< M extends Model< M > > implements CoordinateTransfo
 	 * @return true if {@link Model} could be estimated and inliers is not
 	 *   empty, false otherwise.  If false, {@link Model} remains unchanged.
 	 */
-	final public boolean ransac(
-			final List< PointMatch > candidates,
-			final Collection< PointMatch > inliers,
+	public < P extends PointMatch >boolean ransac(
+			final List< P > candidates,
+			final Collection< P > inliers,
 			final int iterations,
 			final double epsilon,
 			final double minInlierRatio,
 			final int minNumInliers )
-		throws NotEnoughDataPointsException
-	{
-		if ( candidates.size() < getMinNumMatches() )
-			throw new NotEnoughDataPointsException( candidates.size() + " data points are not enough to solve the Model, at least " + getMinNumMatches() + " data points required." );
-		
-		final M copy = clone();
-		final M m = clone();
-		
-		inliers.clear();
-		
-		int i = 0;
-		final HashSet< PointMatch > minMatches = new HashSet< PointMatch >();
-		
-A:		while ( i < iterations )
-		{
-			// choose model.MIN_SET_SIZE disjunctive matches randomly
-			minMatches.clear();
-			for ( int j = 0; j < getMinNumMatches(); ++j )
-			{
-				PointMatch p;
-				do
-				{
-					p = candidates.get( ( int )( rnd.nextDouble() * candidates.size() ) );
-				}
-				while ( minMatches.contains( p ) );
-				minMatches.add( p );
-			}
-			try { m.fit( minMatches ); }
-			catch ( IllDefinedDataPointsException e )
-			{
-				++i;
-				continue;
-			}
-			
-			final ArrayList< PointMatch > tempInliers = new ArrayList< PointMatch >();
-			
-			int numInliers = 0;
-			boolean isGood = m.test( candidates, tempInliers, epsilon, minInlierRatio );
-			while ( isGood && numInliers < tempInliers.size() )
-			{
-				numInliers = tempInliers.size();
-				try { m.fit( tempInliers ); }
-				catch ( IllDefinedDataPointsException e )
-				{
-					++i;
-					continue A;
-				}
-				isGood = m.test( candidates, tempInliers, epsilon, minInlierRatio, minNumInliers );
-			}
-			if (
-					isGood &&
-					m.betterThan( copy ) &&
-					tempInliers.size() >= minNumInliers )
-			{
-				copy.set( m );
-				inliers.clear();
-				inliers.addAll( tempInliers );
-			}
-			++i;
-		}
-		if ( inliers.size() == 0 )
-			return false;
-		
-		set( copy );
-		return true;
-	}
+		throws NotEnoughDataPointsException;
 	
 	/**
 	 * Call {@link #ransac(List, Collection, int, double, double, int)} with
 	 * minNumInliers = {@link #getMinNumMatches()}.
 	 */
-	final public boolean ransac(
-			final List< PointMatch > candidates,
-			final Collection< PointMatch > inliers,
+	public < P extends PointMatch >boolean ransac(
+			final List< P > candidates,
+			final Collection< P > inliers,
 			final int iterations,
 			final double epsilon,
 			final double minInlierRatio )
-		throws NotEnoughDataPointsException
-	{
-		return ransac( candidates, inliers, iterations, epsilon, minInlierRatio, getMinNumMatches() );
-	}
+		throws NotEnoughDataPointsException;
 	
 	/**
 	 * Estimate a {@link Model} from a set with many outliers by first
@@ -412,78 +236,53 @@ A:		while ( i < iterations )
 	 * @return true if {@link Model} could be estimated and inliers is not
 	 *   empty, false otherwise.  If false, {@link Model} remains unchanged.
 	 */
-	final public boolean filterRansac(
-			final List< PointMatch > candidates,
-			final Collection< PointMatch > inliers,
+	public < P extends PointMatch >boolean filterRansac(
+			final List< P > candidates,
+			final Collection< P > inliers,
 			final int iterations,
 			final float maxEpsilon,
 			final float minInlierRatio,
 			final int minNumInliers,
 			final float maxTrust )
-		throws NotEnoughDataPointsException
-	{
-		final ArrayList< PointMatch > temp = new ArrayList< PointMatch >();
-		if (
-				ransac(
-						candidates,
-						temp,
-						iterations,
-						maxEpsilon,
-						minInlierRatio,
-						minNumInliers ) &&
-				filter( temp, inliers, maxTrust, minNumInliers ) )
-			return true;
-		return false;
-	}
+		throws NotEnoughDataPointsException;
 	
 	/**
 	 * Call {@link #filterRansac(List, Collection, int, float, float, int, float)}
 	 * with maxTrust = 4.
 	 */
-	final public boolean filterRansac(
-			final List< PointMatch > candidates,
-			final Collection< PointMatch > inliers,
+	public < P extends PointMatch >boolean filterRansac(
+			final List< P > candidates,
+			final Collection< P > inliers,
 			final int iterations,
 			final float maxEpsilon,
 			final float minInlierRatio,
 			final int minNumInliers )
-		throws NotEnoughDataPointsException
-	{
-		return filterRansac( candidates, inliers, iterations, maxEpsilon, minInlierRatio, minNumInliers, 4f );
-	}
-	
+		throws NotEnoughDataPointsException;
 	
 	/**
 	 * Call {@link #filterRansac(List, Collection, int, float, float, int, float)}
 	 * with minNumInliers = {@link #getMinNumMatches()}.
 	 */
-	final public boolean filterRansac(
-			final List< PointMatch > candidates,
-			final Collection< PointMatch > inliers,
+	public < P extends PointMatch >boolean filterRansac(
+			final List< P > candidates,
+			final Collection< P > inliers,
 			final int iterations,
 			final float maxEpsilon,
 			final float minInlierRatio,
 			final float maxTrust )
-		throws NotEnoughDataPointsException
-	{
-		return filterRansac( candidates, inliers, iterations, maxEpsilon, minInlierRatio, getMinNumMatches(), maxTrust );
-	}
-	
+		throws NotEnoughDataPointsException;
 	
 	/**
 	 * Call {@link #filterRansac(List, Collection, int, float, float, float)}
 	 * with maxTrust = 4.
 	 */
-	final public boolean filterRansac(
-			final List< PointMatch > candidates,
-			final Collection< PointMatch > inliers,
+	public < P extends PointMatch >boolean filterRansac(
+			final List< P > candidates,
+			final Collection< P > inliers,
 			final int iterations,
 			final float maxEpsilon,
 			final float minInlierRatio )
-		throws NotEnoughDataPointsException
-	{
-		return filterRansac( candidates, inliers, iterations, maxEpsilon, minInlierRatio, 4f );
-	}
+		throws NotEnoughDataPointsException;
 	
 	
 	/**
@@ -499,67 +298,19 @@ A:		while ( i < iterations )
 	 * 
 	 * TODO Test---at least once!
 	 */
-	final public Collection< PointMatch > icp(
+	public Collection< PointMatch > icp(
 			final List< Point > p,
-			final List< Point > q )
-	{
-		final M m = clone();
-		final List< PointMatch > currentMatches = new ArrayList< PointMatch >();
-		final List< PointMatch > previousMatches = new ArrayList< PointMatch >();
-		do
-		{
-			previousMatches.clear();
-			previousMatches.addAll( currentMatches );
-			currentMatches.clear();
-			
-			/* Match by Euclidean distance in space */
-			for ( final Point pi : p )
-			{
-				float minimalDistance = Float.MAX_VALUE;
-				Point closestPoint = null;
-				for ( final Point qi : q )
-				{
-					final float d = Point.distance( pi, qi );
-					if ( d < minimalDistance )
-					{
-						minimalDistance = d;
-						closestPoint = qi;
-					}
-				}
-				currentMatches.add( new PointMatch( pi, closestPoint ) );
-			}
-			try
-			{
-				m.fit( currentMatches );
-			}
-			catch ( Exception e )
-			{
-				e.printStackTrace();
-				return null;
-			}
-		}
-		while ( currentMatches.equals( previousMatches ) );
-		this.set( m );
-		return currentMatches;
-	}
-	
-		
-	/**
-	 * Create a meaningful string representation of the model for save into
-	 * text-files or display on terminals.
-	 */
-	abstract public String toString();
-	
+			final List< Point > q );
 	
 	/**
 	 * Set the model to m
 	 * @param m
 	 */
-	abstract public void set( final M m );
+	public void set( final M m );
 
 	
 	/**
 	 * Clone the model.
 	 */
-	abstract public M clone();
+	public M copy();
 };
