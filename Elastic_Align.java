@@ -14,7 +14,6 @@ import ij.process.*;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.Vector;
 import java.awt.TextField;
 import java.awt.event.KeyEvent;
@@ -46,6 +45,11 @@ public class Elastic_Align implements PlugIn, KeyListener
 		public float minInlierRatio = 0.1f;
 		
 		/**
+		 * Minimal absolute number of inliers
+		 */
+		public int minNumInliers = 7;
+		
+		/**
 		 * Implemeted transformation models for choice
 		 */
 		final static public String[] modelStrings = new String[]{ "Translation", "Rigid", "Similarity", "Affine" };
@@ -59,7 +63,7 @@ public class Elastic_Align implements PlugIn, KeyListener
 		public float stiffness = 0.1f;
 		public float springMeshDamp = 0.6f;
 		public float maxStretch = 2000.0f;
-		public int maxIterations = 2000;
+		public int maxIterations = 1000;
 		public int maxPlateauwidth = 200;
 		
 		public boolean interpolate = true;
@@ -68,7 +72,7 @@ public class Elastic_Align implements PlugIn, KeyListener
 		
 		public boolean setup()
 		{
-			final GenericDialog gd = new GenericDialog( "Elastically align stack" );
+			final GenericDialog gd = new GenericDialog( "Elastically align stack: SIFT parameters" );
 			
 			SIFT.addFields( gd, sift );
 			
@@ -76,22 +80,9 @@ public class Elastic_Align implements PlugIn, KeyListener
 			
 			gd.addMessage( "Geometric Consensus Filter:" );
 			gd.addNumericField( "maximal_alignment_error :", p.maxEpsilon, 2, 6, "px" );
-			gd.addNumericField( "inlier_ratio :", p.minInlierRatio, 2 );
+			gd.addNumericField( "minimal_inlier_ratio :", p.minInlierRatio, 2 );
+			gd.addNumericField( "minimal_number_of_inliers :", p.minNumInliers, 0 );
 			gd.addChoice( "approximate_transformation :", Param.modelStrings, Param.modelStrings[ p.modelIndex ] );
-			
-			gd.addMessage( "Block Matching:" );
-			gd.addNumericField( "minimal R :", minR, 2 );
-			gd.addNumericField( "maximal curvature factor :", maxCurvatureR, 2 );
-			gd.addNumericField( "closest/next_closest_ratio :", p.rodR, 2 );
-			
-			gd.addMessage( "Spring Mesh:" );
-			gd.addNumericField( "resolution :", springMeshResolution, 0 );
-			gd.addNumericField( "stiffness :", stiffness, 2 );
-			gd.addNumericField( "maximal_stretch :", maxStretch, 2, 6, "px" );
-			
-			gd.addMessage( "Output:" );
-			gd.addCheckbox( "interpolate", p.interpolate );
-			gd.addCheckbox( "animate", p.animate );
 			
 			gd.showDialog();
 			
@@ -103,18 +94,44 @@ public class Elastic_Align implements PlugIn, KeyListener
 			
 			p.maxEpsilon = ( float )gd.getNextNumber();
 			p.minInlierRatio = ( float )gd.getNextNumber();
+			p.minNumInliers = ( int )gd.getNextNumber();
 			p.modelIndex = gd.getNextChoiceIndex();
 			
-			p.minR = ( float )gd.getNextNumber();
-			p.maxCurvatureR = ( float )gd.getNextNumber();
-			p.rodR = ( float )gd.getNextNumber();
 			
-			p.springMeshResolution = ( int )gd.getNextNumber();
-			p.stiffness = ( float )gd.getNextNumber();
-			p.maxStretch = ( float )gd.getNextNumber();
+			final GenericDialog gdBlockMatching = new GenericDialog( "Elastically align stack: Block Matching parameters" );
+			gdBlockMatching.addMessage( "Block Matching:" );
+			gdBlockMatching.addNumericField( "minimal R :", minR, 2 );
+			gdBlockMatching.addNumericField( "maximal curvature factor :", maxCurvatureR, 2 );
+			gdBlockMatching.addNumericField( "closest/next_closest_ratio :", p.rodR, 2 );
 			
-			p.interpolate = gd.getNextBoolean();
-			p.animate = gd.getNextBoolean();
+			gdBlockMatching.addMessage( "Spring Mesh:" );
+			gdBlockMatching.addNumericField( "resolution :", springMeshResolution, 0 );
+			gdBlockMatching.addNumericField( "stiffness :", stiffness, 2 );
+			gdBlockMatching.addNumericField( "maximal_stretch :", maxStretch, 2, 6, "px" );
+			gdBlockMatching.addNumericField( "maximal_iterations :", maxIterations, 0 );
+			gdBlockMatching.addNumericField( "maximal_plateau_width :", maxPlateauwidth, 0 );
+			
+			gdBlockMatching.addMessage( "Output:" );
+			gdBlockMatching.addCheckbox( "interpolate", p.interpolate );
+			gdBlockMatching.addCheckbox( "animate", p.animate );
+			
+			gdBlockMatching.showDialog();
+			
+			if ( gdBlockMatching.wasCanceled() ) return false;
+			
+			
+			p.minR = ( float )gdBlockMatching.getNextNumber();
+			p.maxCurvatureR = ( float )gdBlockMatching.getNextNumber();
+			p.rodR = ( float )gdBlockMatching.getNextNumber();
+			
+			p.springMeshResolution = ( int )gdBlockMatching.getNextNumber();
+			p.stiffness = ( float )gdBlockMatching.getNextNumber();
+			p.maxStretch = ( float )gdBlockMatching.getNextNumber();
+			p.maxIterations = ( int )gdBlockMatching.getNextNumber();
+			p.maxPlateauwidth = ( int )gdBlockMatching.getNextNumber();
+			
+			p.interpolate = gdBlockMatching.getNextBoolean();
+			p.animate = gdBlockMatching.getNextBoolean();
 			
 			return true;
 		}
@@ -319,9 +336,9 @@ public class Elastic_Align implements PlugIn, KeyListener
 					blockRadius,
 					searchRadius,
 					searchRadius,
-					0.9f,
-					0.8f,
-					5.0f,
+					p.minR,
+					p.rodR,
+					p.maxCurvatureR,
 					v2,
 					pm21,
 					new ErrorStatistic( 1 ) );
