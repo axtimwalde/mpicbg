@@ -175,4 +175,9 @@ public class Util
 	{
 		return ( int )( a + 0.5f );
 	}
+	
+	final static int roundPositive( double a )
+	{
+		return ( int )( a + 0.5 );
+	}
 }
