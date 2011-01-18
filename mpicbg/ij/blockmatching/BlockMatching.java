@@ -289,11 +289,11 @@ P:		for ( final PointMatch pm : query )
 						if ( targetBlockStd == 0 ) continue P;
 
 						float r = 0;
-						for ( int iy = 0; iy <= blockHeight; ++iy )
+						for ( int iy = 0; iy < blockHeight; ++iy )
 						{
 							final int ys = pty + iy;
 							final int yt = ipty + iy;
-							for ( int ix = 0; ix <= blockWidth; ++ix )
+							for ( int ix = 0; ix < blockWidth; ++ix )
 							{
 								final int xs = ptx + ix;
 								final int xt = iptx + ix;
