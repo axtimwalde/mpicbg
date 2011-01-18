@@ -5,6 +5,7 @@ mpicbg.jar <- \
 	mpicbg/ij/*.java \
 	mpicbg/ij/blockmatching/*.java \
 	mpicbg/ij/clahe/*.java \
+	mpicbg/ij/integral/*.java \
 	mpicbg/ij/stack/*.java \
 	mpicbg/ij/util/*.java \
 	mpicbg/ij/visualization/*.java \
@@ -48,3 +49,9 @@ clahe_.jar <- \
 	mpicbg/util/Util.java \
 	plugins.config[clahe.config] \
 	LICENSE[LICENSE.GPL]
+	
+integral_smooth.jar <- \
+	mpicbg/ij/integral/*.java \
+	plugins.config[integral.config] \
+	LICENSE[LICENSE.GPL]
+	
