@@ -1,5 +1,9 @@
 package mpicbg.ij.blockmatching;
 
+import ij.IJ;
+import ij.ImageStack;
+import ij.process.FloatProcessor;
+
 import java.awt.Shape;
 import java.awt.geom.GeneralPath;
 import java.util.ArrayList;
@@ -7,16 +11,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import ij.IJ;
-import ij.ImagePlus;
-import ij.ImageStack;
-import ij.process.FloatProcessor;
 import mpicbg.ij.InverseMapping;
 import mpicbg.ij.TransformMapping;
 import mpicbg.ij.util.Filter;
 import mpicbg.ij.util.Util;
 import mpicbg.models.AbstractAffineModel2D;
-import mpicbg.models.AffineModel2D;
 import mpicbg.models.CoordinateTransform;
 import mpicbg.models.CoordinateTransformList;
 import mpicbg.models.ErrorStatistic;
@@ -25,7 +24,6 @@ import mpicbg.models.Model;
 import mpicbg.models.MovingLeastSquaresTransform;
 import mpicbg.models.Point;
 import mpicbg.models.PointMatch;
-import mpicbg.models.RigidModel2D;
 import mpicbg.models.SimilarityModel2D;
 import mpicbg.models.TransformMesh;
 import mpicbg.models.TranslationModel2D;
@@ -159,7 +157,7 @@ public class BlockMatching
 		
 		final TranslationModel2D tTarget = new TranslationModel2D();
 		tTarget.set( -searchRadiusX, -searchRadiusY );
-		final CoordinateTransformList lTarget = new CoordinateTransformList();
+		final CoordinateTransformList< CoordinateTransform > lTarget = new CoordinateTransformList< CoordinateTransform >();
 		lTarget.add( tTarget );
 		lTarget.add( transform );
 		final InverseMapping< ? > targetMapping = new TransformMapping< CoordinateTransform >( lTarget );
@@ -380,7 +378,7 @@ P:		for ( final PointMatch pm : query )
 				/* is it well localized in both x and y? */
 				final float det = dxx * dyy - dxy * dxy;
 				final float trace = dxx + dyy;
-				if ( det == 0 || trace * trace / det > maxCurvatureRatio ) continue;
+				if ( det <= 0 || trace * trace / det > maxCurvatureRatio ) continue;
 
 				// IJ.log( "edge test passed" );
 
@@ -394,7 +392,7 @@ P:		for ( final PointMatch pm : query )
 				final float ox = -ixx * dx - ixy * dy;
 				final float oy = -ixy * dx - iyy * dy;
 
-				if ( ox >= 1 || oy >= 1 ) continue;
+				if ( ox >= 1 || oy >= 1 || ox <= -1 || oy <= -1 ) continue;
 
 				// IJ.log( "localized" );
 
