@@ -303,7 +303,7 @@ public class Elastic_Align implements PlugIn, KeyListener
 
 					if ( modelFound )
 					{
-						transforms[ slice - 1 ] = model;
+						transforms[ slice - 2 ] = model;   // -2: there's one transform less
 						//model.concatenate( currentModel );
 					}
 					// else the model is left null
