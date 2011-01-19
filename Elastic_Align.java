@@ -1,4 +1,4 @@
-import mpicbg.ij.InverseTransformMapping;
+
 import mpicbg.ij.SIFT;
 import mpicbg.ij.TransformMeshMapping;
 import mpicbg.ij.blockmatching.BlockMatching;
@@ -14,7 +14,6 @@ import ij.process.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,8 +35,10 @@ import java.io.Serializable;
  */
 public class Elastic_Align implements PlugIn, KeyListener
 {
-	static private class Param
-	{	
+	static private class Param implements Serializable
+	{
+		private static final long serialVersionUID = 1288115190817093499L;
+
 		final public FloatArray2DSIFT.Param sift = new FloatArray2DSIFT.Param();
 		
 		/**
@@ -145,11 +146,6 @@ public class Elastic_Align implements PlugIn, KeyListener
 			p.animate = gdBlockMatching.getNextBoolean();
 			
 			return true;
-		}
-
-		public boolean equalSiftFeaturesParams( final Param p )
-		{
-			return sift.equals( p.sift );
 		}
 		
 		public boolean equalSiftPointMatchParams( final Param p )
@@ -268,7 +264,7 @@ public class Elastic_Align implements PlugIn, KeyListener
 						}
 					}
 
-					AbstractAffineModel2D model;
+					AbstractAffineModel2D<?> model;
 					switch ( p.modelIndex )
 					{
 					case 0:
