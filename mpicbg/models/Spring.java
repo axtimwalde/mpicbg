@@ -1,5 +1,6 @@
 package mpicbg.models;
 
+import java.io.Serializable;
 import java.util.Random;
 
 /**
@@ -9,8 +10,10 @@ import java.util.Random;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.2b
  */
-public class Spring
+public class Spring implements Serializable
 {
+	private static final long serialVersionUID = -8807104366983065341L;
+
 	final static protected Random rnd = new Random( 0 );
 	
 	protected float length;
