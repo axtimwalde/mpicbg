@@ -142,6 +142,7 @@ public class Elastic_Align implements PlugIn, KeyListener
 
 	final public void run( final String args )
 	{
+		try {
 		if ( IJ.versionLessThan( "1.41n" ) ) return;
 
 		final ImagePlus imp = WindowManager.getCurrentImage();
@@ -257,9 +258,15 @@ public class Elastic_Align implements PlugIn, KeyListener
 			{
 				transforms.add( currentModel );
 				model.concatenate( currentModel );
+				
+				IJ.log( inliers.size() + " corresponding features with an average displacement of " + PointMatch.meanDistance( inliers ) + "px identified." );
+				IJ.log( "Estimated transformation model: " + currentModel );
 			}
 			else
+			{
 				transforms.add( null );
+				IJ.log( "No correspondences found." );
+			}
 			
 			final ImageProcessor approximatelyAlignedSlice =
 					ip.createProcessor( ip.getWidth(), ip.getHeight() );
@@ -430,6 +437,9 @@ public class Elastic_Align implements PlugIn, KeyListener
 		}
 		
 		IJ.log( "Done." );
+	}
+		catch ( Exception e )
+		{ e.printStackTrace(); }
 	}
 
 	public void keyPressed(KeyEvent e)
