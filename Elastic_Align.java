@@ -8,6 +8,7 @@ import mpicbg.util.Util;
 
 import ij.plugin.*;
 import ij.gui.*;
+import ij.io.DirectoryChooser;
 import ij.*;
 import ij.process.*;
 
@@ -37,7 +38,9 @@ public class Elastic_Align implements PlugIn, KeyListener
 {
 	static private class Param implements Serializable
 	{
-		private static final long serialVersionUID = 1288115190817093499L;
+		private static final long serialVersionUID = 3816564377727147658L;
+
+		public String outputPath = "";
 
 		final public FloatArray2DSIFT.Param sift = new FloatArray2DSIFT.Param();
 		
@@ -84,6 +87,23 @@ public class Elastic_Align implements PlugIn, KeyListener
 		
 		public boolean setup()
 		{
+			DirectoryChooser.setDefaultDirectory( outputPath );
+			final DirectoryChooser dc = new DirectoryChooser( "Elastically align stack: Output directory" );
+			outputPath = dc.getDirectory();
+			if ( outputPath == null )
+			{
+				outputPath = "";
+				return false;
+			}
+			else
+			{
+				final File d = new File( p.outputPath );
+				if ( d.exists() && d.isDirectory() )
+					p.outputPath += "/";
+				else
+					return false;
+			}
+			
 			final GenericDialog gd = new GenericDialog( "Elastically align stack: SIFT parameters" );
 			
 			SIFT.addFields( gd, sift );
@@ -98,7 +118,8 @@ public class Elastic_Align implements PlugIn, KeyListener
 			
 			gd.showDialog();
 			
-			if ( gd.wasCanceled() ) return false;
+			if ( gd.wasCanceled() )
+				return false;
 			
 			SIFT.readFields( gd, sift );
 			
@@ -129,8 +150,8 @@ public class Elastic_Align implements PlugIn, KeyListener
 			
 			gdBlockMatching.showDialog();
 			
-			if ( gdBlockMatching.wasCanceled() ) return false;
-			
+			if ( gdBlockMatching.wasCanceled() )
+				return false;
 			
 			p.minR = ( float )gdBlockMatching.getNextNumber();
 			p.maxCurvatureR = ( float )gdBlockMatching.getNextNumber();
@@ -148,22 +169,22 @@ public class Elastic_Align implements PlugIn, KeyListener
 			return true;
 		}
 		
-		public boolean equalSiftPointMatchParams( final Param p )
+		public boolean equalSiftPointMatchParams( final Param param )
 		{
-			return sift.equals( p.sift )
-			    && maxEpsilon == p.maxEpsilon
-			    && minInlierRatio == p.minInlierRatio
-			    && minNumInliers == p.minNumInliers
-			    && modelIndex == p.modelIndex;
+			return sift.equals( param.sift )
+			    && maxEpsilon == param.maxEpsilon
+			    && minInlierRatio == param.minInlierRatio
+			    && minNumInliers == param.minNumInliers
+			    && modelIndex == param.modelIndex;
 		}
 		
 		/** Test if parameters for extracting blockmatching PointMatches are the same. */
-		public boolean equalBlockmatchingParams( final Param p )
+		public boolean equalBlockmatchingParams( final Param param )
 		{
-			return sift.maxOctaveSize == p.sift.maxOctaveSize
-			    && minR == p.minR
-			    && maxCurvatureR == p.maxCurvatureR
-			    && rodR == p.rodR;
+			return sift.maxOctaveSize == param.sift.maxOctaveSize
+			    && minR == param.minR
+			    && maxCurvatureR == param.maxCurvatureR
+			    && rodR == param.rodR;
 		}
 	}
 	
@@ -192,10 +213,6 @@ public class Elastic_Align implements PlugIn, KeyListener
 		final ExecutorService exec = Executors.newFixedThreadPool( Runtime.getRuntime().availableProcessors() );
 		final ArrayList<Future<?>> tasks = new ArrayList<Future<?>>();
 		
-		
-		// TODO make it choosable
-		final String base_path = System.getProperty( "user.dir" ) + "/";
-		
 		// Extract all features and store them in disk.
 
 		final AtomicInteger counter = new AtomicInteger( 0 );
@@ -207,7 +224,7 @@ public class Elastic_Align implements PlugIn, KeyListener
 				public Object call() {
 					IJ.showProgress( counter.getAndIncrement(), stack.getSize() );
 					// Extract features
-					final String path = base_path + stack.getSliceLabel( slice ) + ".features";
+					final String path = p.outputPath + stack.getSliceLabel( slice ) + ".features";
 					ArrayList< Feature > fs = deserializeFeatures( p.sift, path );
 					if ( null == fs )
 					{
@@ -250,13 +267,13 @@ public class Elastic_Align implements PlugIn, KeyListener
 				public Object call() {
 					IJ.showProgress( counter.getAndIncrement(), stack.getSize() - 1 );
 					
-					String path = base_path + stack.getSliceLabel( slice ) + ".pointmatches";
+					String path = p.outputPath + stack.getSliceLabel( slice ) + ".pointmatches";
 					ArrayList< PointMatch > candidates = deserializePointMatches( p, path );
 					
 					if ( null == candidates )
 					{
-						ArrayList< Feature > fs1 = deserializeFeatures( p.sift, base_path + stack.getSliceLabel( slice - 1 ) + ".features" );
-						ArrayList< Feature > fs2 = deserializeFeatures( p.sift, base_path + stack.getSliceLabel( slice ) + ".features" );
+						ArrayList< Feature > fs1 = deserializeFeatures( p.sift, p.outputPath + stack.getSliceLabel( slice - 1 ) + ".features" );
+						ArrayList< Feature > fs2 = deserializeFeatures( p.sift, p.outputPath + stack.getSliceLabel( slice ) + ".features" );
 						candidates = new ArrayList< PointMatch >( FloatArray2DSIFT.createMatches( fs2, fs1, p.rod ) );
 						if ( ! serializePointMatches( p, candidates, path ) )
 						{
@@ -350,8 +367,8 @@ public class Elastic_Align implements PlugIn, KeyListener
 					final SpringMesh m1 = meshes[ slice - 1 ];
 					final SpringMesh m2 = meshes[ slice ];
 
-					String path12 = base_path + stack.getSliceLabel( slice ) + "--" + stack.getSliceLabel( slice + 1 ) + ".blockmatches";
-					String path21 = base_path + stack.getSliceLabel( slice + 1 ) + "--" + stack.getSliceLabel( slice )  + ".blockmatches";
+					String path12 = p.outputPath + stack.getSliceLabel( slice ) + "--" + stack.getSliceLabel( slice + 1 ) + ".blockmatches";
+					String path21 = p.outputPath + stack.getSliceLabel( slice + 1 ) + "--" + stack.getSliceLabel( slice )  + ".blockmatches";
 					ArrayList< PointMatch > pm12 = deserializeBlockMatches( p, path12 );
 					ArrayList< PointMatch > pm21 = deserializeBlockMatches( p, path21 );
 
@@ -516,7 +533,7 @@ public class Elastic_Align implements PlugIn, KeyListener
 				meshMapping.mapInterpolated( stack.getProcessor( i ), ip );
 			else
 				meshMapping.map( stack.getProcessor( i ), ip );
-			IJ.save( new ImagePlus( "elastic " + i, ip ), "elastic-" + String.format( "%04d", i ) + ".tif" );
+			IJ.save( new ImagePlus( "elastic " + i, ip ), p.outputPath + "elastic-" + String.format( "%04d", i ) + ".tif" );
 			
 			//stackAlignedMeshes.addSlice( "" + i, ip );
 		}
@@ -544,29 +561,29 @@ public class Elastic_Align implements PlugIn, KeyListener
 	{
 		private static final long serialVersionUID = 2689219384710526198L;
 		
-		final FloatArray2DSIFT.Param p;
+		final FloatArray2DSIFT.Param param;
 		final ArrayList< Feature > features;
 		Features( final FloatArray2DSIFT.Param p, final ArrayList< Feature > features )
 		{
-			this.p = p;
+			this.param = p;
 			this.features = features;
 		}
 	}
 	
 	final static private boolean serializeFeatures(
-			final FloatArray2DSIFT.Param p,
+			final FloatArray2DSIFT.Param param,
 			final ArrayList< Feature > fs,
 			final String path )
 	{
-		return serialize( new Features( p, fs ), path );
+		return serialize( new Features( param, fs ), path );
 	}
 
-	final static private ArrayList< Feature > deserializeFeatures( final FloatArray2DSIFT.Param p, final String path )
+	final static private ArrayList< Feature > deserializeFeatures( final FloatArray2DSIFT.Param param, final String path )
 	{
 		Object o = deserialize( path );
 		if ( null == o ) return null;
 		Features fs = (Features) o;
-		if ( p.equals( fs.p ) )
+		if ( param.equals( fs.param ) )
 			return fs.features;
 		return null;
 	}
@@ -575,39 +592,39 @@ public class Elastic_Align implements PlugIn, KeyListener
 	{
 		private static final long serialVersionUID = -2564147268101223484L;
 		
-		Elastic_Align.Param p;
+		Elastic_Align.Param param;
 		ArrayList< PointMatch > pointMatches;
 		PointMatches( final Elastic_Align.Param p, final ArrayList< PointMatch > pointMatches )
 		{
-			this.p = p;
+			this.param = p;
 			this.pointMatches = pointMatches;
 		}
 	}
 	
 	final static private boolean serializePointMatches(
-			final Elastic_Align.Param p,
+			final Elastic_Align.Param param,
 			final ArrayList< PointMatch > pms,
 			final String path )
 	{
-		return serialize( new PointMatches( p, pms ), path );
+		return serialize( new PointMatches( param, pms ), path );
 	}
 	
-	final static private ArrayList< PointMatch > deserializePointMatches( final Elastic_Align.Param p, final String path )
+	final static private ArrayList< PointMatch > deserializePointMatches( final Elastic_Align.Param param, final String path )
 	{
 		Object o = deserialize( path );
 		if ( null == o ) return null;
 		PointMatches pms = (PointMatches) o;
-		if ( p.equalSiftPointMatchParams( pms.p ) )
+		if ( param.equalSiftPointMatchParams( pms.param ) )
 			return pms.pointMatches;
 		return null;
 	}
 	
-	final static private ArrayList< PointMatch > deserializeBlockMatches( final Elastic_Align.Param p, final String path )
+	final static private ArrayList< PointMatch > deserializeBlockMatches( final Elastic_Align.Param param, final String path )
 	{
 		Object o = deserialize( path );
 		if ( null == o ) return null;
 		PointMatches pms = (PointMatches) o;
-		if ( p.equalBlockmatchingParams( pms.p ))
+		if ( param.equalBlockmatchingParams( pms.param ))
 			return pms.pointMatches;
 		return null;
 	}
