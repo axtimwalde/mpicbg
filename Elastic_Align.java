@@ -193,11 +193,8 @@ public class Elastic_Align implements PlugIn, KeyListener
 	final public void run( final String args )
 	{
 		if ( IJ.versionLessThan( "1.41n" ) ) return;
-		try {
-			run();
-		} catch (Throwable t) {
-			t.printStackTrace();
-		}
+		try { run(); }
+		catch ( Throwable t ) { t.printStackTrace(); }
 	}
 	
 	final public void run() throws Exception
@@ -220,29 +217,32 @@ public class Elastic_Align implements PlugIn, KeyListener
 		for ( int i = 1; i <= stack.getSize(); i++ )
 		{
 			final int slice = i;
-			tasks.add( exec.submit( new Callable<Object> () {
-				public Object call() {
-					IJ.showProgress( counter.getAndIncrement(), stack.getSize() );
-					// Extract features
-					final String path = p.outputPath + stack.getSliceLabel( slice ) + ".features";
-					ArrayList< Feature > fs = deserializeFeatures( p.sift, path );
-					if ( null == fs )
+			tasks.add(
+					exec.submit( new Callable< Object >()
 					{
-						final FloatArray2DSIFT sift = new FloatArray2DSIFT( p.sift );
-						final SIFT ijSIFT = new SIFT( sift );
-						fs = new ArrayList< Feature >();
-						ijSIFT.extractFeatures( stack.getProcessor( slice ), fs );
-						// Store features to disk
-						if ( ! serializeFeatures( p.sift, fs, path ) )
+						public Object call()
 						{
-							IJ.log( "FAILED to store serialized features for " + stack.getSliceLabel( slice ) );
+							IJ.showProgress( counter.getAndIncrement(), stack.getSize() );
+							// Extract features
+							final String path = p.outputPath + stack.getSliceLabel( slice ) + ".features";
+							ArrayList< Feature > fs = deserializeFeatures( p.sift, path );
+							if ( null == fs )
+							{
+								final FloatArray2DSIFT sift = new FloatArray2DSIFT( p.sift );
+								final SIFT ijSIFT = new SIFT( sift );
+								fs = new ArrayList< Feature >();
+								ijSIFT.extractFeatures( stack.getProcessor( slice ), fs );
+								// Store features to disk
+								if ( ! serializeFeatures( p.sift, fs, path ) )
+								{
+									IJ.log( "FAILED to store serialized features for " + stack.getSliceLabel( slice ) );
+								}
+							}
+							IJ.log( fs.size() + " features extracted for slice " + stack.getSliceLabel ( slice ) );
+							
+							return null;
 						}
-					}
-					IJ.log( fs.size() + " features extracted for slice " + stack.getSliceLabel ( slice ) );
-					
-					return null;
-				}
-			} ) );
+					} ) );
 		}
 
 		// Wait until all are complete
@@ -263,94 +263,85 @@ public class Elastic_Align implements PlugIn, KeyListener
 		for ( int i = 2; i <= stack.getSize(); i++ )
 		{
 			final int slice = i;
-			tasks.add( exec.submit( new Callable<Object> () {
-				public Object call() {
-					IJ.showProgress( counter.getAndIncrement(), stack.getSize() - 1 );
-					
-					String path = p.outputPath + stack.getSliceLabel( slice ) + ".pointmatches";
-					ArrayList< PointMatch > candidates = deserializePointMatches( p, path );
-					
-					if ( null == candidates )
+			tasks.add( exec.submit(
+					new Callable< Object >()
 					{
-						ArrayList< Feature > fs1 = deserializeFeatures( p.sift, p.outputPath + stack.getSliceLabel( slice - 1 ) + ".features" );
-						ArrayList< Feature > fs2 = deserializeFeatures( p.sift, p.outputPath + stack.getSliceLabel( slice ) + ".features" );
-						candidates = new ArrayList< PointMatch >( FloatArray2DSIFT.createMatches( fs2, fs1, p.rod ) );
-						if ( ! serializePointMatches( p, candidates, path ) )
+						public Object call()
 						{
-							IJ.log( "Could not store point matches!" );
+							IJ.showProgress( counter.getAndIncrement(), stack.getSize() - 1 );
+							
+							String path = p.outputPath + stack.getSliceLabel( slice ) + ".pointmatches";
+							ArrayList< PointMatch > candidates = deserializePointMatches( p, path );
+							
+							if ( null == candidates )
+							{
+								ArrayList< Feature > fs1 = deserializeFeatures( p.sift, p.outputPath + stack.getSliceLabel( slice - 1 ) + ".features" );
+								ArrayList< Feature > fs2 = deserializeFeatures( p.sift, p.outputPath + stack.getSliceLabel( slice ) + ".features" );
+								candidates = new ArrayList< PointMatch >( FloatArray2DSIFT.createMatches( fs2, fs1, p.rod ) );
+								if ( ! serializePointMatches( p, candidates, path ) )
+								{
+									IJ.log( "Could not store point matches!" );
+								}
+							}
+		
+							AbstractAffineModel2D< ? > model;
+							switch ( p.modelIndex )
+							{
+							case 0:
+								model = new TranslationModel2D();
+								break;
+							case 1:
+								model = new RigidModel2D();
+								break;
+							case 2:
+								model = new SimilarityModel2D();
+								break;
+							case 3:
+								model = new AffineModel2D();
+								break;
+							default:
+								return null;
+							}
+							
+							final ArrayList< PointMatch > inliers = new ArrayList< PointMatch >();
+							
+							boolean modelFound;
+							try
+							{
+								modelFound = model.filterRansac(
+										candidates,
+										inliers,
+										1000,
+										p.maxEpsilon,
+										p.minInlierRatio );
+							}
+							catch ( Exception e )
+							{
+								modelFound = false;
+								System.err.println( e.getMessage() );
+							}
+		
+							if ( modelFound )
+							{
+								transforms[ slice - 2 ] = model;
+								IJ.log( inliers.size() + " corresponding features with an average displacement of " + PointMatch.meanDistance( inliers ) + "px identified." );
+								IJ.log( "Estimated transformation model: " + model );
+							}
+							else
+							{
+								IJ.log( "No correspondences found." );
+							}
+							meshes[ slice - 1 ] = new SpringMesh( p.springMeshResolution, stack.getWidth(), stack.getHeight(), p.stiffness, p.maxStretch, p.springMeshDamp );
+						
+							return null;
 						}
-					}
-
-					AbstractAffineModel2D<?> model;
-					switch ( p.modelIndex )
-					{
-					case 0:
-						model = new TranslationModel2D();
-						break;
-					case 1:
-						model = new RigidModel2D();
-						break;
-					case 2:
-						model = new SimilarityModel2D();
-						break;
-					case 3:
-						model = new AffineModel2D();
-						break;
-					default:
-						return null;
-					}
-					
-					final ArrayList< PointMatch > inliers = new ArrayList< PointMatch >();
-					
-					boolean modelFound;
-					try
-					{
-						modelFound = model.filterRansac(
-								candidates,
-								inliers,
-								1000,
-								p.maxEpsilon,
-								p.minInlierRatio );
-					}
-					catch ( Exception e )
-					{
-						modelFound = false;
-						System.err.println( e.getMessage() );
-					}
-
-					if ( modelFound )
-					{
-						transforms[ slice - 2 ] = model;   // -2: there's one transform less
-						//model.concatenate( currentModel );
-					}
-					// else the model is left null
-
-					meshes[ slice - 1 ] = new SpringMesh( p.springMeshResolution, stack.getWidth(), stack.getHeight(), p.stiffness, p.maxStretch, p.springMeshDamp );
-					
-					
-					/*
-					ImageProcessor ip = ...
-					final ImageProcessor approximatelyAlignedSlice =
-						ip.createProcessor( ip.getWidth(), ip.getHeight() );
-				if ( p.interpolate )
-					mapping.mapInterpolated( ip, approximatelyAlignedSlice );
-				else
-					mapping.map( ip, approximatelyAlignedSlice );
-				
-				IJ.save( new ImagePlus( "linear " + i, approximatelyAlignedSlice ), "linear-" + String.format( "%04d", i ) + ".tif" );
-					
-					InverseTransformMapping< AbstractAffineModel2D< ? > > mapping = new InverseTransformMapping< AbstractAffineModel2D< ? > >( model );
-				*/
-				
-					return null;
-				}
-			} ) );
+					} ) );
 		}
 		
 		// Wait until all are complete
-		for ( Future<?> fu : tasks ) {
+		for ( Future< ? > fu : tasks )
 			fu.get();
-		}
+		
 		tasks.clear();
 		
 		/* Elastic alignment */
