@@ -1,7 +1,6 @@
 package mpicbg.ij.blockmatching;
 
 import ij.IJ;
-import ij.ImageStack;
 import ij.process.FloatProcessor;
 
 import java.awt.Shape;
@@ -10,6 +9,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import mpicbg.ij.InverseMapping;
 import mpicbg.ij.TransformMapping;
@@ -42,7 +47,7 @@ public class BlockMatching
 	 * &sigma; = 1.6 (as suggested by Lowe, 2004)
 	 */
 	final static private float minSigma = 1.6f;
-	final static private float minDiffSigma = ( float )Math.sqrt( minSigma * minSigma - 0.5f );
+//	final static private float minDiffSigma = ( float )Math.sqrt( minSigma * minSigma - 0.5f );
 	
 	private BlockMatching(){}
 	
@@ -245,170 +250,221 @@ public class BlockMatching
 
 		/* Visualization of PMCC(x,y) */
 		/* <visualisation> */
-		final ImageStack rMapStack = new ImageStack( 2 * searchRadiusX + 1, 2 * searchRadiusY + 1 );
+//		final ImageStack rMapStack = new ImageStack( 2 * searchRadiusX + 1, 2 * searchRadiusY + 1 );
+//		final AtomicInteger l = new AtomicInteger( 0 );
 		/* </visualisation> */
 
-		int k = 0;
-		int l = 0;
+		final AtomicInteger k = new AtomicInteger( 0 );
 		
-P:		for ( final PointMatch pm : query )
+		final ExecutorService exec = Executors.newFixedThreadPool( Runtime.getRuntime().availableProcessors() );
+		final ArrayList< Future< PointMatch > > tasks = new ArrayList< Future< PointMatch > >();
+		
+		for ( final PointMatch pm : query )
 		{
-			IJ.showProgress( k++, query.size() );
-			
-			final Point p = pm.getP1();
-			final Point q = pm.getP2();
-
-			final float[] s = p.getL();
-			final int px = Math.round( s[ 0 ] );
-			final int py = Math.round( s[ 1 ] );
-			final int ptx = px - blockRadiusX;
-			final int pty = py - blockRadiusY;
-			if ( ptx >= 0 && ptx + blockWidth < source.getWidth() && pty >= 0 && pty + blockHeight < source.getHeight() )
+			tasks.add( exec.submit( new Callable< PointMatch >()
 			{
-				final float sourceBlockMean = blockMean( source, ptx, pty, blockWidth, blockHeight );
-				if ( Float.isNaN( sourceBlockMean ) ) continue P;
-				final float sourceBlockStd = ( float ) Math.sqrt( blockVariance( source, ptx, pty, blockWidth, blockHeight, sourceBlockMean ) );
-				if ( sourceBlockStd == 0 ) continue P;
-
-				float tx = 0;
-				float ty = 0;
-				float rMax = -Float.MAX_VALUE;
-
-				final FloatProcessor rMap = new FloatProcessor( 2 * searchRadiusX + 1, 2 * searchRadiusY + 1 );
-
-				for ( int ity = -searchRadiusY; ity <= searchRadiusY; ++ity )
+				public PointMatch call()
 				{
-					final int ipty = ity + pty + searchRadiusY;
-					for ( int itx = -searchRadiusX; itx <= searchRadiusX; ++itx )
+					IJ.showProgress( k.getAndIncrement(), query.size() );
+
+					final Point p = pm.getP1();
+
+					final float[] s = p.getL();
+					final int px = Math.round( s[ 0 ] );
+					final int py = Math.round( s[ 1 ] );
+					final int ptx = px - blockRadiusX;
+					final int pty = py - blockRadiusY;
+					if ( ptx >= 0 && ptx + blockWidth < source.getWidth() && pty >= 0 && pty + blockHeight < source.getHeight() )
 					{
-						final int iptx = itx + ptx + searchRadiusX;
+						final float sourceBlockMean = blockMean( source, ptx, pty, blockWidth, blockHeight );
+						if ( Float.isNaN( sourceBlockMean ) )
+							return null;
+						final float sourceBlockStd = ( float ) Math.sqrt( blockVariance( source, ptx, pty, blockWidth, blockHeight, sourceBlockMean ) );
+						if ( sourceBlockStd == 0 )
+							return null;
 
-						final float targetBlockMean = blockMean( target, iptx, ipty, blockWidth, blockHeight );
-						if ( Float.isNaN( targetBlockMean ) ) continue P;
-						final float targetBlockStd = ( float ) Math.sqrt( blockVariance( target, iptx, ipty, blockWidth, blockHeight, targetBlockMean ) );
-						if ( targetBlockStd == 0 ) continue P;
+						float tx = 0;
+						float ty = 0;
+						float rMax = -Float.MAX_VALUE;
 
-						float r = 0;
-						for ( int iy = 0; iy < blockHeight; ++iy )
+						final FloatProcessor rMap = new FloatProcessor( 2 * searchRadiusX + 1, 2 * searchRadiusY + 1 );
+
+						for ( int ity = -searchRadiusY; ity <= searchRadiusY; ++ity )
 						{
-							final int ys = pty + iy;
-							final int yt = ipty + iy;
-							for ( int ix = 0; ix < blockWidth; ++ix )
+							final int ipty = ity + pty + searchRadiusY;
+							for ( int itx = -searchRadiusX; itx <= searchRadiusX; ++itx )
 							{
-								final int xs = ptx + ix;
-								final int xt = iptx + ix;
-								r += ( source.getf( xs, ys ) - sourceBlockMean ) * ( target.getf( xt, yt ) - targetBlockMean );
+								final int iptx = itx + ptx + searchRadiusX;
+
+								final float targetBlockMean = blockMean( target, iptx, ipty, blockWidth, blockHeight );
+								if ( Float.isNaN( targetBlockMean ) )
+									return null;
+								final float targetBlockStd = ( float ) Math.sqrt( blockVariance( target, iptx, ipty, blockWidth, blockHeight, targetBlockMean ) );
+								if ( targetBlockStd == 0 )
+									return null;
+
+								float r = 0;
+								for ( int iy = 0; iy < blockHeight; ++iy )
+								{
+									final int ys = pty + iy;
+									final int yt = ipty + iy;
+									for ( int ix = 0; ix < blockWidth; ++ix )
+									{
+										final int xs = ptx + ix;
+										final int xt = iptx + ix;
+										r += ( source.getf( xs, ys ) - sourceBlockMean ) * ( target.getf( xt, yt ) - targetBlockMean );
+									}
+								}
+								r /= sourceBlockStd * targetBlockStd * ( blockWidth * blockHeight - 1 );
+								if ( r > rMax )
+								{
+									rMax = r;
+									tx = itx;
+									ty = ity;
+								}
+								rMap.setf( itx + searchRadiusX, ity + searchRadiusY, r );
+
 							}
 						}
-						r /= sourceBlockStd * targetBlockStd * ( blockWidth * blockHeight - 1 );
-						if ( r > rMax )
-						{
-							rMax = r;
-							tx = itx;
-							ty = ity;
-						}
-						rMap.setf( itx + searchRadiusX, ity + searchRadiusY, r );
 
-					}
-				}
+						/* search and process maxima */
+						float bestR = -2.0f;
+						float secondBestR = -2.0f;
+						float dx = 0, dy = 0, dxx = 0, dyy = 0, dxy = 0;
+						for ( int y = 2 * searchRadiusY - 1; y > 0; --y )
+							for ( int x = 2 * searchRadiusX - 1; x > 0; --x )
+							{
+								final float c00, c01, c02, c10, c11, c12, c20, c21, c22;
 
-				/* search and process maxima */
-				float bestR = -2.0f;
-				float secondBestR = -2.0f;
-				float dx = 0, dy = 0, dxx = 0, dyy = 0, dxy = 0;
-				for ( int y = 2 * searchRadiusY - 1; y > 0; --y )
-					for ( int x = 2 * searchRadiusX - 1; x > 0; --x )
-					{
-						final float c00, c01, c02, c10, c11, c12, c20, c21, c22;
+								c11 = rMap.getf( x, y );
 
-						c11 = rMap.getf( x, y );
+								c00 = rMap.getf( x - 1, y - 1 );
+								if ( c00 >= c11 )
+									continue;
+								c01 = rMap.getf( x, y - 1 );
+								if ( c01 >= c11 )
+									continue;
+								c02 = rMap.getf( x + 1, y - 1 );
+								if ( c02 >= c11 )
+									continue;
 
-						c00 = rMap.getf( x - 1, y - 1 );
-						if ( c00 >= c11 ) continue;
-						c01 = rMap.getf( x, y - 1 );
-						if ( c01 >= c11 ) continue;
-						c02 = rMap.getf( x + 1, y - 1 );
-						if ( c02 >= c11 ) continue;
+								c10 = rMap.getf( x - 1, y );
+								if ( c10 >= c11 )
+									continue;
+								c12 = rMap.getf( x + 1, y );
+								if ( c12 >= c11 )
+									continue;
 
-						c10 = rMap.getf( x - 1, y );
-						if ( c10 >= c11 ) continue;
-						c12 = rMap.getf( x + 1, y );
-						if ( c12 >= c11 ) continue;
+								c20 = rMap.getf( x - 1, y + 1 );
+								if ( c20 >= c11 )
+									continue;
+								c21 = rMap.getf( x, y + 1 );
+								if ( c21 >= c11 )
+									continue;
+								c22 = rMap.getf( x + 1, y + 1 );
+								if ( c22 >= c11 )
+									continue;
 
-						c20 = rMap.getf( x - 1, y + 1 );
-						if ( c20 >= c11 ) continue;
-						c21 = rMap.getf( x, y + 1 );
-						if ( c21 >= c11 ) continue;
-						c22 = rMap.getf( x + 1, y + 1 );
-						if ( c22 >= c11 ) continue;
+								/* is it better than what we had before? */
+								if ( c11 <= bestR )
+								{
+									if ( c11 > secondBestR )
+										secondBestR = c11;
+									continue;
+								}
 
-						/* is it better than what we had before? */
-						if ( c11 <= bestR )
-						{
-							if ( c11 > secondBestR ) secondBestR = c11;
-							continue;
-						}
+								secondBestR = bestR;
+								bestR = c11;
 
-						secondBestR = bestR;
-						bestR = c11;
+								/* is it good enough? */
+								if ( c11 < minR )
+									continue;
+
+								/* estimate finite derivatives */
+								dx = ( c12 - c10 ) / 2.0f;
+								dy = ( c21 - c01 ) / 2.0f;
+								dxx = c10 - c11 - c11 + c12;
+								dyy = c01 - c11 - c11 + c21;
+								dxy = ( c22 - c20 - c02 + c00 ) / 4.0f;
+							}
+
+//						IJ.log( "maximum found" );
 
 						/* is it good enough? */
-						if ( c11 < minR ) continue;
+						if ( bestR < minR )
+							return null;
 
-						/* estimate finite derivatives */
-						dx = ( c12 - c10 ) / 2.0f;
-						dy = ( c21 - c01 ) / 2.0f;
-						dxx = c10 - c11 - c11 + c12;
-						dyy = c01 - c11 - c11 + c21;
-						dxy = ( c22 - c20 - c02 + c00 ) / 4.0f;
+//						IJ.log( "minR test passed" );
+
+						/* is there more than one maximum of equal goodness? */
+						if ( secondBestR >= 0 && secondBestR / bestR > rod )
+							return null;
+
+//						IJ.log( "rod test passed" );
+
+						/* is it well localized in both x and y? */
+						final float det = dxx * dyy - dxy * dxy;
+						final float trace = dxx + dyy;
+						if ( det <= 0 || trace * trace / det > maxCurvatureRatio )
+							return null;
+
+//						IJ.log( "edge test passed" );
+
+						/* localize by Taylor expansion */
+						/* invert Hessian */
+						final float ixx = dyy / det;
+						final float ixy = -dxy / det;
+						final float iyy = dxx / det;
+
+						/* calculate offset */
+						final float ox = -ixx * dx - ixy * dy;
+						final float oy = -ixy * dx - iyy * dy;
+
+						if ( ox >= 1 || oy >= 1 || ox <= -1 || oy <= -1 )
+							return null;
+
+//						IJ.log( "localized" );
+
+						final float[] t = new float[] { tx + s[ 0 ] + ox, ty + s[ 1 ] + oy };
+						return new PointMatch( p, new Point( t ) );
+
+						/* <visualisation> */
+						// synchronized ( rMapStack )
+						// {
+						// rMap.setMinAndMax( rMap.getMin(), rMap.getMax() );
+						// rMapStack.addSlice( "" + l.incrementAndGet(), rMap );
+						// }
+						/* </visualisation> */
 					}
-
-				// IJ.log( "maximum found" );
-
-				/* is it good enough? */
-				if ( bestR < minR ) continue;
-
-				// IJ.log( "minR test passed" );
-
-				/* is there more than one maximum of equal goodness? */
-				if ( secondBestR >= 0 && secondBestR / bestR > rod ) continue;
-
-				// IJ.log( "rod test passed" );
-
-				/* is it well localized in both x and y? */
-				final float det = dxx * dyy - dxy * dxy;
-				final float trace = dxx + dyy;
-				if ( det <= 0 || trace * trace / det > maxCurvatureRatio ) continue;
-
-				// IJ.log( "edge test passed" );
-
-				/* localize by Taylor expansion */
-				/* invert Hessian */
-				final float ixx = dyy / det;
-				final float ixy = -dxy / det;
-				final float iyy = dxx / det;
-
-				/* calculate offset */
-				final float ox = -ixx * dx - ixy * dy;
-				final float oy = -ixy * dx - iyy * dy;
-
-				if ( ox >= 1 || oy >= 1 || ox <= -1 || oy <= -1 ) continue;
-
-				// IJ.log( "localized" );
-
-				final float[] t = new float[] { tx + s[ 0 ] + ox, ty + s[ 1 ] + oy };
-				// System.out.println( k + " : " + ( tx + ox ) + ", " + ( ty +
-				// oy ) + " => " + rMax );
-				results.add( new PointMatch( p, new Point( t ) ) );
-
-				rMap.setMinAndMax( rMap.getMin(), rMap.getMax() );
-				rMapStack.addSlice( "" + ++l, rMap );
+					else
+						return null;
+				}
+			} ) );
+		}
+		
+		for ( Future< PointMatch > fu : tasks )
+		{
+			try
+			{
+				final PointMatch pm = fu.get();
+				if ( pm != null )
+					results.add( pm );
+			}
+			catch ( InterruptedException e )
+			{
+				e.printStackTrace();
+			}
+			catch ( ExecutionException e )
+			{
+				e.printStackTrace();
 			}
 		}
 		/* <visualisation> */
 //		if ( results.size() > 0 ) new ImagePlus( "r", rMapStack ).show();
 		/* </visualisation> */
 	}
+				
+				
     
     
     /**
