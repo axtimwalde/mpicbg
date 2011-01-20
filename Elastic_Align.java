@@ -83,7 +83,7 @@ public class Elastic_Align implements PlugIn, KeyListener
 		
 		public boolean interpolate = true;
 		
-		public boolean animate = false;
+		public boolean visualize = true;
 		
 		public boolean setup()
 		{
@@ -146,7 +146,8 @@ public class Elastic_Align implements PlugIn, KeyListener
 			
 			gdBlockMatching.addMessage( "Output:" );
 			gdBlockMatching.addCheckbox( "interpolate", p.interpolate );
-			gdBlockMatching.addCheckbox( "animate", p.animate );
+			gdBlockMatching.addCheckbox( "visualize", p.visualize );
+			
 			
 			gdBlockMatching.showDialog();
 			
@@ -164,7 +165,7 @@ public class Elastic_Align implements PlugIn, KeyListener
 			p.maxPlateauwidth = ( int )gdBlockMatching.getNextNumber();
 			
 			p.interpolate = gdBlockMatching.getNextBoolean();
-			p.animate = gdBlockMatching.getNextBoolean();
+			p.visualize = gdBlockMatching.getNextBoolean();
 			
 			return true;
 		}
@@ -208,7 +209,7 @@ public class Elastic_Align implements PlugIn, KeyListener
 		final ImageStack stack = imp.getStack();
 		
 		final ExecutorService exec = Executors.newFixedThreadPool( Runtime.getRuntime().availableProcessors() );
-		final ArrayList<Future<?>> tasks = new ArrayList<Future<?>>();
+		final ArrayList< Future< ? > > tasks = new ArrayList< Future< ? > >();
 		
 		// Extract all features and store them in disk.
 
@@ -224,7 +225,8 @@ public class Elastic_Align implements PlugIn, KeyListener
 						{
 							IJ.showProgress( counter.getAndIncrement(), stack.getSize() );
 							// Extract features
-							final String path = p.outputPath + stack.getSliceLabel( slice ) + ".features";
+							//final String path = p.outputPath + stack.getSliceLabel( slice ) + ".features";
+							final String path = p.outputPath + String.format( "%05d", slice - 1 ) + ".features";
 							ArrayList< Feature > fs = deserializeFeatures( p.sift, path );
 							if ( null == fs )
 							{
@@ -235,10 +237,12 @@ public class Elastic_Align implements PlugIn, KeyListener
 								// Store features to disk
 								if ( ! serializeFeatures( p.sift, fs, path ) )
 								{
-									IJ.log( "FAILED to store serialized features for " + stack.getSliceLabel( slice ) );
+									//IJ.log( "FAILED to store serialized features for " + stack.getSliceLabel( slice ) );
+									IJ.log( "FAILED to store serialized features for " + String.format( "%05d", slice - 1 ) );
 								}
 							}
-							IJ.log( fs.size() + " features extracted for slice " + stack.getSliceLabel ( slice ) );
+							//IJ.log( fs.size() + " features extracted for slice " + stack.getSliceLabel ( slice ) );
+							IJ.log( fs.size() + " features extracted for slice " + String.format( "%05d", slice - 1 ) );
 							
 							return null;
 						}
@@ -246,7 +250,8 @@ public class Elastic_Align implements PlugIn, KeyListener
 		}
 
 		// Wait until all are complete
-		for ( Future<?> fu : tasks ) {
+		for ( Future<?> fu : tasks )
+		{
 			fu.get();
 		}
 		tasks.clear();
@@ -270,13 +275,16 @@ public class Elastic_Align implements PlugIn, KeyListener
 						{
 							IJ.showProgress( counter.getAndIncrement(), stack.getSize() - 1 );
 							
-							String path = p.outputPath + stack.getSliceLabel( slice ) + ".pointmatches";
+							//String path = p.outputPath + stack.getSliceLabel( slice ) + ".pointmatches";
+							String path = p.outputPath + String.format( "%05d", slice - 1 ) + "-" + String.format( "%05d", slice - 2 ) + ".pointmatches";
 							ArrayList< PointMatch > candidates = deserializePointMatches( p, path );
 							
 							if ( null == candidates )
 							{
-								ArrayList< Feature > fs1 = deserializeFeatures( p.sift, p.outputPath + stack.getSliceLabel( slice - 1 ) + ".features" );
-								ArrayList< Feature > fs2 = deserializeFeatures( p.sift, p.outputPath + stack.getSliceLabel( slice ) + ".features" );
+								//ArrayList< Feature > fs1 = deserializeFeatures( p.sift, p.outputPath + stack.getSliceLabel( slice - 1 ) + ".features" );
+								ArrayList< Feature > fs1 = deserializeFeatures( p.sift, p.outputPath + String.format( "%05d", slice - 2 ) + ".features" );
+								//ArrayList< Feature > fs2 = deserializeFeatures( p.sift, p.outputPath + stack.getSliceLabel( slice ) + ".features" );
+								ArrayList< Feature > fs2 = deserializeFeatures( p.sift, p.outputPath + String.format( "%05d", slice - 1 ) + ".features" );
 								candidates = new ArrayList< PointMatch >( FloatArray2DSIFT.createMatches( fs2, fs1, p.rod ) );
 								if ( ! serializePointMatches( p, candidates, path ) )
 								{
@@ -352,118 +360,95 @@ public class Elastic_Align implements PlugIn, KeyListener
 		
 		for ( int i = 1; i < stack.getSize(); ++i )
 		{
-			final int slice = i;
-			tasks.add( exec.submit( new Callable< Object>() {
-				public Object call() {
-					final SpringMesh m1 = meshes[ slice - 1 ];
-					final SpringMesh m2 = meshes[ slice ];
+			final SpringMesh m1 = meshes[ i - 1 ];
+			final SpringMesh m2 = meshes[ i ];
 
-					String path12 = p.outputPath + stack.getSliceLabel( slice ) + "--" + stack.getSliceLabel( slice + 1 ) + ".blockmatches";
-					String path21 = p.outputPath + stack.getSliceLabel( slice + 1 ) + "--" + stack.getSliceLabel( slice )  + ".blockmatches";
-					ArrayList< PointMatch > pm12 = deserializeBlockMatches( p, path12 );
-					ArrayList< PointMatch > pm21 = deserializeBlockMatches( p, path21 );
+			ArrayList< PointMatch > pm12 = new ArrayList< PointMatch >();
+			ArrayList< PointMatch > pm21 = new ArrayList< PointMatch >();
 
-					if (null == pm12 || null == pm21) {
-						pm12 = new ArrayList< PointMatch >();
-						pm21 = new ArrayList< PointMatch >();
+			final Collection< Vertex > v1 = m1.getVertices();
+			final Collection< Vertex > v2 = m2.getVertices();
 
-						final Collection< Vertex > v1 = m1.getVertices();
-						final Collection< Vertex > v2 = m2.getVertices();
-
-						final FloatProcessor ip1 = ( FloatProcessor )stack.getProcessor( slice ).convertToFloat().duplicate();
-						final FloatProcessor ip2 = ( FloatProcessor )stack.getProcessor( slice + 1 ).convertToFloat().duplicate();
+			final FloatProcessor ip1 = ( FloatProcessor )stack.getProcessor( i ).convertToFloat().duplicate();
+			final FloatProcessor ip2 = ( FloatProcessor )stack.getProcessor( i + 1 ).convertToFloat().duplicate();
 
 
-						BlockMatching.matchByMaximalPMCC(
-								ip1,
-								ip2,
-								Math.min( 1.0f, ( float )p.sift.maxOctaveSize / ip1.getWidth() ),
-								transforms[ slice - 1 ].createInverse(),
-								blockRadius,
-								blockRadius,
-								searchRadius,
-								searchRadius,
-								p.minR,
-								p.rodR,
-								p.maxCurvatureR,
-								v1,
-								pm12,
-								new ErrorStatistic( 1 ) );
+			BlockMatching.matchByMaximalPMCC(
+					ip1,
+					ip2,
+					Math.min( 1.0f, ( float )p.sift.maxOctaveSize / ip1.getWidth() ),
+					transforms[ i - 1 ].createInverse(),
+					blockRadius,
+					blockRadius,
+					searchRadius,
+					searchRadius,
+					p.minR,
+					p.rodR,
+					p.maxCurvatureR,
+					v1,
+					pm12,
+					new ErrorStatistic( 1 ) );
 
-						IJ.log( "> found " + pm12.size() + " correspondences." );
+			IJ.log( "> found " + pm12.size() + " correspondences." );
 
-						/* <visualisation> */
-						//			final List< Point > s1 = new ArrayList< Point >();
-						//			PointMatch.sourcePoints( pm12, s1 );
-						//			final ImagePlus imp1 = new ImagePlus( i + " >", ip1 );
-						//			imp1.show();
-						//			imp1.setOverlay( BlockMatching.illustrateMatches( pm12 ), Color.yellow, null );
-						//			imp1.setRoi( Util.pointsToPointRoi( s1 ) );
-						//			imp1.updateAndDraw();
-						/* </visualisation> */
+			/* <visualisation> */
+			//			final List< Point > s1 = new ArrayList< Point >();
+			//			PointMatch.sourcePoints( pm12, s1 );
+			//			final ImagePlus imp1 = new ImagePlus( i + " >", ip1 );
+			//			imp1.show();
+			//			imp1.setOverlay( BlockMatching.illustrateMatches( pm12 ), Color.yellow, null );
+			//			imp1.setRoi( Util.pointsToPointRoi( s1 ) );
+			//			imp1.updateAndDraw();
+			/* </visualisation> */
 
-						BlockMatching.matchByMaximalPMCC(
-								ip2,
-								ip1,
-								Math.min( 1.0f, ( float )p.sift.maxOctaveSize / ip1.getWidth() ),
-								transforms[ slice - 1 ],
-								blockRadius,
-								blockRadius,
-								searchRadius,
-								searchRadius,
-								p.minR,
-								p.rodR,
-								p.maxCurvatureR,
-								v2,
-								pm21,
-								new ErrorStatistic( 1 ) );
+			BlockMatching.matchByMaximalPMCC(
+					ip2,
+					ip1,
+					Math.min( 1.0f, ( float )p.sift.maxOctaveSize / ip1.getWidth() ),
+					transforms[ i - 1 ],
+					blockRadius,
+					blockRadius,
+					searchRadius,
+					searchRadius,
+					p.minR,
+					p.rodR,
+					p.maxCurvatureR,
+					v2,
+					pm21,
+					new ErrorStatistic( 1 ) );
 
-						IJ.log( "< found " + pm21.size() + " correspondences." );
-					}
+			IJ.log( "< found " + pm21.size() + " correspondences." );
 					
-					serializePointMatches( p, pm12, path12 );
-					serializePointMatches( p, pm21, path21 );
-
-					/* <visualisation> */
-					//			final List< Point > s2 = new ArrayList< Point >();
-					//			PointMatch.sourcePoints( pm21, s2 );
-					//			final ImagePlus imp2 = new ImagePlus( i + " <", ip2 );
-					//			imp2.show();
-					//			imp2.setOverlay( BlockMatching.illustrateMatches( pm21 ), Color.yellow, null );
-					//			imp2.setRoi( Util.pointsToPointRoi( s2 ) );
-					//			imp2.updateAndDraw();
-					/* </visualisation> */
-
-					synchronized ( m2 ) {
-						for ( final PointMatch pm : pm12 )
-						{
-							final Vertex p1 = ( Vertex )pm.getP1();
-							final Vertex p2 = new Vertex( pm.getP2() );
-							p1.addSpring( p2, new Spring( 0, 1 ) );
-							m2.addPassiveVertex( p2 );
-						}
-					}
-					
-					synchronized ( m1 ) {
-						for ( final PointMatch pm : pm21 )
-						{
-							final Vertex p1 = ( Vertex )pm.getP1();
-							final Vertex p2 = new Vertex( pm.getP2() );
-							p1.addSpring( p2, new Spring( 0, 1 ) );
-							m1.addPassiveVertex( p2 );
-						}
-					}
-					
-					return null;
+			/* <visualisation> */
+			//			final List< Point > s2 = new ArrayList< Point >();
+			//			PointMatch.sourcePoints( pm21, s2 );
+			//			final ImagePlus imp2 = new ImagePlus( i + " <", ip2 );
+			//			imp2.show();
+			//			imp2.setOverlay( BlockMatching.illustrateMatches( pm21 ), Color.yellow, null );
+			//			imp2.setRoi( Util.pointsToPointRoi( s2 ) );
+			//			imp2.updateAndDraw();
+			/* </visualisation> */
+	
+			synchronized ( m2 ) {
+				for ( final PointMatch pm : pm12 )
+				{
+					final Vertex p1 = ( Vertex )pm.getP1();
+					final Vertex p2 = new Vertex( pm.getP2() );
+					p1.addSpring( p2, new Spring( 0, 1 ) );
+					m2.addPassiveVertex( p2 );
 				}
-			} ) );
+			}
+			
+			synchronized ( m1 ) {
+				for ( final PointMatch pm : pm21 )
+				{
+					final Vertex p1 = ( Vertex )pm.getP1();
+					final Vertex p2 = new Vertex( pm.getP2() );
+					p1.addSpring( p2, new Spring( 0, 1 ) );
+					m1.addPassiveVertex( p2 );
+				}
+			}
 		}
-		
-		// Wait until all are complete
-		for ( Future<?> fu : tasks ) {
-			fu.get();
-		}
-		tasks.clear();
 		
 		/* initialize meshes */
 		/* TODO this is accumulative and thus not perfect, change to analytical concatenation later */
@@ -480,7 +465,7 @@ public class Elastic_Align implements PlugIn, KeyListener
 			long t0 = System.currentTimeMillis();
 			IJ.log("Optimizing spring meshes...");
 			
-			SpringMesh.optimizeMeshes( Arrays.asList( meshes ), p.maxEpsilon, p.maxIterations, p.maxPlateauwidth );
+			SpringMesh.optimizeMeshes( Arrays.asList( meshes ), p.maxEpsilon, p.maxIterations, p.maxPlateauwidth, p.visualize );
 
 			IJ.log("Done optimizing spring meshes. Took " + (System.currentTimeMillis() - t0) + " ms");
 			
@@ -524,7 +509,7 @@ public class Elastic_Align implements PlugIn, KeyListener
 				meshMapping.mapInterpolated( stack.getProcessor( i ), ip );
 			else
 				meshMapping.map( stack.getProcessor( i ), ip );
-			IJ.save( new ImagePlus( "elastic " + i, ip ), p.outputPath + "elastic-" + String.format( "%04d", i ) + ".tif" );
+			IJ.save( new ImagePlus( "elastic " + i, ip ), p.outputPath + "elastic-" + String.format( "%05d", i ) + ".tif" );
 			
 			//stackAlignedMeshes.addSlice( "" + i, ip );
 		}
