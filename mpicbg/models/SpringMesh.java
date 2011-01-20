@@ -192,11 +192,11 @@ public class SpringMesh extends TransformMesh
 	 */
 	final public Vertex findClosestTargetVertex( final float[] there )
 	{
-		Set< Vertex > vertices = vp.keySet();
+		Set< Vertex > vs = vp.keySet();
 		
 		Vertex closest = null;
 		float cd = Float.MAX_VALUE;
-		for ( final Vertex v : vertices )
+		for ( final Vertex v : vs )
 		{
 			final float[] here = v.getW();
 			final float dx = here[ 0 ] - there[ 0 ];
@@ -220,11 +220,11 @@ public class SpringMesh extends TransformMesh
 	 */
 	final public Vertex findClosestSourceVertex( final float[] there )
 	{
-		Set< Vertex > vertices = vp.keySet();
+		Set< Vertex > vs = vp.keySet();
 		
 		Vertex closest = null;
 		float cd = Float.MAX_VALUE;
-		for ( final Vertex v : vertices )
+		for ( final Vertex v : vs )
 		{
 			final float[] here = v.getL();
 			final float dx = here[ 0 ] - there[ 0 ];
@@ -299,12 +299,12 @@ public class SpringMesh extends TransformMesh
 			final float weight,
 			final float alpha )
 	{
-		final Set< Vertex > vertices = vp.keySet();
+		final Set< Vertex > vs = vp.keySet();
 		final float[] there = vertex.getW();
 		
 		float[] weights = new float[]{ weight, 1.0f };
 		
-		for ( final Vertex v : vertices )
+		for ( final Vertex v : vs )
 		{
 			final float[] here = v.getL();
 			final float dx = here[ 0 ] - there[ 0 ];
@@ -313,7 +313,7 @@ public class SpringMesh extends TransformMesh
 			weights[ 1 ] = weigh( 1f + dx * dx + dy * dy, alpha );
 			
 			// add a Spring if the Vertex is one of the observed ones
-			if ( vertices.contains( v ) )
+			if ( vs.contains( v ) )
 				vertex.addSpring( v, weights );
 		}
 	}
@@ -488,6 +488,27 @@ public class SpringMesh extends TransformMesh
 			final int maxIterations,
 			final int maxPlateauwidth ) throws NotEnoughDataPointsException 
 	{
+		optimizeMeshes( meshes, maxError, maxIterations, maxPlateauwidth, false );
+	}
+	
+	/**
+	 * Optimize a {@link Collection} of connected {@link SpringMesh SpringMeshes}.
+	 * 
+	 * @param maxError do not accept convergence if error is > max_error
+	 * @param maxIterations stop after that many iterations even if there was
+	 *   no minimum found
+	 * @param maxPlateauwidth convergence is reached if the average slope in
+	 *   an interval of this size is 0.0 (in double accuracy).  This prevents
+	 *   the algorithm from stopping at plateaus smaller than this value.
+	 * 
+	 */
+	public static void optimizeMeshes(
+			final Collection< SpringMesh > meshes,
+			final float maxError,
+			final int maxIterations,
+			final int maxPlateauwidth,
+			final boolean visualize ) throws NotEnoughDataPointsException 
+	{
 		final ErrorStatistic observer = new ErrorStatistic( maxPlateauwidth + 1 );
 		final ErrorStatistic singleMeshObserver = new ErrorStatistic( maxPlateauwidth + 1 );
 		
@@ -517,12 +538,15 @@ public class SpringMesh extends TransformMesh
 			
 			/* <visualization> */
 //			stackAnimation.addSlice( "" + i, paintMeshes( meshes, scale ) );
-			stackAnimation.addSlice( "" + i, paintSprings( meshes, scale, maxError ) );
-			impAnimation.setStack( stackAnimation );
-			impAnimation.updateAndDraw();
-			if ( i == 1 )
+			if ( visualize )
 			{
-				impAnimation.show();
+				stackAnimation.addSlice( "" + i, paintSprings( meshes, scale, maxError ) );
+				impAnimation.setStack( stackAnimation );
+				impAnimation.updateAndDraw();
+				if ( i == 1 )
+				{
+					impAnimation.show();
+				}
 			}
 			/* </visualization> */
 			
@@ -565,7 +589,7 @@ public class SpringMesh extends TransformMesh
 		}
 		
 		System.out.println( "Successfully optimized " + meshes.size() + " meshes after " + i + " iterations:" );
-		System.out.println( "  average force: " + decimalFormat.format( force ) + "N" );
+		System.out.println( "  average force: " + decimalFormat.format( force / meshes.size() ) + "N" );
 		System.out.println( "  minimal force: " + decimalFormat.format( minForce ) + "N" );
 		System.out.println( "  maximal force: " + decimalFormat.format( maxForce ) + "N" );
 	}
