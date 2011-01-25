@@ -51,9 +51,11 @@ import mpicbg.imagefeatures.Feature;
 import mpicbg.imagefeatures.FloatArray2DSIFT;
 import mpicbg.models.AbstractModel;
 import mpicbg.models.AffineModel2D;
+import mpicbg.models.CoordinateTransformMesh;
 import mpicbg.models.ErrorStatistic;
 import mpicbg.models.HomographyModel2D;
 import mpicbg.models.InvertibleCoordinateTransform;
+import mpicbg.models.MovingLeastSquaresTransform;
 import mpicbg.models.NotEnoughDataPointsException;
 import mpicbg.models.PointMatch;
 import mpicbg.models.RigidModel2D;
@@ -143,6 +145,8 @@ public class ElasticAlign implements PlugIn, KeyListener
 		
 		public boolean interpolate = true;
 		public boolean visualize = true;
+		public int resolutionOutput = 128;
+		
 		
 		public int maxNumThreads = Runtime.getRuntime().availableProcessors();
 		
@@ -169,6 +173,8 @@ public class ElasticAlign implements PlugIn, KeyListener
 			
 			gdOutput.addCheckbox( "interpolate", p.interpolate );
 			gdOutput.addCheckbox( "visualize", p.visualize );
+			gdOutput.addNumericField( "resolution :", p.resolutionOutput, 0 );
+			
 			
 			gdOutput.showDialog();
 			
@@ -177,6 +183,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 			
 			p.interpolate = gdOutput.getNextBoolean();
 			p.visualize = gdOutput.getNextBoolean();
+			p.resolutionOutput = ( int )gdOutput.getNextNumber();
 			
 			
 			/* SIFT */
@@ -577,12 +584,15 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 			//			imp2.setRoi( Util.pointsToPointRoi( s2 ) );
 			//			imp2.updateAndDraw();
 			/* </visualisation> */
+			
+			final float springConstant  = 1.0f / ( pair.b - pair.a );
+			IJ.log( pair.a + " <> " + pair.b + " spring constant = " + springConstant );
 	
 			for ( final PointMatch pm : pm12 )
 			{
 				final Vertex p1 = ( Vertex )pm.getP1();
 				final Vertex p2 = new Vertex( pm.getP2() );
-				p1.addSpring( p2, new Spring( 0, 1 ) );
+				p1.addSpring( p2, new Spring( 0, springConstant ) );
 				m2.addPassiveVertex( p2 );
 			}
 		
@@ -590,7 +600,7 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 			{
 				final Vertex p1 = ( Vertex )pm.getP1();
 				final Vertex p2 = new Vertex( pm.getP2() );
-				p1.addSpring( p2, new Spring( 0, 1 ) );
+				p1.addSpring( p2, new Spring( 0, springConstant ) );
 				m1.addPassiveVertex( p2 );
 			}
 			
@@ -626,7 +636,8 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 			meshes[ i ].init( tiles.get( i ).getModel() );
 
 		/* optimize */
-		try {
+		try
+		{
 			long t0 = System.currentTimeMillis();
 			IJ.log("Optimizing spring meshes...");
 			
@@ -634,7 +645,8 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 
 			IJ.log("Done optimizing spring meshes. Took " + (System.currentTimeMillis() - t0) + " ms");
 			
-		} catch ( NotEnoughDataPointsException e ) { e.printStackTrace(); }
+		}
+		catch ( NotEnoughDataPointsException e ) { e.printStackTrace(); }
 		
 		/* calculate bounding box */
 		final float[] min = new float[ 2 ];
@@ -668,13 +680,30 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 		final int height = ( int )Math.ceil( max[ 1 ] - min[ 1 ] );
 		for ( int i = 1; i <= stack.getSize(); ++i )
 		{
-			final TransformMeshMapping< SpringMesh > meshMapping = new TransformMeshMapping< SpringMesh >( meshes[ i - 1 ] );
+//			final TransformMeshMapping< SpringMesh > meshMapping = new TransformMeshMapping< SpringMesh >( meshes[ i - 1 ] );
+			
+			final MovingLeastSquaresTransform mlt = new MovingLeastSquaresTransform();
+			mlt.setModel( AffineModel2D.class );
+			mlt.setAlpha( 2.0f );
+			mlt.setMatches( meshes[ i - 1 ].getVA().keySet() );
+			
+			final TransformMeshMapping< CoordinateTransformMesh > mltMapping = new TransformMeshMapping< CoordinateTransformMesh >( new CoordinateTransformMesh( mlt, p.resolutionOutput, width, height ) );
+			
+			
+//			final ImageProcessor ipMesh = stack.getProcessor( i ).createProcessor( width, height );
 			final ImageProcessor ip = stack.getProcessor( i ).createProcessor( width, height );
 			if ( p.interpolate )
-				meshMapping.mapInterpolated( stack.getProcessor( i ), ip );
+			{
+//				meshMapping.mapInterpolated( stack.getProcessor( i ), ipMesh );
+				mltMapping.mapInterpolated( stack.getProcessor( i ), ip );
+			}
 			else
-				meshMapping.map( stack.getProcessor( i ), ip );
-			IJ.save( new ImagePlus( "elastic " + i, ip ), p.outputPath + "elastic-" + String.format( "%05d", i ) + ".tif" );
+			{
+//				meshMapping.map( stack.getProcessor( i ), ipMesh );
+				mltMapping.map( stack.getProcessor( i ), ip );
+			}
+//			IJ.save( new ImagePlus( "elastic " + i, ipMesh ), p.outputPath + "elastic-" + String.format( "%05d", i ) + ".tif" );
+			IJ.save( new ImagePlus( "elastic mlt " + i, ip ), p.outputPath + "elastic-mlt-" + String.format( "%05d", i ) + ".tif" );
 			
 			//stackAlignedMeshes.addSlice( "" + i, ip );
 		}
