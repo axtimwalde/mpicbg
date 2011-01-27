@@ -297,6 +297,8 @@ public class ElasticAlign implements PlugIn, KeyListener
 		if ( !p.setup() ) return;
 		
 		final ImageStack stack = imp.getStack();
+		final double displayRangeMin = imp.getDisplayRangeMin();
+		final double displayRangeMax = imp.getDisplayRangeMax();
 		
 		final ArrayList< Tile< ? > > tiles = new ArrayList< Tile<?> >();
 		for ( int i = 0; i < stack.getSize(); ++i )
@@ -347,7 +349,9 @@ public class ElasticAlign implements PlugIn, KeyListener
 								final FloatArray2DSIFT sift = new FloatArray2DSIFT( p.sift );
 								final SIFT ijSIFT = new SIFT( sift );
 								fs = new ArrayList< Feature >();
-								ijSIFT.extractFeatures( stack.getProcessor( slice ), fs );
+								final ImageProcessor ip = stack.getProcessor( slice );
+								ip.setMinAndMax( displayRangeMin, displayRangeMax );
+								ijSIFT.extractFeatures( ip, fs );
 
 								if ( ! serializeFeatures( p.sift, fs, path ) )
 								{
@@ -506,9 +510,9 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 		final TileConfiguration initMeshes = new TileConfiguration();
 		initMeshes.addTiles( tiles );
 		
-		final SpringMesh[] meshes = new SpringMesh[ stack.getSize() ];
+		final ArrayList< SpringMesh > meshes = new ArrayList< SpringMesh >( stack.getSize() );
 		for ( int i = 0; i < stack.getSize(); ++i )
-			meshes[ i ] = new SpringMesh( p.resolutionSpringMesh, stack.getWidth(), stack.getHeight(), p.stiffnessSpringMesh, p.maxStretchSpringMesh, p.dampSpringMesh );
+			meshes.add( new SpringMesh( p.resolutionSpringMesh, stack.getWidth(), stack.getHeight(), p.stiffnessSpringMesh, p.maxStretchSpringMesh, p.dampSpringMesh ) );
 		
 		final int blockRadius = Math.max( 32, stack.getWidth() / p.resolutionSpringMesh / 2 );
 		
@@ -517,8 +521,8 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 		
 		for ( final Triple< Integer, Integer, AbstractModel< ? > > pair : pairs )
 		{
-			final SpringMesh m1 = meshes[ pair.a ];
-			final SpringMesh m2 = meshes[ pair.b ];
+			final SpringMesh m1 = meshes.get( pair.a );
+			final SpringMesh m2 = meshes.get( pair.b );
 
 			ArrayList< PointMatch > pm12 = new ArrayList< PointMatch >();
 			ArrayList< PointMatch > pm21 = new ArrayList< PointMatch >();
@@ -633,7 +637,7 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 //		}
 		initMeshes.optimize( p.maxEpsilon, p.maxIterationsSpringMesh, p.maxPlateauwidthSpringMesh );
 		for ( int i = 0; i < stack.getSize(); ++i )
-			meshes[ i ].init( tiles.get( i ).getModel() );
+			meshes.get( i ).init( tiles.get( i ).getModel() );
 
 		/* optimize */
 		try
@@ -641,7 +645,7 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 			long t0 = System.currentTimeMillis();
 			IJ.log("Optimizing spring meshes...");
 			
-			SpringMesh.optimizeMeshes( Arrays.asList( meshes ), p.maxEpsilon, p.maxIterationsSpringMesh, p.maxPlateauwidthSpringMesh, p.visualize );
+			SpringMesh.optimizeMeshes( meshes, p.maxEpsilon, p.maxIterationsSpringMesh, p.maxPlateauwidthSpringMesh, p.visualize );
 
 			IJ.log("Done optimizing spring meshes. Took " + (System.currentTimeMillis() - t0) + " ms");
 			
@@ -678,29 +682,30 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 		//final ImageStack stackAlignedMeshes = new ImageStack( ( int )Math.ceil( max[ 0 ] - min[ 0 ] ), ( int )Math.ceil( max[ 1 ] - min[ 1 ] ) );
 		final int width = ( int )Math.ceil( max[ 0 ] - min[ 0 ] );
 		final int height = ( int )Math.ceil( max[ 1 ] - min[ 1 ] );
-		for ( int i = 1; i <= stack.getSize(); ++i )
+		for ( int i = 0; i < stack.getSize(); ++i )
 		{
+			final int slice  = i + 1;
 //			final TransformMeshMapping< SpringMesh > meshMapping = new TransformMeshMapping< SpringMesh >( meshes[ i - 1 ] );
 			
 			final MovingLeastSquaresTransform mlt = new MovingLeastSquaresTransform();
 			mlt.setModel( AffineModel2D.class );
 			mlt.setAlpha( 2.0f );
-			mlt.setMatches( meshes[ i - 1 ].getVA().keySet() );
+			mlt.setMatches( meshes.get( i ).getVA().keySet() );
 			
 			final TransformMeshMapping< CoordinateTransformMesh > mltMapping = new TransformMeshMapping< CoordinateTransformMesh >( new CoordinateTransformMesh( mlt, p.resolutionOutput, width, height ) );
 			
 			
-//			final ImageProcessor ipMesh = stack.getProcessor( i ).createProcessor( width, height );
-			final ImageProcessor ip = stack.getProcessor( i ).createProcessor( width, height );
+//			final ImageProcessor ipMesh = stack.getProcessor( slice ).createProcessor( width, height );
+			final ImageProcessor ip = stack.getProcessor( slice ).createProcessor( width, height );
 			if ( p.interpolate )
 			{
-//				meshMapping.mapInterpolated( stack.getProcessor( i ), ipMesh );
-				mltMapping.mapInterpolated( stack.getProcessor( i ), ip );
+//				meshMapping.mapInterpolated( stack.getProcessor( slice ), ipMesh );
+				mltMapping.mapInterpolated( stack.getProcessor( slice ), ip );
 			}
 			else
 			{
-//				meshMapping.map( stack.getProcessor( i ), ipMesh );
-				mltMapping.map( stack.getProcessor( i ), ip );
+//				meshMapping.map( stack.getProcessor( slice ), ipMesh );
+				mltMapping.map( stack.getProcessor( slice ), ip );
 			}
 //			IJ.save( new ImagePlus( "elastic " + i, ipMesh ), p.outputPath + "elastic-" + String.format( "%05d", i ) + ".tif" );
 			IJ.save( new ImagePlus( "elastic mlt " + i, ip ), p.outputPath + "elastic-mlt-" + String.format( "%05d", i ) + ".tif" );
