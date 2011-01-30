@@ -28,28 +28,32 @@ import ij.process.ImageProcessor;
 
 import java.awt.Canvas;
 import java.awt.Rectangle;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 
+import mpicbg.util.Timer;
+
 /**
  * 
  *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  */
-public class Smooth implements KeyListener, MouseListener, MouseMotionListener, PlugIn
+public class InteractiveDifferenceOfMean implements KeyListener, MouseListener, MouseMotionListener, PlugIn
 {
 	final static private String NL = System.getProperty( "line.separator" );
 	
-	private int blockRadiusX = 0, blockRadiusY = 0;
+	private int blockRadiusX1 = 0, blockRadiusY1 = 0, blockRadiusX2 = 0, blockRadiusY2 = 0;
 	private ImageJ ij;
 	private ImagePlus imp;
 	private ImageWindow window;
 	private Canvas canvas;
 	private IntegralImage integral;
 	private PaintThread painter;
+	private final Timer timer = new Timer();
 	
 	@Override
 	public void run( String arg )
@@ -96,19 +100,35 @@ public class Smooth implements KeyListener, MouseListener, MouseMotionListener, 
 		final ImageProcessor ip = imp.getProcessor();
 		final int w = imp.getWidth() - 1;
 		final int h = imp.getHeight() - 1;
+		
+		timer.start();
 		for ( int y = 0; y <= h; ++y )
 		{
-			final int yMin = Math.max( -1, y - blockRadiusY - 1 );
-			final int yMax = Math.min( h, y + blockRadiusY );
-			final int bh = yMax - yMin;
+			final int yMin1 = Math.max( -1, y - blockRadiusY1 - 1 );
+			final int yMax1 = Math.min( h, y + blockRadiusY1 );
+			final int bh1 = yMax1 - yMin1;
+			
+			final int yMin2 = Math.max( -1, y - blockRadiusY2 - 1 );
+			final int yMax2 = Math.min( h, y + blockRadiusY2 );
+			final int bh2 = yMax2 - yMin2;
+			
 			for ( int x = 0; x <= w; ++x )
 			{
-				final int xMin = Math.max( -1, x - blockRadiusX - 1 );
-				final int xMax = Math.min( w, x + blockRadiusX );
-				final float scale = 1.0f / ( xMax - xMin ) / bh;
-				ip.set( x, y, integral.getScaledSum( xMin, yMin, xMax, yMax, scale ) );
+				final int xMin1 = Math.max( -1, x - blockRadiusX1 - 1 );
+				final int xMax1 = Math.min( w, x + blockRadiusX1 );
+				final float scale1 = 1.0f / ( xMax1 - xMin1 ) / bh1;
+				
+				final int xMin2 = Math.max( -1, x - blockRadiusX2 - 1 );
+				final int xMax2 = Math.min( w, x + blockRadiusX2 );
+				final float scale2 = 1.0f / ( xMax2 - xMin2 ) / bh2;
+				
+				ip.set( x, y, integral.getScaledSumDifference(
+						xMin1, yMin1, xMax1, yMax1, scale1,
+						xMin2, yMin2, xMax2, yMax2, scale2 ) );
 			}
 		}
+		final long t = timer.stop();
+		IJ.log( "took " + t + " seconds" );
 	}
 	
 	public class PaintThread extends Thread
@@ -200,13 +220,31 @@ public class Smooth implements KeyListener, MouseListener, MouseMotionListener, 
 		if ( roi != null )
 		{
 			final Rectangle bounds = imp.getRoi().getBounds();
-			blockRadiusX = bounds.width / 2;
-			blockRadiusY = bounds.height / 2;
+			if ( ( e.getModifiers() & InputEvent.SHIFT_DOWN_MASK ) == 0 )
+			{
+				blockRadiusX2 = bounds.width / 2;
+				blockRadiusY2 = bounds.height / 2;				
+				blockRadiusX1 = Math.round( blockRadiusX2 * 0.5f );
+				blockRadiusY1 = Math.round( blockRadiusY2 * 0.5f );
+			}
+			else
+			{
+				blockRadiusX1 = bounds.width / 2;
+				blockRadiusY1 = bounds.height / 2;
+			}
 		}
 		else
 		{
-			blockRadiusX = 0;
-			blockRadiusY = 0;	
+			if ( ( e.getModifiers() & InputEvent.SHIFT_DOWN_MASK ) == 0 )
+			{
+				blockRadiusX1 = 0;
+				blockRadiusY1 = 0;
+			}
+			else
+			{
+				blockRadiusX2 = 0;
+				blockRadiusY2 = 0;				
+			}
 		}
 		painter.repaint();
 	}
