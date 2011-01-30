@@ -28,7 +28,6 @@ import ij.process.ImageProcessor;
 
 import java.awt.Canvas;
 import java.awt.Rectangle;
-import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -40,11 +39,11 @@ import java.awt.event.MouseMotionListener;
  *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  */
-public class DifferenceOfMean implements KeyListener, MouseListener, MouseMotionListener, PlugIn
+public class InteractiveSmooth implements KeyListener, MouseListener, MouseMotionListener, PlugIn
 {
 	final static private String NL = System.getProperty( "line.separator" );
 	
-	private int blockRadiusX1 = 0, blockRadiusY1 = 0, blockRadiusX2 = 0, blockRadiusY2 = 0;
+	private int blockRadiusX = 0, blockRadiusY = 0;
 	private ImageJ ij;
 	private ImagePlus imp;
 	private ImageWindow window;
@@ -99,27 +98,15 @@ public class DifferenceOfMean implements KeyListener, MouseListener, MouseMotion
 		final int h = imp.getHeight() - 1;
 		for ( int y = 0; y <= h; ++y )
 		{
-			final int yMin1 = Math.max( -1, y - blockRadiusY1 - 1 );
-			final int yMax1 = Math.min( h, y + blockRadiusY1 );
-			final int bh1 = yMax1 - yMin1;
-			
-			final int yMin2 = Math.max( -1, y - blockRadiusY2 - 1 );
-			final int yMax2 = Math.min( h, y + blockRadiusY2 );
-			final int bh2 = yMax2 - yMin2;
-			
+			final int yMin = Math.max( -1, y - blockRadiusY - 1 );
+			final int yMax = Math.min( h, y + blockRadiusY );
+			final int bh = yMax - yMin;
 			for ( int x = 0; x <= w; ++x )
 			{
-				final int xMin1 = Math.max( -1, x - blockRadiusX1 - 1 );
-				final int xMax1 = Math.min( w, x + blockRadiusX1 );
-				final float scale1 = 1.0f / ( xMax1 - xMin1 ) / bh1;
-				
-				final int xMin2 = Math.max( -1, x - blockRadiusX2 - 1 );
-				final int xMax2 = Math.min( w, x + blockRadiusX2 );
-				final float scale2 = 1.0f / ( xMax2 - xMin2 ) / bh2;
-				
-				ip.set( x, y, integral.getScaledSumDifference(
-						xMin1, yMin1, xMax1, yMax1, scale1,
-						xMin2, yMin2, xMax2, yMax2, scale2 ) );
+				final int xMin = Math.max( -1, x - blockRadiusX - 1 );
+				final int xMax = Math.min( w, x + blockRadiusX );
+				final float scale = 1.0f / ( xMax - xMin ) / bh;
+				ip.set( x, y, integral.getScaledSum( xMin, yMin, xMax, yMax, scale ) );
 			}
 		}
 	}
@@ -213,29 +200,13 @@ public class DifferenceOfMean implements KeyListener, MouseListener, MouseMotion
 		if ( roi != null )
 		{
 			final Rectangle bounds = imp.getRoi().getBounds();
-			if ( ( e.getModifiers() & InputEvent.SHIFT_DOWN_MASK ) == 0 )
-			{
-				blockRadiusX1 = bounds.width / 2;
-				blockRadiusY1 = bounds.height / 2;
-			}
-			else
-			{
-				blockRadiusX2 = bounds.width / 2;
-				blockRadiusY2 = bounds.height / 2;				
-			}
+			blockRadiusX = bounds.width / 2;
+			blockRadiusY = bounds.height / 2;
 		}
 		else
 		{
-			if ( ( e.getModifiers() & InputEvent.SHIFT_DOWN_MASK ) == 0 )
-			{
-				blockRadiusX1 = 0;
-				blockRadiusY1 = 0;
-			}
-			else
-			{
-				blockRadiusX2 = 0;
-				blockRadiusY2 = 0;				
-			}
+			blockRadiusX = 0;
+			blockRadiusY = 0;	
 		}
 		painter.repaint();
 	}
