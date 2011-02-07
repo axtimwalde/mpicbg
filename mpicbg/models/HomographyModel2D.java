@@ -503,6 +503,5 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 		m.cost = getCost();
 		
 		return m;
-		
 	}
 }

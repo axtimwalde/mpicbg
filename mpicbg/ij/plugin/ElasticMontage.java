@@ -71,7 +71,7 @@ import mpicbg.util.Util;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.1a
  */
-public class ElasticAlign implements PlugIn, KeyListener
+public class ElasticMontage implements PlugIn, KeyListener
 {
 	final static private class Triple< A, B, C >
 	{
@@ -589,13 +589,13 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 			/* </visualisation> */
 			
 			final float springConstant  = 1.0f / ( pair.b - pair.a );
-			IJ.log( pair.a + " <> " + pair.b + " spring constant = " + springConstant );
+			IJ.log( pair.a + " <> " + pair.b );
 	
 			for ( final PointMatch pm : pm12 )
 			{
 				final Vertex p1 = ( Vertex )pm.getP1();
 				final Vertex p2 = new Vertex( pm.getP2() );
-				p1.addSpring( p2, new Spring( 0, springConstant ) );
+				p1.addSpring( p2, new Spring( 0, 1.0f ) );
 				m2.addPassiveVertex( p2 );
 			}
 		
@@ -603,7 +603,7 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 			{
 				final Vertex p1 = ( Vertex )pm.getP1();
 				final Vertex p2 = new Vertex( pm.getP2() );
-				p1.addSpring( p2, new Spring( 0, springConstant ) );
+				p1.addSpring( p2, new Spring( 0, 1.0f ) );
 				m1.addPassiveVertex( p2 );
 			}
 			
@@ -681,6 +681,7 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 		//final ImageStack stackAlignedMeshes = new ImageStack( ( int )Math.ceil( max[ 0 ] - min[ 0 ] ), ( int )Math.ceil( max[ 1 ] - min[ 1 ] ) );
 		final int width = ( int )Math.ceil( max[ 0 ] - min[ 0 ] );
 		final int height = ( int )Math.ceil( max[ 1 ] - min[ 1 ] );
+		final ImageProcessor ip = stack.getProcessor( 0 ).createProcessor( width, height );
 		for ( int i = 0; i < stack.getSize(); ++i )
 		{
 			final int slice  = i + 1;
@@ -695,7 +696,6 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 			
 			
 //			final ImageProcessor ipMesh = stack.getProcessor( slice ).createProcessor( width, height );
-			final ImageProcessor ip = stack.getProcessor( slice ).createProcessor( width, height );
 			if ( p.interpolate )
 			{
 //				meshMapping.mapInterpolated( stack.getProcessor( slice ), ipMesh );
@@ -707,10 +707,11 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 				mltMapping.map( stack.getProcessor( slice ), ip );
 			}
 //			IJ.save( new ImagePlus( "elastic " + i, ipMesh ), p.outputPath + "elastic-" + String.format( "%05d", i ) + ".tif" );
-			IJ.save( new ImagePlus( "elastic mlt " + i, ip ), p.outputPath + "elastic-mlt-" + String.format( "%05d", i ) + ".tif" );
+			
 			
 			//stackAlignedMeshes.addSlice( "" + i, ip );
 		}
+		IJ.save( new ImagePlus( "elastic mlt montage", ip ), p.outputPath + "elastic-mlt-montage.tif" );
 		
 		IJ.log( "Done." );
 	}
@@ -766,9 +767,9 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 	{
 		private static final long serialVersionUID = -2564147268101223484L;
 		
-		ElasticAlign.Param param;
+		ElasticMontage.Param param;
 		ArrayList< PointMatch > pointMatches;
-		PointMatches( final ElasticAlign.Param p, final ArrayList< PointMatch > pointMatches )
+		PointMatches( final ElasticMontage.Param p, final ArrayList< PointMatch > pointMatches )
 		{
 			this.param = p;
 			this.pointMatches = pointMatches;
@@ -776,14 +777,14 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 	}
 	
 	final static private boolean serializePointMatches(
-			final ElasticAlign.Param param,
+			final ElasticMontage.Param param,
 			final ArrayList< PointMatch > pms,
 			final String path )
 	{
 		return serialize( new PointMatches( param, pms ), path );
 	}
 	
-	final static private ArrayList< PointMatch > deserializePointMatches( final ElasticAlign.Param param, final String path )
+	final static private ArrayList< PointMatch > deserializePointMatches( final ElasticMontage.Param param, final String path )
 	{
 		Object o = deserialize( path );
 		if ( null == o ) return null;
