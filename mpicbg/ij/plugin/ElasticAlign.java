@@ -131,6 +131,8 @@ public class ElasticAlign implements PlugIn, KeyListener
 		public float maxCurvatureR = 3f;
 		public float rodR = 0.8f;
 		
+		public boolean mask = false;
+		
 		public int modelIndexOptimize = 1;
 		public int maxIterationsOptimize = 1000;
 		public int maxPlateauwidthOptimize = 200;
@@ -225,6 +227,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 			gdBlockMatching.addNumericField( "maximal_curvature_factor :", p.maxCurvatureR, 2 );
 			gdBlockMatching.addNumericField( "closest/next_closest_ratio :", p.rodR, 2 );
 			gdBlockMatching.addNumericField( "resolution :", p.resolutionSpringMesh, 0 );
+			gdBlockMatching.addCheckbox( "green mask (TODO more colors)", mask );
 			
 			gdBlockMatching.showDialog();
 			
@@ -236,7 +239,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 			p.maxCurvatureR = ( float )gdBlockMatching.getNextNumber();
 			p.rodR = ( float )gdBlockMatching.getNextNumber();
 			p.resolutionSpringMesh = ( int )gdBlockMatching.getNextNumber();
-			
+			p.mask = gdBlockMatching.getNextBoolean();
 			
 			/* Optimization */
 			final GenericDialog gdOptimize = new GenericDialog( "Elastically align stack: Optimization" );
@@ -531,6 +534,13 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 
 			final FloatProcessor ip1 = ( FloatProcessor )stack.getProcessor( pair.a + 1 ).convertToFloat().duplicate();
 			final FloatProcessor ip2 = ( FloatProcessor )stack.getProcessor( pair.b + 1 ).convertToFloat().duplicate();
+			
+			if ( imp.getType() == ImagePlus.COLOR_RGB && p.mask )
+			{
+				mask( ip1, stack.getProcessor( pair.a + 1 ) );
+				mask( ip2, stack.getProcessor( pair.b + 1 ) );
+			}
+			
 
 			BlockMatching.matchByMaximalPMCC(
 					ip1,
@@ -713,6 +723,19 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 		}
 		
 		IJ.log( "Done." );
+	}
+
+	static private void mask( final FloatProcessor ip, final ImageProcessor mask )
+	{
+		final int maskColor = 0x0000ff00;
+		final int n = ip.getWidth() * ip.getHeight();
+		final float[] ipPixels = ( float[] )ip.getPixels();
+		for ( int i = 0; i < n; ++i )
+		{
+			final int maskPixel = mask.get( i ) & 0x00ffffff;
+			if ( maskPixel == maskColor )
+				ipPixels[ i ] = Float.NaN;
+		}
 	}
 
 	public void keyPressed(KeyEvent e)
