@@ -681,7 +681,7 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 		//final ImageStack stackAlignedMeshes = new ImageStack( ( int )Math.ceil( max[ 0 ] - min[ 0 ] ), ( int )Math.ceil( max[ 1 ] - min[ 1 ] ) );
 		final int width = ( int )Math.ceil( max[ 0 ] - min[ 0 ] );
 		final int height = ( int )Math.ceil( max[ 1 ] - min[ 1 ] );
-		final ImageProcessor ip = stack.getProcessor( 0 ).createProcessor( width, height );
+		final ImageProcessor ip = stack.getProcessor( 1 ).createProcessor( width, height );
 		for ( int i = 0; i < stack.getSize(); ++i )
 		{
 			final int slice  = i + 1;
