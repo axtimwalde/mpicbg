@@ -244,6 +244,8 @@ public class Align_SIFT_BlockMatching_ElasticMeshStack implements PlugIn
 			BlockMatching.matchByMaximalPMCC(
 					( FloatProcessor )( ipSource instanceof FloatProcessor ? ipSource.duplicate() : ipSource.convertToFloat() ),
 					( FloatProcessor )( ipTarget instanceof FloatProcessor ? ipTarget.duplicate() : ipTarget.convertToFloat() ),
+					null,
+					null,
 					//512.0f / p.imp1.getWidth(),
 					Math.min(  1.0f, 16.0f / searchRadius ),
 					ict,

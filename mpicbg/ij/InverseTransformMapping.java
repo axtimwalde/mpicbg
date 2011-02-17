@@ -22,7 +22,7 @@ public class InverseTransformMapping< T extends InverseCoordinateTransform > imp
 		this.transform = t;
 	}
 	
-	//@Override
+	@Override
 	public void map(
 			final ImageProcessor source,
 			final ImageProcessor target )
@@ -55,7 +55,7 @@ public class InverseTransformMapping< T extends InverseCoordinateTransform > imp
 		}
 	}
 	
-	//@Override
+	@Override
 	public void mapInterpolated(
 			final ImageProcessor source,
 			final ImageProcessor target )

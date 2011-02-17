@@ -2,6 +2,7 @@ package mpicbg.ij.blockmatching;
 
 import ij.IJ;
 import ij.process.FloatProcessor;
+import ij.process.ImageProcessor;
 
 import java.awt.Shape;
 import java.awt.geom.GeneralPath;
@@ -85,6 +86,55 @@ public class BlockMatching
 				sum += pixels[ ry + x ];
 		}
 		return ( float )( sum / blockWidth / blockHeight );
+	}
+	
+	
+	/**
+	 * Set all pixels in source with a mask value == 0 to NaN
+	 * 
+	 * @param source
+	 * @param mask
+	 */
+	final static private void mask( final FloatProcessor source, final FloatProcessor mask )
+	{
+		final float[] sourcePixels = ( float[] )source.getPixels();
+		final float[] maskPixels = ( float[] )mask.getPixels();
+		final int n = sourcePixels.length;
+		for ( int i = 0; i < n; ++i )
+		{
+			final float m = maskPixels[ i ];
+			if ( m < 1 )
+				sourcePixels[ i ] = Float.NaN;
+		}
+	}
+	
+	final static private void mapAndMask(
+			final ImageProcessor source,
+			final ImageProcessor mask,
+			final ImageProcessor target,
+			final CoordinateTransform transform )
+	{
+		final float[] t = new float[ 2 ];
+		final int sw = source.getWidth() - 1;
+		final int sh = source.getHeight() - 1;
+		final int tw = target.getWidth();
+		final int th = target.getHeight();
+		for ( int y = 0; y < th; ++y )
+		{
+			for ( int x = 0; x < tw; ++x )
+			{
+				t[ 0 ] = x;
+				t[ 1 ] = y;
+				transform.applyInPlace( t );
+				if (
+						t[ 0 ] >= 0 &&
+						t[ 0 ] <= sw &&
+						t[ 1 ] >= 0 &&
+						t[ 1 ] <= sh &&
+						mask.getPixelInterpolated( t[ 0 ], t[ 1 ] ) > 0 )
+					target.putPixel( x, y, source.getPixelInterpolated( t[ 0 ], t[ 1 ] ) );
+			}
+		}
 	}
 	
 	/**
@@ -475,8 +525,10 @@ public class BlockMatching
 	 * pixel intensities as similarity measure. Only correspondence candidates
 	 * with <i>r</i> >= a given threshold are accepted.
 	 * 
-	 * @param scaledSource
+	 * @param source
 	 * @param target
+	 * @param sourceMask
+	 * @param targetMask
 	 * @param scale
 	 *            [0,1]
 	 * @param transform
@@ -491,12 +543,16 @@ public class BlockMatching
 	 *            vertical search radius
 	 * @param minR
 	 *            minimal accepted Cross-Correlation coefficient
+	 * @param rod
 	 * @param sourcePoints
 	 * @param sourceMatches
+	 * @param observer
 	 */
     static public void matchByMaximalPMCC(
-			final FloatProcessor source,
-			final FloatProcessor target,
+			FloatProcessor source,
+			FloatProcessor target,
+			FloatProcessor sourceMask,
+			FloatProcessor targetMask,
 			final float scale,
 			final CoordinateTransform transform,
 			final int blockRadiusX,
@@ -516,15 +572,23 @@ public class BlockMatching
     	final int scaledSearchRadiusY = ( int )Math.ceil( scale * searchRadiusY ) + 1; // +1 for 3x3 maximum test
     	
     	/* Scale source */
-    	final FloatProcessor scaledSource = Filter.createDownsampled( source, scale, 0.5f, minSigma );
-    	Util.normalizeContrast( scaledSource );
+    	source = Filter.createDownsampled( source, scale, 0.5f, minSigma );
+    	Util.normalizeContrast( source );
+    	
+    	/* Scaled source mask */
+    	if ( sourceMask != null )
+    		mask( source, Filter.createDownsampled( sourceMask, scale, 0.5f, 0.5f ) );
+    	
+    	/* Free memory */
+    	sourceMask = null;
     	
     	/* Smooth target with respect to the desired scale */
-    	final FloatProcessor smoothedTarget = ( FloatProcessor )target.duplicate();
-    	Filter.smoothForScale( smoothedTarget, scale, 0.5f, minSigma );
-    	Util.normalizeContrast( smoothedTarget );
+    	target = ( FloatProcessor )target.duplicate();
     	
-    	FloatProcessor mappedScaledTarget = new FloatProcessor( scaledSource.getWidth() + 2 * scaledSearchRadiusX, scaledSource.getHeight() + 2 * scaledSearchRadiusY );
+    	Filter.smoothForScale( target, scale, 0.5f, minSigma );
+    	Util.normalizeContrast( target );
+    	
+    	final FloatProcessor mappedScaledTarget = new FloatProcessor( source.getWidth() + 2 * scaledSearchRadiusX, source.getHeight() + 2 * scaledSearchRadiusY );
 		Util.fillWithNaN( mappedScaledTarget );
 		
 		/* Shift relative to the scaled search radius */
@@ -541,13 +605,27 @@ public class BlockMatching
 		lTarget.add( tTarget );
 		lTarget.add( transform );
 		
-		final InverseMapping< ? > targetMapping = new TransformMapping< CoordinateTransform >( lTarget );
-		targetMapping.mapInverseInterpolated( smoothedTarget, mappedScaledTarget );
+		if ( targetMask == null )
+		{
+			final InverseMapping< ? > targetMapping = new TransformMapping< CoordinateTransform >( lTarget );
+			targetMapping.mapInverseInterpolated( target, mappedScaledTarget );
+		}
+		else
+		{
+			final FloatProcessor smoothedTargetMask = ( FloatProcessor )targetMask.duplicate();
+	    	Filter.smoothForScale( smoothedTargetMask, scale, 0.5f, 0.5f );
+	    	
+	    	mapAndMask( target, smoothedTargetMask, mappedScaledTarget, lTarget );
+		}
 		
-//		scaledSource.setMinAndMax( 0, 1 );
+		target = null;
+		
+		/* <visualization> */
+//		source.setMinAndMax( 0, 1 );
 //		mappedScaledTarget.setMinAndMax( 0, 1 );
-//		new ImagePlus( "Scaled Source", scaledSource ).show();
+//		new ImagePlus( "Scaled Source", source ).show();
 //		new ImagePlus( "Mapped Target", mappedScaledTarget ).show();
+		/* </visualization> */
 		
 		final Map< Point, Point > scaledSourcePoints = new HashMap< Point, Point>();
 		final ArrayList< PointMatch > scaledSourceMatches = new ArrayList< PointMatch >();
@@ -566,7 +644,7 @@ public class BlockMatching
 			query.add( new PointMatch( p, p.clone()) );
 		
 		matchByMaximalPMCC(
-				scaledSource,
+				source,
 				mappedScaledTarget,
 				scaledBlockRadiusX,
 				scaledBlockRadiusY,
@@ -620,6 +698,8 @@ public class BlockMatching
     static public void matchByMaximalPMCC(
 			final FloatProcessor source,
 			final FloatProcessor target,
+			final FloatProcessor sourceMask,
+			final FloatProcessor targetMask,
 			final float scale,
 			final CoordinateTransform transform,
 			final int blockRadiusX,
@@ -633,6 +713,8 @@ public class BlockMatching
     	matchByMaximalPMCC(
     			source,
     			target,
+    			sourceMask,
+    			targetMask,
     			scale,
     			transform,
     			blockRadiusX,
@@ -650,6 +732,8 @@ public class BlockMatching
     public static void findMatches(
     		final FloatProcessor source,
     		final FloatProcessor target,
+    		final FloatProcessor sourceMask,
+			final FloatProcessor targetMask,
 			final Model< ? > initialModel,
 			final Class< ? extends AbstractAffineModel2D< ? > > localModelClass,
 			final float maxEpsilon,
@@ -701,6 +785,8 @@ public class BlockMatching
 			BlockMatching.matchByMaximalPMCC(
 					source,
 					target,
+					sourceMask,
+					targetMask,
 					//512.0f / p.imp1.getWidth(),
 					scale,
 					ict,

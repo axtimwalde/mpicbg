@@ -16,6 +16,7 @@
  */
 package mpicbg.ij.plugin;
 
+
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
@@ -534,17 +535,25 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 
 			final FloatProcessor ip1 = ( FloatProcessor )stack.getProcessor( pair.a + 1 ).convertToFloat().duplicate();
 			final FloatProcessor ip2 = ( FloatProcessor )stack.getProcessor( pair.b + 1 ).convertToFloat().duplicate();
+			final FloatProcessor ip1Mask;
+			final FloatProcessor ip2Mask;
 			
 			if ( imp.getType() == ImagePlus.COLOR_RGB && p.mask )
 			{
-				mask( ip1, stack.getProcessor( pair.a + 1 ) );
-				mask( ip2, stack.getProcessor( pair.b + 1 ) );
+				ip1Mask = createMask( stack.getProcessor( pair.a + 1 ) );
+				ip2Mask = createMask( stack.getProcessor( pair.b + 1 ) );
+			}
+			else
+			{
+				ip1Mask = null;
+				ip2Mask = null;
 			}
 			
-
 			BlockMatching.matchByMaximalPMCC(
 					ip1,
 					ip2,
+					ip1Mask,
+					ip2Mask,
 					Math.min( 1.0f, ( float )p.maxImageSize / ip1.getWidth() ),
 					( ( InvertibleCoordinateTransform )pair.c ).createInverse(),
 					blockRadius,
@@ -573,6 +582,8 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 			BlockMatching.matchByMaximalPMCC(
 					ip2,
 					ip1,
+					ip2Mask,
+					ip1Mask,
 					Math.min( 1.0f, ( float )p.maxImageSize / ip1.getWidth() ),
 					pair.c,
 					blockRadius,
@@ -725,17 +736,21 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 		IJ.log( "Done." );
 	}
 
-	static private void mask( final FloatProcessor ip, final ImageProcessor mask )
+	static private FloatProcessor createMask( final ImageProcessor source )
 	{
+		final FloatProcessor mask = new FloatProcessor( source.getWidth(), source.getHeight() );
 		final int maskColor = 0x0000ff00;
-		final int n = ip.getWidth() * ip.getHeight();
-		final float[] ipPixels = ( float[] )ip.getPixels();
+		final int n = source.getWidth() * source.getHeight();
+		final float[] maskPixels = ( float[] )mask.getPixels();
 		for ( int i = 0; i < n; ++i )
 		{
-			final int maskPixel = mask.get( i ) & 0x00ffffff;
-			if ( maskPixel == maskColor )
-				ipPixels[ i ] = Float.NaN;
+			final int sourcePixel = source.get( i ) & 0x00ffffff;
+			if ( sourcePixel == maskColor )
+				maskPixels[ i ] = 0;
+			else
+				maskPixels[ i ] = 1;
 		}
+		return mask;
 	}
 
 	public void keyPressed(KeyEvent e)

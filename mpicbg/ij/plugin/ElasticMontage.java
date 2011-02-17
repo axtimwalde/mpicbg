@@ -535,6 +535,8 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 			BlockMatching.matchByMaximalPMCC(
 					ip1,
 					ip2,
+					null,
+					null,
 					Math.min( 1.0f, ( float )p.maxImageSize / ip1.getWidth() ),
 					( ( InvertibleCoordinateTransform )pair.c ).createInverse(),
 					blockRadius,
@@ -563,6 +565,8 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 			BlockMatching.matchByMaximalPMCC(
 					ip2,
 					ip1,
+					null,
+					null,
 					Math.min( 1.0f, ( float )p.maxImageSize / ip1.getWidth() ),
 					pair.c,
 					blockRadius,

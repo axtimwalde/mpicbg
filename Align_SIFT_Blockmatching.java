@@ -222,6 +222,8 @@ public class Align_SIFT_Blockmatching implements PlugIn
 			BlockMatching.matchByMaximalPMCC(
 					( FloatProcessor )p.imp1.getProcessor().convertToFloat().duplicate(),
 					( FloatProcessor )p.imp2.getProcessor().convertToFloat().duplicate(),
+					null,
+					null,
 					//512.0f / p.imp1.getWidth(),
 					scale,
 					ict,
