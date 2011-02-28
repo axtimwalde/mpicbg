@@ -98,13 +98,18 @@ final public class DoubleIntegralImage implements IntegralImage
 	final public int getWidth() { return width; }
 	@Override
 	final public int getHeight() { return height; }
+	
+	final public double getDoubleSum( final int xMin, final int yMin, final int xMax, final int yMax )
+	{
+		final int y1w = yMin * w + w + 1;
+		final int y2w = yMax * w + w + 1;
+		return sum[ y1w + xMin ] + sum[ y2w + xMax ] - sum[ y1w + xMax ] - sum[ y2w + xMin ];
+	}
 
 	@Override
 	final public int getSum( final int xMin, final int yMin, final int xMax, final int yMax )
 	{
-		final int y1w = yMin * w + w + 1;
-		final int y2w = yMax * w + w + 1;
-		return Float.floatToIntBits( ( float )( sum[ y1w + xMin ] + sum[ y2w + xMax ] - sum[ y1w + xMax ] - sum[ y2w + xMin ] ) );
+		return Float.floatToIntBits( ( float )getDoubleSum( xMin, yMin, xMax, yMax ) );
 	}
 	
 	@Override

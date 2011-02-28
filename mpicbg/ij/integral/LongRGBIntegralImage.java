@@ -89,11 +89,32 @@ final public class LongRGBIntegralImage implements IntegralImage
 		this( ( int[] )ip.getPixels(), ip.getWidth(), ip.getHeight() );
 	}
 	
+	final static private int roundPositive( final float f )
+	{
+		return ( int )( f + 0.5f );
+	}
+	
+	
 	@Override
 	final public int getWidth() { return width; }
 	@Override
 	final public int getHeight() { return height; }
 
+	final public void readLongRGBSum( final long[] rgb, final int xMin, final int yMin, final int xMax, final int yMax )
+	{
+		final int y1w = yMin * w + w + 1;
+		final int y2w = yMax * w + w + 1;
+		final int a = y1w + xMin;
+		final int b = y2w + xMax;
+		final int c = y1w + xMax;
+		final int d = y2w + xMin;
+		
+		rgb[ 0 ] = sumR[ a ] + sumR[ b ] - sumR[ c ] - sumR[ d ];
+		rgb[ 1 ] = sumG[ a ] + sumG[ b ] - sumG[ c ] - sumG[ d ];
+		rgb[ 2 ] = sumB[ a ] + sumB[ b ] - sumB[ c ] - sumB[ d ];
+	}
+	
+	
 	@Override
 	final public int getSum( final int xMin, final int yMin, final int xMax, final int yMax )
 	{
@@ -121,9 +142,9 @@ final public class LongRGBIntegralImage implements IntegralImage
 		final int c = y1w + xMax;
 		final int d = y2w + xMin;
 		
-		final int r = Math.round( ( sumR[ a ] + sumR[ b ] - sumR[ c ] - sumR[ d ] ) * scale );
-		final int g = Math.round( ( sumG[ a ] + sumG[ b ] - sumG[ c ] - sumG[ d ] ) * scale );
-		final int x = Math.round( ( sumB[ a ] + sumB[ b ] - sumB[ c ] - sumB[ d ] ) * scale );
+		final int r = roundPositive( ( sumR[ a ] + sumR[ b ] - sumR[ c ] - sumR[ d ] ) * scale );
+		final int g = roundPositive( ( sumG[ a ] + sumG[ b ] - sumG[ c ] - sumG[ d ] ) * scale );
+		final int x = roundPositive( ( sumB[ a ] + sumB[ b ] - sumB[ c ] - sumB[ d ] ) * scale );
 		
 		return ( ( ( r << 8 ) | g ) << 8 ) | x;
 	}

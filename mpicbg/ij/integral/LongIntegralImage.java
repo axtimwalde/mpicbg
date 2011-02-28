@@ -88,17 +88,27 @@ final public class LongIntegralImage implements IntegralImage
 		}
 	}
 	
+	final static private int roundPositive( final float f )
+	{
+		return ( int )( f + 0.5f );
+	}
+	
 	@Override
 	final public int getWidth() { return width; }
 	@Override
 	final public int getHeight() { return height; }
 
-	@Override
-	final public int getSum( final int xMin, final int yMin, final int xMax, final int yMax )
+	final public long getLongSum( final int xMin, final int yMin, final int xMax, final int yMax )
 	{
 		final int y1w = yMin * w + w + 1;
 		final int y2w = yMax * w + w + 1;
-		return ( int )( sum[ y1w + xMin ] + sum[ y2w + xMax ] - sum[ y1w + xMax ] - sum[ y2w + xMin ] );
+		return sum[ y1w + xMin ] + sum[ y2w + xMax ] - sum[ y1w + xMax ] - sum[ y2w + xMin ];
+	}
+	
+	@Override
+	final public int getSum( final int xMin, final int yMin, final int xMax, final int yMax )
+	{
+		return ( int )getLongSum( xMin, yMin, xMax, yMax );
 	}
 	
 	@Override
@@ -106,7 +116,7 @@ final public class LongIntegralImage implements IntegralImage
 	{
 		final int y1w = yMin * w + w + 1;
 		final int y2w = yMax * w + w + 1;
-		return Math.round( ( sum[ y1w + xMin ] + sum[ y2w + xMax ] - sum[ y1w + xMax ] - sum[ y2w + xMin ] ) * scale );
+		return roundPositive( ( sum[ y1w + xMin ] + sum[ y2w + xMax ] - sum[ y1w + xMax ] - sum[ y2w + xMin ] ) * scale );
 	}
 	
 	@Override
