@@ -67,6 +67,11 @@ final public class DifferenceOfMean
 		return ( int )( f + 0.5f );
 	}
 	
+	final static private int crop( final int a, final int min, final int max )
+	{
+		return a < min ? min : a > max ? max : a;
+	}
+	
 	final static private void differenceOfMeanFloat( final FloatProcessor ip, final DoubleIntegralImage integral, final int blockRadiusX1, final int blockRadiusY1, final int blockRadiusX2, final int blockRadiusY2 )
 	{
 		final int w = ip.getWidth() - 1;
@@ -101,7 +106,7 @@ final public class DifferenceOfMean
 		}
 	}
 	
-	final static private void differenceOfMeanLong( final ImageProcessor ip, final LongIntegralImage integral, final int blockRadiusX1, final int blockRadiusY1, final int blockRadiusX2, final int blockRadiusY2, final int offset )
+	final static private void differenceOfMeanLong( final ImageProcessor ip, final LongIntegralImage integral, final int blockRadiusX1, final int blockRadiusY1, final int blockRadiusX2, final int blockRadiusY2, final int offset, final int min, final int max )
 	{
 		final int w = ip.getWidth() - 1;
 		final int h = ip.getHeight() - 1;
@@ -168,9 +173,9 @@ final public class DifferenceOfMean
 				integral.readLongRGBSum( rgb1, xMin1, yMin1, xMax1, yMax1 );
 				integral.readLongRGBSum( rgb2, xMin2, yMin2, xMax2, yMax2 );
 				
-				final int r = roundPositive( rgb1[ 0 ] * scale1 - rgb2[ 0 ] * scale2 ) + offset;
-				final int g = roundPositive( rgb1[ 1 ] * scale1 - rgb2[ 1 ] * scale2 ) + offset;
-				final int b = roundPositive( rgb1[ 2 ] * scale1 - rgb2[ 2 ] * scale2 ) + offset;
+				final int r = crop( roundPositive( rgb1[ 0 ] * scale1 - rgb2[ 0 ] * scale2 ) + offset, 0, 255 );
+				final int g = crop( roundPositive( rgb1[ 1 ] * scale1 - rgb2[ 1 ] * scale2 ) + offset, 0, 255 );
+				final int b = crop( roundPositive( rgb1[ 2 ] * scale1 - rgb2[ 2 ] * scale2 ) + offset, 0, 255 );
 				
 				ip.set(	row + x, ( ( ( r << 8 ) | g ) << 8 ) | b );
 			}
@@ -185,10 +190,10 @@ final public class DifferenceOfMean
 			differenceOfMeanFloat( ( FloatProcessor )ip, ( DoubleIntegralImage )integral, blockRadiusX1, blockRadiusY1, blockRadiusX2, blockRadiusY2 );
 			break;
 		case ImagePlus.GRAY8:
-			differenceOfMeanLong( ip, ( LongIntegralImage )integral, blockRadiusX1, blockRadiusY1, blockRadiusX2, blockRadiusY2, 127 );
+			differenceOfMeanLong( ip, ( LongIntegralImage )integral, blockRadiusX1, blockRadiusY1, blockRadiusX2, blockRadiusY2, 127, 0, 255 );
 			break;
 		case ImagePlus.GRAY16:
-			differenceOfMeanLong( ip, ( LongIntegralImage )integral, blockRadiusX1, blockRadiusY1, blockRadiusX2, blockRadiusY2, 32767 );
+			differenceOfMeanLong( ip, ( LongIntegralImage )integral, blockRadiusX1, blockRadiusY1, blockRadiusX2, blockRadiusY2, 32767, 0, 65535 );
 			break;
 		case ImagePlus.COLOR_RGB:
 			differenceOfMeanLongRGB( ( ColorProcessor )ip, ( LongRGBIntegralImage )integral, blockRadiusX1, blockRadiusY1, blockRadiusX2, blockRadiusY2, 127 );
