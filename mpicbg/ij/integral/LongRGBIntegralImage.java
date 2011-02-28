@@ -148,30 +148,4 @@ final public class LongRGBIntegralImage implements IntegralImage
 		
 		return ( ( ( r << 8 ) | g ) << 8 ) | x;
 	}
-	
-	@Override
-	final public int getScaledSumDifference(
-			final int xMin1, final int yMin1, final int xMax1, final int yMax1, final float scale1,
-			final int xMin2, final int yMin2, final int xMax2, final int yMax2, final float scale2 )
-	{
-		final int y1w1 = yMin1 * w + w + 1;
-		final int y2w1 = yMax1 * w + w + 1;
-		final int a1 = y1w1 + xMin1;
-		final int b1 = y2w1 + xMax1;
-		final int c1 = y1w1 + xMax1;
-		final int d1 = y2w1 + xMin1;
-		
-		final int y1w2 = yMin2 * w + w + 1;
-		final int y2w2 = yMax2 * w + w + 1;
-		final int a2 = y1w2 + xMin2;
-		final int b2 = y2w2 + xMax2;
-		final int c2 = y1w2 + xMax2;
-		final int d2 = y2w2 + xMin2;
-		
-		final int r = Math.round( ( sumR[ a1 ] + sumR[ b1 ] - sumR[ c1 ] - sumR[ d1 ] ) * scale1 - ( sumR[ a2 ] + sumR[ b2 ] - sumR[ c2 ] - sumR[ d2 ] ) * scale2 );
-		final int g = Math.round( ( sumG[ a1 ] + sumG[ b1 ] - sumG[ c1 ] - sumG[ d1 ] ) * scale1 - ( sumG[ a2 ] + sumG[ b2 ] - sumG[ c2 ] - sumG[ d2 ] ) * scale2 );
-		final int x = Math.round( ( sumB[ a1 ] + sumB[ b1 ] - sumB[ c1 ] - sumB[ d1 ] ) * scale1 - ( sumB[ a2 ] + sumB[ b2 ] - sumB[ c2 ] - sumB[ d2 ] ) * scale2 );
-		
-		return ( ( ( r << 8 ) | g ) << 8 ) | x;
-	}
 }
