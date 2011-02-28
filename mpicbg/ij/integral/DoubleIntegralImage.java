@@ -56,7 +56,7 @@ final public class DoubleIntegralImage implements IntegralImage
 			for ( int x = 1; x < width; ++x )
 			{
 				final int ywx = yw + x;
-				sum[ ywx ] = sum[ ywx - width ] + sum[ ywx - 1 ] + pixels[ ywidth + x ] - sum[ ywx - width - 1 ];
+				sum[ ywx ] = sum[ ywx - w ] + sum[ ywx - 1 ] + pixels[ ywidth + x ] - sum[ ywx - w - 1 ];
 			}
 		}
 	}
