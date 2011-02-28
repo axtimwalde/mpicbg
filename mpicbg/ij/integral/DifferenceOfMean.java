@@ -200,4 +200,27 @@ final public class DifferenceOfMean
 	{
 		differenceOfMean( blockRadius1, blockRadius1, blockRadius2, blockRadius2 );
 	}
+	
+	
+	/**
+	 * Factory method that decides on the type of <code>ip</code> which
+	 * {@link DifferenceOfMean} constructor to call.  Returns <code>null</code>
+	 * for unknown types.
+	 * 
+	 * @param ip
+	 * @return
+	 */
+	final static public DifferenceOfMean create( final ImageProcessor ip )
+	{
+		if ( FloatProcessor.class.isInstance( ip ) )
+			return new DifferenceOfMean( ( FloatProcessor )ip );
+		else if ( ByteProcessor.class.isInstance( ip ) )
+			return new DifferenceOfMean( ( ByteProcessor )ip );
+		else if ( ShortProcessor.class.isInstance( ip ) )
+			return new DifferenceOfMean( ( ShortProcessor )ip );
+		else if ( ColorProcessor.class.isInstance( ip ) )
+			return new DifferenceOfMean( ( ColorProcessor )ip );
+		else
+			return null;
+	}
 }

@@ -79,4 +79,27 @@ final public class Mean
 	{
 		mean( blockRadius, blockRadius );
 	}
+	
+	
+	/**
+	 * Factory method that decides on the type of <code>ip</code> which
+	 * {@link Mean} constructor to call.  Returns <code>null</code> for unknown
+	 * types.
+	 * 
+	 * @param ip
+	 * @return
+	 */
+	final static public Mean create( final ImageProcessor ip )
+	{
+		if ( FloatProcessor.class.isInstance( ip ) )
+			return new Mean( ( FloatProcessor )ip );
+		else if ( ByteProcessor.class.isInstance( ip ) )
+			return new Mean( ( ByteProcessor )ip );
+		else if ( ShortProcessor.class.isInstance( ip ) )
+			return new Mean( ( ShortProcessor )ip );
+		else if ( ColorProcessor.class.isInstance( ip ) )
+			return new Mean( ( ColorProcessor )ip );
+		else
+			return null;
+	}
 }
