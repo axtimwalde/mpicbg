@@ -50,6 +50,8 @@ public class InteractiveDifferenceOfMean implements KeyListener, MouseListener, 
 	private Canvas canvas;
 	private DifferenceOfMean dom;
 	private PaintThread painter;
+	private double min;
+	private double max;
 	
 	@Override
 	public void run( String arg )
@@ -66,7 +68,14 @@ public class InteractiveDifferenceOfMean implements KeyListener, MouseListener, 
 		ij.addKeyListener( this );
 		
 		final ImageProcessor ip = imp.getProcessor();
+		min = ip.getMin();
+		max = ip.getMax();
 		ip.snapshot();
+		if ( imp.getType() == ImagePlus.GRAY32 )
+			ip.setMinAndMax( -max / 2.0, max / 2.0 );
+		else if ( imp.getType() == ImagePlus.GRAY16 )
+			ip.setMinAndMax( 32767 - max / 2.0, 32767 + max / 2.0 );
+
 		dom = DifferenceOfMean.create( ip );
 		
 		Toolbar.getInstance().setTool( Toolbar.RECTANGLE );
@@ -143,7 +152,9 @@ public class InteractiveDifferenceOfMean implements KeyListener, MouseListener, 
 			{
 				if ( e.getKeyCode() == KeyEvent.VK_ESCAPE )
 				{
-					imp.getProcessor().reset();
+					final ImageProcessor ip = imp.getProcessor();
+					ip.reset();
+					ip.setMinAndMax( min, max );
 				}
 				else if ( e.getKeyCode() == KeyEvent.VK_ENTER )
 				{
