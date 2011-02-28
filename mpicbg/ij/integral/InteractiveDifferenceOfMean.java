@@ -72,9 +72,9 @@ public class InteractiveDifferenceOfMean implements KeyListener, MouseListener, 
 		max = ip.getMax();
 		ip.snapshot();
 		if ( imp.getType() == ImagePlus.GRAY32 )
-			ip.setMinAndMax( -max / 2.0, max / 2.0 );
+			ip.setMinAndMax( ( min - max ) / 2.0, ( max - min ) / 2.0 );
 		else if ( imp.getType() == ImagePlus.GRAY16 )
-			ip.setMinAndMax( 32767 - max / 2.0, 32767 + max / 2.0 );
+			ip.setMinAndMax( 32767 - ( max - min ) / 2.0, 32767 + ( max - min ) / 2.0 );
 
 		dom = DifferenceOfMean.create( ip );
 		
