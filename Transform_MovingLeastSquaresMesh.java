@@ -62,7 +62,7 @@ public class Transform_MovingLeastSquaresMesh extends InteractiveMapping
 	@Override
 	final protected void createMapping()
 	{
-		mapping = new TransformMeshMapping( mesh );
+		mapping = new TransformMeshMapping< MovingLeastSquaresMesh< ? > >( mesh );
 	}
 	
 	@Override
@@ -79,14 +79,14 @@ public class Transform_MovingLeastSquaresMesh extends InteractiveMapping
 		float[] l = new float[]{ x, y };
 		synchronized ( mesh )
 		{
-			InvertibleCoordinateTransform m = ( InvertibleCoordinateTransform )mesh.findClosest( l ).getModel();
+			InvertibleCoordinateTransform ict = ( InvertibleCoordinateTransform )mesh.findClosest( l ).getModel();
 			try
 			{
-				m.applyInverseInPlace( l );
+				ict.applyInverseInPlace( l );
 				Point here = new Point( l );
 				Point there = new Point( l );
 				hooks.add( here );
-				here.apply( m );
+				here.apply( ict );
 				mesh.addMatchWeightedByDistance( new PointMatch( there, here, 10f ), alpha );
 			}
 			catch ( NoninvertibleModelException e ){ e.printStackTrace(); }
