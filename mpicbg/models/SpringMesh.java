@@ -569,10 +569,7 @@ public class SpringMesh extends TransformMesh
 		boolean proceed = i < maxIterations;
 		
 		/* <visualization> */
-		final float width = meshes.iterator().next().getWidth();
-		final float height = meshes.iterator().next().getHeight();
-		final float scale = Math.min(  1.0f, 512.0f / Math.max( width, height ) );
-		final ImageStack stackAnimation = new ImageStack( mpicbg.util.Util.round( width * scale ), mpicbg.util.Util.round( height * scale ) );
+		final ImageStack stackAnimation = new ImageStack( 512, 512 );
 		final ImagePlus impAnimation = new ImagePlus();
 		/* </visualization> */
 		
@@ -588,7 +585,7 @@ public class SpringMesh extends TransformMesh
 //			stackAnimation.addSlice( "" + i, paintMeshes( meshes, scale ) );
 			if ( visualize )
 			{
-				stackAnimation.addSlice( "" + i, paintSprings( meshes, scale, maxError ) );
+				stackAnimation.addSlice( "" + i, paintSprings( meshes, 512, 512, maxError ) );
 				impAnimation.setStack( stackAnimation );
 				impAnimation.updateAndDraw();
 				if ( i == 1 )
