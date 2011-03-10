@@ -471,6 +471,54 @@ public class SpringMesh extends TransformMesh
 	/* </visualization> */
 	
 	
+	/* <visualization> */
+	final static public ColorProcessor paintSprings( final Collection< SpringMesh > meshes, final int width, final int height, final float maxStretch )
+	{
+		final ColorProcessor ip = new ColorProcessor( width, height );
+		
+		/* calculate bounding box */
+		final float[] min = new float[ 2 ];
+		final float[] max = new float[ 2 ];
+		
+		/* estimate maximal spring stretch */
+		float maxSpringStretch = 0;
+		for ( final SpringMesh mesh : meshes )
+		{
+			final float[] meshMin = new float[ 2 ];
+			final float[] meshMax = new float[ 2 ];
+			
+			mesh.bounds( meshMin, meshMax );
+			
+			mpicbg.util.Util.min( min, meshMin );
+			mpicbg.util.Util.max( max, meshMax );
+			
+			for ( final Vertex vertex : mesh.getVertices() )
+			{
+				for ( final Vertex v : vertex.getConnectedVertices() )
+				{
+					final Spring spring = vertex.getSpring( v );
+					final float stretch = Math.abs( Point.distance( vertex, v ) - spring.getLength() );
+					if ( stretch > maxSpringStretch ) maxSpringStretch = stretch;
+				}
+			}
+		}
+		
+		/* calculate scale */
+		final float w = max[ 0 ] - min[ 0 ];
+		final float h = max[ 1 ] - min[ 1 ];
+		
+		final float scale = Math.min( width / w, height / h );
+		final float offsetX = ( scale * w - width ) / 2;
+		final float offsetY = ( scale * h - height ) / 2;
+		
+		for ( final SpringMesh m : meshes )
+			m.illustrateSprings( ip, scale, maxSpringStretch, offsetX, offsetY );
+		
+		return ip;
+	}
+	/* </visualization> */
+	
+	
 	/**
 	 * Optimize a {@link Collection} of connected {@link SpringMesh SpringMeshes}.
 	 * 
@@ -523,8 +571,8 @@ public class SpringMesh extends TransformMesh
 		/* <visualization> */
 		final float width = meshes.iterator().next().getWidth();
 		final float height = meshes.iterator().next().getHeight();
-		final float scale = Math.min(  1.0f, 256.0f / Math.max( width, height ) );
-		final ImageStack stackAnimation = new ImageStack( mpicbg.util.Util.round( width * scale * 2 ), mpicbg.util.Util.round( height * scale * 2 ) );
+		final float scale = Math.min(  1.0f, 512.0f / Math.max( width, height ) );
+		final ImageStack stackAnimation = new ImageStack( mpicbg.util.Util.round( width * scale ), mpicbg.util.Util.round( height * scale ) );
 		final ImagePlus impAnimation = new ImagePlus();
 		/* </visualization> */
 		
@@ -651,6 +699,39 @@ public class SpringMesh extends TransformMesh
 	
 	
 	/**
+	 * Paint all {@Spring Springs} into a {@link ColorProcessor}.
+	 * 
+	 * @return illustration
+	 */
+	public void illustrateSprings( final ColorProcessor ip, final float scale, final float maxStretch, final float offsetX, final float offsetY )
+	{
+		for ( final Vertex vertex : vertices )
+		{
+			final float[] v1 = vertex.getW();
+			for ( final Vertex v : vertex.getConnectedVertices() )
+			{
+				final Spring spring = vertex.getSpring( v );
+				//final float stretch = mpicbg.util.Util.pow( Math.min( 1.0f, Math.abs( Point.distance( vertex, v ) - spring.getLength() ) / maxStretch ), 2 );
+				final float stretch = Math.min( 1.0f, Math.abs( Point.distance( vertex, v ) - spring.getLength() ) / maxStretch );
+				
+				final float r = Math.min( 1, stretch * 2 );
+				final float g = Math.min( 1, 2 - stretch * 2 );
+				
+				ip.setColor( new Color( r, g, 0 ) );
+				
+				final float[] v2 = v.getW();
+				
+				ip.drawLine(
+						mpicbg.util.Util.round( scale * v1[ 0 ] + offsetX ),
+						mpicbg.util.Util.round( scale * v1[ 1 ] + offsetY ),
+						mpicbg.util.Util.round( scale * v2[ 0 ] + offsetX ),
+						mpicbg.util.Util.round( scale * v2[ 1 ] + offsetY ) );
+			}
+		}
+	}
+	
+	
+	/**
 	 * Create a Shape that illustrates the mesh.
 	 * 
 	 * @return the illustration
@@ -659,9 +740,9 @@ public class SpringMesh extends TransformMesh
 	public Shape illustrateMesh()
 	{
 		final GeneralPath path = ( GeneralPath )super.illustrateMesh();
-		for ( final Vertex vertex : pva.keySet() )
+		for ( final Vertex pv : pva.keySet() )
 		{
-			final float[] w = vertex.getW();
+			final float[] w = pv.getW();
 			path.moveTo( w[ 0 ], w[ 1 ] -1 );
 			path.lineTo( w[ 0 ] + 1, w[ 1 ] );
 			path.lineTo( w[ 0 ], w[ 1 ] + 1 );
