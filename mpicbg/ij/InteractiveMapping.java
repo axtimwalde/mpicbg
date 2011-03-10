@@ -40,7 +40,7 @@ public abstract class InteractiveMapping implements PlugIn, MouseListener, Mouse
 	protected PointRoi handles;
 	final protected ArrayList< Point > hooks = new ArrayList< Point >();
 	
-	protected Mapping mapping;
+	protected Mapping< ? > mapping;
 	protected MappingThread painter;
 	final protected AtomicBoolean pleaseRepaint = new AtomicBoolean( false );
 	
@@ -86,6 +86,8 @@ public abstract class InteractiveMapping implements PlugIn, MouseListener, Mouse
 		imp.getCanvas().addMouseListener( this );
 		imp.getCanvas().addMouseMotionListener( this );
 		imp.getCanvas().addKeyListener( this );
+		imp.getWindow().addKeyListener( this );
+		IJ.getInstance().addKeyListener( this );
     }
 	
 	final protected void updateRoi()
@@ -103,13 +105,13 @@ public abstract class InteractiveMapping implements PlugIn, MouseListener, Mouse
 		imp.setRoi( handles );
 	}
 	
-	public void imageClosed( ImagePlus imp )
+	public void imageClosed( ImagePlus impl )
 	{
-		if ( imp == this.imp )
+		if ( impl == this.imp )
 			painter.interrupt();
 	}
-	public void imageOpened( ImagePlus imp ){}
-	public void imageUpdated( ImagePlus imp ){}
+	public void imageOpened( ImagePlus impl ){}
+	public void imageUpdated( ImagePlus impl ){}
 	
 	public void keyPressed( KeyEvent e)
 	{
@@ -121,7 +123,9 @@ public abstract class InteractiveMapping implements PlugIn, MouseListener, Mouse
 				imp.getCanvas().removeMouseListener( this );
 				imp.getCanvas().removeMouseMotionListener( this );
 				imp.getCanvas().removeKeyListener( this );
-				imp.getCanvas().setDisplayList( null );
+				imp.getWindow().removeKeyListener( this );
+				IJ.getInstance().removeKeyListener( this );
+				imp.setOverlay( null );
 				imp.setRoi( ( Roi )null );
 			}
 			if ( e.getKeyCode() == KeyEvent.VK_ESCAPE )
@@ -135,18 +139,19 @@ public abstract class InteractiveMapping implements PlugIn, MouseListener, Mouse
 				imp.updateAndDraw();
 			}
 		}
-		else if ( e.getKeyCode() == KeyEvent.VK_Y )
+		else if ( e.getKeyCode() == KeyEvent.VK_U )
 		{
 			showIllustration = !showIllustration;
-			updateIllustration();			
+			updateIllustration();
+			e.consume();
 		}
 		else if (
 				( e.getKeyCode() == KeyEvent.VK_F1 ) &&
 				( e.getSource() instanceof TextField ) ){}
 	}
 
-	public void keyReleased( KeyEvent e ){}
-	public void keyTyped( KeyEvent e ){}
+	public void keyReleased( KeyEvent e ){ e.consume(); }
+	public void keyTyped( KeyEvent e ){ e.consume(); }
 	
 	public void mousePressed( MouseEvent e )
 	{
