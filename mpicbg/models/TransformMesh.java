@@ -8,7 +8,7 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 
 /**
- * Trianguar transformation mesh.
+ * Triangular transformation mesh.
  * 
  * See an example to find out how the mesh is constructed:
  * 
