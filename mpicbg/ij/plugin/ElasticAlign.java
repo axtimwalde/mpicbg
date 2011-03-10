@@ -416,9 +416,7 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 							
 							if ( null == candidates )
 							{
-								//ArrayList< Feature > fs1 = deserializeFeatures( p.sift, p.outputPath + stack.getSliceLabel( slice - 1 ) + ".features" );
 								ArrayList< Feature > fs1 = deserializeFeatures( p.sift, p.outputPath + String.format( "%05d", sliceA ) + ".features" );
-								//ArrayList< Feature > fs2 = deserializeFeatures( p.sift, p.outputPath + stack.getSliceLabel( slice ) + ".features" );
 								ArrayList< Feature > fs2 = deserializeFeatures( p.sift, p.outputPath + String.format( "%05d", sliceB ) + ".features" );
 								candidates = new ArrayList< PointMatch >( FloatArray2DSIFT.createMatches( fs2, fs1, p.rod ) );
 								
@@ -637,29 +635,12 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 				t2.connect( t1, pm21 );
 		}
 		
-		/* initialize meshes */
-		/* TODO this is accumulative and thus not perfect, change to analytical concatenation later */
-//		for ( int i = 1; i < stack.getSize(); ++i )
-//		{
-//			final CoordinateTransformList< CoordinateTransform > ctl = new CoordinateTransformList< CoordinateTransform >();
-//			for ( int j = 0; j < i; ++j )
-//			{
-//				for ( final Triple< Integer, Integer, AbstractModel< ? > > pair : pairs )
-//				{
-//					if ( pair.a == j && pair.b == i )
-//					{
-//						ctl.add( pair.c );
-//						break;
-//					}
-//				}
-//			}
-//			meshes[ i ].init( ctl );
-//		}
+		/* pre-align by optimizing a piecewise linear model */ 
 		initMeshes.optimize( p.maxEpsilon, p.maxIterationsSpringMesh, p.maxPlateauwidthSpringMesh );
 		for ( int i = 0; i < stack.getSize(); ++i )
 			meshes.get( i ).init( tiles.get( i ).getModel() );
 
-		/* optimize */
+		/* optimize the meshes */
 		try
 		{
 			long t0 = System.currentTimeMillis();
@@ -699,38 +680,30 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 			mesh.updatePassiveVertices();
 		}
 		
-		//final ImageStack stackAlignedMeshes = new ImageStack( ( int )Math.ceil( max[ 0 ] - min[ 0 ] ), ( int )Math.ceil( max[ 1 ] - min[ 1 ] ) );
 		final int width = ( int )Math.ceil( max[ 0 ] - min[ 0 ] );
 		final int height = ( int )Math.ceil( max[ 1 ] - min[ 1 ] );
 		for ( int i = 0; i < stack.getSize(); ++i )
 		{
 			final int slice  = i + 1;
-//			final TransformMeshMapping< SpringMesh > meshMapping = new TransformMeshMapping< SpringMesh >( meshes[ i - 1 ] );
 			
 			final MovingLeastSquaresTransform mlt = new MovingLeastSquaresTransform();
 			mlt.setModel( AffineModel2D.class );
 			mlt.setAlpha( 2.0f );
 			mlt.setMatches( meshes.get( i ).getVA().keySet() );
 			
-			final TransformMeshMapping< CoordinateTransformMesh > mltMapping = new TransformMeshMapping< CoordinateTransformMesh >( new CoordinateTransformMesh( mlt, p.resolutionOutput, width, height ) );
+			final TransformMeshMapping< CoordinateTransformMesh > mltMapping = new TransformMeshMapping< CoordinateTransformMesh >( new CoordinateTransformMesh( mlt, p.resolutionOutput, stack.getWidth(), stack.getHeight() ) );
 			
 			
-//			final ImageProcessor ipMesh = stack.getProcessor( slice ).createProcessor( width, height );
 			final ImageProcessor ip = stack.getProcessor( slice ).createProcessor( width, height );
 			if ( p.interpolate )
 			{
-//				meshMapping.mapInterpolated( stack.getProcessor( slice ), ipMesh );
 				mltMapping.mapInterpolated( stack.getProcessor( slice ), ip );
 			}
 			else
 			{
-//				meshMapping.map( stack.getProcessor( slice ), ipMesh );
 				mltMapping.map( stack.getProcessor( slice ), ip );
 			}
-//			IJ.save( new ImagePlus( "elastic " + i, ipMesh ), p.outputPath + "elastic-" + String.format( "%05d", i ) + ".tif" );
-			IJ.save( new ImagePlus( "elastic mlt " + i, ip ), p.outputPath + "elastic-mlt-" + String.format( "%05d", i ) + ".tif" );
-			
-			//stackAlignedMeshes.addSlice( "" + i, ip );
+			IJ.save( new ImagePlus( "elastic mlt " + i, ip ), p.outputPath + "elastic-" + String.format( "%05d", i ) + ".tif" );
 		}
 		
 		IJ.log( "Done." );
