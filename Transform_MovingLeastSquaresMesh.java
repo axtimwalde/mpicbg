@@ -39,7 +39,7 @@ public class Transform_MovingLeastSquaresMesh extends InteractiveMapping
 		"and drag them to deform the image." + NL + " " + NL +
 		"ENTER - Apply the deformation." + NL +
 		"ESC - Return to the original image." + NL +
-		"Y - Toggle mesh display.";
+		"U - Toggle mesh display.";
 	
 	/**
 	 * number of vertices in horizontal direction
@@ -145,8 +145,8 @@ public class Transform_MovingLeastSquaresMesh extends InteractiveMapping
 	final protected void updateIllustration()
 	{
 		if ( showIllustration )
-			imp.getCanvas().setDisplayList( mesh.illustrateMesh(), Color.white, null );
+			imp.setOverlay( mesh.illustrateMesh(), Color.white, null );
 		else
-			imp.getCanvas().setDisplayList( null );
+			imp.setOverlay( null );
 	}
 }

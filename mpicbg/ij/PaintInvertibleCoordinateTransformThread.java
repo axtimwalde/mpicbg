@@ -17,7 +17,7 @@ public class PaintInvertibleCoordinateTransformThread extends Thread
 	final protected ImageProcessor target;
 	final protected AtomicBoolean pleaseRepaint;
 	final protected InverseCoordinateTransform transform;
-	final protected InverseTransformMapping mapping;
+	final protected InverseTransformMapping< ? > mapping;
 	
 	public PaintInvertibleCoordinateTransformThread(
 			ImagePlus imp,

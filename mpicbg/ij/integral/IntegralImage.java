@@ -27,7 +27,4 @@ public interface IntegralImage
 	public int getHeight();
 	public int getSum( final int xMin, final int yMin, final int xMax, final int yMax );
 	public int getScaledSum( final int xMin, final int yMin, final int xMax, final int yMax, final float scale );
-	public int getScaledSumDifference(
-			final int xMin1, final int yMin1, final int xMax1, final int yMax1, final float scale1,
-			final int xMin2, final int yMin2, final int xMax2, final int yMax2, final float scale2 );
 }

@@ -101,4 +101,27 @@ final public class Scale
 		
 		return scale( width, height );
 	}
+	
+	
+	/**
+	 * Factory method that decides on the type of <code>ip</code> which
+	 * {@link Scale} constructor to call.  Returns <code>null</code> for
+	 * unknown types.
+	 * 
+	 * @param ip
+	 * @return
+	 */
+	final static public Scale create( final ImageProcessor ip )
+	{
+		if ( FloatProcessor.class.isInstance( ip ) )
+			return new Scale( ( FloatProcessor )ip );
+		else if ( ByteProcessor.class.isInstance( ip ) )
+			return new Scale( ( ByteProcessor )ip );
+		else if ( ShortProcessor.class.isInstance( ip ) )
+			return new Scale( ( ShortProcessor )ip );
+		else if ( ColorProcessor.class.isInstance( ip ) )
+			return new Scale( ( ColorProcessor )ip );
+		else
+			return null;
+	}
 }

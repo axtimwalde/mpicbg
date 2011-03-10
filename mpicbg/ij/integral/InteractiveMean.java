@@ -23,8 +23,6 @@ import ij.gui.ImageWindow;
 import ij.gui.Roi;
 import ij.gui.Toolbar;
 import ij.plugin.PlugIn;
-import ij.process.ColorProcessor;
-import ij.process.ImageProcessor;
 
 import java.awt.Canvas;
 import java.awt.Rectangle;
@@ -39,7 +37,7 @@ import java.awt.event.MouseMotionListener;
  *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  */
-public class InteractiveSmooth implements KeyListener, MouseListener, MouseMotionListener, PlugIn
+public class InteractiveMean implements KeyListener, MouseListener, MouseMotionListener, PlugIn
 {
 	final static private String NL = System.getProperty( "line.separator" );
 	
@@ -48,7 +46,7 @@ public class InteractiveSmooth implements KeyListener, MouseListener, MouseMotio
 	private ImagePlus imp;
 	private ImageWindow window;
 	private Canvas canvas;
-	private IntegralImage integral;
+	private Mean mean;
 	private PaintThread painter;
 	
 	@Override
@@ -65,22 +63,7 @@ public class InteractiveSmooth implements KeyListener, MouseListener, MouseMotio
 		canvas.addMouseListener( this );
 		ij.addKeyListener( this );
 		
-		switch( imp.getType() )
-		{
-		case ImagePlus.GRAY32:
-			integral = new DoubleIntegralImage( imp.getProcessor() );
-			break;
-		case ImagePlus.GRAY8:
-		case ImagePlus.GRAY16:
-			integral = new LongIntegralImage( imp.getProcessor() );
-			break;
-		case ImagePlus.COLOR_RGB:
-			integral = new LongRGBIntegralImage( ( ColorProcessor )imp.getProcessor() );
-			break;
-		default:
-			IJ.error( "Type not yet supported." );
-			return;
-		}
+		mean = Mean.create( imp.getProcessor() );
 		
 		imp.getProcessor().snapshot();
 		
@@ -93,22 +76,7 @@ public class InteractiveSmooth implements KeyListener, MouseListener, MouseMotio
 	
 	final private void draw()
 	{
-		final ImageProcessor ip = imp.getProcessor();
-		final int w = imp.getWidth() - 1;
-		final int h = imp.getHeight() - 1;
-		for ( int y = 0; y <= h; ++y )
-		{
-			final int yMin = Math.max( -1, y - blockRadiusY - 1 );
-			final int yMax = Math.min( h, y + blockRadiusY );
-			final int bh = yMax - yMin;
-			for ( int x = 0; x <= w; ++x )
-			{
-				final int xMin = Math.max( -1, x - blockRadiusX - 1 );
-				final int xMax = Math.min( w, x + blockRadiusX );
-				final float scale = 1.0f / ( xMax - xMin ) / bh;
-				ip.set( x, y, integral.getScaledSum( xMin, yMin, xMax, yMax, scale ) );
-			}
-		}
+		mean.mean( blockRadiusX, blockRadiusY );
 	}
 	
 	public class PaintThread extends Thread

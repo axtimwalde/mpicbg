@@ -23,7 +23,6 @@ import ij.gui.ImageWindow;
 import ij.gui.Roi;
 import ij.gui.Toolbar;
 import ij.plugin.PlugIn;
-import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 
 import java.awt.Canvas;
@@ -34,8 +33,6 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-
-import mpicbg.util.Timer;
 
 /**
  * 
@@ -51,9 +48,10 @@ public class InteractiveDifferenceOfMean implements KeyListener, MouseListener, 
 	private ImagePlus imp;
 	private ImageWindow window;
 	private Canvas canvas;
-	private IntegralImage integral;
+	private DifferenceOfMean dom;
 	private PaintThread painter;
-	private final Timer timer = new Timer();
+	private double min;
+	private double max;
 	
 	@Override
 	public void run( String arg )
@@ -69,24 +67,16 @@ public class InteractiveDifferenceOfMean implements KeyListener, MouseListener, 
 		canvas.addMouseListener( this );
 		ij.addKeyListener( this );
 		
-		switch( imp.getType() )
-		{
-		case ImagePlus.GRAY32:
-			integral = new DoubleIntegralImage( imp.getProcessor() );
-			break;
-		case ImagePlus.GRAY8:
-		case ImagePlus.GRAY16:
-			integral = new LongIntegralImage( imp.getProcessor() );
-			break;
-		case ImagePlus.COLOR_RGB:
-			integral = new LongRGBIntegralImage( ( ColorProcessor )imp.getProcessor() );
-			break;
-		default:
-			IJ.error( "Type not yet supported." );
-			return;
-		}
-		
-		imp.getProcessor().snapshot();
+		final ImageProcessor ip = imp.getProcessor();
+		min = ip.getMin();
+		max = ip.getMax();
+		ip.snapshot();
+		if ( imp.getType() == ImagePlus.GRAY32 )
+			ip.setMinAndMax( ( min - max ) / 2.0, ( max - min ) / 2.0 );
+		else if ( imp.getType() == ImagePlus.GRAY16 )
+			ip.setMinAndMax( 32767 - ( max - min ) / 2.0, 32767 + ( max - min ) / 2.0 );
+
+		dom = DifferenceOfMean.create( ip );
 		
 		Toolbar.getInstance().setTool( Toolbar.RECTANGLE );
 		
@@ -97,38 +87,7 @@ public class InteractiveDifferenceOfMean implements KeyListener, MouseListener, 
 	
 	final private void draw()
 	{
-		final ImageProcessor ip = imp.getProcessor();
-		final int w = imp.getWidth() - 1;
-		final int h = imp.getHeight() - 1;
-		
-		timer.start();
-		for ( int y = 0; y <= h; ++y )
-		{
-			final int yMin1 = Math.max( -1, y - blockRadiusY1 - 1 );
-			final int yMax1 = Math.min( h, y + blockRadiusY1 );
-			final int bh1 = yMax1 - yMin1;
-			
-			final int yMin2 = Math.max( -1, y - blockRadiusY2 - 1 );
-			final int yMax2 = Math.min( h, y + blockRadiusY2 );
-			final int bh2 = yMax2 - yMin2;
-			
-			for ( int x = 0; x <= w; ++x )
-			{
-				final int xMin1 = Math.max( -1, x - blockRadiusX1 - 1 );
-				final int xMax1 = Math.min( w, x + blockRadiusX1 );
-				final float scale1 = 1.0f / ( xMax1 - xMin1 ) / bh1;
-				
-				final int xMin2 = Math.max( -1, x - blockRadiusX2 - 1 );
-				final int xMax2 = Math.min( w, x + blockRadiusX2 );
-				final float scale2 = 1.0f / ( xMax2 - xMin2 ) / bh2;
-				
-				ip.set( x, y, integral.getScaledSumDifference(
-						xMin1, yMin1, xMax1, yMax1, scale1,
-						xMin2, yMin2, xMax2, yMax2, scale2 ) );
-			}
-		}
-		final long t = timer.stop();
-		IJ.log( "took " + t + " seconds" );
+		dom.differenceOfMean( blockRadiusX1, blockRadiusY1, blockRadiusX2, blockRadiusY2 );
 	}
 	
 	public class PaintThread extends Thread
@@ -193,7 +152,9 @@ public class InteractiveDifferenceOfMean implements KeyListener, MouseListener, 
 			{
 				if ( e.getKeyCode() == KeyEvent.VK_ESCAPE )
 				{
-					imp.getProcessor().reset();
+					final ImageProcessor ip = imp.getProcessor();
+					ip.reset();
+					ip.setMinAndMax( min, max );
 				}
 				else if ( e.getKeyCode() == KeyEvent.VK_ENTER )
 				{

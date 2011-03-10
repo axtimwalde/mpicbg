@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.List;
 
 import mpicbg.imagefeatures.Feature;
-import mpicbg.imagefeatures.Filter;
 import mpicbg.imagefeatures.FloatArray2D;
 import mpicbg.imagefeatures.FloatArray2DFeatureTransform;
 import mpicbg.imagefeatures.ImageArrayConverter;

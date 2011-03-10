@@ -55,7 +55,7 @@ final public class LongIntegralImage implements IntegralImage
 			for ( int x = 1; x < width; ++x )
 			{
 				final int ywx = yw + x;
-				sum[ ywx ] = sum[ ywx - width ] + sum[ ywx - 1 ] + pixels[ ywidth + x ] - sum[ ywx - width - 1 ];
+				sum[ ywx ] = sum[ ywx - w ] + sum[ ywx - 1 ] + pixels[ ywidth + x ] - sum[ ywx - w - 1 ];
 			}
 		}
 	}
@@ -88,17 +88,27 @@ final public class LongIntegralImage implements IntegralImage
 		}
 	}
 	
+	final static private int roundPositive( final float f )
+	{
+		return ( int )( f + 0.5f );
+	}
+	
 	@Override
 	final public int getWidth() { return width; }
 	@Override
 	final public int getHeight() { return height; }
 
-	@Override
-	final public int getSum( final int xMin, final int yMin, final int xMax, final int yMax )
+	final public long getLongSum( final int xMin, final int yMin, final int xMax, final int yMax )
 	{
 		final int y1w = yMin * w + w + 1;
 		final int y2w = yMax * w + w + 1;
-		return ( int )( sum[ y1w + xMin ] + sum[ y2w + xMax ] - sum[ y1w + xMax ] - sum[ y2w + xMin ] );
+		return sum[ y1w + xMin ] + sum[ y2w + xMax ] - sum[ y1w + xMax ] - sum[ y2w + xMin ];
+	}
+	
+	@Override
+	final public int getSum( final int xMin, final int yMin, final int xMax, final int yMax )
+	{
+		return ( int )getLongSum( xMin, yMin, xMax, yMax );
 	}
 	
 	@Override
@@ -106,22 +116,6 @@ final public class LongIntegralImage implements IntegralImage
 	{
 		final int y1w = yMin * w + w + 1;
 		final int y2w = yMax * w + w + 1;
-		return Math.round( ( sum[ y1w + xMin ] + sum[ y2w + xMax ] - sum[ y1w + xMax ] - sum[ y2w + xMin ] ) * scale );
-	}
-	
-	@Override
-	final public int getScaledSumDifference(
-			final int xMin1, final int yMin1, final int xMax1, final int yMax1, final float scale1,
-			final int xMin2, final int yMin2, final int xMax2, final int yMax2, final float scale2 )
-	{
-		final int y1w1 = yMin1 * w + w + 1;
-		final int y2w1 = yMax1 * w + w + 1;
-		
-		final int y1w2 = yMin2 * w + w + 1;
-		final int y2w2 = yMax2 * w + w + 1;
-		
-		return Math.round(
-				( sum[ y1w1 + xMin1 ] + sum[ y2w1 + xMax1 ] - sum[ y1w1 + xMax1 ] - sum[ y2w1 + xMin1 ] ) * scale1 -
-				( sum[ y1w2 + xMin2 ] + sum[ y2w2 + xMax2 ] - sum[ y1w2 + xMax2 ] - sum[ y2w2 + xMin2 ] ) * scale2 );
+		return roundPositive( ( sum[ y1w + xMin ] + sum[ y2w + xMax ] - sum[ y1w + xMax ] - sum[ y2w + xMin ] ) * scale );
 	}
 }
