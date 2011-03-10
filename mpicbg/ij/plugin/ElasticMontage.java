@@ -23,12 +23,10 @@ import ij.WindowManager;
 import ij.gui.GenericDialog;
 import ij.io.DirectoryChooser;
 import ij.plugin.PlugIn;
+import ij.process.ColorProcessor;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 
-import java.awt.TextField;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -37,6 +35,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -71,7 +70,7 @@ import mpicbg.util.Util;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.1a
  */
-public class ElasticMontage implements PlugIn, KeyListener
+public class ElasticMontage implements PlugIn
 {
 	final static private class Triple< A, B, C >
 	{
@@ -121,11 +120,6 @@ public class ElasticMontage implements PlugIn, KeyListener
 		final static public String[] modelStrings = new String[]{ "Translation", "Rigid", "Similarity", "Affine", "Perspective" };
 		public int modelIndex = 1;
 		
-		/**
-		 * Maximal number of consecutive slices for which no model could be found
-		 */
-		public int maxNumFailures = 3;
-		
 		public int maxImageSize = 1024;
 		public float minR = 0.8f;
 		public float maxCurvatureR = 3f;
@@ -145,6 +139,7 @@ public class ElasticMontage implements PlugIn, KeyListener
 		public boolean interpolate = true;
 		public boolean visualize = true;
 		public int resolutionOutput = 128;
+		public boolean rgbWithGreenBackground = false;
 		
 		
 		public int maxNumThreads = Runtime.getRuntime().availableProcessors();
@@ -152,7 +147,7 @@ public class ElasticMontage implements PlugIn, KeyListener
 		public boolean setup()
 		{
 			DirectoryChooser.setDefaultDirectory( outputPath );
-			final DirectoryChooser dc = new DirectoryChooser( "Elastically align stack: Output directory" );
+			final DirectoryChooser dc = new DirectoryChooser( "Elastically montage stack: Output directory" );
 			outputPath = dc.getDirectory();
 			if ( outputPath == null )
 			{
@@ -168,11 +163,12 @@ public class ElasticMontage implements PlugIn, KeyListener
 					return false;
 			}
 			
-			final GenericDialog gdOutput = new GenericDialog( "Elastically align stack: Output" );
+			final GenericDialog gdOutput = new GenericDialog( "Elastically montage stack: Output" );
 			
 			gdOutput.addCheckbox( "interpolate", p.interpolate );
 			gdOutput.addCheckbox( "visualize", p.visualize );
 			gdOutput.addNumericField( "resolution :", p.resolutionOutput, 0 );
+			gdOutput.addCheckbox( "render RGB with green background", p.rgbWithGreenBackground );
 			
 			
 			gdOutput.showDialog();
@@ -183,10 +179,11 @@ public class ElasticMontage implements PlugIn, KeyListener
 			p.interpolate = gdOutput.getNextBoolean();
 			p.visualize = gdOutput.getNextBoolean();
 			p.resolutionOutput = ( int )gdOutput.getNextNumber();
+			p.rgbWithGreenBackground = gdOutput.getNextBoolean();
 			
 			
 			/* SIFT */
-			final GenericDialog gd = new GenericDialog( "Elastically align stack: SIFT parameters" );
+			final GenericDialog gd = new GenericDialog( "Elastically montage stack: SIFT parameters" );
 			
 			SIFT.addFields( gd, sift );
 			
@@ -197,9 +194,6 @@ public class ElasticMontage implements PlugIn, KeyListener
 			gd.addNumericField( "minimal_inlier_ratio :", p.minInlierRatio, 2 );
 			gd.addNumericField( "minimal_number_of_inliers :", p.minNumInliers, 0 );
 			gd.addChoice( "approximate_transformation :", Param.modelStrings, Param.modelStrings[ p.modelIndex ] );
-			
-			gd.addMessage( "Matching:" );
-			gd.addNumericField( "give_up_after :", p.maxNumFailures, 0, 6, "failures" );
 			
 			gd.showDialog();
 			
@@ -214,11 +208,10 @@ public class ElasticMontage implements PlugIn, KeyListener
 			p.minInlierRatio = ( float )gd.getNextNumber();
 			p.minNumInliers = ( int )gd.getNextNumber();
 			p.modelIndex = gd.getNextChoiceIndex();
-			p.maxNumFailures = ( int )gd.getNextNumber();
 			
 			
 			/* Block Matching */
-			final GenericDialog gdBlockMatching = new GenericDialog( "Elastically align stack: Block Matching parameters" );
+			final GenericDialog gdBlockMatching = new GenericDialog( "Elastically montage stack: Block Matching parameters" );
 			gdBlockMatching.addMessage( "Block Matching:" );
 			gdBlockMatching.addNumericField( "maximal_image_size :", p.maxImageSize, 0, 6, "px" );
 			gdBlockMatching.addNumericField( "minimal_R :", p.minR, 2 );
@@ -239,7 +232,7 @@ public class ElasticMontage implements PlugIn, KeyListener
 			
 			
 			/* Optimization */
-			final GenericDialog gdOptimize = new GenericDialog( "Elastically align stack: Optimization" );
+			final GenericDialog gdOptimize = new GenericDialog( "Elastically montage stack: Optimization" );
 			
 			gdOptimize.addMessage( "Approximate Optimizer:" );
 			gdOptimize.addChoice( "approximate_transformation :", Param.modelStrings, Param.modelStrings[ p.modelIndexOptimize ] );
@@ -371,12 +364,10 @@ public class ElasticMontage implements PlugIn, KeyListener
 			fu.get();
 		
 		
-		/* collect all pairs of slices for which a model could be found */
+		/* collect all pairs of tiles for which a model could be found */
 		final ArrayList< Triple< Integer, Integer, AbstractModel< ? > > > pairs = new ArrayList< Triple< Integer, Integer, AbstractModel< ? > > >();
 		
 		counter.set( 0 );
-		
-		int numFailures = 0;
 		
 		for ( int i = 0; i < stack.getSize(); ++i )
 		{
@@ -384,7 +375,7 @@ public class ElasticMontage implements PlugIn, KeyListener
 			
 			final int sliceA = i;
 			
-J:			for ( int j = i + 1; j < stack.getSize(); )
+			for ( int j = i + 1; j < stack.getSize(); )
 			{
 				final int numThreads = Math.min( p.maxNumThreads, stack.getSize() - j );
 				final ArrayList< Triple< Integer, Integer, AbstractModel< ? > > > models =
@@ -485,22 +476,16 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 					thread.join();
 				}
 				
-				/* collect successfully matches pairs and break the search on gaps */
+				/* collect successfully matches pairs */
 				for ( int t = 0; t < models.size(); ++t )
 				{
 					final Triple< Integer, Integer, AbstractModel< ? > > pair = models.get( t );
-					if ( pair == null )
-					{
-						if ( ++numFailures > p.maxNumFailures )
-							break J;
-					}
-					else
-					{
-						numFailures = 0;
+					if ( pair != null )
 						pairs.add( pair );
-					}
 				}
 			}
+			
+			IJ.showProgress( i, stack.getSize() - 1 );
 		}
 		
 		/* Elastic alignment */
@@ -592,9 +577,6 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 			//			imp2.updateAndDraw();
 			/* </visualisation> */
 			
-			final float springConstant  = 1.0f / ( pair.b - pair.a );
-			IJ.log( pair.a + " <> " + pair.b );
-	
 			for ( final PointMatch pm : pm12 )
 			{
 				final Vertex p1 = ( Vertex )pm.getP1();
@@ -620,29 +602,12 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 				t2.connect( t1, pm21 );
 		}
 		
-		/* initialize meshes */
-		/* TODO this is accumulative and thus not perfect, change to analytical concatenation later */
-//		for ( int i = 1; i < stack.getSize(); ++i )
-//		{
-//			final CoordinateTransformList< CoordinateTransform > ctl = new CoordinateTransformList< CoordinateTransform >();
-//			for ( int j = 0; j < i; ++j )
-//			{
-//				for ( final Triple< Integer, Integer, AbstractModel< ? > > pair : pairs )
-//				{
-//					if ( pair.a == j && pair.b == i )
-//					{
-//						ctl.add( pair.c );
-//						break;
-//					}
-//				}
-//			}
-//			meshes[ i ].init( ctl );
-//		}
+		/* pre-align by optimizing a piecewise linear model */ 
 		initMeshes.optimize( p.maxEpsilon, p.maxIterationsSpringMesh, p.maxPlateauwidthSpringMesh );
 		for ( int i = 0; i < stack.getSize(); ++i )
 			meshes.get( i ).init( tiles.get( i ).getModel() );
 
-		/* optimize */
+		/* optimize the meshes */
 		try
 		{
 			long t0 = System.currentTimeMillis();
@@ -654,6 +619,23 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 			
 		}
 		catch ( NotEnoughDataPointsException e ) { e.printStackTrace(); }
+		
+		/* calculate rotation of first mesh */
+		final Set< PointMatch > firstMeshVertices = meshes.get( 0 ).getVA().keySet();
+		final RigidModel2D rigid = new RigidModel2D();
+		rigid.fit( firstMeshVertices );
+		
+		/* unrotate all meshes respectively */
+		for ( final SpringMesh mesh : meshes )
+		{
+			for ( final Vertex vertex : mesh.getVertices() )
+			{
+				final float[] w = vertex.getW();
+				rigid.applyInverseInPlace( w );
+			}
+			mesh.updateAffines();
+			mesh.updatePassiveVertices();
+		}
 		
 		/* calculate bounding box */
 		final float[] min = new float[ 2 ];
@@ -682,60 +664,46 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 			mesh.updatePassiveVertices();
 		}
 		
-		//final ImageStack stackAlignedMeshes = new ImageStack( ( int )Math.ceil( max[ 0 ] - min[ 0 ] ), ( int )Math.ceil( max[ 1 ] - min[ 1 ] ) );
 		final int width = ( int )Math.ceil( max[ 0 ] - min[ 0 ] );
 		final int height = ( int )Math.ceil( max[ 1 ] - min[ 1 ] );
-		final ImageProcessor ip = stack.getProcessor( 1 ).createProcessor( width, height );
+		final ImageProcessor ip;
+		if ( p.rgbWithGreenBackground )
+		{
+			ip = new ColorProcessor( width, height );
+			for ( int i = width * height - 1; i >=0; --i )
+				ip.set( i, 0xff00ff00 );
+		}
+		else
+			ip = stack.getProcessor( 1 ).createProcessor( width, height );
 		for ( int i = 0; i < stack.getSize(); ++i )
 		{
 			final int slice  = i + 1;
-//			final TransformMeshMapping< SpringMesh > meshMapping = new TransformMeshMapping< SpringMesh >( meshes[ i - 1 ] );
 			
 			final MovingLeastSquaresTransform mlt = new MovingLeastSquaresTransform();
 			mlt.setModel( AffineModel2D.class );
 			mlt.setAlpha( 2.0f );
 			mlt.setMatches( meshes.get( i ).getVA().keySet() );
 			
-			final TransformMeshMapping< CoordinateTransformMesh > mltMapping = new TransformMeshMapping< CoordinateTransformMesh >( new CoordinateTransformMesh( mlt, p.resolutionOutput, width, height ) );
-			
-			
-//			final ImageProcessor ipMesh = stack.getProcessor( slice ).createProcessor( width, height );
+			final TransformMeshMapping< CoordinateTransformMesh > mltMapping = new TransformMeshMapping< CoordinateTransformMesh >( new CoordinateTransformMesh( mlt, p.resolutionOutput, stack.getWidth() - 1, stack.getHeight() - 1 ) );
+			final ImageProcessor source;
+			if ( p.rgbWithGreenBackground )
+				source = stack.getProcessor( slice ).convertToRGB();
+			else
+				source = stack.getProcessor( slice );
 			if ( p.interpolate )
 			{
-//				meshMapping.mapInterpolated( stack.getProcessor( slice ), ipMesh );
-				mltMapping.mapInterpolated( stack.getProcessor( slice ), ip );
+				mltMapping.mapInterpolated( source, ip );
 			}
 			else
 			{
-//				meshMapping.map( stack.getProcessor( slice ), ipMesh );
-				mltMapping.map( stack.getProcessor( slice ), ip );
+				mltMapping.map( source, ip );
 			}
-//			IJ.save( new ImagePlus( "elastic " + i, ipMesh ), p.outputPath + "elastic-" + String.format( "%05d", i ) + ".tif" );
-			
-			
-			//stackAlignedMeshes.addSlice( "" + i, ip );
 		}
-		IJ.save( new ImagePlus( "elastic mlt montage", ip ), p.outputPath + "elastic-mlt-montage.tif" );
+		IJ.save( new ImagePlus( "elastic montage", ip ), p.outputPath + "elastic-montage.tif" );
 		
 		IJ.log( "Done." );
 	}
 
-	public void keyPressed(KeyEvent e)
-	{
-		if (
-				( e.getKeyCode() == KeyEvent.VK_F1 ) &&
-				( e.getSource() instanceof TextField ) )
-		{
-			
-		}
-	}
-
-	public void keyReleased(KeyEvent e) { }
-
-	public void keyTyped(KeyEvent e) { }
-	
-	
-	
 	final static private class Features implements Serializable
 	{
 		private static final long serialVersionUID = 2689219384710526198L;
