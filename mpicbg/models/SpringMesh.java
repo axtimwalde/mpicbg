@@ -508,8 +508,8 @@ public class SpringMesh extends TransformMesh
 		final float h = max[ 1 ] - min[ 1 ];
 		
 		final float scale = Math.min( width / w, height / h );
-		final float offsetX = ( scale * w - width ) / 2;
-		final float offsetY = ( scale * h - height ) / 2;
+		final float offsetX = ( width - scale * w ) / 2 - min[ 0 ] * scale;
+		final float offsetY = ( height - scale * h ) / 2 - min[ 1 ] * scale;
 		
 		for ( final SpringMesh m : meshes )
 			m.illustrateSprings( ip, scale, maxSpringStretch, offsetX, offsetY );
