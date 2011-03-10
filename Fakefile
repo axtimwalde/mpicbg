@@ -17,8 +17,6 @@ mpicbg.jar <- \
 CLASSPATH(mpicbg_.jar)=$CLASSPATH:mpicbg.jar
 mpicbg_.jar <- \
 	mpicbg/ij/plugin/*.java \
-	Align_SIFT_BlockMatching_ElasticMeshStack.java \
-	Align_SIFT_Blockmatching.java \
 	Find_PointRoi.java \
 	MOPS_ExtractPointRoi.java \
 	SIFT_Align.java \
@@ -30,7 +28,6 @@ mpicbg_.jar <- \
 	Transform_Rigid.java \
 	Transform_Roi.java \
 	Transform_Similarity.java \
-	Transform_SpringMesh.java \
 	plugins.config \
 	LICENSE
 
@@ -49,7 +46,7 @@ clahe_.jar <- \
 	plugins.config[clahe.config] \
 	LICENSE[LICENSE.GPL]
 	
-integral_smooth.jar <- \
+integral_image.jar <- \
 	mpicbg/ij/integral/*.java \
 	plugins.config[integral.config] \
 	LICENSE[LICENSE.GPL]
