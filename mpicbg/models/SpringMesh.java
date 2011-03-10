@@ -112,7 +112,7 @@ public class SpringMesh extends TransformMesh
 		}
 		
 //		/**
-//		 * For each vertex, find the illlustrated connections and add a Spring.
+//		 * For each vertex, find the illustrated connections and add a Spring.
 //		 * 
 //		 * <pre>
 //		 *   *        *
@@ -523,8 +523,8 @@ public class SpringMesh extends TransformMesh
 		/* <visualization> */
 		final float width = meshes.iterator().next().getWidth();
 		final float height = meshes.iterator().next().getHeight();
-		final float scale = Math.min(  1.0f, 512.0f / Math.max( width, height ) );
-		final ImageStack stackAnimation = new ImageStack( mpicbg.util.Util.round( width * scale ), mpicbg.util.Util.round( height * scale ) );
+		final float scale = Math.min(  1.0f, 256.0f / Math.max( width, height ) );
+		final ImageStack stackAnimation = new ImageStack( mpicbg.util.Util.round( width * scale * 2 ), mpicbg.util.Util.round( height * scale * 2 ) );
 		final ImagePlus impAnimation = new ImagePlus();
 		/* </visualization> */
 		
@@ -659,9 +659,9 @@ public class SpringMesh extends TransformMesh
 	public Shape illustrateMesh()
 	{
 		final GeneralPath path = ( GeneralPath )super.illustrateMesh();
-		for ( final Vertex pv : pva.keySet() )
+		for ( final Vertex vertex : pva.keySet() )
 		{
-			final float[] w = pv.getW();
+			final float[] w = vertex.getW();
 			path.moveTo( w[ 0 ], w[ 1 ] -1 );
 			path.lineTo( w[ 0 ] + 1, w[ 1 ] );
 			path.lineTo( w[ 0 ], w[ 1 ] + 1 );
