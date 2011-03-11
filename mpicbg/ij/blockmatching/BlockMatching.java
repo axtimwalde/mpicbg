@@ -90,7 +90,7 @@ public class BlockMatching
 	
 	
 	/**
-	 * Set all pixels in source with a mask value == 0 to NaN
+	 * Set all pixels in source with a mask value < 0.95f to NaN
 	 * 
 	 * @param source
 	 * @param mask
@@ -103,7 +103,7 @@ public class BlockMatching
 		for ( int i = 0; i < n; ++i )
 		{
 			final float m = maskPixels[ i ];
-			if ( m < 1 )
+			if ( m < 0.95f )
 				sourcePixels[ i ] = Float.NaN;
 		}
 	}
@@ -376,6 +376,14 @@ public class BlockMatching
 
 							}
 						}
+						
+						/* <visualisation> */
+//						synchronized ( rMapStack )
+//						{
+//							rMap.setMinAndMax( rMap.getMin(), rMap.getMax() );
+//							rMapStack.addSlice( "" + l.incrementAndGet(), rMap );
+//						}
+						/* </visualisation> */
 
 						/* search and process maxima */
 						float bestR = -2.0f;
@@ -477,14 +485,6 @@ public class BlockMatching
 
 						final float[] t = new float[] { tx + s[ 0 ] + ox, ty + s[ 1 ] + oy };
 						return new PointMatch( p, new Point( t ) );
-
-						/* <visualisation> */
-						// synchronized ( rMapStack )
-						// {
-						// rMap.setMinAndMax( rMap.getMin(), rMap.getMax() );
-						// rMapStack.addSlice( "" + l.incrementAndGet(), rMap );
-						// }
-						/* </visualisation> */
 					}
 					else
 						return null;
@@ -511,6 +511,7 @@ public class BlockMatching
 		}
 		/* <visualisation> */
 //		if ( results.size() > 0 ) new ImagePlus( "r", rMapStack ).show();
+//		if ( rMapStack.getSize() > 0 ) new ImagePlus( "r", rMapStack ).show();
 		/* </visualisation> */
 	}
 				
