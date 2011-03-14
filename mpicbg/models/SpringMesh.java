@@ -39,6 +39,8 @@ import mpicbg.ij.util.Util;
  */
 public class SpringMesh extends TransformMesh
 {
+	final static private int VIS_SIZE = 512;
+	
 	final protected HashSet< Vertex > fixedVertices = new HashSet< Vertex >();
 	final protected HashSet< Vertex > vertices = new HashSet< Vertex >();
 	public Set< Vertex > getVertices(){ return vertices; }
@@ -569,7 +571,7 @@ public class SpringMesh extends TransformMesh
 		boolean proceed = i < maxIterations;
 		
 		/* <visualization> */
-		final ImageStack stackAnimation = new ImageStack( 512, 512 );
+		final ImageStack stackAnimation = new ImageStack( VIS_SIZE, VIS_SIZE );
 		final ImagePlus impAnimation = new ImagePlus();
 		/* </visualization> */
 		
@@ -585,7 +587,7 @@ public class SpringMesh extends TransformMesh
 //			stackAnimation.addSlice( "" + i, paintMeshes( meshes, scale ) );
 			if ( visualize )
 			{
-				stackAnimation.addSlice( "" + i, paintSprings( meshes, 512, 512, maxError ) );
+				stackAnimation.addSlice( "" + i, paintSprings( meshes, VIS_SIZE, VIS_SIZE, maxError ) );
 				impAnimation.setStack( stackAnimation );
 				impAnimation.updateAndDraw();
 				if ( i == 1 )
@@ -737,9 +739,9 @@ public class SpringMesh extends TransformMesh
 	public Shape illustrateMesh()
 	{
 		final GeneralPath path = ( GeneralPath )super.illustrateMesh();
-		for ( final Vertex pv : pva.keySet() )
+		for ( final Vertex vertex : pva.keySet() )
 		{
-			final float[] w = pv.getW();
+			final float[] w = vertex.getW();
 			path.moveTo( w[ 0 ], w[ 1 ] -1 );
 			path.lineTo( w[ 0 ] + 1, w[ 1 ] );
 			path.lineTo( w[ 0 ], w[ 1 ] + 1 );
