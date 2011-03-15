@@ -214,9 +214,9 @@ public class ElasticMontage implements PlugIn
 			final GenericDialog gdBlockMatching = new GenericDialog( "Elastically montage stack: Block Matching parameters" );
 			gdBlockMatching.addMessage( "Block Matching:" );
 			gdBlockMatching.addNumericField( "maximal_image_size :", p.maxImageSize, 0, 6, "px" );
-			gdBlockMatching.addNumericField( "minimal_R :", p.minR, 2 );
-			gdBlockMatching.addNumericField( "maximal_curvature_factor :", p.maxCurvatureR, 2 );
-			gdBlockMatching.addNumericField( "closest/next_closest_ratio :", p.rodR, 2 );
+			gdBlockMatching.addNumericField( "minimal_PMCC_r :", p.minR, 2 );
+			gdBlockMatching.addNumericField( "maximal_curvature_ratio :", p.maxCurvatureR, 2 );
+			gdBlockMatching.addNumericField( "maximal_second_best_r/best_r :", p.rodR, 2 );
 			gdBlockMatching.addNumericField( "resolution :", p.resolutionSpringMesh, 0 );
 			
 			gdBlockMatching.showDialog();
