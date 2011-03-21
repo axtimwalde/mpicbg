@@ -17,7 +17,26 @@
 package mpicbg.ij.integral;
 
 /**
+ * A 2d integral image (summed-area table) as described by Crow (1984).
  * 
+ * <p>BibTeX:</p>
+ * <pre>
+ * &#64;inproceedings{Crow84,
+ *	author    = {Franklin C. Crow},
+ *	title     = {Summed-area tables for texture mapping},
+ *	booktitle = {Proceedings of the 11th annual conference on Computer graphics and interactive techniques},
+ *	series    = {SIGGRAPH '84},
+ *	year      = {1984},
+ *	pages     = {207--212},
+ *	publisher = {ACM},
+ *	address   = {New York, NY, USA},
+ *	keywords  = {Antialiasing, Shading algorithms, Table lookup algorithms, texture mapping},
+ *	isbn      = {0-89791-138-5},
+ *	numpages  = {6},
+ *	url       = {http://doi.acm.org/10.1145/800031.808600},
+ *	doi       = {http://doi.acm.org/10.1145/800031.808600}
+ * }
+ * </pre>
  *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  */

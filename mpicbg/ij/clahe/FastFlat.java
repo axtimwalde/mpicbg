@@ -30,7 +30,7 @@ import ij.process.ImageProcessor;
  * 
  * <br />BibTeX:
  * <pre>
- * @article{zuiderveld94,
+ * &#64;article{zuiderveld94,
  *   author    = {Zuiderveld, Karel},
  *   title     = {Contrast limited adaptive histogram equalization},
  *   book      = {Graphics gems IV},
