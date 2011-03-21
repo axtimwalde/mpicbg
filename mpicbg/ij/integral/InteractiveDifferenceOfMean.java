@@ -27,19 +27,20 @@ import ij.process.ImageProcessor;
 
 import java.awt.Canvas;
 import java.awt.Rectangle;
-import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 
 /**
  * 
  *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  */
-public class InteractiveDifferenceOfMean implements KeyListener, MouseListener, MouseMotionListener, PlugIn
+public class InteractiveDifferenceOfMean implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener, PlugIn
 {
 	final static private String NL = System.getProperty( "line.separator" );
 	
@@ -52,6 +53,14 @@ public class InteractiveDifferenceOfMean implements KeyListener, MouseListener, 
 	private PaintThread painter;
 	private double min;
 	private double max;
+	final static private int dpScale = 10;
+	private int dp = -1 * dpScale;
+	
+	final private static float d( final int dp )
+	{
+		return ( float )Math.pow( 2.0, ( double )dp / dpScale );
+	}
+	
 	
 	@Override
 	public void run( String arg )
@@ -63,6 +72,7 @@ public class InteractiveDifferenceOfMean implements KeyListener, MouseListener, 
 		
 		canvas.addKeyListener( this );
 		window.addKeyListener( this );
+		window.addMouseWheelListener( this );
 		canvas.addMouseMotionListener( this );
 		canvas.addMouseListener( this );
 		ij.addKeyListener( this );
@@ -79,6 +89,8 @@ public class InteractiveDifferenceOfMean implements KeyListener, MouseListener, 
 		dom = DifferenceOfMean.create( ip );
 		
 		Toolbar.getInstance().setTool( Toolbar.RECTANGLE );
+		
+		dp = -1 * dpScale;
 		
 		painter = new PaintThread();
 		painter.start();
@@ -144,6 +156,7 @@ public class InteractiveDifferenceOfMean implements KeyListener, MouseListener, 
 			
 			canvas.removeKeyListener( this );
 			window.removeKeyListener( this );
+			window.removeMouseWheelListener( this );
 			ij.removeKeyListener( this );
 			canvas.removeMouseListener( this );
 			canvas.removeMouseMotionListener( this );
@@ -165,12 +178,32 @@ public class InteractiveDifferenceOfMean implements KeyListener, MouseListener, 
 		else if ( e.getKeyCode() == KeyEvent.VK_F1 )
 		{
 			IJ.showMessage(
-					"Interactive Mean Smooth",
+					"Interactive Difference of Means",
 					"Click and drag to change the size of the smoothing kernel." + NL +
 					"ENTER - Apply" + NL +
 					"ESC - Cancel" );
 		}
 	}
+	
+	public void mouseWheelMoved( final MouseWheelEvent e )
+	{
+		final int s = e.getWheelRotation();
+		if ( s < 0 )
+		{
+			e.consume();
+			++dp;
+		}
+		else
+		{
+			e.consume();
+			--dp;
+		}
+		blockRadiusX1 = Math.round( blockRadiusX2 * d( dp ) );
+		blockRadiusY1 = Math.round( blockRadiusY2 * d( dp ) );
+		
+		painter.repaint();
+	}
+	
 	
 	public void keyReleased( KeyEvent e ) {}
 	public void keyTyped( KeyEvent e ) {}
@@ -181,31 +214,18 @@ public class InteractiveDifferenceOfMean implements KeyListener, MouseListener, 
 		if ( roi != null )
 		{
 			final Rectangle bounds = imp.getRoi().getBounds();
-			if ( ( e.getModifiers() & InputEvent.SHIFT_DOWN_MASK ) == 0 )
-			{
-				blockRadiusX2 = bounds.width / 2;
-				blockRadiusY2 = bounds.height / 2;				
-				blockRadiusX1 = Math.round( blockRadiusX2 * 0.5f );
-				blockRadiusY1 = Math.round( blockRadiusY2 * 0.5f );
-			}
-			else
-			{
-				blockRadiusX1 = bounds.width / 2;
-				blockRadiusY1 = bounds.height / 2;
-			}
+			blockRadiusX2 = bounds.width / 2;
+			blockRadiusY2 = bounds.height / 2;				
+			blockRadiusX1 = Math.round( blockRadiusX2 * d( dp ) );
+			blockRadiusY1 = Math.round( blockRadiusY2 * d( dp ) );
+			
 		}
 		else
 		{
-			if ( ( e.getModifiers() & InputEvent.SHIFT_DOWN_MASK ) == 0 )
-			{
-				blockRadiusX1 = 0;
-				blockRadiusY1 = 0;
-			}
-			else
-			{
-				blockRadiusX2 = 0;
-				blockRadiusY2 = 0;				
-			}
+			blockRadiusX1 = 0;
+			blockRadiusY1 = 0;
+			blockRadiusX2 = 0;
+			blockRadiusY2 = 0;				
 		}
 		painter.repaint();
 	}
