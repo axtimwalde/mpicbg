@@ -17,10 +17,17 @@
 package mpicbg.ij.integral;
 
 import ij.process.FloatProcessor;
+import ij.process.ImageProcessor;
 
 /**
+ * Basic statistical properties of a block of pixels that can be accelerated
+ * using {@link IntegralImage integral images}.  At this time, it is
+ * implemented for single channel images at floating point accuracy only, RGB
+ * is transferred into grey, integer accuracy into floating point accuracy
+ * accordingly.  That is, for processing multiple color channels, separate them
+ * into individual {@link ImageProcessor ImageProcessors} first and execute the
+ * calculation on each of them individually.
  * 
- *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  */
 final public class BlockStatistics
@@ -182,9 +189,14 @@ final public class BlockStatistics
 			{
 				final int xMin = Math.max( -1, x - blockRadiusX - 1 );
 				final int xMax = Math.min( w, x + blockRadiusX );
-				final float scale = 1.0f / ( xMax - xMin ) / bh;
+//				final float scale = 1.0f / ( xMax - xMin ) / bh;
+//				final double sum = sums.getDoubleSum( xMin, yMin, xMax, yMax );
+//				final double var = scale * ( sumsOfSquares.getDoubleSum( xMin, yMin, xMax, yMax ) - sum * sum * scale );
+				final int bs = ( xMax - xMin ) / bh;
+				final float scale1 = 1.0f / ( bs - 1 );
+				final float scale2 = 1.0f / ( bs * bs - bs );
 				final double sum = sums.getDoubleSum( xMin, yMin, xMax, yMax );
-				final double var = scale * ( sumsOfSquares.getDoubleSum( xMin, yMin, xMax, yMax ) - sum * sum * scale );
+				final double var = scale1 * sumsOfSquares.getDoubleSum( xMin, yMin, xMax, yMax ) - scale2 * sum * sum;
 				
 				fp.setf( row + x, var < 0 ? 0 : ( float )Math.sqrt( var ) );
 			}
@@ -201,5 +213,50 @@ final public class BlockStatistics
 	final public void std( final int blockRadius )
 	{
 		std( blockRadius, blockRadius );
+	}
+	
+	
+	/**
+	 * Set all pixels in <code>ip</code> to their block sample variance for a block
+	 * with given radius.
+	 * 
+	 * @param blockRadiusX
+	 * @param blockRadiusY
+	 */
+	final public void sampleVariance( final int blockRadiusX, final int blockRadiusY )
+	{
+		final int width = fp.getWidth();
+		final int w = fp.getWidth() - 1;
+		final int h = fp.getHeight() - 1;
+		for ( int y = 0; y <= h; ++y )
+		{
+			final int row = y * width;
+			final int yMin = Math.max( -1, y - blockRadiusY - 1 );
+			final int yMax = Math.min( h, y + blockRadiusY );
+			final int bh = yMax - yMin;
+			for ( int x = 0; x <= w; ++x )
+			{
+				final int xMin = Math.max( -1, x - blockRadiusX - 1 );
+				final int xMax = Math.min( w, x + blockRadiusX );
+				final int bs = ( xMax - xMin ) / bh;
+				final float scale1 = 1.0f / ( bs - 1 );
+				final float scale2 = 1.0f / ( bs * bs - bs );
+				final double sum = sums.getDoubleSum( xMin, yMin, xMax, yMax );
+				final double var = scale1 * sumsOfSquares.getDoubleSum( xMin, yMin, xMax, yMax ) - scale2 * sum * sum;
+				
+				fp.setf( row + x, var < 0 ? 0 : ( float )var );
+			}
+		}
+	}
+	
+	/**
+	 * Set all pixels in <code>ip</code> to their block sample variance for a block
+	 * with given radius.
+	 * 
+	 * @param blockRadius
+	 */
+	final public void sampleVariance( final int blockRadius )
+	{
+		sampleVariance( blockRadius, blockRadius );
 	}
 }

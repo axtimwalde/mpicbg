@@ -17,55 +17,27 @@
 package mpicbg.ij.integral;
 
 import ij.IJ;
-import ij.ImageJ;
 import ij.ImagePlus;
-import ij.gui.ImageWindow;
 import ij.gui.Roi;
-import ij.gui.Toolbar;
-import ij.plugin.PlugIn;
 import ij.process.ColorProcessor;
 import ij.process.ImageProcessor;
 
-import java.awt.Canvas;
 import java.awt.Rectangle;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
 
 /**
  * 
  *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  */
-public class InteractiveScale implements KeyListener, MouseListener, MouseMotionListener, PlugIn
+final public class InteractiveScale extends AbstractInteractiveBlockFilter
 {
-	final static private String NL = System.getProperty( "line.separator" );
-	
-	private ImageJ ij;
-	private ImagePlus imp;
-	private ImageWindow window;
-	private Canvas canvas;
 	private IntegralImage integral;
-	private PaintThread painter;
 	private ImageProcessor ipCopy;
 	private boolean useIntegral = true;
 	
 	@Override
-	public void run( String arg )
+	final protected void init()
 	{
-		ij = IJ.getInstance();
-		imp = IJ.getImage();
-		window = imp.getWindow();
-		canvas = imp.getCanvas();
-		
-		canvas.addKeyListener( this );
-		window.addKeyListener( this );
-		canvas.addMouseMotionListener( this );
-		canvas.addMouseListener( this );
-		ij.addKeyListener( this );
-		
 		switch( imp.getType() )
 		{
 		case ImagePlus.GRAY32:
@@ -85,8 +57,6 @@ public class InteractiveScale implements KeyListener, MouseListener, MouseMotion
 		
 		ipCopy = imp.getProcessor().duplicate();
 		
-		imp.getProcessor().snapshot();
-		
 		final Roi roi;
 		if ( imp.getRoi() != null )
 			roi = imp.getRoi();
@@ -95,15 +65,10 @@ public class InteractiveScale implements KeyListener, MouseListener, MouseMotion
 			roi = new Roi( imp.getWidth() / 4, imp.getHeight() / 4, imp.getWidth() / 2, imp.getHeight() / 2 );
 			imp.setRoi( roi );
 		}
-		
-		Toolbar.getInstance().setTool( Toolbar.RECTANGLE );
-		
-		painter = new PaintThread();
-		painter.start();
-		
 	}
 	
-	final private void draw()
+	@Override
+	final protected void draw()
 	{
 		final ImageProcessor ip = imp.getProcessor();
 		final int w = imp.getWidth() - 1;
@@ -171,100 +136,14 @@ public class InteractiveScale implements KeyListener, MouseListener, MouseMotion
 		}
 	}
 	
-	public class PaintThread extends Thread
+	@Override
+	final protected void showHelp()
 	{
-		private boolean pleaseRepaint = true;
-		
-		PaintThread()
-		{
-			this.setName( "MappingThread" );
-		}
-		
-		@Override
-		public void run()
-		{
-			while ( !isInterrupted() )
-			{
-				final boolean b;
-				synchronized ( this )
-				{
-					b = pleaseRepaint;
-					pleaseRepaint = false;
-				}
-				if ( b )
-				{
-					draw();
-					imp.updateAndDraw();
-				}
-				synchronized ( this )
-				{
-					try
-					{
-						if ( !pleaseRepaint ) wait();
-					}
-					catch ( InterruptedException e ){}
-				}
-			}
-		}
-		
-		public void repaint()
-		{
-			synchronized ( this )
-			{
-				pleaseRepaint = true;
-				notify();
-			}
-		}
+		IJ.showMessage(
+				"Interactive Mean Smooth",
+				"Click and drag to change the size of the smoothing kernel." + NL +
+				"U - Toggle integral sampling" + NL +
+				"ENTER - Apply" + NL +
+				"ESC - Cancel" );
 	}
-	
-	public void keyPressed( KeyEvent e )
-	{
-		if ( e.getKeyCode() == KeyEvent.VK_ESCAPE || e.getKeyCode() == KeyEvent.VK_ENTER )
-		{
-			painter.interrupt();
-			
-			canvas.removeKeyListener( this );
-			window.removeKeyListener( this );
-			ij.removeKeyListener( this );
-			canvas.removeMouseListener( this );
-			canvas.removeMouseMotionListener( this );
-			
-			if ( imp != null )
-			{
-				if ( e.getKeyCode() == KeyEvent.VK_ESCAPE )
-				{
-					imp.getProcessor().reset();
-				}
-				else if ( e.getKeyCode() == KeyEvent.VK_ENTER )
-				{
-				}
-			}
-			imp.updateAndDraw();
-		}
-		else if ( e.getKeyCode() == KeyEvent.VK_U )
-		{
-			useIntegral = !useIntegral;
-			painter.repaint();
-		}
-		else if ( e.getKeyCode() == KeyEvent.VK_F1 )
-		{
-			IJ.showMessage(
-					"Interactive Mean Smooth",
-					"Click and drag to change the size of the smoothing kernel." + NL +
-					"U - Toggle integral sampling" + NL +
-					"ENTER - Apply" + NL +
-					"ESC - Cancel" );
-		}
-	}
-	
-	public void keyReleased( KeyEvent e ) {}
-	public void keyTyped( KeyEvent e ) {}
-
-	public void mouseDragged( final MouseEvent e ) { painter.repaint(); }
-	public void mouseMoved( MouseEvent e ){}
-	public void mouseClicked( MouseEvent e ){}
-	public void mouseEntered( MouseEvent e ){}
-	public void mouseExited( MouseEvent e ){}
-	public void mouseReleased( MouseEvent e ) { painter.repaint(); }
-	public void mousePressed( MouseEvent e ) { painter.repaint(); }
 }

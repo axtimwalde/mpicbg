@@ -17,21 +17,13 @@
 package mpicbg.ij.integral;
 
 import ij.IJ;
-import ij.ImageJ;
 import ij.ImagePlus;
-import ij.gui.ImageWindow;
 import ij.gui.Roi;
-import ij.gui.Toolbar;
-import ij.plugin.PlugIn;
 import ij.process.ImageProcessor;
 
-import java.awt.Canvas;
 import java.awt.Rectangle;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
 
@@ -40,17 +32,10 @@ import java.awt.event.MouseWheelListener;
  *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  */
-public class InteractiveDifferenceOfMean implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener, PlugIn
+final public class InteractiveDifferenceOfMean extends AbstractInteractiveBlockFilter implements MouseWheelListener
 {
-	final static private String NL = System.getProperty( "line.separator" );
-	
 	private int blockRadiusX1 = 0, blockRadiusY1 = 0, blockRadiusX2 = 0, blockRadiusY2 = 0;
-	private ImageJ ij;
-	private ImagePlus imp;
-	private ImageWindow window;
-	private Canvas canvas;
 	private DifferenceOfMean dom;
-	private PaintThread painter;
 	private double min;
 	private double max;
 	final static private int dpScale = 10;
@@ -61,21 +46,10 @@ public class InteractiveDifferenceOfMean implements KeyListener, MouseListener, 
 		return ( float )Math.pow( 2.0, ( double )dp / dpScale );
 	}
 	
-	
 	@Override
-	public void run( String arg )
+	final protected void init()
 	{
-		ij = IJ.getInstance();
-		imp = IJ.getImage();
-		window = imp.getWindow();
-		canvas = imp.getCanvas();
-		
-		canvas.addKeyListener( this );
-		window.addKeyListener( this );
 		window.addMouseWheelListener( this );
-		canvas.addMouseMotionListener( this );
-		canvas.addMouseListener( this );
-		ij.addKeyListener( this );
 		
 		final ImageProcessor ip = imp.getProcessor();
 		min = ip.getMin();
@@ -88,64 +62,23 @@ public class InteractiveDifferenceOfMean implements KeyListener, MouseListener, 
 
 		dom = DifferenceOfMean.create( ip );
 		
-		Toolbar.getInstance().setTool( Toolbar.RECTANGLE );
-		
 		dp = -1 * dpScale;
-		
-		painter = new PaintThread();
-		painter.start();
-		
 	}
 	
-	final private void draw()
+	@Override
+	final protected void draw()
 	{
 		dom.differenceOfMean( blockRadiusX1, blockRadiusY1, blockRadiusX2, blockRadiusY2 );
 	}
 	
-	public class PaintThread extends Thread
+	@Override
+	final protected void showHelp()
 	{
-		private boolean pleaseRepaint;
-		
-		PaintThread()
-		{
-			this.setName( "MappingThread" );
-		}
-		
-		@Override
-		public void run()
-		{
-			while ( !isInterrupted() )
-			{
-				final boolean b;
-				synchronized ( this )
-				{
-					b = pleaseRepaint;
-					pleaseRepaint = false;
-				}
-				if ( b )
-				{
-					draw();
-					imp.updateAndDraw();
-				}
-				synchronized ( this )
-				{
-					try
-					{
-						if ( !pleaseRepaint ) wait();
-					}
-					catch ( InterruptedException e ){}
-				}
-			}
-		}
-		
-		public void repaint()
-		{
-			synchronized ( this )
-			{
-				pleaseRepaint = true;
-				notify();
-			}
-		}
+		IJ.showMessage(
+				"Interactive Difference of Means",
+				"Click and drag to change the size of the smoothing kernel." + NL +
+				"ENTER - Apply" + NL +
+				"ESC - Cancel" );
 	}
 	
 	public void keyPressed( KeyEvent e )
@@ -176,13 +109,7 @@ public class InteractiveDifferenceOfMean implements KeyListener, MouseListener, 
 			imp.updateAndDraw();
 		}
 		else if ( e.getKeyCode() == KeyEvent.VK_F1 )
-		{
-			IJ.showMessage(
-					"Interactive Difference of Means",
-					"Click and drag to change the size of the smoothing kernel." + NL +
-					"ENTER - Apply" + NL +
-					"ESC - Cancel" );
-		}
+			showHelp();
 	}
 	
 	public void mouseWheelMoved( final MouseWheelEvent e )
@@ -204,10 +131,6 @@ public class InteractiveDifferenceOfMean implements KeyListener, MouseListener, 
 		painter.repaint();
 	}
 	
-	
-	public void keyReleased( KeyEvent e ) {}
-	public void keyTyped( KeyEvent e ) {}
-
 	public void mouseDragged( final MouseEvent e )
 	{
 		final Roi roi = imp.getRoi();
@@ -228,15 +151,5 @@ public class InteractiveDifferenceOfMean implements KeyListener, MouseListener, 
 			blockRadiusY2 = 0;				
 		}
 		painter.repaint();
-	}
-
-	public void mouseMoved( MouseEvent e ){}
-	public void mouseClicked( MouseEvent e ){}
-	public void mouseEntered( MouseEvent e ){}
-	public void mouseExited( MouseEvent e ){}
-	public void mouseReleased( MouseEvent e ){}
-	public void mousePressed( MouseEvent e )
-	{
-		mouseDragged( e );
 	}
 }
