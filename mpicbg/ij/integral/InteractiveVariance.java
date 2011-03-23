@@ -16,6 +16,8 @@
  */
 package mpicbg.ij.integral;
 
+import java.awt.event.KeyEvent;
+
 import ij.IJ;
 import ij.ImagePlus;
 import ij.process.FloatProcessor;
@@ -60,5 +62,33 @@ final public class InteractiveVariance extends AbstractInteractiveBlockFilter
 				"Click and drag to change the size of the smoothing kernel." + NL +
 				"ENTER - Apply" + NL +
 				"ESC - Cancel" );
+	}
+	
+	public void keyPressed( KeyEvent e )
+	{
+		if ( e.getKeyCode() == KeyEvent.VK_ESCAPE || e.getKeyCode() == KeyEvent.VK_ENTER )
+		{
+			painter.interrupt();
+			
+			canvas.removeKeyListener( this );
+			window.removeKeyListener( this );
+			ij.removeKeyListener( this );
+			canvas.removeMouseListener( this );
+			canvas.removeMouseMotionListener( this );
+			
+			if ( imp != null )
+			{
+				if ( e.getKeyCode() == KeyEvent.VK_ESCAPE )
+				{
+					imp.setProcessor( ipOriginal );
+				}
+				else if ( e.getKeyCode() == KeyEvent.VK_ENTER )
+				{
+				}
+			}
+			imp.updateAndDraw();
+		}
+		else if ( e.getKeyCode() == KeyEvent.VK_F1 )
+			showHelp();
 	}
 }
