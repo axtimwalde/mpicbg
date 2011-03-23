@@ -17,7 +17,6 @@
 package mpicbg.ij.integral;
 
 import ij.IJ;
-import ij.gui.Toolbar;
 
 /**
  * 
@@ -32,29 +31,6 @@ final public class InteractiveMean extends AbstractInteractiveBlockFilter
 	final protected void init()
 	{
 		mean = Mean.create( imp.getProcessor() );
-	}
-	
-	@Override
-	public void run( String arg )
-	{
-		ij = IJ.getInstance();
-		imp = IJ.getImage();
-		window = imp.getWindow();
-		canvas = imp.getCanvas();
-		
-		canvas.addKeyListener( this );
-		window.addKeyListener( this );
-		canvas.addMouseMotionListener( this );
-		canvas.addMouseListener( this );
-		ij.addKeyListener( this );
-		
-		imp.getProcessor().snapshot();
-		
-		Toolbar.getInstance().setTool( Toolbar.RECTANGLE );
-		
-		painter = new PaintThread();
-		painter.start();
-		
 	}
 	
 	@Override

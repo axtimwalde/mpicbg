@@ -192,7 +192,7 @@ final public class BlockStatistics
 //				final float scale = 1.0f / ( xMax - xMin ) / bh;
 //				final double sum = sums.getDoubleSum( xMin, yMin, xMax, yMax );
 //				final double var = scale * ( sumsOfSquares.getDoubleSum( xMin, yMin, xMax, yMax ) - sum * sum * scale );
-				final int bs = ( xMax - xMin ) / bh;
+				final int bs = ( xMax - xMin ) * bh;
 				final float scale1 = 1.0f / ( bs - 1 );
 				final float scale2 = 1.0f / ( bs * bs - bs );
 				final double sum = sums.getDoubleSum( xMin, yMin, xMax, yMax );
@@ -238,7 +238,7 @@ final public class BlockStatistics
 			{
 				final int xMin = Math.max( -1, x - blockRadiusX - 1 );
 				final int xMax = Math.min( w, x + blockRadiusX );
-				final int bs = ( xMax - xMin ) / bh;
+				final int bs = ( xMax - xMin ) * bh;
 				final float scale1 = 1.0f / ( bs - 1 );
 				final float scale2 = 1.0f / ( bs * bs - bs );
 				final double sum = sums.getDoubleSum( xMin, yMin, xMax, yMax );

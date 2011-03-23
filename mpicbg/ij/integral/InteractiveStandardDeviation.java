@@ -33,7 +33,7 @@ final public class InteractiveStandardDeviation extends AbstractInteractiveBlock
 	private BlockStatistics std;
 	
 	@Override
-	public void init()
+	final protected void init()
 	{
 		ipOriginal = imp.getProcessor();
 		if ( imp.getType() == ImagePlus.GRAY32 )
@@ -56,7 +56,7 @@ final public class InteractiveStandardDeviation extends AbstractInteractiveBlock
 	final protected void showHelp()
 	{
 		IJ.showMessage(
-				"Interactive Block Variance",
+				"Interactive Block Standard Deviation",
 				"Click and drag to change the size of the smoothing kernel." + NL +
 				"ENTER - Apply" + NL +
 				"ESC - Cancel" );
