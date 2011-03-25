@@ -15,31 +15,31 @@ import java.util.Collection;
  */
 public class PointMatch implements Serializable
 {
-	private static final long serialVersionUID = 4021585829747053663L;
+	private static final long serialVersionUID = -4194179098872410057L;
 
-	final private Point p1;
-	final public Point getP1() { return p1; }
+	final protected Point p1;
+	public Point getP1() { return p1; }
 	
-	final private Point p2;
-	final public Point getP2() { return p2; }
+	final protected Point p2;
+	public Point getP2() { return p2; }
 	
 	protected float[] weights;
-	final public float[] getWeights(){ return weights; }
-	final public void setWeights( float[] weights )
+	public float[] getWeights(){ return weights; }
+	public void setWeights( float[] weights )
 	{
 		this.weights = weights.clone();
 		calculateWeight();
 	}
 	
 	protected float weight;
-	final public float getWeight(){ return weight; }
-	final public void setWeight( int index, float weight )
+	public float getWeight(){ return weight; }
+	public void setWeight( int index, float weight )
 	{
 		weights[ index ] = weight;
 		calculateWeight();
 	}
 	
-	final protected void calculateWeight()
+	protected void calculateWeight()
 	{
 		weight = 1.0f;
 		for ( float wi : weights )
@@ -48,7 +48,7 @@ public class PointMatch implements Serializable
 	
 	protected float strength = 1.0f;
 	
-	final public float getDistance(){ return Point.distance( p1, p2 ); }
+	public float getDistance(){ return Point.distance( p1, p2 ); }
 	
 	/**
 	 * Constructor
@@ -179,7 +179,7 @@ public class PointMatch implements Serializable
 	 * 
 	 * @param t
 	 */
-	final public void apply( final CoordinateTransform t )
+	public void apply( final CoordinateTransform t )
 	{
 		p1.apply( t );
 	}
@@ -191,7 +191,7 @@ public class PointMatch implements Serializable
 	 * @param t
 	 * @param amount
 	 */
-	final public void apply( final CoordinateTransform t, final float amount )
+	public void apply( final CoordinateTransform t, final float amount )
 	{
 		p1.apply( t, strength * amount );
 	}
