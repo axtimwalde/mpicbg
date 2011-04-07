@@ -141,7 +141,7 @@ public class Optic_Flow implements PlugIn, KeyListener
 				else
 					blue = Math.min( 1.0, Math.max( 0.0, o - 4.0 ) ) * r;
 				
-				ipColorPixels[ i ] =  ( ( ( int )( red * 255 ) << 8 ) | ( int )( green * 255 ) << 8 ) | ( int )( blue * 255 );
+				ipColorPixels[ i ] =  ( ( ( ( int )( red * 255 ) << 8 ) | ( int )( green * 255 ) ) << 8 ) | ( int )( blue * 255 );
 			}
 		}
 	}
@@ -178,7 +178,7 @@ public class Optic_Flow implements PlugIn, KeyListener
 		else
 			b = Math.min( 1.0, Math.max( 0.0, o - 4.0 ) ) * a;
 		
-		return ( ( ( int )( r * 255 ) << 8 ) + ( int )( g * 255 ) << 8 ) + ( int )( b * 255 );
+		return ( ( ( ( int )( r * 255 ) << 8 ) | ( int )( g * 255 ) ) << 8 ) | ( int )( b * 255 );
 	}
 	
 	final static private void subtractShifted(
