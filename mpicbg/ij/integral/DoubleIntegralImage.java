@@ -142,4 +142,23 @@ final public class DoubleIntegralImage implements IntegralImage
 		final int y2w = yMax * w + w1;
 		return Float.floatToIntBits( ( float )( sum[ y1w + xMin ] + sum[ y2w + xMax ] - sum[ y1w + xMax ] - sum[ y2w + xMin ] ) * scale );
 	}
+	
+	final double[] getData()
+	{
+		return sum;
+	}
+	
+	final public FloatProcessor toProcessor()
+	{
+		final float[] pixels = new float[ width * height ];
+		for ( int y = 0; y < height; ++y )
+		{
+			final int row = y * width;
+			for ( int x = 0; x < width; ++x )
+			{
+				pixels[ row + x ] = ( float )getDoubleSum( x - 1, y - 1, x, y );
+			}
+		}
+		return new FloatProcessor( width, height, pixels, null );
+	}
 }
