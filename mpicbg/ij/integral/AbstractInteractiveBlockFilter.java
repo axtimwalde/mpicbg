@@ -74,7 +74,6 @@ abstract public class AbstractInteractiveBlockFilter implements KeyListener, Mou
 		
 		painter = new PaintThread();
 		painter.start();
-		
 	}
 	
 	protected class PaintThread extends Thread
