@@ -156,6 +156,7 @@ public class PMCCBlockFlow implements PlugIn
 			final FloatProcessor ip1,
 			final FloatProcessor ip2,
 			final FloatProcessor r,
+			final FloatProcessor amp,
 			final FloatProcessor phi,
 			final ColorProcessor of )
 	{
@@ -163,13 +164,12 @@ public class PMCCBlockFlow implements PlugIn
 		//final BlockPMCC bc = new BlockPMCC( ip1, ip2 );
 		
 		final FloatProcessor ipR = bc.getTargetProcessor();
-		final FloatProcessor ipRMax = new FloatProcessor( ipR.getWidth(), ipR.getHeight() );
 		final ColorProcessor ipX = new ColorProcessor( ipR.getWidth(), ipR.getHeight() );
 		final ColorProcessor ipY = new ColorProcessor( ipR.getWidth(), ipR.getHeight() );
 		
 		/* init */
 		{
-			final float[] ipRMaxPixels = ( float[] )ipRMax.getPixels();
+			final float[] ipRMaxPixels = ( float[] )r.getPixels();
 			for ( int i = 0; i < ipRMaxPixels.length; ++i )
 				ipRMaxPixels[ i ] = -1;
 		}
@@ -189,7 +189,7 @@ public class PMCCBlockFlow implements PlugIn
 //				stack.addSlice( xo + " " + yo, ipR.duplicate() );
 				
 				final float[] ipRPixels = ( float[] )ipR.getPixels();
-				final float[] ipRMaxPixels = ( float[] )ipRMax.getPixels();
+				final float[] ipRMaxPixels = ( float[] )r.getPixels();
 				final int[] ipXPixels = ( int[] )ipX.getPixels();
 				final int[] ipYPixels = ( int[] )ipY.getPixels();
 				
@@ -232,7 +232,7 @@ public class PMCCBlockFlow implements PlugIn
 		algebraicToPolarAndColor(
 				( int[] )ipX.getPixels(),
 				( int[] )ipY.getPixels(),
-				( float[] )r.getPixels(),
+				( float[] )amp.getPixels(),
 				( float[] )phi.getPixels(),
 				( int[] )of.getPixels(),
 				maxDistance );
@@ -268,12 +268,14 @@ public class PMCCBlockFlow implements PlugIn
 		
 		
 		ImageStack seq = imp.getStack();
+		ImageStack seqR = new ImageStack( imp.getWidth(), imp.getHeight(), seq.getSize() - 1 );
 		ImageStack seqOpticFlow = new ImageStack( imp.getWidth(), imp.getHeight(), seq.getSize() - 1 );
 		ImageStack seqFlowVectors = new ImageStack( imp.getWidth(), imp.getHeight(), 2 * seq.getSize() - 2 );
 		
 		FloatProcessor ip1;
 		FloatProcessor ip2 = ( FloatProcessor )seq.getProcessor( 1 ).convertToFloat();
 		
+		ImagePlus impR = null;
 		ImagePlus impOpticFlow = null;
 		CompositeImage impFlowVectors = null;
 		
@@ -286,10 +288,13 @@ public class PMCCBlockFlow implements PlugIn
 			
 			final FloatProcessor seqFlowVectorRSlice = new FloatProcessor( imp.getWidth(), imp.getHeight() );
 			final FloatProcessor seqFlowVectorPhiSlice = new FloatProcessor( imp.getWidth(), imp.getHeight() );
+			final FloatProcessor seqRSlice = new FloatProcessor( imp.getWidth(), imp.getHeight() );
 			final ColorProcessor seqOpticFlowSlice = new ColorProcessor( imp.getWidth(), imp.getHeight() );
 			
-			opticFlow( ip1, ip2, seqFlowVectorRSlice, seqFlowVectorPhiSlice, seqOpticFlowSlice );
+			opticFlow( ip1, ip2, seqRSlice, seqFlowVectorRSlice, seqFlowVectorPhiSlice, seqOpticFlowSlice );
 			
+			seqR.setPixels( seqRSlice.getPixels(), i );
+			seqR.setSliceLabel( "" + i, i );
 			seqFlowVectors.setPixels( seqFlowVectorRSlice.getPixels(), 2 * i - 1 );
 			seqFlowVectors.setSliceLabel( "r " + i, 2 * i - 1 );
 			seqFlowVectors.setPixels( seqFlowVectorPhiSlice.getPixels(), 2 * i );
@@ -299,6 +304,12 @@ public class PMCCBlockFlow implements PlugIn
 			
 			if ( i == 1 )
 			{
+				impR = new ImagePlus( imp.getTitle() + " R^2", seqR );
+				impR.setOpenAsHyperStack( true );
+				impR.setCalibration( imp.getCalibration() );
+				impR.setDimensions( 1, 1, seq.getSize() - 1 );
+				impR.show();
+				
 				impOpticFlow = new ImagePlus( imp.getTitle() + " optic flow", seqOpticFlow );
 				impOpticFlow.setOpenAsHyperStack( true );
 				impOpticFlow.setCalibration( imp.getCalibration() );
@@ -322,6 +333,7 @@ public class PMCCBlockFlow implements PlugIn
 			}
 			
 			IJ.showProgress( i, seq.getSize() );
+			impR.setSlice( i );
 			impOpticFlow.setSlice( i );
 			impFlowVectors.setPosition( 1, 1, i );
 			imp.setSlice( i + 1 );
