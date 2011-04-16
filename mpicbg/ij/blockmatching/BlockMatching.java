@@ -509,6 +509,10 @@ public class BlockMatching
 				e.printStackTrace();
 			}
 		}
+		
+		tasks.clear();
+		exec.shutdown();
+		
 		/* <visualisation> */
 //		if ( results.size() > 0 ) new ImagePlus( "r", rMapStack ).show();
 //		if ( rMapStack.getSize() > 0 ) new ImagePlus( "r", rMapStack ).show();

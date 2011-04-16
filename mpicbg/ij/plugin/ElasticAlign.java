@@ -374,6 +374,9 @@ public class ElasticAlign implements PlugIn, KeyListener
 		for ( Future< ArrayList< Feature > > fu : siftTasks )
 			fu.get();
 		
+		siftTasks.clear();
+		exec.shutdown();
+		
 		
 		/* collect all pairs of slices for which a model could be found */
 		final ArrayList< Triple< Integer, Integer, AbstractModel< ? > > > pairs = new ArrayList< Triple< Integer, Integer, AbstractModel< ? > > >();
@@ -483,9 +486,9 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 				}
 				
 				for ( final Thread thread : threads )
-				{
 					thread.join();
-				}
+				
+				threads.clear();
 				
 				/* collect successfully matches pairs and break the search on gaps */
 				for ( int t = 0; t < models.size(); ++t )

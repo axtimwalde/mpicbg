@@ -363,6 +363,9 @@ public class ElasticMontage implements PlugIn
 		for ( Future< ArrayList< Feature > > fu : siftTasks )
 			fu.get();
 		
+		siftTasks.clear();
+		exec.shutdown();
+		
 		
 		/* collect all pairs of tiles for which a model could be found */
 		final ArrayList< Triple< Integer, Integer, AbstractModel< ? > > > pairs = new ArrayList< Triple< Integer, Integer, AbstractModel< ? > > >();
