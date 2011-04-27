@@ -29,6 +29,7 @@ final public class LongIntegralImage implements IntegralImage
 	final private int height;
 	
 	final private int w;
+	final private int w1;
 
 	final protected long[] sum;
 	
@@ -38,6 +39,7 @@ final public class LongIntegralImage implements IntegralImage
 		this.height = height;
 		
 		w = width + 1;
+		w1 = w + 1;
 
 		sum = new long[ w * ( height + 1 ) ];
 
@@ -50,7 +52,7 @@ final public class LongIntegralImage implements IntegralImage
 		for ( int y = 1; y < height; ++y )
 		{
 			final int ywidth = y * width;
-			final int yw = y * w + w + 1;
+			final int yw = y * w + w1;
 			sum[ yw ] = sum[ yw - w ] + pixels[ ywidth ];
 			for ( int x = 1; x < width; ++x )
 			{
@@ -60,12 +62,31 @@ final public class LongIntegralImage implements IntegralImage
 		}
 	}
 	
+	/**
+	 * Package protected constructor with the area sums passed as a parameter.
+	 * 
+	 * @param sum area sums with size = (width + 1) * (height + 1)
+	 * @param width width of the original data
+	 * @param height heigth of the original data
+	 */
+	LongIntegralImage( final long[] sum, final int width, final int height )
+	{
+		this.width = width;
+		this.height = height;
+		
+		w = width + 1;
+		w1 = w + 1;
+
+		this.sum = sum;
+	}
+	
 	public LongIntegralImage( final ImageProcessor ip )
 	{
 		this.width = ip.getWidth();
 		this.height = ip.getHeight();
 
 		w = width + 1;
+		w1 = w + 1;
 
 		sum = new long[ w * ( height + 1 ) ];
 
@@ -78,7 +99,7 @@ final public class LongIntegralImage implements IntegralImage
 		for ( int y = 1; y < height; ++y )
 		{
 			final int ywidth = y * width;
-			final int yw = y * w + w + 1;
+			final int yw = y * w + w1;
 			sum[ yw ] = sum[ yw - w ] + ip.get( ywidth );
 			for ( int x = 1; x < width; ++x )
 			{
@@ -100,8 +121,8 @@ final public class LongIntegralImage implements IntegralImage
 
 	final public long getLongSum( final int xMin, final int yMin, final int xMax, final int yMax )
 	{
-		final int y1w = yMin * w + w + 1;
-		final int y2w = yMax * w + w + 1;
+		final int y1w = yMin * w + w1;
+		final int y2w = yMax * w + w1;
 		return sum[ y1w + xMin ] + sum[ y2w + xMax ] - sum[ y1w + xMax ] - sum[ y2w + xMin ];
 	}
 	
@@ -114,8 +135,8 @@ final public class LongIntegralImage implements IntegralImage
 	@Override
 	final public int getScaledSum( final int xMin, final int yMin, final int xMax, final int yMax, final float scale )
 	{
-		final int y1w = yMin * w + w + 1;
-		final int y2w = yMax * w + w + 1;
+		final int y1w = yMin * w + w1;
+		final int y2w = yMax * w + w1;
 		return roundPositive( ( sum[ y1w + xMin ] + sum[ y2w + xMax ] - sum[ y1w + xMax ] - sum[ y2w + xMin ] ) * scale );
 	}
 }
