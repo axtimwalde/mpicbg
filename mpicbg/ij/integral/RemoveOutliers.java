@@ -16,10 +16,7 @@
  */
 package mpicbg.ij.integral;
 
-import ij.ImagePlus;
-import ij.plugin.filter.PlugInFilter;
 import ij.process.FloatProcessor;
-import ij.process.ImageProcessor;
 
 /**
  * Remove saturated pixels by diffusing the neighbors in.
@@ -27,7 +24,7 @@ import ij.process.ImageProcessor;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.1a
  */
-public class RemoveOutliers extends BlockStatistics implements PlugInFilter
+public class RemoveOutliers extends BlockStatistics
 {
 	final protected FloatProcessor fpOriginal;
 	
@@ -183,15 +180,5 @@ public class RemoveOutliers extends BlockStatistics implements PlugInFilter
 			fp.setPixels( fpCopy.getPixelsCopy() );
 		}
 		while ( numSaturatedPixels != numSaturatedPixelsBefore );
-	}
-	
-	public int setup( final String arg, final ImagePlus imp )
-	{
-		return DOES_32 | DOES_STACKS;
-	}
-	
-	public void run( final ImageProcessor ip )
-	{
-		
 	}
 }
