@@ -122,6 +122,11 @@ final public class DoubleIntegralImage implements IntegralImage
 	@Override
 	final public int getHeight() { return height; }
 	
+	final public double getDoubleSum( final int x, final int y )
+	{
+		return sum[ y * w + w1 + x ];
+	}
+	
 	final public double getDoubleSum( final int xMin, final int yMin, final int xMax, final int yMax )
 	{
 		final int y1w = yMin * w + w1;
