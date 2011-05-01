@@ -38,7 +38,7 @@ public class RemoveOutliers implements ExtendedPlugInFilter, DialogListener
 {
 	static protected int blockRadiusX = 40, blockRadiusY = 40;
 	static protected double standardDeviations = 3;
-	final static protected int flags = DOES_32 | DOES_STACKS;
+	final static protected int flags = CONVERT_TO_FLOAT | DOES_ALL | DOES_STACKS;
 	
 	protected mpicbg.ij.integral.RemoveOutliers rmo;
 	
