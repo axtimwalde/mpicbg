@@ -1,4 +1,4 @@
-package mpicbg.ij.integral;
+package mpicbg.ij.plugin;
 /**
  * License: GPL
  *
@@ -16,6 +16,8 @@ package mpicbg.ij.integral;
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  */
+import mpicbg.ij.integral.BlockPMCC;
+import mpicbg.ij.integral.IntegralImage;
 import ij.plugin.*;
 import ij.gui.*;
 import ij.*;
