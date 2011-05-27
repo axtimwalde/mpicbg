@@ -1,4 +1,4 @@
-package mpicbg.ij.integral;
+package mpicbg.ij.plugin;
 /**
  * License: GPL
  *
@@ -17,9 +17,14 @@ package mpicbg.ij.integral;
  *
  */
 import ij.plugin.*;
+import ij.plugin.filter.GaussianBlur;
 import ij.gui.*;
 import ij.*;
 import ij.process.*;
+
+import java.awt.TextField;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
 /**
  * <h1>Transfer an image sequence into an optic flow field<h1>
@@ -27,19 +32,21 @@ import ij.process.*;
  * <p>Flow fields are calculated for each pair <em>(t,t+1)</em> of the sequence
  * independently.  The motion vector for each pixel in image t is estimated by
  * searching the most similar looking pixel in image <em>t+1</em>.  The
- * similarity measure is the sum of square differences of all pixels in a local
- * vicinity.  The local vicinity is defined by a block and is calculated using
- * an {@link IntegralImage}.  Both the size of the block and the search radius
- * are parameters of the method.</p>
+ * similarity measure is the sum of differences of all pixels in a local
+ * vicinity.  The local vicinity is defined by a Gaussian.  Both the standard
+ * deviation of the Gaussian (the size of the local vicinity) and the search
+ * radius are parameters of the method.</p>
  * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.1a
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de> and Pavel Tomancak <tomancak@mpi-cbg.de>
+ * @version 0.1b
  */ 
-public class MESBlockFlow implements PlugIn
+public class MSEGaussianFlow implements PlugIn, KeyListener
 {
-	static protected int blockRadius = 8;
+	static protected float sigma = 4;
 	static protected byte maxDistance = 7;
 	static protected boolean showColors = false;
+	
+	final static protected GaussianBlur filter = new GaussianBlur();
 	
 	final static protected int pingPong( final int a, final int mod )
 	{
@@ -236,8 +243,7 @@ public class MESBlockFlow implements PlugIn
 				subtractShifted( ip1, ip2, ipD, xo, yo );
 				
 				// blur in order to compare small regions instead of single pixels 
-				final Mean mean = new Mean( ipD );
-				mean.mean( blockRadius );
+				filter.blurFloat( ipD, sigma, sigma, 0.002 );
 				
 				final float[] ipDPixels = ( float[] )ipD.getPixels();
 				final float[] ipDMinPixels = ( float[] )ipDMin.getPixels();
@@ -274,7 +280,7 @@ public class MESBlockFlow implements PlugIn
 		if ( imp == null )  { IJ.error( "There are no images open" ); return; }
 		
 		GenericDialog gd = new GenericDialog( "Generate optic flow" );
-		gd.addNumericField( "block radius :", blockRadius, 0, 6, "px" );
+		gd.addNumericField( "sigma :", sigma, 2, 6, "px" );
 		gd.addNumericField( "maximal_distance :", maxDistance, 0, 6, "px" );
 		gd.addCheckbox( "show_color_map", showColors );
 		
@@ -282,7 +288,7 @@ public class MESBlockFlow implements PlugIn
 		
 		if (gd.wasCanceled()) return;
 		
-		blockRadius = ( int )gd.getNextNumber();
+		sigma = ( float )gd.getNextNumber();
 		maxDistance = ( byte )gd.getNextNumber();
 		showColors = gd.getNextBoolean();
 		
@@ -355,4 +361,17 @@ public class MESBlockFlow implements PlugIn
 			imp.setSlice( i + 1 );
 		}
 	}
+
+	public void keyPressed(KeyEvent e)
+	{
+		if (
+				( e.getKeyCode() == KeyEvent.VK_F1 ) &&
+				( e.getSource() instanceof TextField ) )
+		{
+		}
+	}
+
+	public void keyReleased(KeyEvent e) { }
+
+	public void keyTyped(KeyEvent e) { }
 }

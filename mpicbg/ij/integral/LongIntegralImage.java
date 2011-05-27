@@ -19,8 +19,17 @@ package mpicbg.ij.integral;
 import ij.process.ImageProcessor;
 
 /**
+ * <p>Summed area table using 64bit signed integer precision.  This table can
+ * be used safely for 16bit unsigned integer precision images with a maximal
+ * size of >2<sup>31</sup>&nbsp;px which is ImageJ's size limit due to usage
+ * of a single basic type array for pixel storage.  For the squares of 16bit
+ * unsigned integer precision images, the size limit is two pixels less
+ * (2<sup>31</sup>-2&nbsp;px) which should not impose a practical limitation.
+ * These limits are calculated for the extreme case that all pixels have the
+ * maximum possible value.</p>
  * 
- *
+ * <p>Boolean or byte integer precision images and their squares are safe.</p> 
+ * 
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  */
 final public class LongIntegralImage implements IntegralImage
@@ -109,16 +118,16 @@ final public class LongIntegralImage implements IntegralImage
 		}
 	}
 	
-	final static private int roundPositive( final float f )
-	{
-		return ( int )( f + 0.5f );
-	}
-	
 	@Override
 	final public int getWidth() { return width; }
 	@Override
 	final public int getHeight() { return height; }
-
+	
+	final public long getLongSum( final int x, final int y )
+	{
+		return sum[ y * w + w1 + x ];
+	}
+	
 	final public long getLongSum( final int xMin, final int yMin, final int xMax, final int yMax )
 	{
 		final int y1w = yMin * w + w1;
@@ -137,6 +146,6 @@ final public class LongIntegralImage implements IntegralImage
 	{
 		final int y1w = yMin * w + w1;
 		final int y2w = yMax * w + w1;
-		return roundPositive( ( sum[ y1w + xMin ] + sum[ y2w + xMax ] - sum[ y1w + xMax ] - sum[ y2w + xMin ] ) * scale );
+		return Util.roundPositive( ( sum[ y1w + xMin ] + sum[ y2w + xMax ] - sum[ y1w + xMax ] - sum[ y2w + xMin ] ) * scale );
 	}
 }

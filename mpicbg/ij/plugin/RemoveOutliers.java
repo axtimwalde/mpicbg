@@ -38,7 +38,7 @@ public class RemoveOutliers implements ExtendedPlugInFilter, DialogListener
 {
 	static protected int blockRadiusX = 40, blockRadiusY = 40;
 	static protected double standardDeviations = 3;
-	final static protected int flags = DOES_32 | DOES_STACKS;
+	final static protected int flags = CONVERT_TO_FLOAT | DOES_8G | DOES_16 | DOES_32 | DOES_RGB | DOES_STACKS;
 	
 	protected mpicbg.ij.integral.RemoveOutliers rmo;
 	
@@ -57,7 +57,7 @@ public class RemoveOutliers implements ExtendedPlugInFilter, DialogListener
 		gd.addDialogListener( this );
 
 		/* initialize summed area tables for statistical outlier removal */
-		rmo = new mpicbg.ij.integral.RemoveOutliers( ( FloatProcessor )imp.getProcessor() );
+		rmo = new mpicbg.ij.integral.RemoveOutliers( ( FloatProcessor )imp.getProcessor().convertToFloat() );
 		
 		gd.showDialog();
 		if ( gd.wasCanceled() )
@@ -75,8 +75,6 @@ public class RemoveOutliers implements ExtendedPlugInFilter, DialogListener
         
         if ( gd.invalidNumber() )
             return false;
-        
-        
         
         return true;
     }

@@ -16,7 +16,6 @@
  */
 package mpicbg.ij.integral;
 
-import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 
 /**
@@ -24,7 +23,7 @@ import ij.process.ImageProcessor;
  *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  */
-final public class DoubleIntegralImage implements IntegralImage
+final public class IntIntegralImage implements IntegralImage
 {
 	final private int width;
 	final private int height;
@@ -32,9 +31,9 @@ final public class DoubleIntegralImage implements IntegralImage
 	final private int w;
 	final private int w1;
 
-	final private double[] sum;
+	final protected int[] sum;
 	
-	DoubleIntegralImage( final float[] pixels, final int width, final int height )
+	IntIntegralImage( final byte[] pixels, final int width, final int height )
 	{
 		this.width = width;
 		this.height = height;
@@ -42,9 +41,9 @@ final public class DoubleIntegralImage implements IntegralImage
 		w = width + 1;
 		w1 = w + 1;
 
-		sum = new double[ w * ( height + 1 ) ];
+		sum = new int[ w * ( height + 1 ) ];
 
-		double s = 0;
+		int s = 0;
 		for ( int x = 0; x < width; )
 		{
 			s += pixels[ x ];
@@ -63,15 +62,14 @@ final public class DoubleIntegralImage implements IntegralImage
 		}
 	}
 	
-	
 	/**
 	 * Package protected constructor with the area sums passed as a parameter.
 	 * 
 	 * @param sum area sums with size = (width + 1) * (height + 1)
 	 * @param width width of the original data
-	 * @param height heigth of the original data
+	 * @param height height of the original data
 	 */
-	DoubleIntegralImage( final double[] sum, final int width, final int height )
+	IntIntegralImage( final int[] sum, final int width, final int height )
 	{
 		this.width = width;
 		this.height = height;
@@ -82,13 +80,7 @@ final public class DoubleIntegralImage implements IntegralImage
 		this.sum = sum;
 	}
 	
-	
-	public DoubleIntegralImage( final FloatProcessor fp )
-	{
-		this( ( float[] )fp.getPixels(), fp.getWidth(), fp.getHeight() );
-	}
-	
-	public DoubleIntegralImage( final ImageProcessor ip )
+	public IntIntegralImage( final ImageProcessor ip )
 	{
 		this.width = ip.getWidth();
 		this.height = ip.getHeight();
@@ -96,23 +88,23 @@ final public class DoubleIntegralImage implements IntegralImage
 		w = width + 1;
 		w1 = w + 1;
 
-		sum = new double[ w * ( height + 1 ) ];
+		sum = new int[ w * ( height + 1 ) ];
 
-		double s = 0;
+		int s = 0;
 		for ( int x = 0; x < width; )
 		{
-			s += ip.getf( x );
+			s += ip.get( x );
 			sum[ ++x + w ] = s;
 		}
 		for ( int y = 1; y < height; ++y )
 		{
 			final int ywidth = y * width;
 			final int yw = y * w + w1;
-			sum[ yw ] = sum[ yw - w ] + ip.getf( ywidth );
+			sum[ yw ] = sum[ yw - w ] + ip.get( ywidth );
 			for ( int x = 1; x < width; ++x )
 			{
 				final int ywx = yw + x;
-				sum[ ywx ] = sum[ ywx - w ] + sum[ ywx - 1 ] + ip.getf( ywidth + x ) - sum[ ywx - w - 1 ];
+				sum[ ywx ] = sum[ ywx - w ] + sum[ ywx - 1 ] + ip.get( ywidth + x ) - sum[ ywx - w - 1 ];
 			}
 		}
 	}
@@ -122,22 +114,24 @@ final public class DoubleIntegralImage implements IntegralImage
 	@Override
 	final public int getHeight() { return height; }
 	
-	final public double getDoubleSum( final int x, final int y )
+	final public int getIntSum( final int x, final int y )
 	{
 		return sum[ y * w + w1 + x ];
 	}
 	
-	final public double getDoubleSum( final int xMin, final int yMin, final int xMax, final int yMax )
+	
+	final public int getIntSum( final int xMin, final int yMin, final int xMax, final int yMax )
 	{
 		final int y1w = yMin * w + w1;
 		final int y2w = yMax * w + w1;
 		return sum[ y1w + xMin ] + sum[ y2w + xMax ] - sum[ y1w + xMax ] - sum[ y2w + xMin ];
 	}
-
+	
+	
 	@Override
 	final public int getSum( final int xMin, final int yMin, final int xMax, final int yMax )
 	{
-		return Float.floatToIntBits( ( float )getDoubleSum( xMin, yMin, xMax, yMax ) );
+		return getIntSum( xMin, yMin, xMax, yMax );
 	}
 	
 	@Override
@@ -145,25 +139,6 @@ final public class DoubleIntegralImage implements IntegralImage
 	{
 		final int y1w = yMin * w + w1;
 		final int y2w = yMax * w + w1;
-		return Float.floatToIntBits( ( float )( sum[ y1w + xMin ] + sum[ y2w + xMax ] - sum[ y1w + xMax ] - sum[ y2w + xMin ] ) * scale );
-	}
-	
-	final double[] getData()
-	{
-		return sum;
-	}
-	
-	final public FloatProcessor toProcessor()
-	{
-		final float[] pixels = new float[ width * height ];
-		for ( int y = 0; y < height; ++y )
-		{
-			final int row = y * width;
-			for ( int x = 0; x < width; ++x )
-			{
-				pixels[ row + x ] = ( float )getDoubleSum( x - 1, y - 1, x, y );
-			}
-		}
-		return new FloatProcessor( width, height, pixels, null );
+		return Util.roundPositive( ( sum[ y1w + xMin ] + sum[ y2w + xMax ] - sum[ y1w + xMax ] - sum[ y2w + xMin ] ) * scale );
 	}
 }
