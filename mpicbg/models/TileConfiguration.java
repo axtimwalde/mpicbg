@@ -338,6 +338,12 @@ public class TileConfiguration
 			
 			println( "Filter outliers..." );
 			
+			/* TODO Actually remove a tile or change its model in case that the
+			 * number of remaining matches < Model.getMinNumMatches().
+			 * 
+			 * Currently, the whole configuration will fail  in that case!!!!!! 
+			 */
+			
 			/* remove the worst if there is one */
 			if ( dMax > maxMeanFactor * sum.getSum() / weights.getSum() )
 			{
