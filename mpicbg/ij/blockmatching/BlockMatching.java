@@ -624,10 +624,10 @@ public class BlockMatching
 		target = null;
 		
 		/* <visualization> */
-		source.setMinAndMax( 0, 1 );
-		mappedScaledTarget.setMinAndMax( 0, 1 );
-		new ImagePlus( "Scaled Source", source ).show();
-		new ImagePlus( "Mapped Target", mappedScaledTarget ).show();		
+//		source.setMinAndMax( 0, 1 );
+//		mappedScaledTarget.setMinAndMax( 0, 1 );
+//		new ImagePlus( "Scaled Source", source ).show();
+//		new ImagePlus( "Mapped Target", mappedScaledTarget ).show();		
 		/* </visualization> */
 		
 		final Map< Point, Point > scaledSourcePoints = new HashMap< Point, Point>();
