@@ -1,5 +1,7 @@
 package mpicbg.util;
 
+import java.util.Arrays;
+
 /**
  * Methods collection for general purpose that do not have a common context
  * 
@@ -132,7 +134,27 @@ final public class Util
 	 */
 	final static public int round( final double a )
 	{
-		return ( int )( a + Math.signum( a ) * 0.5f );
+		return ( int )( a + Math.signum( a ) * 0.5 );
+	}
+	
+	/**
+	 * Round a positive a
+	 * 
+	 * @param a
+	 */
+	final static public int roundPos( final float a )
+	{
+		return ( int )( a + 0.5f );
+	}
+	
+	/**
+	 * Round a positive a
+	 * 
+	 * @param a
+	 */
+	final static public int roundPos( final double a )
+	{
+		return ( int )( a + 0.5 );
 	}
 	
 	/**
