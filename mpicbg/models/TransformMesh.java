@@ -179,7 +179,7 @@ public class TransformMesh implements InvertibleCoordinateTransform
 				++i;
 			}
 			
-			p  = new Point( new float[]{ width, yip } );
+			p  = new Point( new float[]{ width - 1, yip } );
 			pq[ i ] = new PointMatch( p, p.clone(), w );
 			
 			i1 = i - numXs;
