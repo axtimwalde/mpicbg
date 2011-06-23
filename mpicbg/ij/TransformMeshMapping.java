@@ -2,7 +2,6 @@ package mpicbg.ij;
 
 import ij.process.ImageProcessor;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -11,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import mpicbg.models.AffineModel2D;
 import mpicbg.models.PointMatch;
 import mpicbg.models.TransformMesh;
+import mpicbg.util.Util;
 
 /**
  * Use a {@link TransformMesh} to map and map inversely
@@ -442,8 +442,8 @@ public class TransformMeshMapping< T extends TransformMesh > extends InvertibleT
 		final float[] max = new float[ 2 ];
 		calculateBoundingBoxInverse( pm, min, max );
 		
-		final int maxX = ( int )max[ 0 ];
-		final int maxY = ( int )max[ 1 ];
+		final int maxX = Util.round( max[ 0 ] );
+		final int maxY = Util.round( max[ 1 ] );
 		
 		final float[] a = pm.get( 0 ).getP1().getL();
 		final float ax = a[ 0 ];
@@ -455,9 +455,9 @@ public class TransformMeshMapping< T extends TransformMesh > extends InvertibleT
 		final float cx = c[ 0 ];
 		final float cy = c[ 1 ];
 		final float[] t = new float[ 2 ];
-		for ( int y = ( int )min[ 1 ]; y <= maxY; ++y )
+		for ( int y = Util.round( min[ 1 ] ); y <= maxY; ++y )
 		{
-			for ( int x = ( int )min[ 0 ]; x <= maxX; ++x )
+			for ( int x = Util.round( min[ 0 ] ); x <= maxX; ++x )
 			{
 				if ( isInTriangle( ax, ay, bx, by, cx, cy, x, y ) )
 				{
@@ -481,8 +481,8 @@ public class TransformMeshMapping< T extends TransformMesh > extends InvertibleT
 		final float[] max = new float[ 2 ];
 		calculateBoundingBoxInverse( pm, min, max );
 		
-		final int maxX = ( int )max[ 0 ];
-		final int maxY = ( int )max[ 1 ];
+		final int maxX = Util.round( max[ 0 ] );
+		final int maxY = Util.round( max[ 1 ] );
 		
 		final float[] a = pm.get( 0 ).getP1().getL();
 		final float ax = a[ 0 ];
@@ -494,9 +494,9 @@ public class TransformMeshMapping< T extends TransformMesh > extends InvertibleT
 		final float cx = c[ 0 ];
 		final float cy = c[ 1 ];
 		final float[] t = new float[ 2 ];
-		for ( int y = ( int )min[ 1 ]; y <= maxY; ++y )
+		for ( int y = Util.round( min[ 1 ] ); y <= maxY; ++y )
 		{
-			for ( int x = ( int )min[ 0 ]; x <= maxX; ++x )
+			for ( int x = Util.round( min[ 0 ] ); x <= maxX; ++x )
 			{
 				if ( isInTriangle( ax, ay, bx, by, cx, cy, x, y ) )
 				{
