@@ -229,13 +229,16 @@ public class TransformMeshMapping< T extends TransformMesh > extends InvertibleT
 			final ImageProcessor source,
 			final ImageProcessor target )
 	{
+		final int w = target.getWidth() - 1;
+		final int h = target.getHeight() - 1;
 		final ArrayList< PointMatch > pm = m.getAV().get( ai );
 		final float[] min = new float[ 2 ];
 		final float[] max = new float[ 2 ];
 		calculateBoundingBox( pm, min, max );
-		
-		final int maxX = ( int )max[ 0 ];
-		final int maxY = ( int )max[ 1 ];
+		final int minX = Math.max( 0, Util.roundPos( min[ 0 ] ) );
+		final int minY = Math.max( 0, Util.roundPos( min[ 1 ] ) );
+		final int maxX = Math.min( w, Util.roundPos( max[ 0 ] ) );
+		final int maxY = Math.min( h, Util.roundPos( max[ 1 ] ) );
 		
 		final float[] a = pm.get( 0 ).getP2().getW();
 		final float ax = a[ 0 ];
@@ -247,9 +250,9 @@ public class TransformMeshMapping< T extends TransformMesh > extends InvertibleT
 		final float cx = c[ 0 ];
 		final float cy = c[ 1 ];
 		final float[] t = new float[ 2 ];
-		for ( int y = ( int )min[ 1 ]; y <= maxY; ++y )
+		for ( int y = minY; y <= maxY; ++y )
 		{
-			for ( int x = ( int )min[ 0 ]; x <= maxX; ++x )
+			for ( int x = minX; x <= maxX; ++x )
 			{
 				if ( isInTriangle( ax, ay, bx, by, cx, cy, x, y ) )
 				{
@@ -276,13 +279,16 @@ public class TransformMeshMapping< T extends TransformMesh > extends InvertibleT
 			final ImageProcessor source,
 			final ImageProcessor target )
 	{
+		final int w = target.getWidth() - 1;
+		final int h = target.getHeight() - 1;
 		final ArrayList< PointMatch > pm = m.getAV().get( ai );
 		final float[] min = new float[ 2 ];
 		final float[] max = new float[ 2 ];
 		calculateBoundingBox( pm, min, max );
-		
-		final int maxX = ( int )max[ 0 ];
-		final int maxY = ( int )max[ 1 ];
+		final int minX = Math.max( 0, Util.roundPos( min[ 0 ] ) );
+		final int minY = Math.max( 0, Util.roundPos( min[ 1 ] ) );
+		final int maxX = Math.min( w, Util.roundPos( max[ 0 ] ) );
+		final int maxY = Math.min( h, Util.roundPos( max[ 1 ] ) );
 		
 		final float[] a = pm.get( 0 ).getP2().getW();
 		final float ax = a[ 0 ];
@@ -294,9 +300,9 @@ public class TransformMeshMapping< T extends TransformMesh > extends InvertibleT
 		final float cx = c[ 0 ];
 		final float cy = c[ 1 ];
 		final float[] t = new float[ 2 ];
-		for ( int y = ( int )min[ 1 ]; y <= maxY; ++y )
+		for ( int y = minY; y <= maxY; ++y )
 		{
-			for ( int x = ( int )min[ 0 ]; x <= maxX; ++x )
+			for ( int x = minX; x <= maxX; ++x )
 			{
 				if ( isInTriangle( ax, ay, bx, by, cx, cy, x, y ) )
 				{
@@ -437,13 +443,16 @@ public class TransformMeshMapping< T extends TransformMesh > extends InvertibleT
 			final ImageProcessor source,
 			final ImageProcessor target )
 	{
+		final int w = target.getWidth() - 1;
+		final int h = target.getHeight() - 1;
 		final ArrayList< PointMatch > pm = m.getAV().get( ai );
 		final float[] min = new float[ 2 ];
 		final float[] max = new float[ 2 ];
 		calculateBoundingBoxInverse( pm, min, max );
-		
-		final int maxX = Util.round( max[ 0 ] );
-		final int maxY = Util.round( max[ 1 ] );
+		final int minX = Math.max( 0, Util.roundPos( min[ 0 ] ) );
+		final int minY = Math.max( 0, Util.roundPos( min[ 1 ] ) );
+		final int maxX = Math.min( w, Util.roundPos( max[ 0 ] ) );
+		final int maxY = Math.min( h, Util.roundPos( max[ 1 ] ) );
 		
 		final float[] a = pm.get( 0 ).getP1().getL();
 		final float ax = a[ 0 ];
@@ -455,9 +464,9 @@ public class TransformMeshMapping< T extends TransformMesh > extends InvertibleT
 		final float cx = c[ 0 ];
 		final float cy = c[ 1 ];
 		final float[] t = new float[ 2 ];
-		for ( int y = Util.round( min[ 1 ] ); y <= maxY; ++y )
+		for ( int y = minY; y <= maxY; ++y )
 		{
-			for ( int x = Util.round( min[ 0 ] ); x <= maxX; ++x )
+			for ( int x = minX; x <= maxX; ++x )
 			{
 				if ( isInTriangle( ax, ay, bx, by, cx, cy, x, y ) )
 				{
@@ -476,13 +485,16 @@ public class TransformMeshMapping< T extends TransformMesh > extends InvertibleT
 			final ImageProcessor source,
 			final ImageProcessor target )
 	{
+		final int w = target.getWidth() - 1;
+		final int h = target.getHeight() - 1;
 		final ArrayList< PointMatch > pm = m.getAV().get( ai );
 		final float[] min = new float[ 2 ];
 		final float[] max = new float[ 2 ];
 		calculateBoundingBoxInverse( pm, min, max );
-		
-		final int maxX = Util.round( max[ 0 ] );
-		final int maxY = Util.round( max[ 1 ] );
+		final int minX = Math.max( 0, Util.roundPos( min[ 0 ] ) );
+		final int minY = Math.max( 0, Util.roundPos( min[ 1 ] ) );
+		final int maxX = Math.min( w, Util.roundPos( max[ 0 ] ) );
+		final int maxY = Math.min( h, Util.roundPos( max[ 1 ] ) );
 		
 		final float[] a = pm.get( 0 ).getP1().getL();
 		final float ax = a[ 0 ];
@@ -494,9 +506,9 @@ public class TransformMeshMapping< T extends TransformMesh > extends InvertibleT
 		final float cx = c[ 0 ];
 		final float cy = c[ 1 ];
 		final float[] t = new float[ 2 ];
-		for ( int y = Util.round( min[ 1 ] ); y <= maxY; ++y )
+		for ( int y = minY; y <= maxY; ++y )
 		{
-			for ( int x = Util.round( min[ 0 ] ); x <= maxX; ++x )
+			for ( int x = minX; x <= maxX; ++x )
 			{
 				if ( isInTriangle( ax, ay, bx, by, cx, cy, x, y ) )
 				{
