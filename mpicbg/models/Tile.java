@@ -12,7 +12,7 @@ import java.util.Set;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.1b
  */
-public class Tile< M extends AbstractModel< M > >
+public class Tile< M extends Model< M > >
 {
 	/**
 	 * The transformation {@link AbstractModel} of the {@link Tile}.  All local
