@@ -23,6 +23,7 @@ import ij.ImageStack;
 import ij.WindowManager;
 import ij.gui.GenericDialog;
 import ij.io.DirectoryChooser;
+import ij.measure.Calibration;
 import ij.plugin.PlugIn;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
@@ -57,6 +58,7 @@ import mpicbg.models.HomographyModel2D;
 import mpicbg.models.InvertibleCoordinateTransform;
 import mpicbg.models.MovingLeastSquaresTransform;
 import mpicbg.models.NotEnoughDataPointsException;
+import mpicbg.models.Point;
 import mpicbg.models.PointMatch;
 import mpicbg.models.RigidModel2D;
 import mpicbg.models.SimilarityModel2D;
@@ -64,6 +66,7 @@ import mpicbg.models.Spring;
 import mpicbg.models.SpringMesh;
 import mpicbg.models.Tile;
 import mpicbg.models.TileConfiguration;
+import mpicbg.models.Transforms;
 import mpicbg.models.TranslationModel2D;
 import mpicbg.models.Vertex;
 import mpicbg.util.Util;
@@ -90,11 +93,14 @@ public class ElasticAlign implements PlugIn, KeyListener
 	
 	final static private class Param implements Serializable
 	{
-		private static final long serialVersionUID = 3816564377727147658L;
+		private static final long serialVersionUID = -6777642913512469616L;
 
 		public String outputPath = "";
 
 		final public FloatArray2DSIFT.Param sift = new FloatArray2DSIFT.Param();
+		{
+			sift.fdSize = 8;
+		}
 		
 		/**
 		 * Closest/next closest neighbor distance ratio
@@ -104,30 +110,41 @@ public class ElasticAlign implements PlugIn, KeyListener
 		/**
 		 * Maximal accepted alignment error in px
 		 */
-		public float maxEpsilon = 25.0f;
+		public float maxEpsilon = 200.0f;
 		
 		/**
 		 * Inlier/candidates ratio
 		 */
-		public float minInlierRatio = 0.1f;
+		public float minInlierRatio = 0.0f;
 		
 		/**
 		 * Minimal absolute number of inliers
 		 */
-		public int minNumInliers = 7;
+		public int minNumInliers = 12;
 		
 		/**
 		 * Transformation models for choice
 		 */
 		final static public String[] modelStrings = new String[]{ "Translation", "Rigid", "Similarity", "Affine", "Perspective" };
-		public int modelIndex = 1;
+		public int modelIndex = 3;
+		
+		/**
+		 * Ignore identity transform up to a given tolerance
+		 */
+		public boolean rejectIdentity = true;
+		public float identityTolerance = 5.0f;
+		
+		/**
+		 * Maximal number of consecutive sections to be tested for an alignment model
+		 */
+		public int maxNumNeighbors = 10;
 		
 		/**
 		 * Maximal number of consecutive slices for which no model could be found
 		 */
 		public int maxNumFailures = 3;
 		
-		public int maxImageSize = 1024;
+		public float sectionScale = -1;
 		public float minR = 0.8f;
 		public float maxCurvatureR = 3f;
 		public float rodR = 0.8f;
@@ -149,10 +166,11 @@ public class ElasticAlign implements PlugIn, KeyListener
 		public boolean visualize = true;
 		public int resolutionOutput = 128;
 		
+		public boolean clearCache = true;
 		
 		public int maxNumThreads = Runtime.getRuntime().availableProcessors();
 		
-		public boolean setup()
+		public boolean setup( final ImagePlus imp )
 		{
 			DirectoryChooser.setDefaultDirectory( outputPath );
 			final DirectoryChooser dc = new DirectoryChooser( "Elastically align stack: Output directory" );
@@ -164,18 +182,18 @@ public class ElasticAlign implements PlugIn, KeyListener
 			}
 			else
 			{
-				final File d = new File( p.outputPath );
+				final File d = new File( outputPath );
 				if ( d.exists() && d.isDirectory() )
-					p.outputPath += "/";
+					outputPath += "/";
 				else
 					return false;
 			}
 			
 			final GenericDialog gdOutput = new GenericDialog( "Elastically align stack: Output" );
 			
-			gdOutput.addCheckbox( "interpolate", p.interpolate );
-			gdOutput.addCheckbox( "visualize", p.visualize );
-			gdOutput.addNumericField( "resolution :", p.resolutionOutput, 0 );
+			gdOutput.addCheckbox( "interpolate", interpolate );
+			gdOutput.addCheckbox( "visualize", visualize );
+			gdOutput.addNumericField( "resolution :", resolutionOutput, 0 );
 			
 			
 			gdOutput.showDialog();
@@ -183,9 +201,9 @@ public class ElasticAlign implements PlugIn, KeyListener
 			if ( gdOutput.wasCanceled() )
 				return false;
 			
-			p.interpolate = gdOutput.getNextBoolean();
-			p.visualize = gdOutput.getNextBoolean();
-			p.resolutionOutput = ( int )gdOutput.getNextNumber();
+			interpolate = gdOutput.getNextBoolean();
+			visualize = gdOutput.getNextBoolean();
+			resolutionOutput = ( int )gdOutput.getNextNumber();
 			
 			
 			/* SIFT */
@@ -193,16 +211,22 @@ public class ElasticAlign implements PlugIn, KeyListener
 			
 			SIFT.addFields( gd, sift );
 			
-			gd.addNumericField( "closest/next_closest_ratio :", p.rod, 2 );
+			gd.addNumericField( "closest/next_closest_ratio :", rod, 2 );
 			
 			gd.addMessage( "Geometric Consensus Filter:" );
-			gd.addNumericField( "maximal_alignment_error :", p.maxEpsilon, 2, 6, "px" );
-			gd.addNumericField( "minimal_inlier_ratio :", p.minInlierRatio, 2 );
-			gd.addNumericField( "minimal_number_of_inliers :", p.minNumInliers, 0 );
-			gd.addChoice( "approximate_transformation :", Param.modelStrings, Param.modelStrings[ p.modelIndex ] );
+			gd.addNumericField( "maximal_alignment_error :", maxEpsilon, 2, 6, "px" );
+			gd.addNumericField( "minimal_inlier_ratio :", minInlierRatio, 2 );
+			gd.addNumericField( "minimal_number_of_inliers :", minNumInliers, 0 );
+			gd.addChoice( "approximate_transformation :", Param.modelStrings, Param.modelStrings[ modelIndex ] );
+			gd.addCheckbox( "ignore constant background", rejectIdentity );
+			gd.addNumericField( "tolerance :", identityTolerance, 2, 6, "px" );
 			
 			gd.addMessage( "Matching:" );
-			gd.addNumericField( "give_up_after :", p.maxNumFailures, 0, 6, "failures" );
+			gd.addNumericField( "test_maximally :", maxNumNeighbors, 0, 6, "layers" );
+			gd.addNumericField( "give_up_after :", maxNumFailures, 0, 6, "failures" );
+			
+			gd.addMessage( "Caching:" );
+			gd.addCheckbox( "clear_cache", clearCache );
 			
 			gd.showDialog();
 			
@@ -211,23 +235,33 @@ public class ElasticAlign implements PlugIn, KeyListener
 			
 			SIFT.readFields( gd, sift );
 			
-			p.rod = ( float )gd.getNextNumber();
+			rod = ( float )gd.getNextNumber();
 			
-			p.maxEpsilon = ( float )gd.getNextNumber();
-			p.minInlierRatio = ( float )gd.getNextNumber();
-			p.minNumInliers = ( int )gd.getNextNumber();
-			p.modelIndex = gd.getNextChoiceIndex();
-			p.maxNumFailures = ( int )gd.getNextNumber();
+			maxEpsilon = ( float )gd.getNextNumber();
+			minInlierRatio = ( float )gd.getNextNumber();
+			minNumInliers = ( int )gd.getNextNumber();
+			modelIndex = gd.getNextChoiceIndex();
+			rejectIdentity = gd.getNextBoolean();
+			identityTolerance = ( float )gd.getNextNumber();
+			maxNumNeighbors = ( int )gd.getNextNumber();
+			maxNumFailures = ( int )gd.getNextNumber();
+			
+			clearCache = gd.getNextBoolean();
 			
 			
 			/* Block Matching */
+			if ( sectionScale < 0 )
+			{
+				final Calibration calib = imp.getCalibration();
+				sectionScale = ( float )( calib.pixelWidth / calib.pixelDepth );
+			}
 			final GenericDialog gdBlockMatching = new GenericDialog( "Elastically align stack: Block Matching parameters" );
 			gdBlockMatching.addMessage( "Block Matching:" );
-			gdBlockMatching.addNumericField( "maximal_image_size :", p.maxImageSize, 0, 6, "px" );
-			gdBlockMatching.addNumericField( "minimal_PMCC_r :", p.minR, 2 );
-			gdBlockMatching.addNumericField( "maximal_curvature_ratio :", p.maxCurvatureR, 2 );
-			gdBlockMatching.addNumericField( "maximal_second_best_r/best_r :", p.rodR, 2 );
-			gdBlockMatching.addNumericField( "resolution :", p.resolutionSpringMesh, 0 );
+			gdBlockMatching.addNumericField( "scale :", sectionScale, 2 );
+			gdBlockMatching.addNumericField( "minimal_PMCC_r :", minR, 2 );
+			gdBlockMatching.addNumericField( "maximal_curvature_ratio :", maxCurvatureR, 2 );
+			gdBlockMatching.addNumericField( "maximal_second_best_r/best_r :", rodR, 2 );
+			gdBlockMatching.addNumericField( "resolution :", resolutionSpringMesh, 0 );
 			gdBlockMatching.addCheckbox( "green_mask_(TODO_more_colors)", mask );
 			
 			gdBlockMatching.showDialog();
@@ -235,40 +269,40 @@ public class ElasticAlign implements PlugIn, KeyListener
 			if ( gdBlockMatching.wasCanceled() )
 				return false;
 			
-			p.maxImageSize = ( int )gdBlockMatching.getNextNumber();
-			p.minR = ( float )gdBlockMatching.getNextNumber();
-			p.maxCurvatureR = ( float )gdBlockMatching.getNextNumber();
-			p.rodR = ( float )gdBlockMatching.getNextNumber();
-			p.resolutionSpringMesh = ( int )gdBlockMatching.getNextNumber();
-			p.mask = gdBlockMatching.getNextBoolean();
+			sectionScale = ( float )gdBlockMatching.getNextNumber();
+			minR = ( float )gdBlockMatching.getNextNumber();
+			maxCurvatureR = ( float )gdBlockMatching.getNextNumber();
+			rodR = ( float )gdBlockMatching.getNextNumber();
+			resolutionSpringMesh = ( int )gdBlockMatching.getNextNumber();
+			mask = gdBlockMatching.getNextBoolean();
 			
 			/* Optimization */
 			final GenericDialog gdOptimize = new GenericDialog( "Elastically align stack: Optimization" );
 			
 			gdOptimize.addMessage( "Approximate Optimizer:" );
-			gdOptimize.addChoice( "approximate_transformation :", Param.modelStrings, Param.modelStrings[ p.modelIndexOptimize ] );
-			gdOptimize.addNumericField( "maximal_iterations :", p.maxIterationsOptimize, 0 );
-			gdOptimize.addNumericField( "maximal_plateauwidth :", p.maxPlateauwidthOptimize, 0 );
+			gdOptimize.addChoice( "approximate_transformation :", Param.modelStrings, Param.modelStrings[ modelIndexOptimize ] );
+			gdOptimize.addNumericField( "maximal_iterations :", maxIterationsOptimize, 0 );
+			gdOptimize.addNumericField( "maximal_plateauwidth :", maxPlateauwidthOptimize, 0 );
 			
 			gdOptimize.addMessage( "Spring Mesh:" );
-			gdOptimize.addNumericField( "stiffness :", p.stiffnessSpringMesh, 2 );
-			gdOptimize.addNumericField( "maximal_stretch :", p.maxStretchSpringMesh, 2, 6, "px" );
-			gdOptimize.addNumericField( "maximal_iterations :", p.maxIterationsSpringMesh, 0 );
-			gdOptimize.addNumericField( "maximal_plateauwidth :", p.maxPlateauwidthSpringMesh, 0 );
+			gdOptimize.addNumericField( "stiffness :", stiffnessSpringMesh, 2 );
+			gdOptimize.addNumericField( "maximal_stretch :", maxStretchSpringMesh, 2, 6, "px" );
+			gdOptimize.addNumericField( "maximal_iterations :", maxIterationsSpringMesh, 0 );
+			gdOptimize.addNumericField( "maximal_plateauwidth :", maxPlateauwidthSpringMesh, 0 );
 			
 			gdOptimize.showDialog();
 			
 			if ( gdOptimize.wasCanceled() )
 				return false;
 			
-			p.modelIndexOptimize = gdOptimize.getNextChoiceIndex();
-			p.maxIterationsOptimize = ( int )gdOptimize.getNextNumber();
-			p.maxPlateauwidthOptimize = ( int )gdOptimize.getNextNumber();
+			modelIndexOptimize = gdOptimize.getNextChoiceIndex();
+			maxIterationsOptimize = ( int )gdOptimize.getNextNumber();
+			maxPlateauwidthOptimize = ( int )gdOptimize.getNextNumber();
 			
-			p.stiffnessSpringMesh = ( float )gdOptimize.getNextNumber();
-			p.maxStretchSpringMesh = ( float )gdOptimize.getNextNumber();
-			p.maxIterationsSpringMesh = ( int )gdOptimize.getNextNumber();
-			p.maxPlateauwidthSpringMesh = ( int )gdOptimize.getNextNumber();
+			stiffnessSpringMesh = ( float )gdOptimize.getNextNumber();
+			maxStretchSpringMesh = ( float )gdOptimize.getNextNumber();
+			maxIterationsSpringMesh = ( int )gdOptimize.getNextNumber();
+			maxPlateauwidthSpringMesh = ( int )gdOptimize.getNextNumber();
 			
 			return true;
 		}
@@ -279,7 +313,11 @@ public class ElasticAlign implements PlugIn, KeyListener
 			    && maxEpsilon == param.maxEpsilon
 			    && minInlierRatio == param.minInlierRatio
 			    && minNumInliers == param.minNumInliers
-			    && modelIndex == param.modelIndex;
+			    && modelIndex == param.modelIndex
+				&& rejectIdentity == param.rejectIdentity
+				&& identityTolerance == param.identityTolerance
+				&& maxNumNeighbors == param.maxNumNeighbors
+				&& maxNumFailures == param.maxNumFailures;
 		}
 	}
 	
@@ -295,9 +333,13 @@ public class ElasticAlign implements PlugIn, KeyListener
 	final public void run() throws Exception
 	{
 		final ImagePlus imp = WindowManager.getCurrentImage();
-		if ( imp == null )  { System.err.println( "There are no images open" ); return; }
+		if ( imp == null )
+		{
+			System.err.println( "There are no images open" );
+			return;
+		}
 		
-		if ( !p.setup() ) return;
+		if ( !p.setup( imp ) ) return;
 		
 		final ImageStack stack = imp.getStack();
 		final double displayRangeMin = imp.getDisplayRangeMin();
@@ -382,7 +424,6 @@ public class ElasticAlign implements PlugIn, KeyListener
 		final ArrayList< Triple< Integer, Integer, AbstractModel< ? > > > pairs = new ArrayList< Triple< Integer, Integer, AbstractModel< ? > > >();
 		
 		counter.set( 0 );
-		
 		int numFailures = 0;
 		
 		for ( int i = 0; i < stack.getSize(); ++i )
@@ -390,32 +431,34 @@ public class ElasticAlign implements PlugIn, KeyListener
 			final ArrayList< Thread > threads = new ArrayList< Thread >( p.maxNumThreads );
 			
 			final int sliceA = i;
+			final int range = Math.min( stack.getSize(), i + p.maxNumNeighbors + 1 );
 			
-J:			for ( int j = i + 1; j < stack.getSize(); )
+J:			for ( int j = i + 1; j < range; )
 			{
-				final int numThreads = Math.min( p.maxNumThreads, stack.getSize() - j );
+				final int numThreads = Math.min( p.maxNumThreads, range - j );
 				final ArrayList< Triple< Integer, Integer, AbstractModel< ? > > > models =
 					new ArrayList< Triple< Integer, Integer, AbstractModel< ? > > >( numThreads );
 				
 				for ( int k = 0; k < numThreads; ++k )
 					models.add( null );
 				
-				for ( int t = 0;  t < p.maxNumThreads && j < stack.getSize(); ++t, ++j )
+				for ( int t = 0;  t < numThreads && j < range; ++t, ++j )
 				{
-					final int sliceB = j;
 					final int ti = t;
+					final int sliceB = j;
 					
 					final Thread thread = new Thread()
 					{
 						public void run()
 						{
-							IJ.showProgress( counter.getAndIncrement(), stack.getSize() - 1 );
+							IJ.showProgress( sliceA, stack.getSize() - 1 );
 							
 							IJ.log( "matching " + sliceB + " -> " + sliceA + "..." );
 							
-							//String path = p.outputPath + stack.getSliceLabel( slice ) + ".pointmatches";
+							ArrayList< PointMatch > candidates = null;
 							String path = p.outputPath + String.format( "%05d", sliceB ) + "-" + String.format( "%05d", sliceA ) + ".pointmatches";
-							ArrayList< PointMatch > candidates = deserializePointMatches( p, path );
+							if ( !p.clearCache )
+								candidates = deserializePointMatches( p, path );
 							
 							if ( null == candidates )
 							{
@@ -452,15 +495,33 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 							final ArrayList< PointMatch > inliers = new ArrayList< PointMatch >();
 							
 							boolean modelFound;
+							boolean again = false;
 							try
 							{
-								modelFound = model.filterRansac(
-										candidates,
-										inliers,
-										1000,
-										p.maxEpsilon,
-										p.minInlierRatio,
-										p.minNumInliers );
+								do
+								{
+									modelFound = model.filterRansac(
+											candidates,
+											inliers,
+											1000,
+											p.maxEpsilon,
+											p.minInlierRatio,
+											p.minNumInliers,
+											3 );
+									if ( modelFound && p.rejectIdentity )
+									{
+										final ArrayList< Point > points = new ArrayList< Point >();
+										PointMatch.sourcePoints( inliers, points );
+										if ( Transforms.isIdentity( model, points, p.identityTolerance ) )
+										{
+											IJ.log( "Identity transform for " + inliers.size() + " matches rejected." );
+											candidates.removeAll( inliers );
+											inliers.clear();
+											again = true;
+										}
+									}
+								}
+								while ( again );
 							}
 							catch ( Exception e )
 							{
@@ -485,8 +546,24 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 					thread.start();
 				}
 				
-				for ( final Thread thread : threads )
-					thread.join();
+				try
+				{
+					for ( final Thread thread : threads )
+						thread.join();
+				}
+				catch ( InterruptedException e )
+				{
+					IJ.log( "Establishing feature correspondences interrupted." );
+					for ( final Thread thread : threads )
+						thread.interrupt();
+					try
+					{
+						for ( final Thread thread : threads )
+							thread.join();
+					}
+					catch ( InterruptedException f ) {}
+					return;
+				}
 				
 				threads.clear();
 				
@@ -512,11 +589,17 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 		
 		/* Initialization */
 		final TileConfiguration initMeshes = new TileConfiguration();
-		initMeshes.addTiles( tiles );
 		
 		final ArrayList< SpringMesh > meshes = new ArrayList< SpringMesh >( stack.getSize() );
 		for ( int i = 0; i < stack.getSize(); ++i )
-			meshes.add( new SpringMesh( p.resolutionSpringMesh, stack.getWidth(), stack.getHeight(), p.stiffnessSpringMesh, p.maxStretchSpringMesh, p.dampSpringMesh ) );
+			meshes.add(
+					new SpringMesh(
+							p.resolutionSpringMesh,
+							stack.getWidth(),
+							stack.getHeight(),
+							p.stiffnessSpringMesh,
+							p.maxStretchSpringMesh,
+							p.dampSpringMesh ) );
 		
 		final int blockRadius = Math.max( 32, stack.getWidth() / p.resolutionSpringMesh / 2 );
 		
@@ -550,23 +633,38 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 				ip2Mask = null;
 			}
 			
-			BlockMatching.matchByMaximalPMCC(
-					ip1,
-					ip2,
-					ip1Mask,
-					ip2Mask,
-					Math.min( 1.0f, ( float )p.maxImageSize / ip1.getWidth() ),
-					( ( InvertibleCoordinateTransform )pair.c ).createInverse(),
-					blockRadius,
-					blockRadius,
-					searchRadius,
-					searchRadius,
-					p.minR,
-					p.rodR,
-					p.maxCurvatureR,
-					v1,
-					pm12,
-					new ErrorStatistic( 1 ) );
+			try
+			{
+				BlockMatching.matchByMaximalPMCC(
+						ip1,
+						ip2,
+						ip1Mask,
+						ip2Mask,
+						Math.min( 1.0f, ( float )p.sectionScale ),
+						( ( InvertibleCoordinateTransform )pair.c ).createInverse(),
+						blockRadius,
+						blockRadius,
+						searchRadius,
+						searchRadius,
+						p.minR,
+						p.rodR,
+						p.maxCurvatureR,
+						v1,
+						pm12,
+						new ErrorStatistic( 1 ) );
+			}
+			catch ( InterruptedException e )
+			{
+				IJ.log( "Block matching interrupted." );
+				IJ.showProgress( 1.0 );
+				return;
+			}
+			if ( Thread.interrupted() )
+			{
+				IJ.log( "Block matching interrupted." );
+				IJ.showProgress( 1.0 );
+				return;
+			}
 
 			IJ.log( pair.a + " > " + pair.b + ": found " + pm12.size() + " correspondences." );
 
@@ -580,23 +678,38 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 			//			imp1.updateAndDraw();
 			/* </visualisation> */
 
-			BlockMatching.matchByMaximalPMCC(
-					ip2,
-					ip1,
-					ip2Mask,
-					ip1Mask,
-					Math.min( 1.0f, ( float )p.maxImageSize / ip1.getWidth() ),
-					pair.c,
-					blockRadius,
-					blockRadius,
-					searchRadius,
-					searchRadius,
-					p.minR,
-					p.rodR,
-					p.maxCurvatureR,
-					v2,
-					pm21,
-					new ErrorStatistic( 1 ) );
+			try
+			{
+				BlockMatching.matchByMaximalPMCC(
+						ip2,
+						ip1,
+						ip2Mask,
+						ip1Mask,
+						Math.min( 1.0f, ( float )p.sectionScale ),
+						pair.c,
+						blockRadius,
+						blockRadius,
+						searchRadius,
+						searchRadius,
+						p.minR,
+						p.rodR,
+						p.maxCurvatureR,
+						v2,
+						pm21,
+						new ErrorStatistic( 1 ) );
+			}
+			catch ( InterruptedException e )
+			{
+				IJ.log( "Block matching interrupted." );
+				IJ.showProgress( 1.0 );
+				return;
+			}
+			if ( Thread.interrupted() )
+			{
+				IJ.log( "Block matching interrupted." );
+				IJ.showProgress( 1.0 );
+				return;
+			}
 
 			IJ.log( pair.a + " < " + pair.b + ": found " + pm21.size() + " correspondences." );
 					
@@ -633,13 +746,24 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 			final Tile< ? > t2 = tiles.get( pair.b );
 			
 			if ( pm12.size() > pair.c.getMinNumMatches() )
+			{
+				initMeshes.addTile( t1 );
+				initMeshes.addTile( t2 );
 				t1.connect( t2, pm12 );
+			}
 			if ( pm21.size() > pair.c.getMinNumMatches() )
+			{
+				initMeshes.addTile( t1 );
+				initMeshes.addTile( t2 );
 				t2.connect( t1, pm21 );
+			}
 		}
 		
 		/* pre-align by optimizing a piecewise linear model */ 
-		initMeshes.optimize( p.maxEpsilon, p.maxIterationsSpringMesh, p.maxPlateauwidthSpringMesh );
+		initMeshes.optimize(
+				p.maxEpsilon,
+				p.maxIterationsSpringMesh,
+				p.maxPlateauwidthSpringMesh );
 		for ( int i = 0; i < stack.getSize(); ++i )
 			meshes.get( i ).init( tiles.get( i ).getModel() );
 
@@ -649,12 +773,22 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 			long t0 = System.currentTimeMillis();
 			IJ.log("Optimizing spring meshes...");
 			
-			SpringMesh.optimizeMeshes( meshes, p.maxEpsilon, p.maxIterationsSpringMesh, p.maxPlateauwidthSpringMesh, p.visualize );
+			SpringMesh.optimizeMeshes(
+					meshes,
+					p.maxEpsilon,
+					p.maxIterationsSpringMesh,
+					p.maxPlateauwidthSpringMesh,
+					p.visualize );
 
-			IJ.log("Done optimizing spring meshes. Took " + (System.currentTimeMillis() - t0) + " ms");
+			IJ.log( "Done optimizing spring meshes. Took " + ( System.currentTimeMillis() - t0 ) + " ms" );
 			
 		}
-		catch ( NotEnoughDataPointsException e ) { e.printStackTrace(); }
+		catch ( NotEnoughDataPointsException e )
+		{
+			IJ.log( "There were not enough data points to get the spring mesh optimizing." );
+			e.printStackTrace();
+			return;
+		}
 		
 		/* calculate bounding box */
 		final float[] min = new float[ 2 ];
@@ -747,7 +881,7 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 	
 	final static private class Features implements Serializable
 	{
-		private static final long serialVersionUID = 2689219384710526198L;
+		private static final long serialVersionUID = 2668666732018368958L;
 		
 		final FloatArray2DSIFT.Param param;
 		final ArrayList< Feature > features;
@@ -778,7 +912,7 @@ J:			for ( int j = i + 1; j < stack.getSize(); )
 	
 	final static private class PointMatches implements Serializable
 	{
-		private static final long serialVersionUID = -2564147268101223484L;
+		private static final long serialVersionUID = 3718614767497404447L;
 		
 		ElasticAlign.Param param;
 		ArrayList< PointMatch > pointMatches;
