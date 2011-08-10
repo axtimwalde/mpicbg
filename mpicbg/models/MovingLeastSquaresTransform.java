@@ -6,13 +6,18 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Smooth coordinate transformation interpolating between a set of control
- * points that are maped exactly on top of each other using landmark based deformation by means
- * of Moving Least Squares as described by \citet{SchaeferAl06}.
+ * <p>Smooth coordinate transformation interpolating between a set of control
+ * points that are maped exactly on top of each other using landmark based
+ * deformation by means of Moving Least Squares as described by
+ * \citet{SchaeferAl06}.</p>
  * 
- * BibTeX:
+ * <p>This implementation internally stores the passed {@link PointMatch}
+ * objects per reference and is thus best suited for an interactive application
+ * where these matches are changed from an external context.</p>
+ * 
+ * <p>BibTeX:</p>
  * <pre>
- * @article{SchaeferAl06,
+ * &#64;article{SchaeferAl06,
  *   author    = {Scott Schaefer and Travis McPhail and Joe Warren},
  *   title     = {Image deformation using moving least squares},
  *   journal   = {ACM Transactions on Graphics},
@@ -30,22 +35,12 @@ import java.util.Set;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.1b
  */
-public class MovingLeastSquaresTransform implements CoordinateTransform
+public class MovingLeastSquaresTransform extends AbstractMovingLeastSquaresTransform
 {
-	protected AbstractModel< ? > model = null;
-	final public AbstractModel< ? > getModel(){ return model; }
-	final public void setModel( final AbstractModel< ? > model ){ this.model = model; }
-	final public void setModel( final Class< ? extends AbstractModel< ? > > modelClass ) throws Exception
-	{
-		model = modelClass.newInstance();
-	}
-	
-	protected float alpha = 1.0f;
-	final public float getAlpha(){ return alpha; }
-	final public void setAlpha( final float alpha ){ this.alpha = alpha; }
-	
 	final protected Set< PointMatch > matches = new HashSet< PointMatch >();
 	final public Set< PointMatch > getMatches(){ return matches; }
+	
+	@Override
 	final public void setMatches( final Collection< PointMatch > matches ) throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
 		this.matches.clear();
@@ -53,21 +48,8 @@ public class MovingLeastSquaresTransform implements CoordinateTransform
 		model.fit( matches );
 	}
 	
-	final protected double weigh( final double d )
-	{
-		return 1.0 / Math.pow( d, alpha );
-	}
-	
-	//@Override
-	public float[] apply( float[] location )
-	{
-		final float[] a = location.clone();
-		applyInPlace( a );
-		return a;
-	}
-
-	//@Override
-	public void applyInPlace( final float[] location )
+	@Override
+	final public void applyInPlace( final float[] location )
 	{
 		final Collection< PointMatch > weightedMatches = new ArrayList< PointMatch >();
 		for ( final PointMatch m : matches )
