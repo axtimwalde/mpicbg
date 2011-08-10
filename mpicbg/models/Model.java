@@ -82,6 +82,39 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 	public boolean betterThan( final M m );
 	
 	/**
+	 * <p>Fit the {@link Model} to a set of data points minimizing the global
+	 * transfer error.  This is assumed to be implemented as a weighted least
+	 * squares minimization.</p>
+	 * 
+	 * <p>This is a lower level version of {@link #fit(Collection)} for
+	 * optimal emory efficiency.</p>
+	 * 
+	 * <p>The estimated model transfers p to q.</p>
+	 * 
+	 * <p><em>n</em>-dimensional points are passed as an <em>n</em>-dimensional
+	 * array of floats, e.g. four 2d points as:</p>
+	 * <pre>
+	 * float[][]{
+	 *   {x<sub>1</sub>, x<sub>2</sub>, x<sub>3</sub>, x<sub>4</sub>},
+	 *   {y<sub>1</sub>, y<sub>2</sub>, y<sub>3</sub>, y<sub>4</sub>} }
+	 * </pre>
+	 * 
+	 * @param p source points
+	 * @param q target points
+	 * @param w weights
+	 * 
+	 * @throws
+	 *   {@link NotEnoughDataPointsException} if not enough data points
+	 *   were available
+	 *   {@link IllDefinedDataPointsException} if the set of data points is
+	 *   inappropriate to solve the Model
+	 */
+	public void fit(
+			final float[][] p,
+			final float[][] q,
+			final float[] w ) throws NotEnoughDataPointsException, IllDefinedDataPointsException;
+	
+	/**
 	 * Fit the {@link Model} to a set of data points minimizing the global
 	 * transfer error.  This is assumed to be implemented as a weighted least
 	 * squares minimization.  Use
@@ -99,6 +132,8 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 	 */
 	public < P extends PointMatch >void fit( final Collection< P > matches )
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException;
+	
+	
 
 	/**
 	 * Test the {@link Model} for a set of {@link PointMatch} candidates.

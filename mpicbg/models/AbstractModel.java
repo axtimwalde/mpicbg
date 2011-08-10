@@ -529,4 +529,50 @@ A:		while ( i < iterations )
 		this.set( m );
 		return currentMatches;
 	}
+	
+	/**
+	 * Default fit implementation using {@link #fit(Collection)}.  This foils
+	 * the intention that {@link #fit(float[][], float[][], float[])} would be
+	 * potentially more efficient.  You should better implement it directly.
+	 */
+	@Override
+	public void fit(
+			final float[][] p,
+			final float[][] q,
+			final float[] w )
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException
+	{
+		assert
+			p.length > 0 &&
+			q.length == p.length : "Numbers of dimensions do not match.";
+	
+		assert
+			p[ 0 ].length == p[ 1 ].length &&
+			p[ 0 ].length == q[ 0 ].length &&
+			p[ 0 ].length == q[ 1 ].length &&
+			p[ 0 ].length == w.length : "Array lengths do not match.";
+			
+		final int n = p.length;
+		final int l = p[ 0 ].length;
+		
+		final ArrayList< PointMatch > matches = new ArrayList< PointMatch >( l );
+		for ( int i = 0; i < l; ++i )
+		{
+			final float[] pi = new  float[ n ];
+			final float[] qi = new  float[ n ];
+			for ( int d = 0; d < n; ++d )
+			{
+				pi[ d ] = p[ d ][ i ];
+				qi[ d ] = q[ d ][ i ];
+			}
+				
+			matches.add(
+					new PointMatch(
+							new Point( pi ),
+							new Point( qi ),
+							w[ i ] ) );
+		}
+		
+		fit( matches );
+	}
 };
