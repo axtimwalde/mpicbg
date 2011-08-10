@@ -58,6 +58,58 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 	}
 	
 	@Override
+	final public void fit(
+			final float[][] p,
+			final float[][] q,
+			final float[] w )
+		throws NotEnoughDataPointsException
+	{
+		assert
+			p.length == 2 &&
+			q.length == 2 : "2d translations can be applied to 2d points only.";
+	
+		assert
+			p[ 0 ].length == p[ 1 ].length &&
+			p[ 0 ].length == q[ 0 ].length &&
+			p[ 0 ].length == q[ 1 ].length &&
+			p[ 0 ].length == w.length : "Array lengths do not match.";
+			
+		final int l = p[ 0 ].length;
+		
+		if ( l < MIN_NUM_MATCHES )
+			throw new NotEnoughDataPointsException( l + " data points are not enough to estimate a 2d translation model, at least " + MIN_NUM_MATCHES + " data points required." );
+		
+		// center of mass:
+		float pcx = 0, pcy = 0;
+		float qcx = 0, qcy = 0;
+		
+		float ws = 0.0f;
+		
+		for ( int i = 0; i < l; ++i )
+		{
+			final float[] pX = p[ 0 ];
+			final float[] pY = p[ 1 ];
+			final float[] qX = q[ 0 ];
+			final float[] qY = q[ 1 ];
+			
+			final float ww = w[ i ];
+			ws += ww;
+			
+			pcx += ww * pX[ i ];
+			pcy += ww * pY[ i ];
+			qcx += ww * qX[ i ];
+			qcy += ww * qY[ i ];
+		}
+		pcx /= ws;
+		pcy /= ws;
+		qcx /= ws;
+		qcy /= ws;
+
+		tx = qcx - pcx;
+		ty = qcy - pcy;
+	}
+	
+	@Override
 	final public < P extends PointMatch >void fit( final Collection< P > matches ) throws NotEnoughDataPointsException
 	{
 		if ( matches.size() < MIN_NUM_MATCHES ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d translation model, at least " + MIN_NUM_MATCHES + " data points required." );
