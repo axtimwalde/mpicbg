@@ -93,7 +93,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 	
 	final static private class Param implements Serializable
 	{
-		private static final long serialVersionUID = -6777642913512469616L;
+		private static final long serialVersionUID = -4088939083329200368L;
 
 		public String outputPath = "";
 
@@ -101,6 +101,8 @@ public class ElasticAlign implements PlugIn, KeyListener
 		{
 			sift.fdSize = 8;
 		}
+		
+		public int maxNumThreadsSift = Runtime.getRuntime().availableProcessors();
 		
 		/**
 		 * Closest/next closest neighbor distance ratio
@@ -225,8 +227,9 @@ public class ElasticAlign implements PlugIn, KeyListener
 			gd.addNumericField( "test_maximally :", maxNumNeighbors, 0, 6, "layers" );
 			gd.addNumericField( "give_up_after :", maxNumFailures, 0, 6, "failures" );
 			
-			gd.addMessage( "Caching:" );
+			gd.addMessage( "Miscellaneous:" );
 			gd.addCheckbox( "clear_cache", clearCache );
+			gd.addNumericField( "feature_extraction_threads :", maxNumThreadsSift, 0 );
 			
 			gd.showDialog();
 			
@@ -247,7 +250,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 			maxNumFailures = ( int )gd.getNextNumber();
 			
 			clearCache = gd.getNextBoolean();
-			
+			maxNumThreadsSift = ( int )gd.getNextNumber();
 			
 			/* Block Matching */
 			if ( sectionScale < 0 )
@@ -370,7 +373,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 			}
 		}
 		
-		final ExecutorService exec = Executors.newFixedThreadPool( p.maxNumThreads );
+		final ExecutorService execSift = Executors.newFixedThreadPool( p.maxNumThreadsSift );
 		
 		/* extract features for all slices and store them to disk */
 		final AtomicInteger counter = new AtomicInteger( 0 );
@@ -380,7 +383,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 		{
 			final int slice = i;
 			siftTasks.add(
-					exec.submit( new Callable< ArrayList< Feature > >()
+					execSift.submit( new Callable< ArrayList< Feature > >()
 					{
 						public ArrayList< Feature > call()
 						{
@@ -417,7 +420,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 			fu.get();
 		
 		siftTasks.clear();
-		exec.shutdown();
+		execSift.shutdown();
 		
 		
 		/* collect all pairs of slices for which a model could be found */
