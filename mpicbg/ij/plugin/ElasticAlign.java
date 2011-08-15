@@ -391,8 +391,10 @@ public class ElasticAlign implements PlugIn, KeyListener
 
 							//final String path = p.outputPath + stack.getSliceLabel( slice ) + ".features";
 							final String path = p.outputPath + String.format( "%05d", slice - 1 ) + ".features";
-							ArrayList< Feature > fs = deserializeFeatures( p.sift, path );
-							if ( null == fs )
+							ArrayList< Feature > fs = null;
+							if ( !p.clearCache )
+								fs = deserializeFeatures( p.sift, path );
+							if ( fs == null )
 							{
 								final FloatArray2DSIFT sift = new FloatArray2DSIFT( p.sift );
 								final SIFT ijSIFT = new SIFT( sift );
@@ -401,7 +403,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 								ip.setMinAndMax( displayRangeMin, displayRangeMax );
 								ijSIFT.extractFeatures( ip, fs );
 
-								if ( ! serializeFeatures( p.sift, fs, path ) )
+								if ( !serializeFeatures( p.sift, fs, path ) )
 								{
 									//IJ.log( "FAILED to store serialized features for " + stack.getSliceLabel( slice ) );
 									IJ.log( "FAILED to store serialized features for " + String.format( "%05d", slice - 1 ) );
