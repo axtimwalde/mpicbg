@@ -25,9 +25,12 @@ import ij.gui.GenericDialog;
 import ij.io.DirectoryChooser;
 import ij.measure.Calibration;
 import ij.plugin.PlugIn;
+import ij.process.ColorProcessor;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 
+import java.awt.BasicStroke;
+import java.awt.Shape;
 import java.awt.TextField;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -93,7 +96,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 	
 	final static private class Param implements Serializable
 	{
-		private static final long serialVersionUID = -4088939083329200368L;
+		private static final long serialVersionUID = 5047057558460626769L;
 
 		public String outputPath = "";
 
@@ -167,6 +170,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 		public boolean interpolate = true;
 		public boolean visualize = true;
 		public int resolutionOutput = 128;
+		public boolean rgbWithGreenBackground = false;
 		
 		public boolean clearCache = true;
 		
@@ -196,7 +200,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 			gdOutput.addCheckbox( "interpolate", interpolate );
 			gdOutput.addCheckbox( "visualize", visualize );
 			gdOutput.addNumericField( "resolution :", resolutionOutput, 0 );
-			
+			gdOutput.addCheckbox( "render RGB with green background", rgbWithGreenBackground );
 			
 			gdOutput.showDialog();
 			
@@ -206,6 +210,8 @@ public class ElasticAlign implements PlugIn, KeyListener
 			interpolate = gdOutput.getNextBoolean();
 			visualize = gdOutput.getNextBoolean();
 			resolutionOutput = ( int )gdOutput.getNextNumber();
+			rgbWithGreenBackground = gdOutput.getNextBoolean();
+			
 			
 			
 			/* SIFT */
@@ -833,19 +839,38 @@ J:			for ( int j = i + 1; j < range; )
 			mlt.setAlpha( 2.0f );
 			mlt.setMatches( meshes.get( i ).getVA().keySet() );
 			
-			final TransformMeshMapping< CoordinateTransformMesh > mltMapping = new TransformMeshMapping< CoordinateTransformMesh >( new CoordinateTransformMesh( mlt, p.resolutionOutput, stack.getWidth(), stack.getHeight() ) );
+			final CoordinateTransformMesh mltMesh = new CoordinateTransformMesh( mlt, p.resolutionOutput, stack.getWidth(), stack.getHeight() );
+			final TransformMeshMapping< CoordinateTransformMesh > mltMapping = new TransformMeshMapping< CoordinateTransformMesh >( mltMesh );
 			
-			
-			final ImageProcessor ip = stack.getProcessor( slice ).createProcessor( width, height );
-			if ( p.interpolate )
+			final ImageProcessor source, target;
+			if ( p.rgbWithGreenBackground )
 			{
-				mltMapping.mapInterpolated( stack.getProcessor( slice ), ip );
+				target = new ColorProcessor( width, height );
+				for ( int j = width * height - 1; j >=0; --j )
+					target.set( j, 0xff00ff00 );
+				source = stack.getProcessor( slice ).convertToRGB();
 			}
 			else
 			{
-				mltMapping.map( stack.getProcessor( slice ), ip );
+				target = stack.getProcessor( slice ).createProcessor( width, height );
+				source = stack.getProcessor( slice );
 			}
-			IJ.save( new ImagePlus( "elastic mlt " + i, ip ), p.outputPath + "elastic-" + String.format( "%05d", i ) + ".tif" );
+			
+			if ( p.interpolate )
+			{
+				mltMapping.mapInterpolated( source, target );
+			}
+			else
+			{
+				mltMapping.map( source, target );
+			}
+			final ImagePlus impTarget = new ImagePlus( "elastic mlt " + i, target );
+			if ( p.visualize )
+			{
+				final Shape shape = mltMesh.illustrateMesh();
+				impTarget.setOverlay( shape, IJ.getInstance().getForeground(), new BasicStroke( 1 ) );
+			}
+			IJ.save( impTarget, p.outputPath + "elastic-" + String.format( "%05d", i ) + ".tif" );
 		}
 		
 		IJ.log( "Done." );
