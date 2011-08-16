@@ -1,22 +1,18 @@
 package mpicbg.ij.plugin;
-import java.util.Collection;
-
-import mpicbg.ij.stack.InverseTransformMapping;
-import mpicbg.models.AffineModel3D;
-import mpicbg.models.IllDefinedDataPointsException;
-import mpicbg.models.InverseCoordinateTransform;
-import mpicbg.models.AbstractModel;
-import mpicbg.models.NotEnoughDataPointsException;
-import mpicbg.models.PointMatch;
-import mpicbg.models.TranslationModel3D;
-
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
-import ij.gui.StackWindow;
-import ij.measure.Calibration;
 import ij.plugin.PlugIn;
 import ij.process.ImageProcessor;
+
+import java.util.Collection;
+
+import mpicbg.ij.stack.InverseTransformMapping;
+import mpicbg.models.AbstractModel;
+import mpicbg.models.IllDefinedDataPointsException;
+import mpicbg.models.InverseCoordinateTransform;
+import mpicbg.models.NotEnoughDataPointsException;
+import mpicbg.models.PointMatch;
 
 /**
  * License: GPL
