@@ -40,13 +40,12 @@ import ij.process.*;
 public class PMCCBlockFlow implements PlugIn
 {
 	static protected int blockRadius = 8;
-	static protected byte maxDistance = 7;
+	static protected int maxDistance = 7;
 	static protected boolean showColors = false;
 	
 	final static protected void colorCircle( ColorProcessor ip )
 	{
 		final int r1 = Math.min( ip.getWidth(), ip.getHeight() ) / 2;
-		final int r2 = r1 / 2;
 		
 		for ( int y = 0; y < ip.getHeight(); ++y )
 		{
@@ -56,10 +55,10 @@ public class PMCCBlockFlow implements PlugIn
 				final float dx = x - ip.getWidth() / 2;
 				final float l = ( float )Math.sqrt( dx * dx + dy * dy );
 				
-				if ( l > r1 || l < r2 )
+				if ( l > r1 )
 					ip.putPixel( x, y, 0 );
 				else
-					ip.putPixel( x, y, colorVector( dx / l * maxDistance, dy / l * maxDistance ) );
+					ip.putPixel( x, y, colorVector( dx / maxDistance, dy / maxDistance ) );
 			}
 		}
 	}
@@ -120,8 +119,6 @@ public class PMCCBlockFlow implements PlugIn
 	
 	final static private int colorVector( float xs, float ys )
 	{
-		xs /= maxDistance;
-		ys /= maxDistance;
 		final double a = Math.sqrt( xs * xs + ys * ys );
 		if ( a == 0.0 ) return 0;
 		
@@ -257,12 +254,12 @@ public class PMCCBlockFlow implements PlugIn
 		if (gd.wasCanceled()) return;
 		
 		blockRadius = ( int )gd.getNextNumber();
-		maxDistance = ( byte )gd.getNextNumber();
+		maxDistance = ( int )gd.getNextNumber();
 		showColors = gd.getNextBoolean();
 		
 		if ( showColors )
 		{
-			ColorProcessor ipColor = new ColorProcessor( imp.getWidth(), imp.getHeight() );
+			ColorProcessor ipColor = new ColorProcessor( maxDistance * 2 + 1, maxDistance * 2 + 1 );
 			colorCircle( ipColor );
 			ImagePlus impColor = new ImagePlus( "Color", ipColor );
 			impColor.show();
