@@ -96,7 +96,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 	
 	final static private class Param implements Serializable
 	{
-		private static final long serialVersionUID = 5047057558460626769L;
+		private static final long serialVersionUID = -431441828803019970L;
 
 		public String outputPath = "";
 
