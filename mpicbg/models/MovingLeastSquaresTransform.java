@@ -49,7 +49,7 @@ public class MovingLeastSquaresTransform extends AbstractMovingLeastSquaresTrans
 	}
 	
 	@Override
-	final public void applyInPlace( final float[] location )
+	public void applyInPlace( final float[] location )
 	{
 		final Collection< PointMatch > weightedMatches = new ArrayList< PointMatch >();
 		for ( final PointMatch m : matches )

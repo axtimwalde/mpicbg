@@ -13,6 +13,10 @@ import java.util.Collection;
  * {@link MovingLeastSquaresTransform}.  The object count is constant and does
  * not depend on the number of control points.</p>
  * 
+ * <p>Note, the {@link #apply(float[])} and {@link #applyInPlace(float[])}
+ * methods are not concurrency safe because they use the same {@link Model}
+ * instance to execute the local least squares fit.</p>
+ * 
  * BibTeX:
  * <pre>
  * &#64;article{SchaeferAl06,
@@ -106,7 +110,7 @@ public class MovingLeastSquaresTransform2 extends AbstractMovingLeastSquaresTran
 	}
 	
 	@Override
-	final public void applyInPlace( final float[] location )
+	public void applyInPlace( final float[] location )
 	{
 		final float[] ww = new float[ w.length ];
 		for ( int i = 0; i < w.length; ++i )

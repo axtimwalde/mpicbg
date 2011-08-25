@@ -469,7 +469,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 				final int sliceA = i;
 				final int range = Math.min( stack.getSize(), i + p.maxNumNeighbors + 1 );
 				
-	J:			for ( int j = i + 1; j < range; )
+J:				for ( int j = i + 1; j < range; )
 				{
 					final int numThreads = Math.min( p.maxNumThreads, range - j );
 					final ArrayList< Triple< Integer, Integer, AbstractModel< ? > > > models =
