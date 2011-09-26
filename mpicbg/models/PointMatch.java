@@ -203,7 +203,7 @@ public class PointMatch implements Serializable
 	 * @param matches
 	 * @param t
 	 */
-	static public void apply( final Collection< PointMatch > matches, final CoordinateTransform t )
+	static public void apply( final Collection< ? extends PointMatch > matches, final CoordinateTransform t )
 	{
 		for ( final PointMatch match : matches )
 			match.apply( t );
