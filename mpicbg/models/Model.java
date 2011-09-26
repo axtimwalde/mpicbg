@@ -1,5 +1,6 @@
 package mpicbg.models;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Collection;
 
@@ -318,6 +319,34 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 			final float maxEpsilon,
 			final float minInlierRatio )
 		throws NotEnoughDataPointsException;
+	
+	
+	/**
+	 * Filter a {@link Collection} of {@link PointMatch PointMatches} by the
+	 * smoothness of their support for the given {@link Model}.  Smoothness
+	 * means that each {@link PointMatch} agrees with a locally weighted least
+	 * squares fit of this {@link Model} up to a given maximal transfer error
+	 * or up to a given multiply of the local mean transfer error.  Locally
+	 * weighted means that all {@link PointMatch PointMatches} contribute to
+	 * the fit weighted by their Euclidean distance to the candidate.
+	 * 
+	 * @param candidates
+	 * @param inliers
+	 * @param sigma
+	 * @param maxEpsilon
+	 * @param maxTrust
+	 * @return
+	 * 
+	 * @throws NotEnoughDataPointsException
+	 * @throws IllDefinedDataPointsException
+	 */
+	public < P extends PointMatch > boolean localSmoothnessFilter(
+			final Collection< P > candidates,
+			final Collection< P > inliers,
+			final double sigma,
+			final double maxEpsilon,
+			final double maxTrust )
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException;
 	
 	
 	/**

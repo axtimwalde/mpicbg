@@ -1,10 +1,10 @@
 package mpicbg.models;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Random;
-import java.util.List;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
 
 /**
  * Abstract class for arbitrary transformation models to be applied
@@ -574,5 +574,111 @@ A:		while ( i < iterations )
 		}
 		
 		fit( matches );
+	}
+	
+	
+	/**
+	 * <p>Default implementation of
+	 * {@link #localSmoothnessFilter(Collection, Collection, double, double, double)}.
+	 * Requires that {@link #fit(Collection)} is implemented as a weighted
+	 * least squares fit or something similar.</p>
+	 * 
+	 * <p>Note that if candidates == inliers and an exception is thrown, candidates most
+	 * likely has been changed.</p>
+	 * 
+	 */
+	@Override
+	public < P extends PointMatch > boolean localSmoothnessFilter(
+			final Collection< P > candidates,
+			final Collection< P > inliers,
+			final double sigma,
+			final double maxEpsilon,
+			final double maxTrust ) throws NotEnoughDataPointsException, IllDefinedDataPointsException
+	{
+		final double var2 = 2 * sigma * sigma;
+		
+		/* unshift an extra weight into candidates */
+		for ( final P match : candidates )
+			match.unshiftWeight( 1.0f );
+			
+		/* initialize inliers */
+		if ( inliers != candidates )
+		{
+			inliers.clear();
+			inliers.addAll( candidates );
+		}
+				
+		boolean hasChanged = false;
+		
+		do
+		{
+			hasChanged = false;
+			
+			final ArrayList< P > currentInliers = new ArrayList< P >( inliers );
+			inliers.clear();
+			
+			for ( final P candidate : currentInliers )
+			{
+				/* calculate weights by square distance to reference in local space */
+				for ( final P match : currentInliers )
+				{
+					final float w = ( float )Math.exp( -Point.squareLocalDistance( candidate.getP1(), match.getP1() ) / var2 );
+					match.setWeight( 0, w );
+				}
+				
+				candidate.setWeight( 0, 0 );
+
+				try
+				{
+					fit( currentInliers );
+				}
+				catch ( NotEnoughDataPointsException e )
+				{
+					/* clean up extra weight from candidates */
+					for ( final P match : candidates )
+						match.shiftWeight();
+					throw e;
+				}
+				catch ( IllDefinedDataPointsException e )
+				{
+					/* clean up extra weight from candidates */
+					for ( final P match : candidates )
+						match.shiftWeight();
+					throw e;
+				}
+				
+				candidate.apply( this );
+				final double candidateDistance = Point.distance( candidate.getP1(), candidate.getP2() );
+				if ( candidateDistance <= maxEpsilon )
+				{
+					PointMatch.apply( currentInliers, this );
+					
+					/* weighed mean Euclidean distances */
+					double meanDistance = 0, ws = 0;
+					for ( final PointMatch match : currentInliers )
+					{
+						final float w = match.getWeight();
+						ws += w;
+						meanDistance += Point.distance( match.getP1(), match.getP2() ) * w;
+					}
+					meanDistance /= ws;
+					
+					if ( candidateDistance > maxTrust * meanDistance )
+						hasChanged = true;
+					else
+						inliers.add( candidate );
+				}
+				else
+					hasChanged = true;
+			}
+			
+		}
+		while ( hasChanged );
+		
+		/* clean up extra weight from candidates */
+		for ( final P match : candidates )
+			match.shiftWeight();
+		
+		return inliers.size() >= getMinNumMatches();
 	}
 };
