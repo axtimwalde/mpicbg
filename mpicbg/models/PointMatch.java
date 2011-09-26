@@ -17,6 +17,8 @@ public class PointMatch implements Serializable
 {
 	private static final long serialVersionUID = -4194179098872410057L;
 
+	protected float strength = 1.0f;
+	
 	final protected Point p1;
 	public Point getP1() { return p1; }
 	
@@ -24,20 +26,6 @@ public class PointMatch implements Serializable
 	public Point getP2() { return p2; }
 	
 	protected float[] weights;
-	public float[] getWeights(){ return weights; }
-	public void setWeights( float[] weights )
-	{
-		this.weights = weights.clone();
-		calculateWeight();
-	}
-	
-	protected float weight;
-	public float getWeight(){ return weight; }
-	public void setWeight( int index, float weight )
-	{
-		weights[ index ] = weight;
-		calculateWeight();
-	}
 	
 	protected void calculateWeight()
 	{
@@ -46,7 +34,101 @@ public class PointMatch implements Serializable
 			weight *= wi;
 	}
 	
-	protected float strength = 1.0f;
+	public float[] getWeights(){ return weights; }
+	public void setWeights( final float[] weights )
+	{
+		this.weights = weights.clone();
+		calculateWeight();
+	}
+	
+	protected float weight;
+	public float getWeight(){ return weight; }
+	public void setWeight( final int index, final float weight )
+	{
+		weights[ index ] = weight;
+		calculateWeight();
+	}
+	
+	
+	/**
+	 * Get the last weights element and remove it from the list.  In case that
+	 * only one element is in the list, the element is not removed but set to
+	 * 1.0f.
+	 * 
+	 * @return
+	 */
+	public float popWeight()
+	{
+		final int l = weights.length - 1;
+		final float w = weights[ l ];
+		if ( l > 0 )
+		{
+			final float[] newWeights = new float[ l ];
+			System.arraycopy( weights, 0, newWeights, 0, l );
+			weights = newWeights;
+			weight /= w;
+		}
+		else
+			weights[ 0 ] = weight = 1.0f;
+		
+		return w;
+	}
+	
+	
+	/**
+	 * Append a new element to the right side of the weights list.
+	 * 
+	 * @param w
+	 */
+	public void pushWeight( final float w )
+	{
+		final float[] newWeights = new float[ weights.length + 1 ];
+		System.arraycopy( weights, 0, newWeights, 0, weights.length );
+		newWeights[ weights.length ] = w;
+		weights = newWeights;
+		weight *= w;
+	}
+	
+	
+	/**
+	 * Get the first weights element and remove it from the list.  In case that
+	 * only one element is in the list, the element is not removed but set to
+	 * 1.0f.
+	 * 
+	 * @return
+	 */
+	public float shiftWeight()
+	{
+		final int l = weights.length - 1;
+		final float w = weights[ 0 ];
+		if ( l > 0 )
+		{
+			final float[] newWeights = new float[ l ];
+			System.arraycopy( weights, 1, newWeights, 0, l );
+			weights = newWeights;
+			weight /= w;
+		}
+		else
+			weights[ 0 ] = weight = 1.0f;
+		
+		return w;
+	}
+	
+	
+	/**
+	 * Append a new element to the left side of the weights list.
+	 * 
+	 * @param w
+	 */
+	public void unshiftWeight( final float w )
+	{
+		final float[] newWeights = new float[ weights.length + 1 ];
+		System.arraycopy( weights, 0, newWeights, 1, weights.length );
+		newWeights[ 0 ] = w;
+		weights = newWeights;
+		weight *= w;
+	}
+	
 	
 	public float getDistance(){ return Point.distance( p1, p2 ); }
 	
