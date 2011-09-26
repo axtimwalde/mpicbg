@@ -125,8 +125,10 @@ public class Point implements Serializable
 		return ( float )Math.sqrt( squareDistance() );
 	}
 	
+	
 	/**
-	 * Estimate the square distance of two {@link Point Points} in the world.
+	 * Estimate the square Euclidean distance of two {@link Point Points} in
+	 * world space.
 	 *  
 	 * @param p1
 	 * @param p2
@@ -134,7 +136,7 @@ public class Point implements Serializable
 	 */
 	final static public float squareDistance( final Point p1, final Point p2 )
 	{
-		assert p1.l.length == p2.l.length : "Both points have to have the same dimensionality.";
+		assert p1.l.length == p2.l.length : "Both points have to have the same number of dimensions.";
 		
 		double sum = 0.0;
 		for ( int i = 0; i < p1.w.length; ++i )
@@ -145,8 +147,10 @@ public class Point implements Serializable
 		return ( float )sum;
 	}
 	
+	
 	/**
-	 * Estimate the Euclidean distance of two {@link Point Points} in the world.
+	 * Estimate the Euclidean distance of two {@link Point Points} in world
+	 * space.
 	 *  
 	 * @param p1
 	 * @param p2
@@ -155,10 +159,50 @@ public class Point implements Serializable
 	final static public float distance( final Point p1, final Point p2 )
 	{
 		assert p1.l.length == p2.l.length:
-			"Both points have to have the same dimensionality.";
+			"Both points have to have the same number of dimensions.";
 		
 		return ( float )Math.sqrt( squareDistance( p1, p2 ) );
 	}
+	
+	
+	/**
+	 * Estimate the square Euclidean distance of two {@link Point Points} in
+	 * local space.
+	 *  
+	 * @param p1
+	 * @param p2
+	 * @return square distance
+	 */
+	final static public float squareLocalDistance( final Point p1, final Point p2 )
+	{
+		assert p1.l.length == p2.l.length : "Both points have to have the same number of dimensions.";
+		
+		double sum = 0.0;
+		for ( int i = 0; i < p1.l.length; ++i )
+		{
+			final double d = p1.l[ i ] - p2.l[ i ];
+			sum += d * d;
+		}
+		return ( float )sum;
+	}
+	
+	
+	/**
+	 * Estimate the Euclidean distance of two {@link Point Points} in local
+	 * space.
+	 *  
+	 * @param p1
+	 * @param p2
+	 * @return Euclidean distance
+	 */
+	final static public float localDistance( final Point p1, final Point p2 )
+	{
+		assert p1.l.length == p2.l.length:
+			"Both points have to have the same number of dimensions.";
+		
+		return ( float )Math.sqrt( squareLocalDistance( p1, p2 ) );
+	}
+	
 	
 	/**
 	 * Clone this {@link Point} instance.
