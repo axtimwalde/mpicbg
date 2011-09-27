@@ -59,6 +59,8 @@ public class SpringMesh extends TransformMesh
 	protected double maxForce = 0.0;
 	public double getForce(){ return force; }
 	
+	protected double maxSpeed = 0.0;
+
 	protected float damp;
 	
 	public SpringMesh(
@@ -320,15 +322,15 @@ public class SpringMesh extends TransformMesh
 		}
 	}
 	
+	
 	/**
-	 * Performs one optimization step.
+	 * Calculate force and speed vectors for all vertices.
 	 * 
-	 * @param observer collecting the error after update
-	 * @throws NotEnoughDataPointsException
+	 * @param observer
 	 */
-	protected void optimizeStep( final ErrorStatistic observer ) throws NotEnoughDataPointsException
+	protected void calculateForceAndSpeed( final ErrorStatistic observer )
 	{
-		float maxSpeed = Float.MIN_VALUE;
+		maxSpeed = 0.0;
 		minForce = Double.MAX_VALUE;
 		maxForce = 0.0;
 		force = 0;
@@ -338,15 +340,67 @@ public class SpringMesh extends TransformMesh
 			for ( final Vertex vertex : vertices )
 			{
 				vertex.update( damp );
-				force += vertex.getForce();
+				final float vertexForce = vertex.getForce();
+				force += vertexForce;
 				final float speed = vertex.getSpeed();
 				if ( speed > maxSpeed ) maxSpeed = speed;
-				if ( force < minForce ) minForce = force;
-				if ( force > maxForce ) maxForce = force;
+				if ( vertexForce < minForce ) minForce = vertexForce;
+				if ( vertexForce > maxForce ) maxForce = vertexForce;
 			}
 			
+			force /= vertices.size();
+		}
+		observer.add( force );
+	}
+	
+	
+	/**
+	 * Move all vertices for a given &Delta;t
+	 * @param t
+	 */
+	protected void update( final float dt )
+	{
+		synchronized ( this )
+		{
 			for ( final Vertex vertex : vertices )
-				vertex.move( Math.min( 1000.0f, 2.0f / maxSpeed ) );
+				vertex.move( dt );
+			
+			/* passive vertices */	
+			updateAffines();
+			updatePassiveVertices();	
+		}
+	}
+	
+	/**
+	 * Performs one optimization step.
+	 * 
+	 * @param observer collecting the error after update
+	 * @throws NotEnoughDataPointsException
+	 */
+	protected void optimizeStep( final ErrorStatistic observer ) throws NotEnoughDataPointsException
+	{
+		maxSpeed = Double.MIN_VALUE;
+		minForce = Double.MAX_VALUE;
+		maxForce = 0.0;
+		force = 0;
+		synchronized ( this )
+		{
+			/* active vertices */
+			for ( final Vertex vertex : vertices )
+			{
+				vertex.update( damp );
+				final float vertexForce = vertex.getForce();
+				force += vertexForce;
+				final float speed = vertex.getSpeed();
+				if ( speed > maxSpeed ) maxSpeed = speed;
+				if ( vertexForce < minForce ) minForce = vertexForce;
+				if ( vertexForce > maxForce ) maxForce = vertexForce;
+			}
+			
+			force /= vertices.size();
+			
+			for ( final Vertex vertex : vertices )
+				vertex.move( Math.min( 1000.0f, ( float )( 2.0 / maxSpeed ) ) );
 			
 			/* passive vertices */
 			
@@ -580,8 +634,10 @@ public class SpringMesh extends TransformMesh
 		while ( proceed )
 		{
 			force = 0;
-			maxForce = -Double.MAX_VALUE;
+			maxForce = 0;
 			minForce = Double.MAX_VALUE;
+			
+			double maxSpeed = 0;
 			
 			/* <visualization> */
 //			stackAnimation.addSlice( "" + i, paintMeshes( meshes, scale ) );
@@ -599,14 +655,24 @@ public class SpringMesh extends TransformMesh
 			
 			for ( final SpringMesh mesh : meshes )
 			{
-				mesh.optimizeStep( singleMeshObserver );
+				mesh.calculateForceAndSpeed( singleMeshObserver );
 				force += mesh.getForce();
+				if ( mesh.maxSpeed > maxSpeed )
+					maxSpeed = mesh.maxSpeed;
+				
 				final double meshMaxForce = mesh.maxForce;
 				final double meshMinForce = mesh.minForce;
 				if ( meshMaxForce > maxForce ) maxForce = meshMaxForce;
 				if ( meshMinForce < minForce ) minForce = meshMinForce;
 			}
 			observer.add( force / meshes.size() );
+			
+			final float dt = ( float )Math.min( 1000, 1.0 / maxSpeed );
+			
+			for ( final SpringMesh mesh : meshes )
+			{
+				mesh.update( dt );
+			}
 			
 			println( new StringBuffer( i + " " ).append( force / meshes.size() ).append( " " ).append( minForce ).append( " " ).append( maxForce ).toString() );
 			
