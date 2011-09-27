@@ -96,7 +96,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 	
 	final static private class Param implements Serializable
 	{
-		private static final long serialVersionUID = -431441828803019970L;
+		private static final long serialVersionUID = -2217642333964062696L;
 
 		public String outputPath = "";
 
@@ -154,6 +154,11 @@ public class ElasticAlign implements PlugIn, KeyListener
 		public float maxCurvatureR = 3f;
 		public float rodR = 0.8f;
 		public int searchRadius = 200;
+		
+		public int localModelIndex = 1;
+		public float localRegionSigma = searchRadius / 4;
+		public float maxLocalEpsilon = searchRadius / 4;
+		public float maxLocalTrust = 3;
 		
 		public boolean mask = false;
 		
@@ -227,10 +232,18 @@ public class ElasticAlign implements PlugIn, KeyListener
 			gdBlockMatching.addMessage( "Block Matching:" );
 			gdBlockMatching.addNumericField( "scale :", sectionScale, 2 );
 			gdBlockMatching.addNumericField( "search_radius :", searchRadius, 0 );
+			gdBlockMatching.addNumericField( "resolution :", resolutionSpringMesh, 0 );
+			gdBlockMatching.addMessage( "Correlation Filters:" );
 			gdBlockMatching.addNumericField( "minimal_PMCC_r :", minR, 2 );
 			gdBlockMatching.addNumericField( "maximal_curvature_ratio :", maxCurvatureR, 2 );
 			gdBlockMatching.addNumericField( "maximal_second_best_r/best_r :", rodR, 2 );
-			gdBlockMatching.addNumericField( "resolution :", resolutionSpringMesh, 0 );
+			gdBlockMatching.addMessage( "Local Smoothness Filter:" );
+			gdBlockMatching.addChoice( "approximate_local_transformation :", Param.modelStrings, Param.modelStrings[ localModelIndex ] );
+			gdBlockMatching.addNumericField( "local_region_sigma:", localRegionSigma, 2, 6, "px" );
+			gdBlockMatching.addNumericField( "maximal_local_displacement (absolute):", maxLocalEpsilon, 2, 6, "px" );
+			gdBlockMatching.addNumericField( "maximal_local_displacement (relative):", maxLocalTrust, 2 );
+			
+			gdBlockMatching.addMessage( "Miscellaneous:" );
 			gdBlockMatching.addCheckbox( "green_mask_(TODO_more_colors)", mask );
 			gdBlockMatching.addCheckbox( "series_is_aligned", isAligned );
 			
@@ -244,10 +257,14 @@ public class ElasticAlign implements PlugIn, KeyListener
 			
 			sectionScale = ( float )gdBlockMatching.getNextNumber();
 			searchRadius = ( int )gdBlockMatching.getNextNumber();
+			resolutionSpringMesh = ( int )gdBlockMatching.getNextNumber();
 			minR = ( float )gdBlockMatching.getNextNumber();
 			maxCurvatureR = ( float )gdBlockMatching.getNextNumber();
 			rodR = ( float )gdBlockMatching.getNextNumber();
-			resolutionSpringMesh = ( int )gdBlockMatching.getNextNumber();
+			localModelIndex = gdBlockMatching.getNextChoiceIndex();
+			localRegionSigma = ( float )gdBlockMatching.getNextNumber();
+			maxLocalEpsilon = ( float )gdBlockMatching.getNextNumber();
+			maxLocalTrust = ( float )gdBlockMatching.getNextNumber();
 			mask = gdBlockMatching.getNextBoolean();
 			isAligned = gdBlockMatching.getNextBoolean();
 			maxNumNeighbors = ( int )gdBlockMatching.getNextNumber();
@@ -349,6 +366,25 @@ public class ElasticAlign implements PlugIn, KeyListener
 				&& identityTolerance == param.identityTolerance
 				&& maxNumNeighbors == param.maxNumNeighbors
 				&& maxNumFailures == param.maxNumFailures;
+		}
+	}
+	
+	final static public AbstractModel< ? > createModel( final int modelIndex )
+	{
+		switch ( modelIndex )
+		{
+		case 0:
+			return new TranslationModel2D();
+		case 1:
+			return new RigidModel2D();
+		case 2:
+			return new SimilarityModel2D();
+		case 3:
+			return new AffineModel2D();
+		case 4:
+			return new HomographyModel2D();
+		default:
+			return null;
 		}
 	}
 	
@@ -506,27 +542,8 @@ J:				for ( int j = i + 1; j < range; )
 										IJ.log( "Could not store point matches!" );
 								}
 			
-								AbstractModel< ? > model;
-								switch ( p.modelIndex )
-								{
-								case 0:
-									model = new TranslationModel2D();
-									break;
-								case 1:
-									model = new RigidModel2D();
-									break;
-								case 2:
-									model = new SimilarityModel2D();
-									break;
-								case 3:
-									model = new AffineModel2D();
-									break;
-								case 4:
-									model = new HomographyModel2D();
-									break;
-								default:
-									return;
-								}
+								AbstractModel< ? > model = createModel( p.modelIndex );
+								if ( model == null ) return;
 								
 								final ArrayList< PointMatch > inliers = new ArrayList< PointMatch >();
 								
@@ -655,6 +672,8 @@ J:				for ( int j = i + 1; j < range; )
 		/** TODO set this something more than the largest error by the approximate model */
 		final int searchRadius = p.searchRadius;
 		
+		final AbstractModel< ? > localSmoothnessFilterModel = createModel( p.localModelIndex );
+		
 		for ( final Triple< Integer, Integer, AbstractModel< ? > > pair : pairs )
 		{
 			final SpringMesh m1 = meshes.get( pair.a );
@@ -714,9 +733,11 @@ J:				for ( int j = i + 1; j < range; )
 				IJ.showProgress( 1.0 );
 				return;
 			}
-
-			IJ.log( pair.a + " > " + pair.b + ": found " + pm12.size() + " correspondences." );
-
+			
+			IJ.log( pair.a + " > " + pair.b + ": found " + pm12.size() + " correspondence candidates." );
+			localSmoothnessFilterModel.localSmoothnessFilter( pm12, pm12, p.localRegionSigma, p.maxLocalEpsilon, p.maxLocalTrust );
+			IJ.log( pair.a + " > " + pair.b + ": " + pm12.size() + " candidates passed local smoothness filter." );
+			
 			/* <visualisation> */
 			//			final List< Point > s1 = new ArrayList< Point >();
 			//			PointMatch.sourcePoints( pm12, s1 );
@@ -760,8 +781,10 @@ J:				for ( int j = i + 1; j < range; )
 				return;
 			}
 
-			IJ.log( pair.a + " < " + pair.b + ": found " + pm21.size() + " correspondences." );
-					
+			IJ.log( pair.a + " < " + pair.b + ": found " + pm21.size() + " correspondence candidates." );
+			localSmoothnessFilterModel.localSmoothnessFilter( pm21, pm21, p.localRegionSigma, p.maxLocalEpsilon, p.maxLocalTrust );
+			IJ.log( pair.a + " < " + pair.b + ": " + pm21.size() + " candidates passed local smoothness filter." );
+			
 			/* <visualisation> */
 			//			final List< Point > s2 = new ArrayList< Point >();
 			//			PointMatch.sourcePoints( pm21, s2 );
