@@ -583,8 +583,8 @@ A:		while ( i < iterations )
 	 * Requires that {@link #fit(Collection)} is implemented as a weighted
 	 * least squares fit or something similar.</p>
 	 * 
-	 * <p>Note that if candidates == inliers and an exception is thrown, candidates most
-	 * likely has been changed.</p>
+	 * <p>Note that if candidates == inliers and an exception occurs, inliers
+	 * will be cleared according to that there are no inliers.</p>
 	 * 
 	 */
 	@Override
@@ -593,7 +593,7 @@ A:		while ( i < iterations )
 			final Collection< P > inliers,
 			final double sigma,
 			final double maxEpsilon,
-			final double maxTrust ) throws NotEnoughDataPointsException, IllDefinedDataPointsException
+			final double maxTrust )
 	{
 		final double var2 = 2 * sigma * sigma;
 		
@@ -614,13 +614,12 @@ A:		while ( i < iterations )
 		{
 			hasChanged = false;
 			
-			final ArrayList< P > currentInliers = new ArrayList< P >( inliers );
-			inliers.clear();
+			final ArrayList< P > toBeRemoved = new ArrayList< P >();
 			
-			for ( final P candidate : currentInliers )
+			for ( final P candidate : inliers )
 			{
 				/* calculate weights by square distance to reference in local space */
-				for ( final P match : currentInliers )
+				for ( final P match : inliers )
 				{
 					final float w = ( float )Math.exp( -Point.squareLocalDistance( candidate.getP1(), match.getP1() ) / var2 );
 					match.setWeight( 0, w );
@@ -630,32 +629,40 @@ A:		while ( i < iterations )
 
 				try
 				{
-					fit( currentInliers );
+					fit( inliers );
 				}
 				catch ( NotEnoughDataPointsException e )
 				{
 					/* clean up extra weight from candidates */
 					for ( final P match : candidates )
 						match.shiftWeight();
-					throw e;
+					
+					/* no inliers */
+					inliers.clear();
+					
+					return false;
 				}
 				catch ( IllDefinedDataPointsException e )
 				{
 					/* clean up extra weight from candidates */
 					for ( final P match : candidates )
 						match.shiftWeight();
-					throw e;
+					
+					/* no inliers */
+					inliers.clear();
+							
+					return false;
 				}
 				
 				candidate.apply( this );
 				final double candidateDistance = Point.distance( candidate.getP1(), candidate.getP2() );
 				if ( candidateDistance <= maxEpsilon )
 				{
-					PointMatch.apply( currentInliers, this );
+					PointMatch.apply( inliers, this );
 					
 					/* weighed mean Euclidean distances */
 					double meanDistance = 0, ws = 0;
-					for ( final PointMatch match : currentInliers )
+					for ( final PointMatch match : inliers )
 					{
 						final float w = match.getWeight();
 						ws += w;
@@ -664,14 +671,18 @@ A:		while ( i < iterations )
 					meanDistance /= ws;
 					
 					if ( candidateDistance > maxTrust * meanDistance )
+					{
 						hasChanged = true;
-					else
-						inliers.add( candidate );
+						toBeRemoved.add( candidate );
+					}
 				}
 				else
+				{
 					hasChanged = true;
+					toBeRemoved.add( candidate );
+				}
 			}
-			
+			inliers.removeAll( toBeRemoved );
 		}
 		while ( hasChanged );
 		
