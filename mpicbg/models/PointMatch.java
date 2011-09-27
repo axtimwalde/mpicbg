@@ -66,7 +66,7 @@ public class PointMatch implements Serializable
 			final float[] newWeights = new float[ l ];
 			System.arraycopy( weights, 0, newWeights, 0, l );
 			weights = newWeights;
-			weight /= w;
+			calculateWeight();
 		}
 		else
 			weights[ 0 ] = weight = 1.0f;
@@ -106,7 +106,7 @@ public class PointMatch implements Serializable
 			final float[] newWeights = new float[ l ];
 			System.arraycopy( weights, 1, newWeights, 0, l );
 			weights = newWeights;
-			weight /= w;
+			calculateWeight();
 		}
 		else
 			weights[ 0 ] = weight = 1.0f;
