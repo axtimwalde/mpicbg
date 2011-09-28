@@ -610,14 +610,22 @@ A:		while ( i < iterations )
 				
 		boolean hasChanged = false;
 		
+		int p = 0;
+		System.out.print( "Smoothness filter pass  1:   0%" );
 		do
 		{
+			System.out.print( ( char )13 + "Smoothness filter pass " + String.format( "%2d", ++p ) + ":   0%" );
 			hasChanged = false;
 			
 			final ArrayList< P > toBeRemoved = new ArrayList< P >();
+			final ArrayList< P > localInliers = new ArrayList< P >();
+			
+			int i = 0;
 			
 			for ( final P candidate : inliers )
 			{
+				System.out.print( ( char )13 + "Smoothness filter pass " + String.format( "%2d", p ) + ": " + String.format( "%3d", ( ++i * 100 / inliers.size() ) + "%" ) );
+				
 				/* calculate weights by square distance to reference in local space */
 				for ( final P match : inliers )
 				{
@@ -627,22 +635,17 @@ A:		while ( i < iterations )
 				
 				candidate.setWeight( 0, 0 );
 
+				boolean filteredLocalModelFound;
 				try
 				{
-					fit( inliers );
+					filteredLocalModelFound = filter( candidates, localInliers, ( float )maxTrust );
 				}
 				catch ( NotEnoughDataPointsException e )
 				{
-					/* clean up extra weight from candidates */
-					for ( final P match : candidates )
-						match.shiftWeight();
-					
-					/* no inliers */
-					inliers.clear();
-					
-					return false;
+					filteredLocalModelFound = false;
 				}
-				catch ( IllDefinedDataPointsException e )
+				
+				if ( !filteredLocalModelFound )
 				{
 					/* clean up extra weight from candidates */
 					for ( final P match : candidates )
@@ -650,7 +653,7 @@ A:		while ( i < iterations )
 					
 					/* no inliers */
 					inliers.clear();
-							
+					
 					return false;
 				}
 				
@@ -683,6 +686,7 @@ A:		while ( i < iterations )
 				}
 			}
 			inliers.removeAll( toBeRemoved );
+			System.out.println();
 		}
 		while ( hasChanged );
 		
