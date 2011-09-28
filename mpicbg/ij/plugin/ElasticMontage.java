@@ -127,6 +127,11 @@ public class ElasticMontage implements PlugIn
 		public float maxCurvatureR = 3f;
 		public float rodR = 0.8f;
 		
+		public int localModelIndex = 1;
+		public float localRegionSigma = maxEpsilon / 4;
+		public float maxLocalEpsilon = maxEpsilon / 4;
+		public float maxLocalTrust = 3;
+		
 		public int modelIndexOptimize = 1;
 		public int maxIterationsOptimize = 1000;
 		public int maxPlateauwidthOptimize = 200;
@@ -223,10 +228,18 @@ public class ElasticMontage implements PlugIn
 			final GenericDialog gdBlockMatching = new GenericDialog( "Elastically montage stack: Block Matching parameters" );
 			gdBlockMatching.addMessage( "Block Matching:" );
 			gdBlockMatching.addNumericField( "maximal_image_size :", maxImageSize, 0, 6, "px" );
+			gdBlockMatching.addNumericField( "resolution :", resolutionSpringMesh, 0 );
+			
+			gdBlockMatching.addMessage( "Correlation Filters:" );
 			gdBlockMatching.addNumericField( "minimal_PMCC_r :", minR, 2 );
 			gdBlockMatching.addNumericField( "maximal_curvature_ratio :", maxCurvatureR, 2 );
 			gdBlockMatching.addNumericField( "maximal_second_best_r/best_r :", rodR, 2 );
-			gdBlockMatching.addNumericField( "resolution :", resolutionSpringMesh, 0 );
+			
+			gdBlockMatching.addMessage( "Local Smoothness Filter:" );
+			gdBlockMatching.addChoice( "approximate_local_transformation :", Param.modelStrings, Param.modelStrings[ localModelIndex ] );
+			gdBlockMatching.addNumericField( "local_region_sigma:", localRegionSigma, 2, 6, "px" );
+			gdBlockMatching.addNumericField( "maximal_local_displacement (absolute):", maxLocalEpsilon, 2, 6, "px" );
+			gdBlockMatching.addNumericField( "maximal_local_displacement (relative):", maxLocalTrust, 2 );
 			
 			gdBlockMatching.showDialog();
 			
@@ -234,10 +247,14 @@ public class ElasticMontage implements PlugIn
 				return false;
 			
 			maxImageSize = ( int )gdBlockMatching.getNextNumber();
+			resolutionSpringMesh = ( int )gdBlockMatching.getNextNumber();
 			minR = ( float )gdBlockMatching.getNextNumber();
 			maxCurvatureR = ( float )gdBlockMatching.getNextNumber();
 			rodR = ( float )gdBlockMatching.getNextNumber();
-			resolutionSpringMesh = ( int )gdBlockMatching.getNextNumber();
+			localModelIndex = gdBlockMatching.getNextChoiceIndex();
+			localRegionSigma = ( float )gdBlockMatching.getNextNumber();
+			maxLocalEpsilon = ( float )gdBlockMatching.getNextNumber();
+			maxLocalTrust = ( float )gdBlockMatching.getNextNumber();
 			
 			
 			/* Optimization */
@@ -515,6 +532,8 @@ public class ElasticMontage implements PlugIn
 		/** TODO set this something more than the largest error by the approximate model */
 		final int searchRadius = Math.round( p.maxEpsilon );
 		
+		final AbstractModel< ? > localSmoothnessFilterModel = ElasticAlign.createModel( p.localModelIndex );
+		
 		for ( final Triple< Integer, Integer, AbstractModel< ? > > pair : pairs )
 		{
 			final SpringMesh m1 = meshes.get( pair.a );
@@ -547,7 +566,10 @@ public class ElasticMontage implements PlugIn
 					pm12,
 					new ErrorStatistic( 1 ) );
 
-			IJ.log( pair.a + " > " + pair.b + ": found " + pm12.size() + " correspondences." );
+			IJ.log( pair.a + " > " + pair.b + ": found " + pm12.size() + " correspondence candidates." );
+			localSmoothnessFilterModel.localSmoothnessFilter( pm12, pm12, p.localRegionSigma, p.maxLocalEpsilon, p.maxLocalTrust );
+			IJ.log( pair.a + " > " + pair.b + ": " + pm12.size() + " candidates passed local smoothness filter." );
+			
 
 			/* <visualisation> */
 			//			final List< Point > s1 = new ArrayList< Point >();
@@ -577,7 +599,9 @@ public class ElasticMontage implements PlugIn
 					pm21,
 					new ErrorStatistic( 1 ) );
 
-			IJ.log( pair.a + " < " + pair.b + ": found " + pm21.size() + " correspondences." );
+			IJ.log( pair.a + " < " + pair.b + ": found " + pm21.size() + " correspondence candidates." );
+			localSmoothnessFilterModel.localSmoothnessFilter( pm21, pm21, p.localRegionSigma, p.maxLocalEpsilon, p.maxLocalTrust );
+			IJ.log( pair.a + " < " + pair.b + ": " + pm21.size() + " candidates passed local smoothness filter." );
 					
 			/* <visualisation> */
 			//			final List< Point > s2 = new ArrayList< Point >();
