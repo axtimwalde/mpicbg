@@ -457,7 +457,7 @@ public class SpringMesh extends TransformMesh
 				{
 					try
 					{
-						proceed |= Math.abs( observer.getWideSlope( d ) ) > 0.0001;
+						proceed |= Math.abs( observer.getWideSlope( d ) ) > 0.0;
 					}
 					catch ( Exception e ) { e.printStackTrace(); }
 					d /= 2;
@@ -685,7 +685,7 @@ public class SpringMesh extends TransformMesh
 				{
 					try
 					{
-						proceed |= Math.abs( observer.getWideSlope( d ) ) > 0.0001;
+						proceed |= Math.abs( observer.getWideSlope( d ) ) > 0.0;
 					}
 					catch ( Exception e ) { e.printStackTrace(); }
 					d /= 2;
