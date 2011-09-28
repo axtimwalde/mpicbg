@@ -456,7 +456,8 @@ public class BlockMatching
 //						IJ.log( "minR test passed" );
 
 						/* is there more than one maximum of equal goodness? */
-						if ( secondBestR >= 0 && secondBestR / bestR > rod )
+						final float r = ( 1.0f + secondBestR ) / ( 1.0f + bestR );
+						if ( r > rod )
 							return null;
 
 //						IJ.log( "rod test passed" );
