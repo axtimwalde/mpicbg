@@ -624,7 +624,7 @@ A:		while ( i < iterations )
 			
 			for ( final P candidate : inliers )
 			{
-				System.out.print( ( char )13 + "Smoothness filter pass " + String.format( "%2d", p ) + ": " + String.format( "%3d", ( ++i * 100 / inliers.size() ) + "%" ) );
+				System.out.print( ( char )13 + "Smoothness filter pass " + String.format( "%2d", p ) + ": " + String.format( "%3d", ( ++i * 100 / inliers.size() ) ) + "%" );
 				
 				/* calculate weights by square distance to reference in local space */
 				for ( final P match : inliers )
