@@ -96,7 +96,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 	
 	final static private class Param implements Serializable
 	{
-		private static final long serialVersionUID = -2217642333964062696L;
+		private static final long serialVersionUID = 7188730392559018852L;
 
 		public String outputPath = "";
 
@@ -154,6 +154,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 		public float maxCurvatureR = 3f;
 		public float rodR = 0.8f;
 		public int searchRadius = 200;
+		public int blockRadius = -1;
 		
 		public int localModelIndex = 1;
 		public float localRegionSigma = searchRadius / 4;
@@ -228,15 +229,23 @@ public class ElasticAlign implements PlugIn, KeyListener
 				final Calibration calib = imp.getCalibration();
 				sectionScale = ( float )( calib.pixelWidth / calib.pixelDepth );
 			}
+			if ( blockRadius < 0 )
+			{
+				blockRadius = imp.getWidth() / resolutionSpringMesh / 2;
+			}
 			final GenericDialog gdBlockMatching = new GenericDialog( "Elastically align stack: Block Matching parameters" );
+			
 			gdBlockMatching.addMessage( "Block Matching:" );
 			gdBlockMatching.addNumericField( "scale :", sectionScale, 2 );
-			gdBlockMatching.addNumericField( "search_radius :", searchRadius, 0 );
+			gdBlockMatching.addNumericField( "search_radius :", searchRadius, 0, 6, "px" );
+			gdBlockMatching.addNumericField( "block_radius :", blockRadius, 0, 6, "px" );
 			gdBlockMatching.addNumericField( "resolution :", resolutionSpringMesh, 0 );
+			
 			gdBlockMatching.addMessage( "Correlation Filters:" );
 			gdBlockMatching.addNumericField( "minimal_PMCC_r :", minR, 2 );
 			gdBlockMatching.addNumericField( "maximal_curvature_ratio :", maxCurvatureR, 2 );
 			gdBlockMatching.addNumericField( "maximal_second_best_r/best_r :", rodR, 2 );
+			
 			gdBlockMatching.addMessage( "Local Smoothness Filter:" );
 			gdBlockMatching.addChoice( "approximate_local_transformation :", Param.modelStrings, Param.modelStrings[ localModelIndex ] );
 			gdBlockMatching.addNumericField( "local_region_sigma:", localRegionSigma, 2, 6, "px" );
@@ -246,7 +255,6 @@ public class ElasticAlign implements PlugIn, KeyListener
 			gdBlockMatching.addMessage( "Miscellaneous:" );
 			gdBlockMatching.addCheckbox( "green_mask_(TODO_more_colors)", mask );
 			gdBlockMatching.addCheckbox( "series_is_aligned", isAligned );
-			
 			gdBlockMatching.addNumericField( "test_maximally :", maxNumNeighbors, 0, 6, "layers" );
 			
 			
@@ -257,6 +265,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 			
 			sectionScale = ( float )gdBlockMatching.getNextNumber();
 			searchRadius = ( int )gdBlockMatching.getNextNumber();
+			blockRadius = ( int )gdBlockMatching.getNextNumber();
 			resolutionSpringMesh = ( int )gdBlockMatching.getNextNumber();
 			minR = ( float )gdBlockMatching.getNextNumber();
 			maxCurvatureR = ( float )gdBlockMatching.getNextNumber();
@@ -667,7 +676,8 @@ J:				for ( int j = i + 1; j < range; )
 							p.maxStretchSpringMesh,
 							p.dampSpringMesh ) );
 		
-		final int blockRadius = Math.max( 32, stack.getWidth() / p.resolutionSpringMesh / 2 );
+//		final int blockRadius = Math.max( 32, stack.getWidth() / p.resolutionSpringMesh / 2 );
+		final int blockRadius = Math.max( Util.roundPos( 16 / p.sectionScale ), p.blockRadius );
 		
 		/** TODO set this something more than the largest error by the approximate model */
 		final int searchRadius = p.searchRadius;
