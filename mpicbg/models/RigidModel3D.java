@@ -141,7 +141,7 @@ public class RigidModel3D extends AbstractAffineModel3D< RigidModel3D > implemen
 		for ( final P pm : matches )
 		{
 			final float[] p1 = pm.getP1().getL();
-			final float[] p2 = pm.getP2().getL();
+			final float[] p2 = pm.getP2().getW();
 			final float w = pm.getWeight();
 			
 			pcx += p1[ 0 ] * w;
@@ -166,7 +166,7 @@ public class RigidModel3D extends AbstractAffineModel3D< RigidModel3D > implemen
 		for ( final P pm : matches )
 		{
 			final float[] p1 = pm.getP1().getL();
-			final float[] p2 = pm.getP2().getL();
+			final float[] p2 = pm.getP2().getW();
 			final float w = pm.getWeight();
 
 			final float x1 = (p1[ 0 ] - pcx) * w;
