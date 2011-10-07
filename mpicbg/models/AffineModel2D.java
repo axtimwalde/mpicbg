@@ -96,6 +96,96 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	 * \citet{SchaeferAl06}.
 	 */
 	@Override
+	final public void fit(
+			final float[][] p,
+			final float[][] q,
+			final float[] w )
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException
+	{
+		assert
+			p.length == 2 &&
+			q.length == 2 : "2d affine transformations can be applied to 2d points only.";
+		
+		assert
+			p[ 0 ].length == p[ 1 ].length &&
+			p[ 0 ].length == q[ 0 ].length &&
+			p[ 0 ].length == q[ 1 ].length &&
+			p[ 0 ].length == w.length : "Array lengths do not match.";
+			
+		final int l = p[ 0 ].length;
+		
+		if ( l < MIN_NUM_MATCHES )
+			throw new NotEnoughDataPointsException( l + " data points are not enough to estimate a 2d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
+		
+		float pcx = 0, pcy = 0;
+		float qcx = 0, qcy = 0;
+		
+		double ws = 0.0;
+		
+		for ( int i = 0; i < l; ++i )
+		{
+			final float[] pX = p[ 0 ];
+			final float[] pY = p[ 1 ];
+			final float[] qX = q[ 0 ];
+			final float[] qY = q[ 1 ];
+			
+			final float ww = w[ i ];
+			ws += ww;
+			
+			pcx += ww * pX[ i ];
+			pcy += ww * pY[ i ];
+			qcx += ww * qX[ i ];
+			qcy += ww * qY[ i ];
+		}
+		pcx /= ws;
+		pcy /= ws;
+		qcx /= ws;
+		qcy /= ws;
+		
+		float a00, a01, a11;
+		float b00, b01, b10, b11;
+		a00 = a01 = a11 = b00 = b01 = b10 = b11 = 0;
+		for ( int i = 0; i < l; ++i )
+		{
+			final float[] pX = p[ 0 ];
+			final float[] pY = p[ 1 ];
+			final float[] qX = q[ 0 ];
+			final float[] qY = q[ 1 ];
+			
+			final float ww = w[ i ];
+			
+			final float px = pX[ i ] - pcx, py = pY[ i ] - pcy;
+			final float qx = qX[ i ] - qcx, qy = qY[ i ] - qcy;
+			a00 += ww * px * px;
+			a01 += ww * px * py;
+			a11 += ww * py * py;
+			b00 += ww * px * qx;
+			b01 += ww * px * qy;
+			b10 += ww * py * qx;
+			b11 += ww * py * qy;
+		}
+		
+		final float det = a00 * a11 - a01 * a01;
+		
+		if ( det == 0 )
+			throw new IllDefinedDataPointsException();
+		
+		m00 = ( a11 * b00 - a01 * b10 ) / det;
+		m01 = ( a00 * b10 - a01 * b00 ) / det;
+		m10 = ( a11 * b01 - a01 * b11 ) / det;
+		m11 = ( a00 * b11 - a01 * b01 ) / det;
+		
+		m02 = qcx - m00 * pcx - m01 * pcy;
+		m12 = qcy - m10 * pcx - m11 * pcy;
+		
+		invert();
+	}
+	
+	/**
+	 * Closed form weighted least squares solution as described by
+	 * \citet{SchaeferAl06}.
+	 */
+	@Override
 	final public < P extends PointMatch >void fit( final Collection< P > matches )
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{

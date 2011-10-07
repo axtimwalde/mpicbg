@@ -88,11 +88,13 @@ public class ElasticMontage implements PlugIn
 	
 	final static private class Param implements Serializable
 	{
-		private static final long serialVersionUID = 3816564377727147658L;
+		private static final long serialVersionUID = 4528036326879138673L;
 
 		public String outputPath = "";
 
 		final public FloatArray2DSIFT.Param sift = new FloatArray2DSIFT.Param();
+		
+		public int maxNumThreadsSift = Runtime.getRuntime().availableProcessors();
 		
 		/**
 		 * Closest/next closest neighbor distance ratio
@@ -125,6 +127,11 @@ public class ElasticMontage implements PlugIn
 		public float maxCurvatureR = 3f;
 		public float rodR = 0.8f;
 		
+		public int localModelIndex = 1;
+		public float localRegionSigma = maxEpsilon / 4;
+		public float maxLocalEpsilon = maxEpsilon / 4;
+		public float maxLocalTrust = 3;
+		
 		public int modelIndexOptimize = 1;
 		public int maxIterationsOptimize = 1000;
 		public int maxPlateauwidthOptimize = 200;
@@ -141,6 +148,7 @@ public class ElasticMontage implements PlugIn
 		public int resolutionOutput = 128;
 		public boolean rgbWithGreenBackground = false;
 		
+		public boolean clearCache = true;
 		
 		public int maxNumThreads = Runtime.getRuntime().availableProcessors();
 		
@@ -156,19 +164,19 @@ public class ElasticMontage implements PlugIn
 			}
 			else
 			{
-				final File d = new File( p.outputPath );
+				final File d = new File( outputPath );
 				if ( d.exists() && d.isDirectory() )
-					p.outputPath += "/";
+					outputPath += "/";
 				else
 					return false;
 			}
 			
 			final GenericDialog gdOutput = new GenericDialog( "Elastically montage stack: Output" );
 			
-			gdOutput.addCheckbox( "interpolate", p.interpolate );
-			gdOutput.addCheckbox( "visualize", p.visualize );
-			gdOutput.addNumericField( "resolution :", p.resolutionOutput, 0 );
-			gdOutput.addCheckbox( "render RGB with green background", p.rgbWithGreenBackground );
+			gdOutput.addCheckbox( "interpolate", interpolate );
+			gdOutput.addCheckbox( "visualize", visualize );
+			gdOutput.addNumericField( "resolution :", resolutionOutput, 0 );
+			gdOutput.addCheckbox( "render RGB with green background", rgbWithGreenBackground );
 			
 			
 			gdOutput.showDialog();
@@ -176,10 +184,10 @@ public class ElasticMontage implements PlugIn
 			if ( gdOutput.wasCanceled() )
 				return false;
 			
-			p.interpolate = gdOutput.getNextBoolean();
-			p.visualize = gdOutput.getNextBoolean();
-			p.resolutionOutput = ( int )gdOutput.getNextNumber();
-			p.rgbWithGreenBackground = gdOutput.getNextBoolean();
+			interpolate = gdOutput.getNextBoolean();
+			visualize = gdOutput.getNextBoolean();
+			resolutionOutput = ( int )gdOutput.getNextNumber();
+			rgbWithGreenBackground = gdOutput.getNextBoolean();
 			
 			
 			/* SIFT */
@@ -187,13 +195,17 @@ public class ElasticMontage implements PlugIn
 			
 			SIFT.addFields( gd, sift );
 			
-			gd.addNumericField( "closest/next_closest_ratio :", p.rod, 2 );
+			gd.addNumericField( "closest/next_closest_ratio :", rod, 2 );
 			
 			gd.addMessage( "Geometric Consensus Filter:" );
-			gd.addNumericField( "maximal_alignment_error :", p.maxEpsilon, 2, 6, "px" );
-			gd.addNumericField( "minimal_inlier_ratio :", p.minInlierRatio, 2 );
-			gd.addNumericField( "minimal_number_of_inliers :", p.minNumInliers, 0 );
-			gd.addChoice( "approximate_transformation :", Param.modelStrings, Param.modelStrings[ p.modelIndex ] );
+			gd.addNumericField( "maximal_alignment_error :", maxEpsilon, 2, 6, "px" );
+			gd.addNumericField( "minimal_inlier_ratio :", minInlierRatio, 2 );
+			gd.addNumericField( "minimal_number_of_inliers :", minNumInliers, 0 );
+			gd.addChoice( "approximate_transformation :", Param.modelStrings, Param.modelStrings[ modelIndex ] );
+			
+			gd.addMessage( "Miscellaneous:" );
+			gd.addCheckbox( "clear_cache", clearCache );
+			gd.addNumericField( "feature_extraction_threads :", maxNumThreadsSift, 0 );
 			
 			gd.showDialog();
 			
@@ -202,62 +214,76 @@ public class ElasticMontage implements PlugIn
 			
 			SIFT.readFields( gd, sift );
 			
-			p.rod = ( float )gd.getNextNumber();
+			rod = ( float )gd.getNextNumber();
 			
-			p.maxEpsilon = ( float )gd.getNextNumber();
-			p.minInlierRatio = ( float )gd.getNextNumber();
-			p.minNumInliers = ( int )gd.getNextNumber();
-			p.modelIndex = gd.getNextChoiceIndex();
+			maxEpsilon = ( float )gd.getNextNumber();
+			minInlierRatio = ( float )gd.getNextNumber();
+			minNumInliers = ( int )gd.getNextNumber();
+			modelIndex = gd.getNextChoiceIndex();
 			
+			clearCache = gd.getNextBoolean();
+			maxNumThreadsSift = ( int )gd.getNextNumber();
 			
 			/* Block Matching */
 			final GenericDialog gdBlockMatching = new GenericDialog( "Elastically montage stack: Block Matching parameters" );
 			gdBlockMatching.addMessage( "Block Matching:" );
-			gdBlockMatching.addNumericField( "maximal_image_size :", p.maxImageSize, 0, 6, "px" );
-			gdBlockMatching.addNumericField( "minimal_PMCC_r :", p.minR, 2 );
-			gdBlockMatching.addNumericField( "maximal_curvature_ratio :", p.maxCurvatureR, 2 );
-			gdBlockMatching.addNumericField( "maximal_second_best_r/best_r :", p.rodR, 2 );
-			gdBlockMatching.addNumericField( "resolution :", p.resolutionSpringMesh, 0 );
+			gdBlockMatching.addNumericField( "maximal_image_size :", maxImageSize, 0, 6, "px" );
+			gdBlockMatching.addNumericField( "resolution :", resolutionSpringMesh, 0 );
+			
+			gdBlockMatching.addMessage( "Correlation Filters:" );
+			gdBlockMatching.addNumericField( "minimal_PMCC_r :", minR, 2 );
+			gdBlockMatching.addNumericField( "maximal_curvature_ratio :", maxCurvatureR, 2 );
+			gdBlockMatching.addNumericField( "maximal_second_best_r/best_r :", rodR, 2 );
+			
+			gdBlockMatching.addMessage( "Local Smoothness Filter:" );
+			gdBlockMatching.addChoice( "approximate_local_transformation :", Param.modelStrings, Param.modelStrings[ localModelIndex ] );
+			gdBlockMatching.addNumericField( "local_region_sigma:", localRegionSigma, 2, 6, "px" );
+			gdBlockMatching.addNumericField( "maximal_local_displacement (absolute):", maxLocalEpsilon, 2, 6, "px" );
+			gdBlockMatching.addNumericField( "maximal_local_displacement (relative):", maxLocalTrust, 2 );
 			
 			gdBlockMatching.showDialog();
 			
 			if ( gdBlockMatching.wasCanceled() )
 				return false;
 			
-			p.maxImageSize = ( int )gdBlockMatching.getNextNumber();
-			p.minR = ( float )gdBlockMatching.getNextNumber();
-			p.maxCurvatureR = ( float )gdBlockMatching.getNextNumber();
-			p.rodR = ( float )gdBlockMatching.getNextNumber();
-			p.resolutionSpringMesh = ( int )gdBlockMatching.getNextNumber();
+			maxImageSize = ( int )gdBlockMatching.getNextNumber();
+			resolutionSpringMesh = ( int )gdBlockMatching.getNextNumber();
+			minR = ( float )gdBlockMatching.getNextNumber();
+			maxCurvatureR = ( float )gdBlockMatching.getNextNumber();
+			rodR = ( float )gdBlockMatching.getNextNumber();
+			localModelIndex = gdBlockMatching.getNextChoiceIndex();
+			localRegionSigma = ( float )gdBlockMatching.getNextNumber();
+			maxLocalEpsilon = ( float )gdBlockMatching.getNextNumber();
+			maxLocalTrust = ( float )gdBlockMatching.getNextNumber();
 			
 			
 			/* Optimization */
 			final GenericDialog gdOptimize = new GenericDialog( "Elastically montage stack: Optimization" );
 			
 			gdOptimize.addMessage( "Approximate Optimizer:" );
-			gdOptimize.addChoice( "approximate_transformation :", Param.modelStrings, Param.modelStrings[ p.modelIndexOptimize ] );
-			gdOptimize.addNumericField( "maximal_iterations :", p.maxIterationsOptimize, 0 );
-			gdOptimize.addNumericField( "maximal_plateauwidth :", p.maxPlateauwidthOptimize, 0 );
+			gdOptimize.addChoice( "approximate_transformation :", Param.modelStrings, Param.modelStrings[ modelIndexOptimize ] );
+			gdOptimize.addNumericField( "maximal_iterations :", maxIterationsOptimize, 0 );
+			gdOptimize.addNumericField( "maximal_plateauwidth :", maxPlateauwidthOptimize, 0 );
 			
 			gdOptimize.addMessage( "Spring Mesh:" );
-			gdOptimize.addNumericField( "stiffness :", p.stiffnessSpringMesh, 2 );
-			gdOptimize.addNumericField( "maximal_stretch :", p.maxStretchSpringMesh, 2, 6, "px" );
-			gdOptimize.addNumericField( "maximal_iterations :", p.maxIterationsSpringMesh, 0 );
-			gdOptimize.addNumericField( "maximal_plateauwidth :", p.maxPlateauwidthSpringMesh, 0 );
+			gdOptimize.addNumericField( "stiffness :", stiffnessSpringMesh, 2 );
+			gdOptimize.addNumericField( "maximal_stretch :", maxStretchSpringMesh, 2, 6, "px" );
+			gdOptimize.addNumericField( "maximal_iterations :", maxIterationsSpringMesh, 0 );
+			gdOptimize.addNumericField( "maximal_plateauwidth :", maxPlateauwidthSpringMesh, 0 );
 			
 			gdOptimize.showDialog();
 			
 			if ( gdOptimize.wasCanceled() )
 				return false;
 			
-			p.modelIndexOptimize = gdOptimize.getNextChoiceIndex();
-			p.maxIterationsOptimize = ( int )gdOptimize.getNextNumber();
-			p.maxPlateauwidthOptimize = ( int )gdOptimize.getNextNumber();
+			modelIndexOptimize = gdOptimize.getNextChoiceIndex();
+			maxIterationsOptimize = ( int )gdOptimize.getNextNumber();
+			maxPlateauwidthOptimize = ( int )gdOptimize.getNextNumber();
 			
-			p.stiffnessSpringMesh = ( float )gdOptimize.getNextNumber();
-			p.maxStretchSpringMesh = ( float )gdOptimize.getNextNumber();
-			p.maxIterationsSpringMesh = ( int )gdOptimize.getNextNumber();
-			p.maxPlateauwidthSpringMesh = ( int )gdOptimize.getNextNumber();
+			stiffnessSpringMesh = ( float )gdOptimize.getNextNumber();
+			maxStretchSpringMesh = ( float )gdOptimize.getNextNumber();
+			maxIterationsSpringMesh = ( int )gdOptimize.getNextNumber();
+			maxPlateauwidthSpringMesh = ( int )gdOptimize.getNextNumber();
 			
 			return true;
 		}
@@ -265,10 +291,10 @@ public class ElasticMontage implements PlugIn
 		public boolean equalSiftPointMatchParams( final Param param )
 		{
 			return sift.equals( param.sift )
-			    && maxEpsilon == param.maxEpsilon
-			    && minInlierRatio == param.minInlierRatio
-			    && minNumInliers == param.minNumInliers
-			    && modelIndex == param.modelIndex;
+				&& maxEpsilon == param.maxEpsilon
+				&& minInlierRatio == param.minInlierRatio
+				&& minNumInliers == param.minNumInliers
+				&& modelIndex == param.modelIndex;
 		}
 	}
 	
@@ -317,7 +343,7 @@ public class ElasticMontage implements PlugIn
 			}
 		}
 		
-		final ExecutorService exec = Executors.newFixedThreadPool( p.maxNumThreads );
+		final ExecutorService execSift = Executors.newFixedThreadPool( p.maxNumThreadsSift );
 		
 		/* extract features for all slices and store them to disk */
 		final AtomicInteger counter = new AtomicInteger( 0 );
@@ -327,7 +353,7 @@ public class ElasticMontage implements PlugIn
 		{
 			final int slice = i;
 			siftTasks.add(
-					exec.submit( new Callable< ArrayList< Feature > >()
+					execSift.submit( new Callable< ArrayList< Feature > >()
 					{
 						public ArrayList< Feature > call()
 						{
@@ -362,6 +388,9 @@ public class ElasticMontage implements PlugIn
 		/* join */
 		for ( Future< ArrayList< Feature > > fu : siftTasks )
 			fu.get();
+		
+		siftTasks.clear();
+		execSift.shutdown();
 		
 		
 		/* collect all pairs of tiles for which a model could be found */
@@ -503,6 +532,8 @@ public class ElasticMontage implements PlugIn
 		/** TODO set this something more than the largest error by the approximate model */
 		final int searchRadius = Math.round( p.maxEpsilon );
 		
+		final AbstractModel< ? > localSmoothnessFilterModel = ElasticAlign.createModel( p.localModelIndex );
+		
 		for ( final Triple< Integer, Integer, AbstractModel< ? > > pair : pairs )
 		{
 			final SpringMesh m1 = meshes.get( pair.a );
@@ -535,7 +566,10 @@ public class ElasticMontage implements PlugIn
 					pm12,
 					new ErrorStatistic( 1 ) );
 
-			IJ.log( pair.a + " > " + pair.b + ": found " + pm12.size() + " correspondences." );
+			IJ.log( pair.a + " > " + pair.b + ": found " + pm12.size() + " correspondence candidates." );
+			localSmoothnessFilterModel.localSmoothnessFilter( pm12, pm12, p.localRegionSigma, p.maxLocalEpsilon, p.maxLocalTrust );
+			IJ.log( pair.a + " > " + pair.b + ": " + pm12.size() + " candidates passed local smoothness filter." );
+			
 
 			/* <visualisation> */
 			//			final List< Point > s1 = new ArrayList< Point >();
@@ -565,7 +599,9 @@ public class ElasticMontage implements PlugIn
 					pm21,
 					new ErrorStatistic( 1 ) );
 
-			IJ.log( pair.a + " < " + pair.b + ": found " + pm21.size() + " correspondences." );
+			IJ.log( pair.a + " < " + pair.b + ": found " + pm21.size() + " correspondence candidates." );
+			localSmoothnessFilterModel.localSmoothnessFilter( pm21, pm21, p.localRegionSigma, p.maxLocalEpsilon, p.maxLocalTrust );
+			IJ.log( pair.a + " < " + pair.b + ": " + pm21.size() + " candidates passed local smoothness filter." );
 					
 			/* <visualisation> */
 			//			final List< Point > s2 = new ArrayList< Point >();

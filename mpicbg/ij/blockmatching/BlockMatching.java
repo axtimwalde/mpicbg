@@ -1,6 +1,7 @@
 package mpicbg.ij.blockmatching;
 
 import ij.IJ;
+import ij.ImagePlus;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 
@@ -291,7 +292,7 @@ public class BlockMatching
     		final float rod,
     		final float maxCurvature,
     		final Collection< PointMatch > query,
-    		final Collection< PointMatch > results )
+    		final Collection< PointMatch > results ) throws InterruptedException, ExecutionException
 	{
 		final float maxCurvatureRatio = ( maxCurvature + 1 ) * ( maxCurvature + 1 ) / maxCurvature;
 
@@ -316,7 +317,7 @@ public class BlockMatching
 				public PointMatch call()
 				{
 					IJ.showProgress( k.getAndIncrement(), query.size() );
-
+					
 					final Point p = pm.getP1();
 
 					final float[] s = p.getL();
@@ -455,7 +456,8 @@ public class BlockMatching
 //						IJ.log( "minR test passed" );
 
 						/* is there more than one maximum of equal goodness? */
-						if ( secondBestR >= 0 && secondBestR / bestR > rod )
+						final float r = ( 1.0f + secondBestR ) / ( 1.0f + bestR );
+						if ( r > rod )
 							return null;
 
 //						IJ.log( "rod test passed" );
@@ -502,13 +504,14 @@ public class BlockMatching
 			}
 			catch ( InterruptedException e )
 			{
-				e.printStackTrace();
-			}
-			catch ( ExecutionException e )
-			{
-				e.printStackTrace();
+				exec.shutdownNow();
+				throw e;
 			}
 		}
+		
+		tasks.clear();
+		exec.shutdown();
+		
 		/* <visualisation> */
 //		if ( results.size() > 0 ) new ImagePlus( "r", rMapStack ).show();
 //		if ( rMapStack.getSize() > 0 ) new ImagePlus( "r", rMapStack ).show();
@@ -565,7 +568,7 @@ public class BlockMatching
 			final float maxCurvature,
 			final Collection< ? extends Point > sourcePoints,
 			final Collection< PointMatch > sourceMatches,
-			final ErrorStatistic observer )
+			final ErrorStatistic observer ) throws InterruptedException, ExecutionException
 	{
     	final int scaledBlockRadiusX = ( int )Math.ceil( scale * blockRadiusX );
     	final int scaledBlockRadiusY = ( int )Math.ceil( scale * blockRadiusY );
@@ -625,7 +628,7 @@ public class BlockMatching
 //		source.setMinAndMax( 0, 1 );
 //		mappedScaledTarget.setMinAndMax( 0, 1 );
 //		new ImagePlus( "Scaled Source", source ).show();
-//		new ImagePlus( "Mapped Target", mappedScaledTarget ).show();
+//		new ImagePlus( "Mapped Target", mappedScaledTarget ).show();		
 		/* </visualization> */
 		
 		final Map< Point, Point > scaledSourcePoints = new HashMap< Point, Point>();
@@ -709,7 +712,7 @@ public class BlockMatching
 			final int searchRadiusY,
 			final Collection< ? extends Point > sourcePoints,
 			final Collection< PointMatch > sourceMatches,
-			final ErrorStatistic observer )
+			final ErrorStatistic observer ) throws InterruptedException, ExecutionException
 	{
     	matchByMaximalPMCC(
     			source,
@@ -744,7 +747,7 @@ public class BlockMatching
 			final float maxCurvatureR,
 			final int meshResolution,
 			final float alpha,
-			final Collection< PointMatch > sourceMatches )
+			final Collection< PointMatch > sourceMatches ) throws InterruptedException, ExecutionException
 	{
 		CoordinateTransform ict = initialModel;
 		final Collection< Point > sourcePoints = new ArrayList< Point >();

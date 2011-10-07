@@ -30,11 +30,11 @@ import ij.process.ImageProcessor;
  * 
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  */
-final public class BlockStatistics
+public class BlockStatistics
 {
-	final private DoubleIntegralImage sums;
-	final private DoubleIntegralImage sumsOfSquares;
-	final private FloatProcessor fp;
+	final protected DoubleIntegralImage sums;
+	final protected DoubleIntegralImage sumsOfSquares;
+	final protected FloatProcessor fp;
 	
 	public BlockStatistics( final FloatProcessor fp )
 	{

@@ -1,4 +1,4 @@
-package mpicbg.ij.integral;
+package mpicbg.ij.plugin;
 /**
  * License: GPL
  *
@@ -17,9 +17,14 @@ package mpicbg.ij.integral;
  *
  */
 import ij.plugin.*;
+import ij.plugin.filter.GaussianBlur;
 import ij.gui.*;
 import ij.*;
 import ij.process.*;
+
+import java.awt.TextField;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 
 /**
  * <h1>Transfer an image sequence into an optic flow field<h1>
@@ -27,19 +32,45 @@ import ij.process.*;
  * <p>Flow fields are calculated for each pair <em>(t,t+1)</em> of the sequence
  * independently.  The motion vector for each pixel in image t is estimated by
  * searching the most similar looking pixel in image <em>t+1</em>.  The
- * similarity measure is Pearson Product-Moment Correlation Coefficient of all
- * pixels in a local vicinity.  The local vicinity is defined by a block and is
- * calculated using an {@link IntegralImage}.  Both the size of the block and
- * the search radius are parameters of the method.</p>
+ * similarity measure is the sum of differences of all pixels in a local
+ * vicinity.  The local vicinity is defined by a Gaussian.  Both the standard
+ * deviation of the Gaussian (the size of the local vicinity) and the search
+ * radius are parameters of the method.</p>
  * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.1a
+ * @author Stephan Saalfeld <saalfeld@mpi-cbg.de> and Pavel Tomancak <tomancak@mpi-cbg.de>
+ * @version 0.1b
  */ 
-public class PMCCBlockFlow implements PlugIn
+public class MSEGaussianFlow implements PlugIn, KeyListener
 {
-	static protected int blockRadius = 8;
+	static protected float sigma = 4;
 	static protected byte maxDistance = 7;
 	static protected boolean showColors = false;
+	
+	final static protected GaussianBlur filter = new GaussianBlur();
+	
+	final static protected int pingPong( final int a, final int mod )
+	{
+		int x = a;
+		final int p = 2 * mod;
+		if ( x < 0 ) x = -x;
+		if ( x >= mod )
+		{
+			if ( x <= p )
+				x = p - x;
+			else
+			{
+				/* catches mod == 1 to no additional cost */
+				try
+				{
+					x %= p;
+					if ( x >= mod )
+						x = p - x;
+				}
+				catch ( ArithmeticException e ){ x = 0; }
+			}
+		}
+		return x;
+	}
 	
 	final static protected void colorCircle( ColorProcessor ip )
 	{
@@ -63,8 +94,8 @@ public class PMCCBlockFlow implements PlugIn
 	}
 	
 	final static private void algebraicToPolarAndColor(
-			final int[] ipXPixels,
-			final int[] ipYPixels,
+			final byte[] ipXPixels,
+			final byte[] ipYPixels,
 			final float[] ipRPixels,
 			final float[] ipPhiPixels,
 			final int[] ipColorPixels,
@@ -151,6 +182,40 @@ public class PMCCBlockFlow implements PlugIn
 		return ( ( ( ( int )( r * 255 ) << 8 ) | ( int )( g * 255 ) ) << 8 ) | ( int )( b * 255 );
 	}
 	
+	final static private void subtractShifted(
+			final FloatProcessor a,
+			final FloatProcessor b,
+			final FloatProcessor c,
+			final int xo,
+			final int yo )
+	{
+		final float[] af = ( float[] )a.getPixels();
+		final float[] bf = ( float[] )b.getPixels();
+		final float[] cf = ( float[] )c.getPixels();
+		
+		final int w = a.getWidth();
+		final int h = a.getHeight();
+		
+		for ( int y = 0; y < h; ++y )
+		{
+			int yb = y + yo;
+			if ( yb < 0 || yb >= h )
+				yb = pingPong( yb, h - 1 );
+			final int yAdd = y * w;
+			final int ybAdd = yb * w;
+			
+			for ( int x = 0; x < a.getWidth(); ++x )
+			{
+				int xb = x + xo;
+				if ( xb < 0 || xb >= w )
+					xb = pingPong( xb, w - 1 );
+				
+				final int i = yAdd + x;
+				final float d = bf[ ybAdd + xb ] - af[ i ];
+				cf[ i ] = d * d;
+			}
+		}
+	}
 	
 	final static private void opticFlow(
 			final FloatProcessor ip1,
@@ -159,79 +224,48 @@ public class PMCCBlockFlow implements PlugIn
 			final FloatProcessor phi,
 			final ColorProcessor of )
 	{
-		final BlockPMCC bc = new BlockPMCC( ip1.getWidth(), ip1.getHeight(), ip1, ip2 );
-		//final BlockPMCC bc = new BlockPMCC( ip1, ip2 );
+		final ByteProcessor ipX = new ByteProcessor( ip1.getWidth(), ip1.getHeight() );
+		final ByteProcessor ipY = new ByteProcessor( ip1.getWidth(), ip1.getHeight() );
+		final FloatProcessor ipD = new FloatProcessor( ip1.getWidth(), ip1.getHeight() );
+		final FloatProcessor ipDMin = new FloatProcessor( ip1.getWidth(), ip1.getHeight() );
 		
-		final FloatProcessor ipR = bc.getTargetProcessor();
-		final FloatProcessor ipRMax = new FloatProcessor( ipR.getWidth(), ipR.getHeight() );
-		final ColorProcessor ipX = new ColorProcessor( ipR.getWidth(), ipR.getHeight() );
-		final ColorProcessor ipY = new ColorProcessor( ipR.getWidth(), ipR.getHeight() );
+		final float[] ipDMinInitPixels = ( float[] )ipDMin.getPixels();
+		for ( int i = 0; i < ipDMinInitPixels.length; ++i )
+			ipDMinInitPixels[ i ] = Float.MAX_VALUE;
 		
-		/* init */
+		for ( byte yo = ( byte )-maxDistance; yo <= maxDistance; ++yo )
 		{
-			final float[] ipRMaxPixels = ( float[] )ipRMax.getPixels();
-			for ( int i = 0; i < ipRMaxPixels.length; ++i )
-				ipRMaxPixels[ i ] = -1;
-		}
-		
-//		final ImageStack stack = new ImageStack( ipR.getWidth(), ipR.getHeight() );
-		
-		for ( int yo = -maxDistance; yo <= maxDistance; ++yo )
-		{
-			for ( int xo = -maxDistance; xo <= maxDistance; ++xo )
+			for ( byte xo = ( byte )-maxDistance; xo <= maxDistance; ++xo )
 			{
 				// continue if radius is larger than maxDistance
 				if ( yo * yo + xo * xo > maxDistance * maxDistance ) continue;
 				
-				bc.setOffset( xo, yo );
-				bc.rSignedSquare( blockRadius );
+				subtractShifted( ip1, ip2, ipD, xo, yo );
 				
-//				stack.addSlice( xo + " " + yo, ipR.duplicate() );
+				// blur in order to compare small regions instead of single pixels 
+				filter.blurFloat( ipD, sigma, sigma, 0.002 );
 				
-				final float[] ipRPixels = ( float[] )ipR.getPixels();
-				final float[] ipRMaxPixels = ( float[] )ipRMax.getPixels();
-				final int[] ipXPixels = ( int[] )ipX.getPixels();
-				final int[] ipYPixels = ( int[] )ipY.getPixels();
+				final float[] ipDPixels = ( float[] )ipD.getPixels();
+				final float[] ipDMinPixels = ( float[] )ipDMin.getPixels();
+				final byte[] ipXPixels = ( byte[] )ipX.getPixels();
+				final byte[] ipYPixels = ( byte[] )ipY.getPixels();
 				
 				// update the translation fields
-				final int h = ipR.getHeight() - maxDistance;
-				final int width = ipR.getWidth();
-				final int w = width - maxDistance;
-				for ( int y = maxDistance; y < h; ++y )
+				for ( int i = 0; i < ipDPixels.length; ++i )
 				{
-					final int row = y * width;
-					final int rowR;
-					if ( yo < 0 )
-						rowR = row;
-					else
-						rowR = ( y - yo ) * width;
-					for ( int x = maxDistance; x < w; ++x )
+					if ( ipDPixels[ i ] < ipDMinPixels[ i ] )
 					{
-						final int i = row + x;
-						final int iR;
-						if ( xo < 0 )
-							iR = rowR + x;
-						else
-							iR = rowR + ( x - xo );
-						
-						final float ipRPixel = ipRPixels[ iR ];
-						final float ipRMaxPixel = ipRMaxPixels[ i ];
-						
-						if ( ipRPixel > ipRMaxPixel )
-						{
-							ipRMaxPixels[ i ] = ipRPixel;
-							ipXPixels[ i ] = xo;
-							ipYPixels[ i ] = yo;
-						}
+						ipDMinPixels[ i ] = ipDPixels[ i ];
+						ipXPixels[ i ] = xo;
+						ipYPixels[ i ] = yo;
 					}
 				}
 			}
 		}
-//		new ImagePlus( "rs", stack ).show();
 		
 		algebraicToPolarAndColor(
-				( int[] )ipX.getPixels(),
-				( int[] )ipY.getPixels(),
+				( byte[] )ipX.getPixels(),
+				( byte[] )ipY.getPixels(),
 				( float[] )r.getPixels(),
 				( float[] )phi.getPixels(),
 				( int[] )of.getPixels(),
@@ -246,7 +280,7 @@ public class PMCCBlockFlow implements PlugIn
 		if ( imp == null )  { IJ.error( "There are no images open" ); return; }
 		
 		GenericDialog gd = new GenericDialog( "Generate optic flow" );
-		gd.addNumericField( "block radius :", blockRadius, 0, 6, "px" );
+		gd.addNumericField( "sigma :", sigma, 2, 6, "px" );
 		gd.addNumericField( "maximal_distance :", maxDistance, 0, 6, "px" );
 		gd.addCheckbox( "show_color_map", showColors );
 		
@@ -254,7 +288,7 @@ public class PMCCBlockFlow implements PlugIn
 		
 		if (gd.wasCanceled()) return;
 		
-		blockRadius = ( int )gd.getNextNumber();
+		sigma = ( float )gd.getNextNumber();
 		maxDistance = ( byte )gd.getNextNumber();
 		showColors = gd.getNextBoolean();
 		
@@ -327,4 +361,17 @@ public class PMCCBlockFlow implements PlugIn
 			imp.setSlice( i + 1 );
 		}
 	}
+
+	public void keyPressed(KeyEvent e)
+	{
+		if (
+				( e.getKeyCode() == KeyEvent.VK_F1 ) &&
+				( e.getSource() instanceof TextField ) )
+		{
+		}
+	}
+
+	public void keyReleased(KeyEvent e) { }
+
+	public void keyTyped(KeyEvent e) { }
 }

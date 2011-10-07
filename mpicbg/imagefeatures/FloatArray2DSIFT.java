@@ -1,5 +1,7 @@
 package mpicbg.imagefeatures;
 
+import ij.IJ;
+
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Vector;
@@ -78,6 +80,15 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 				( minOctaveSize == p.minOctaveSize ) &&
 				( steps == p.steps ) &&
 				( initialSigma == p.initialSigma );
+		}
+		
+		@Override
+		public boolean equals( Object p )
+		{
+			if ( getClass().isInstance( p ) )
+				return equals( ( Param )p );
+			else
+				return false;
 		}
 		
 		@Override

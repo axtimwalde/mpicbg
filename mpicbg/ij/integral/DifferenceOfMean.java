@@ -170,8 +170,8 @@ final public class DifferenceOfMean
 				final int xMax2 = Math.min( w, x + blockRadiusX2 );
 				final float scale2 = 1.0f / ( xMax2 - xMin2 ) / bh2;
 				
-				integral.readLongRGBSum( rgb1, xMin1, yMin1, xMax1, yMax1 );
-				integral.readLongRGBSum( rgb2, xMin2, yMin2, xMax2, yMax2 );
+				integral.longSums( rgb1, xMin1, yMin1, xMax1, yMax1 );
+				integral.longSums( rgb2, xMin2, yMin2, xMax2, yMax2 );
 				
 				final int r = crop( roundPositive( rgb1[ 0 ] * scale1 - rgb2[ 0 ] * scale2 ) + offset, 0, 255 );
 				final int g = crop( roundPositive( rgb1[ 1 ] * scale1 - rgb2[ 1 ] * scale2 ) + offset, 0, 255 );

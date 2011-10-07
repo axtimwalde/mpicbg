@@ -326,9 +326,11 @@ public class Filter
 	{
 		assert scale <= 1.0f : "Downsampling requires a scale factor < 1.0";
 		
-		if ( scale == 1.0f ) return;
 		final float s = targetSigma / scale;
-		final float sigma = ( float )Math.sqrt( s * s - sourceSigma * sourceSigma );
+		final float v = s * s - sourceSigma * sourceSigma;
+		if ( v <= 0 )
+			return;
+		final float sigma = ( float )Math.sqrt( v );
 //		final float[] kernel = createNormalizedGaussianKernel( sigma );
 //		convolveSeparable( source, kernel, kernel );
 		new GaussianBlur().blurFloat( source, sigma, sigma, 0.01 );
@@ -361,9 +363,10 @@ public class Filter
 		
 		final FloatProcessor temp = ( FloatProcessor )source.duplicate();
 		temp.setMinAndMax( source.getMin(), source.getMax() );
-		if ( scale == 1.0f ) return temp;
 		
 		smoothForScale( temp, scale, sourceSigma, targetSigma );
+		if ( scale == 1.0f ) return temp;
+		
 		final float[] tempPixels = ( float[] )temp.getPixels();
 		
 		final FloatProcessor target = new FloatProcessor( w, h );
@@ -401,9 +404,11 @@ public class Filter
 		final float sourceSigma,
 		final float targetSigma )
 	{
-		if ( scale >= 1.0f ) return;
 		float s = targetSigma / scale;
-		float sigma = ( float )Math.sqrt( s * s - sourceSigma * sourceSigma );
+		final float v = s * s - sourceSigma * sourceSigma;
+		if ( v <= 0 )
+			return;
+		final float sigma = ( float )Math.sqrt( v );
 		new GaussianBlur().blurGaussian( source, sigma, sigma, 0.01 );
 	}
 
@@ -431,9 +436,9 @@ public class Filter
 		
 		final ImageProcessor temp = source.duplicate();
 		temp.setMinAndMax( source.getMin(), source.getMax() );
-		if ( scale >= 1.0f ) return temp;
 			
 		smoothForScale( temp, scale, sourceSigma, targetSigma );
+		if ( scale >= 1.0f ) return temp;
 		
 		final ImageProcessor target = temp.resize( w, h );
 		target.setMinAndMax( source.getMin(), source.getMax() );

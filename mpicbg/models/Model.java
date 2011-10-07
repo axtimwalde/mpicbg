@@ -1,5 +1,6 @@
 package mpicbg.models;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Collection;
 
@@ -82,6 +83,39 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 	public boolean betterThan( final M m );
 	
 	/**
+	 * <p>Fit the {@link Model} to a set of data points minimizing the global
+	 * transfer error.  This is assumed to be implemented as a weighted least
+	 * squares minimization.</p>
+	 * 
+	 * <p>This is a lower level version of {@link #fit(Collection)} for
+	 * optimal emory efficiency.</p>
+	 * 
+	 * <p>The estimated model transfers p to q.</p>
+	 * 
+	 * <p><em>n</em>-dimensional points are passed as an <em>n</em>-dimensional
+	 * array of floats, e.g. four 2d points as:</p>
+	 * <pre>
+	 * float[][]{
+	 *   {x<sub>1</sub>, x<sub>2</sub>, x<sub>3</sub>, x<sub>4</sub>},
+	 *   {y<sub>1</sub>, y<sub>2</sub>, y<sub>3</sub>, y<sub>4</sub>} }
+	 * </pre>
+	 * 
+	 * @param p source points
+	 * @param q target points
+	 * @param w weights
+	 * 
+	 * @throws
+	 *   {@link NotEnoughDataPointsException} if not enough data points
+	 *   were available
+	 *   {@link IllDefinedDataPointsException} if the set of data points is
+	 *   inappropriate to solve the Model
+	 */
+	public void fit(
+			final float[][] p,
+			final float[][] q,
+			final float[] w ) throws NotEnoughDataPointsException, IllDefinedDataPointsException;
+	
+	/**
 	 * Fit the {@link Model} to a set of data points minimizing the global
 	 * transfer error.  This is assumed to be implemented as a weighted least
 	 * squares minimization.  Use
@@ -99,6 +133,8 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 	 */
 	public < P extends PointMatch >void fit( final Collection< P > matches )
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException;
+	
+	
 
 	/**
 	 * Test the {@link Model} for a set of {@link PointMatch} candidates.
@@ -283,6 +319,34 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 			final float maxEpsilon,
 			final float minInlierRatio )
 		throws NotEnoughDataPointsException;
+	
+	
+	/**
+	 * Filter a {@link Collection} of {@link PointMatch PointMatches} by the
+	 * smoothness of their support for the given {@link Model}.  Smoothness
+	 * means that each {@link PointMatch} agrees with a locally weighted least
+	 * squares fit of this {@link Model} up to a given maximal transfer error
+	 * or up to a given multiply of the local mean transfer error.  Locally
+	 * weighted means that all {@link PointMatch PointMatches} contribute to
+	 * the fit weighted by their Euclidean distance to the candidate.
+	 * 
+	 * @param candidates
+	 * @param inliers
+	 * @param sigma
+	 * @param maxEpsilon
+	 * @param maxTrust
+	 * @return
+	 * 
+	 * @throws NotEnoughDataPointsException
+	 * @throws IllDefinedDataPointsException
+	 */
+	public < P extends PointMatch > boolean localSmoothnessFilter(
+			final Collection< P > candidates,
+			final Collection< P > inliers,
+			final double sigma,
+			final double maxEpsilon,
+			final double maxTrust )
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException;
 	
 	
 	/**

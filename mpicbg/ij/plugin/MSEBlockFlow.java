@@ -1,4 +1,4 @@
-package mpicbg.ij.integral;
+package mpicbg.ij.plugin;
 /**
  * License: GPL
  *
@@ -16,6 +16,8 @@ package mpicbg.ij.integral;
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
  */
+import mpicbg.ij.integral.IntegralImage;
+import mpicbg.ij.integral.Mean;
 import ij.plugin.*;
 import ij.gui.*;
 import ij.*;
@@ -35,7 +37,7 @@ import ij.process.*;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.1a
  */ 
-public class MESBlockFlow implements PlugIn
+public class MSEBlockFlow implements PlugIn
 {
 	static protected int blockRadius = 8;
 	static protected byte maxDistance = 7;

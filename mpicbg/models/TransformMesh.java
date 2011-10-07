@@ -7,6 +7,8 @@ import java.util.Set;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
+import mpicbg.util.Util;
+
 /**
  * Triangular transformation mesh.
  * 
@@ -179,7 +181,7 @@ public class TransformMesh implements InvertibleCoordinateTransform
 				++i;
 			}
 			
-			p  = new Point( new float[]{ width, yip } );
+			p  = new Point( new float[]{ width - 1, yip } );
 			pq[ i ] = new PointMatch( p, p.clone(), w );
 			
 			i1 = i - numXs;
@@ -211,8 +213,8 @@ public class TransformMesh implements InvertibleCoordinateTransform
 	{
 		final int numXs = Math.max( 2, numX );
 		final float dx = width / ( float )( numXs - 1 );
-		final float dy = 2.0f * ( float )Math.sqrt(4.0f / 5.0f * dx * dx );
-		return ( int )Math.max( 2, Math.round( height / dy ) + 1 );
+		final float dy = 2.0f * ( float )Math.sqrt( 3.0f / 4.0f * dx * dx );
+		return Math.max( 2, Util.roundPos( height / dy ) + 1 );
 	}
 	
 	public TransformMesh(

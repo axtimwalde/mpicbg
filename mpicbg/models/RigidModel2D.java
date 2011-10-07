@@ -84,6 +84,88 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 		l[ 0 ] = cos * l0  + sin * l[ 1 ] + itx;
 		l[ 1 ] = -sin * l0 + cos * l[ 1 ] + ity;		
 	}
+	
+	/**
+	 * Closed form weighted least squares solution as described by
+	 * \citet{SchaeferAl06} and implemented by Johannes Schindelin.
+	 */
+	@Override
+	final public void fit(
+			final float[][] p,
+			final float[][] q,
+			final float[] w )
+		throws NotEnoughDataPointsException
+	{
+		assert
+			p.length == 2 &&
+			q.length == 2 : "2d rigid transformations can be applied to 2d points only.";
+	
+		assert
+			p[ 0 ].length == p[ 1 ].length &&
+			p[ 0 ].length == q[ 0 ].length &&
+			p[ 0 ].length == q[ 1 ].length &&
+			p[ 0 ].length == w.length : "Array lengths do not match.";
+			
+		final int l = p[ 0 ].length;
+		
+		if ( l < MIN_NUM_MATCHES )
+			throw new NotEnoughDataPointsException( l + " data points are not enough to estimate a 2d rigid model, at least " + MIN_NUM_MATCHES + " data points required." );
+		
+		float pcx = 0, pcy = 0;
+		float qcx = 0, qcy = 0;
+		
+		double ws = 0.0f;
+		
+		for ( int i = 0; i < l; ++i )
+		{
+			final float[] pX = p[ 0 ];
+			final float[] pY = p[ 1 ];
+			final float[] qX = q[ 0 ];
+			final float[] qY = q[ 1 ];
+			
+			final float ww = w[ i ];
+			ws += ww;
+			
+			pcx += ww * pX[ i ];
+			pcy += ww * pY[ i ];
+			qcx += ww * qX[ i ];
+			qcy += ww * qY[ i ];
+		}
+		pcx /= ws;
+		pcy /= ws;
+		qcx /= ws;
+		qcy /= ws;
+
+		final float dx = pcx - qcx;
+		final float dy = pcy - qcy;
+		
+		cos = 0;
+		sin = 0;
+		for ( int i = 0; i < l; ++i )
+		{
+			final float[] pX = p[ 0 ];
+			final float[] pY = p[ 1 ];
+			final float[] qX = q[ 0 ];
+			final float[] qY = q[ 1 ];
+			
+			final float ww = w[ i ];
+
+			final float x1 = pX[ i ] - pcx; // x1
+			final float y1 = pY[ i ] - pcy; // x2
+			final float x2 = qX[ i ] - qcx + dx; // y1
+			final float y2 = qY[ i ] - qcy + dy; // y2
+			sin += ww * ( x1 * y2 - y1 * x2 ); //   x1 * y2 - x2 * y1 // assuming p1 is x1,x2 and p2 is y1,y2
+			cos += ww * ( x1 * x2 + y1 * y2 ); //   x1 * y1 + x2 * y2
+		}
+		final float norm = ( float )Math.sqrt( cos * cos + sin * sin );
+		cos /= norm;
+		sin /= norm;
+		
+		tx = qcx - cos * pcx + sin * pcy;
+		ty = qcy - sin * pcx - cos * pcy;
+		
+		invert();
+	}
 
 	/**
 	 * Closed form weighted least squares solution as described by

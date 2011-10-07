@@ -19,8 +19,17 @@ package mpicbg.ij.integral;
 import ij.process.ImageProcessor;
 
 /**
+ * <p>Summed area table using 64bit signed integer precision.  This table can
+ * be used safely for 16bit unsigned integer precision images with a maximal
+ * size of >2<sup>31</sup>&nbsp;px which is ImageJ's size limit due to usage
+ * of a single basic type array for pixel storage.  For the squares of 16bit
+ * unsigned integer precision images, the size limit is two pixels less
+ * (2<sup>31</sup>-2&nbsp;px) which should not impose a practical limitation.
+ * These limits are calculated for the extreme case that all pixels have the
+ * maximum possible value.</p>
  * 
- *
+ * <p>Boolean or byte integer precision images and their squares are safe.</p> 
+ * 
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  */
 final public class LongIntegralImage implements IntegralImage
@@ -29,6 +38,7 @@ final public class LongIntegralImage implements IntegralImage
 	final private int height;
 	
 	final private int w;
+	final private int w1;
 
 	final protected long[] sum;
 	
@@ -38,6 +48,7 @@ final public class LongIntegralImage implements IntegralImage
 		this.height = height;
 		
 		w = width + 1;
+		w1 = w + 1;
 
 		sum = new long[ w * ( height + 1 ) ];
 
@@ -50,7 +61,7 @@ final public class LongIntegralImage implements IntegralImage
 		for ( int y = 1; y < height; ++y )
 		{
 			final int ywidth = y * width;
-			final int yw = y * w + w + 1;
+			final int yw = y * w + w1;
 			sum[ yw ] = sum[ yw - w ] + pixels[ ywidth ];
 			for ( int x = 1; x < width; ++x )
 			{
@@ -60,12 +71,31 @@ final public class LongIntegralImage implements IntegralImage
 		}
 	}
 	
+	/**
+	 * Package protected constructor with the area sums passed as a parameter.
+	 * 
+	 * @param sum area sums with size = (width + 1) * (height + 1)
+	 * @param width width of the original data
+	 * @param height heigth of the original data
+	 */
+	LongIntegralImage( final long[] sum, final int width, final int height )
+	{
+		this.width = width;
+		this.height = height;
+		
+		w = width + 1;
+		w1 = w + 1;
+
+		this.sum = sum;
+	}
+	
 	public LongIntegralImage( final ImageProcessor ip )
 	{
 		this.width = ip.getWidth();
 		this.height = ip.getHeight();
 
 		w = width + 1;
+		w1 = w + 1;
 
 		sum = new long[ w * ( height + 1 ) ];
 
@@ -78,7 +108,7 @@ final public class LongIntegralImage implements IntegralImage
 		for ( int y = 1; y < height; ++y )
 		{
 			final int ywidth = y * width;
-			final int yw = y * w + w + 1;
+			final int yw = y * w + w1;
 			sum[ yw ] = sum[ yw - w ] + ip.get( ywidth );
 			for ( int x = 1; x < width; ++x )
 			{
@@ -88,20 +118,20 @@ final public class LongIntegralImage implements IntegralImage
 		}
 	}
 	
-	final static private int roundPositive( final float f )
-	{
-		return ( int )( f + 0.5f );
-	}
-	
 	@Override
 	final public int getWidth() { return width; }
 	@Override
 	final public int getHeight() { return height; }
-
+	
+	final public long getLongSum( final int x, final int y )
+	{
+		return sum[ y * w + w1 + x ];
+	}
+	
 	final public long getLongSum( final int xMin, final int yMin, final int xMax, final int yMax )
 	{
-		final int y1w = yMin * w + w + 1;
-		final int y2w = yMax * w + w + 1;
+		final int y1w = yMin * w + w1;
+		final int y2w = yMax * w + w1;
 		return sum[ y1w + xMin ] + sum[ y2w + xMax ] - sum[ y1w + xMax ] - sum[ y2w + xMin ];
 	}
 	
@@ -114,8 +144,8 @@ final public class LongIntegralImage implements IntegralImage
 	@Override
 	final public int getScaledSum( final int xMin, final int yMin, final int xMax, final int yMax, final float scale )
 	{
-		final int y1w = yMin * w + w + 1;
-		final int y2w = yMax * w + w + 1;
-		return roundPositive( ( sum[ y1w + xMin ] + sum[ y2w + xMax ] - sum[ y1w + xMax ] - sum[ y2w + xMin ] ) * scale );
+		final int y1w = yMin * w + w1;
+		final int y2w = yMax * w + w1;
+		return Util.roundPositive( ( sum[ y1w + xMin ] + sum[ y2w + xMax ] - sum[ y1w + xMax ] - sum[ y2w + xMin ] ) * scale );
 	}
 }

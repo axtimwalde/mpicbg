@@ -1,10 +1,10 @@
 package mpicbg.models;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Random;
-import java.util.List;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Random;
 
 /**
  * Abstract class for arbitrary transformation models to be applied
@@ -528,5 +528,172 @@ A:		while ( i < iterations )
 		while ( currentMatches.equals( previousMatches ) );
 		this.set( m );
 		return currentMatches;
+	}
+	
+	/**
+	 * Default fit implementation using {@link #fit(Collection)}.  This foils
+	 * the intention that {@link #fit(float[][], float[][], float[])} would be
+	 * potentially more efficient.  You should better implement it directly.
+	 */
+	@Override
+	public void fit(
+			final float[][] p,
+			final float[][] q,
+			final float[] w )
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException
+	{
+		assert
+			p.length > 0 &&
+			q.length == p.length : "Numbers of dimensions do not match.";
+	
+		assert
+			p[ 0 ].length == p[ 1 ].length &&
+			p[ 0 ].length == q[ 0 ].length &&
+			p[ 0 ].length == q[ 1 ].length &&
+			p[ 0 ].length == w.length : "Array lengths do not match.";
+			
+		final int n = p.length;
+		final int l = p[ 0 ].length;
+		
+		final ArrayList< PointMatch > matches = new ArrayList< PointMatch >( l );
+		for ( int i = 0; i < l; ++i )
+		{
+			final float[] pi = new  float[ n ];
+			final float[] qi = new  float[ n ];
+			for ( int d = 0; d < n; ++d )
+			{
+				pi[ d ] = p[ d ][ i ];
+				qi[ d ] = q[ d ][ i ];
+			}
+				
+			matches.add(
+					new PointMatch(
+							new Point( pi ),
+							new Point( qi ),
+							w[ i ] ) );
+		}
+		
+		fit( matches );
+	}
+	
+	
+	/**
+	 * <p>Default implementation of
+	 * {@link #localSmoothnessFilter(Collection, Collection, double, double, double)}.
+	 * Requires that {@link #fit(Collection)} is implemented as a weighted
+	 * least squares fit or something similar.</p>
+	 * 
+	 * <p>Note that if candidates == inliers and an exception occurs, inliers
+	 * will be cleared according to that there are no inliers.</p>
+	 * 
+	 */
+	@Override
+	public < P extends PointMatch > boolean localSmoothnessFilter(
+			final Collection< P > candidates,
+			final Collection< P > inliers,
+			final double sigma,
+			final double maxEpsilon,
+			final double maxTrust )
+	{
+		final double var2 = 2 * sigma * sigma;
+		
+		/* unshift an extra weight into candidates */
+		for ( final P match : candidates )
+			match.unshiftWeight( 1.0f );
+			
+		/* initialize inliers */
+		if ( inliers != candidates )
+		{
+			inliers.clear();
+			inliers.addAll( candidates );
+		}
+				
+		boolean hasChanged = false;
+		
+		int p = 0;
+		System.out.print( "Smoothness filter pass  1:   0%" );
+		do
+		{
+			System.out.print( ( char )13 + "Smoothness filter pass " + String.format( "%2d", ++p ) + ":   0%" );
+			hasChanged = false;
+			
+			final ArrayList< P > toBeRemoved = new ArrayList< P >();
+			final ArrayList< P > localInliers = new ArrayList< P >();
+			
+			int i = 0;
+			
+			for ( final P candidate : inliers )
+			{
+				System.out.print( ( char )13 + "Smoothness filter pass " + String.format( "%2d", p ) + ": " + String.format( "%3d", ( ++i * 100 / inliers.size() ) ) + "%" );
+				
+				/* calculate weights by square distance to reference in local space */
+				for ( final P match : inliers )
+				{
+					final float w = ( float )Math.exp( -Point.squareLocalDistance( candidate.getP1(), match.getP1() ) / var2 );
+					match.setWeight( 0, w );
+				}
+				
+				candidate.setWeight( 0, 0 );
+
+				boolean filteredLocalModelFound;
+				try
+				{
+					filteredLocalModelFound = filter( candidates, localInliers, ( float )maxTrust );
+				}
+				catch ( NotEnoughDataPointsException e )
+				{
+					filteredLocalModelFound = false;
+				}
+				
+				if ( !filteredLocalModelFound )
+				{
+					/* clean up extra weight from candidates */
+					for ( final P match : candidates )
+						match.shiftWeight();
+					
+					/* no inliers */
+					inliers.clear();
+					
+					return false;
+				}
+				
+				candidate.apply( this );
+				final double candidateDistance = Point.distance( candidate.getP1(), candidate.getP2() );
+				if ( candidateDistance <= maxEpsilon )
+				{
+					PointMatch.apply( inliers, this );
+					
+					/* weighed mean Euclidean distances */
+					double meanDistance = 0, ws = 0;
+					for ( final PointMatch match : inliers )
+					{
+						final float w = match.getWeight();
+						ws += w;
+						meanDistance += Point.distance( match.getP1(), match.getP2() ) * w;
+					}
+					meanDistance /= ws;
+					
+					if ( candidateDistance > maxTrust * meanDistance )
+					{
+						hasChanged = true;
+						toBeRemoved.add( candidate );
+					}
+				}
+				else
+				{
+					hasChanged = true;
+					toBeRemoved.add( candidate );
+				}
+			}
+			inliers.removeAll( toBeRemoved );
+			System.out.println();
+		}
+		while ( hasChanged );
+		
+		/* clean up extra weight from candidates */
+		for ( final P match : candidates )
+			match.shiftWeight();
+		
+		return inliers.size() >= getMinNumMatches();
 	}
 };

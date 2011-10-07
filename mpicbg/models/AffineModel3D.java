@@ -126,6 +126,143 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 	 * \citet{SchaeferAl06}.
 	 */
 	@Override
+	final public void fit(
+			final float[][] p,
+			final float[][] q,
+			final float[] w )
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException
+	{
+		assert
+		p.length == 3 &&
+		q.length == 3 : "3d affine transformations can be applied to 3d points only.";
+	
+		assert
+			p[ 0 ].length == p[ 1 ].length &&
+			p[ 0 ].length == q[ 0 ].length &&
+			p[ 0 ].length == q[ 1 ].length &&
+			p[ 0 ].length == w.length : "Array lengths do not match.";
+			
+		final int l = p[ 0 ].length;
+		
+		if ( l < MIN_NUM_MATCHES )
+			throw new NotEnoughDataPointsException( l + " data points are not enough to estimate a 2d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
+		
+		float pcx = 0, pcy = 0, pcz = 0;
+		float qcx = 0, qcy = 0, qcz = 0;
+		
+		double ws = 0.0;
+		
+		for ( int i = 0; i < l; ++i )
+		{
+			final float[] pX = p[ 0 ];
+			final float[] pY = p[ 1 ];
+			final float[] pZ = p[ 1 ];
+			final float[] qX = q[ 0 ];
+			final float[] qY = q[ 1 ];
+			final float[] qZ = q[ 1 ];
+			
+			final float ww = w[ i ];
+			ws += ww;
+			
+			pcx += ww * pX[ i ];
+			pcy += ww * pY[ i ];
+			pcz += ww * pZ[ i ];
+			qcx += ww * qX[ i ];
+			qcy += ww * qY[ i ];
+			qcz += ww * qZ[ i ];
+		}
+		pcx /= ws;
+		pcy /= ws;
+		pcz /= ws;
+		qcx /= ws;
+		qcy /= ws;
+		qcz /= ws;
+		
+		float
+			a00, a01, a02,
+			     a11, a12,
+			          a22;
+		float
+			b00, b01, b02,
+			b10, b11, b12,
+			b20, b21, b22;
+		
+		a00 = a01 = a02 = a11 = a12 = a22 = b00 = b01 = b02 = b10 = b11 = b12 = b20 = b21 = b22 = 0;
+		for ( int i = 0; i < l; ++i )
+		{
+			final float[] pX = p[ 0 ];
+			final float[] pY = p[ 1 ];
+			final float[] pZ = p[ 1 ];
+			final float[] qX = q[ 0 ];
+			final float[] qY = q[ 1 ];
+			final float[] qZ = q[ 1 ];
+			
+			final float ww = w[ i ];
+			
+			final float px = pX[ i ] - pcx, py = pY[ i ] - pcy, pz = pZ[ i ] - pcz;
+			final float qx = qX[ i ] - qcx, qy = qY[ i ] - qcy, qz = qZ[ i ] - qcz;
+			a00 += ww * px * px;
+			a01 += ww * px * py;
+			a02 += ww * px * pz;
+			a11 += ww * py * py;
+			a12 += ww * py * pz;
+			a22 += ww * pz * pz;
+			
+			b00 += ww * px * qx;
+			b01 += ww * px * qy;
+			b02 += ww * px * qz;	
+			b10 += ww * py * qx;
+			b11 += ww * py * qy;
+			b12 += ww * py * qz;
+			b20 += ww * pz * qx;
+			b21 += ww * pz * qy;
+			b22 += ww * pz * qz;
+		}
+		
+		final float det =
+			a00 * a11 * a22 +
+			a01 * a12 * a02 +
+			a02 * a01 * a12 -
+			a02 * a11 * a02 -
+			a12 * a12 * a00 -
+			a22 * a01 * a01;
+		
+		if ( det == 0 )
+			throw new IllDefinedDataPointsException();
+		
+		final float idet = 1f / det;
+		
+		final float ai00 = ( a11 * a22 - a12 * a12 ) * idet;
+		final float ai01 = ( a02 * a12 - a01 * a22 ) * idet;
+		final float ai02 = ( a01 * a12 - a02 * a11 ) * idet;
+		final float ai11 = ( a00 * a22 - a02 * a02 ) * idet;
+		final float ai12 = ( a02 * a01 - a00 * a12 ) * idet;
+		final float ai22 = ( a00 * a11 - a01 * a01 ) * idet;
+		
+		m00 = ai00 * b00 + ai01 * b10 + ai02 * b20;
+		m01 = ai01 * b00 + ai11 * b10 + ai12 * b20;
+		m02 = ai02 * b00 + ai12 * b10 + ai22 * b20;
+		
+		m10 = ai00 * b01 + ai01 * b11 + ai02 * b21;
+		m11 = ai01 * b01 + ai11 * b11 + ai12 * b21;
+		m12 = ai02 * b01 + ai12 * b11 + ai22 * b21;
+		
+		m20 = ai00 * b02 + ai01 * b12 + ai02 * b22;
+		m21 = ai01 * b02 + ai11 * b12 + ai12 * b22;
+		m22 = ai02 * b02 + ai12 * b12 + ai22 * b22;
+		
+		m03 = qcx - m00 * pcx - m01 * pcy - m02 * pcz;
+		m13 = qcy - m10 * pcx - m11 * pcy - m12 * pcz;
+		m23 = qcz - m20 * pcx - m21 * pcy - m22 * pcz;
+		
+		invert();
+	}
+	
+	/**
+	 * Closed form weighted least squares solution as described by
+	 * \citet{SchaeferAl06}.
+	 */
+	@Override
 	final public < P extends PointMatch >void fit( final Collection< P > matches )
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
