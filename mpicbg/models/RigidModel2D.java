@@ -111,8 +111,8 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 		if ( l < MIN_NUM_MATCHES )
 			throw new NotEnoughDataPointsException( l + " data points are not enough to estimate a 2d rigid model, at least " + MIN_NUM_MATCHES + " data points required." );
 		
-		float pcx = 0, pcy = 0;
-		float qcx = 0, qcy = 0;
+		double pcx = 0, pcy = 0;
+		double qcx = 0, qcy = 0;
 		
 		double ws = 0.0f;
 		
@@ -123,7 +123,7 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 			final float[] qX = q[ 0 ];
 			final float[] qY = q[ 1 ];
 			
-			final float ww = w[ i ];
+			final double ww = w[ i ];
 			ws += ww;
 			
 			pcx += ww * pX[ i ];
@@ -136,11 +136,11 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 		qcx /= ws;
 		qcy /= ws;
 
-		final float dx = pcx - qcx;
-		final float dy = pcy - qcy;
+		final double dx = pcx - qcx;
+		final double dy = pcy - qcy;
 		
-		cos = 0;
-		sin = 0;
+		double cosd = 0;
+		double sind = 0;
 		for ( int i = 0; i < l; ++i )
 		{
 			final float[] pX = p[ 0 ];
@@ -148,21 +148,24 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 			final float[] qX = q[ 0 ];
 			final float[] qY = q[ 1 ];
 			
-			final float ww = w[ i ];
+			final double ww = w[ i ];
 
-			final float x1 = pX[ i ] - pcx; // x1
-			final float y1 = pY[ i ] - pcy; // x2
-			final float x2 = qX[ i ] - qcx + dx; // y1
-			final float y2 = qY[ i ] - qcy + dy; // y2
-			sin += ww * ( x1 * y2 - y1 * x2 ); //   x1 * y2 - x2 * y1 // assuming p1 is x1,x2 and p2 is y1,y2
-			cos += ww * ( x1 * x2 + y1 * y2 ); //   x1 * y1 + x2 * y2
+			final double x1 = pX[ i ] - pcx; // x1
+			final double y1 = pY[ i ] - pcy; // x2
+			final double x2 = qX[ i ] - qcx + dx; // y1
+			final double y2 = qY[ i ] - qcy + dy; // y2
+			sind += ww * ( x1 * y2 - y1 * x2 ); //   x1 * y2 - x2 * y1 // assuming p1 is x1,x2 and p2 is y1,y2
+			cosd += ww * ( x1 * x2 + y1 * y2 ); //   x1 * y1 + x2 * y2
 		}
-		final float norm = ( float )Math.sqrt( cos * cos + sin * sin );
-		cos /= norm;
-		sin /= norm;
+		final double norm = Math.sqrt( cosd * cosd + sind * sind );
+		cosd /= norm;
+		sind /= norm;
 		
-		tx = qcx - cos * pcx + sin * pcy;
-		ty = qcy - sin * pcx - cos * pcy;
+		cos = ( float )cosd;
+		sin = ( float )sind;
+		
+		tx = ( float )( qcx - cosd * pcx + sind * pcy );
+		ty = ( float )( qcy - sind * pcx - cosd * pcy );
 		
 		invert();
 	}
@@ -177,8 +180,8 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	{
 		if ( matches.size() < MIN_NUM_MATCHES ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d rigid model, at least " + MIN_NUM_MATCHES + " data points required." );
 		
-		float pcx = 0, pcy = 0;
-		float qcx = 0, qcy = 0;
+		double pcx = 0, pcy = 0;
+		double qcx = 0, qcy = 0;
 		
 		double ws = 0.0f;
 		
@@ -187,7 +190,7 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 			final float[] p = m.getP1().getL(); 
 			final float[] q = m.getP2().getW();
 			
-			final float w = m.getWeight();
+			final double w = m.getWeight();
 			ws += w;
 			
 			pcx += w * p[ 0 ];
@@ -200,30 +203,33 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 		qcx /= ws;
 		qcy /= ws;
 
-		final float dx = pcx - qcx;
-		final float dy = pcy - qcy;
+		final double dx = pcx - qcx;
+		final double dy = pcy - qcy;
 		
-		cos = 0;
-		sin = 0;
+		double cosd = 0;
+		double sind = 0;
 		for ( final P m : matches )
 		{
 			final float[] p = m.getP1().getL(); 
 			final float[] q = m.getP2().getW();
-			final float w = m.getWeight();
+			final double w = m.getWeight();
 
-			final float x1 = p[ 0 ] - pcx; // x1
-			final float y1 = p[ 1 ] - pcy; // x2
-			final float x2 = q[ 0 ] - qcx + dx; // y1
-			final float y2 = q[ 1 ] - qcy + dy; // y2
-			sin += w * ( x1 * y2 - y1 * x2 ); //   x1 * y2 - x2 * y1 // assuming p1 is x1,x2 and p2 is y1,y2
-			cos += w * ( x1 * x2 + y1 * y2 ); //   x1 * y1 + x2 * y2
+			final double x1 = p[ 0 ] - pcx; // x1
+			final double y1 = p[ 1 ] - pcy; // x2
+			final double x2 = q[ 0 ] - qcx + dx; // y1
+			final double y2 = q[ 1 ] - qcy + dy; // y2
+			sind += w * ( x1 * y2 - y1 * x2 ); //   x1 * y2 - x2 * y1 // assuming p1 is x1,x2 and p2 is y1,y2
+			cosd += w * ( x1 * x2 + y1 * y2 ); //   x1 * y1 + x2 * y2
 		}
-		final float norm = ( float )Math.sqrt( cos * cos + sin * sin );
-		cos /= norm;
-		sin /= norm;
+		final double norm = Math.sqrt( cosd * cosd + sind * sind );
+		cosd /= norm;
+		sind /= norm;
 		
-		tx = qcx - cos * pcx + sin * pcy;
-		ty = qcy - sin * pcx - cos * pcy;
+		cos = ( float )cosd;
+		sin = ( float )sind;
+		
+		tx = ( float )( qcx - cosd * pcx + sind * pcy );
+		ty = ( float )( qcy - sind * pcx - cosd * pcy );
 		
 		invert();
 	}
@@ -273,15 +279,15 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	@Override
 	final public void preConcatenate( final RigidModel2D model )
 	{
-		final float a = model.cos * cos - model.sin * sin;
-		final float b = model.sin * cos + model.cos * sin;
-		final float c = model.cos * tx - model.sin * ty + model.tx;
-		final float d = model.sin * tx + model.cos * ty + model.ty;
+		final double a = model.cos * cos - model.sin * sin;
+		final double b = model.sin * cos + model.cos * sin;
+		final double c = model.cos * tx - model.sin * ty + model.tx;
+		final double d = model.sin * tx + model.cos * ty + model.ty;
 		
-		cos = a;
-		sin = b;
-		tx = c;
-		ty = d;
+		cos = ( float )a;
+		sin = ( float )b;
+		tx = ( float )c;
+		ty = ( float )d;
 		
 		invert();
 	}
@@ -289,15 +295,15 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	@Override
 	final public void concatenate( final RigidModel2D model )
 	{
-		final float a = cos * model.cos - sin * model.sin;
-		final float b = sin * model.cos + cos * model.sin;
-		final float c = cos * model.tx - sin * model.ty + tx;
-		final float d = sin * model.tx + cos * model.ty + ty;
+		final double a = cos * model.cos - sin * model.sin;
+		final double b = sin * model.cos + cos * model.sin;
+		final double c = cos * model.tx - sin * model.ty + tx;
+		final double d = sin * model.tx + cos * model.ty + ty;
 		
-		cos = a;
-		sin = b;
-		tx = c;
-		ty = d;
+		cos = ( float )a;
+		sin = ( float )b;
+		tx = ( float )c;
+		ty = ( float )d;
 		
 		invert();
 	}
@@ -360,7 +366,7 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	}
 
 	@Override
-	public void toArray( float[] data )
+	public void toArray( final float[] data )
 	{
 		data[ 0 ] = cos;
 		data[ 1 ] = sin;
@@ -371,7 +377,7 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	}
 
 	@Override
-	public void toArray( double[] data )
+	public void toArray( final double[] data )
 	{
 		data[ 0 ] = cos;
 		data[ 1 ] = sin;
@@ -382,7 +388,7 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	}
 
 	@Override
-	public void toMatrix( float[][] data )
+	public void toMatrix( final float[][] data )
 	{
 		data[ 0 ][ 0 ] = cos;
 		data[ 0 ][ 1 ] = -sin;
@@ -393,7 +399,7 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	}
 
 	@Override
-	public void toMatrix( double[][] data )
+	public void toMatrix( final double[][] data )
 	{
 		data[ 0 ][ 0 ] = cos;
 		data[ 0 ][ 1 ] = -sin;

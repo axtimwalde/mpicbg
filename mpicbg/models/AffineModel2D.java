@@ -117,8 +117,8 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		if ( l < MIN_NUM_MATCHES )
 			throw new NotEnoughDataPointsException( l + " data points are not enough to estimate a 2d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
 		
-		float pcx = 0, pcy = 0;
-		float qcx = 0, qcy = 0;
+		double pcx = 0, pcy = 0;
+		double qcx = 0, qcy = 0;
 		
 		double ws = 0.0;
 		
@@ -129,7 +129,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 			final float[] qX = q[ 0 ];
 			final float[] qY = q[ 1 ];
 			
-			final float ww = w[ i ];
+			final double ww = w[ i ];
 			ws += ww;
 			
 			pcx += ww * pX[ i ];
@@ -142,8 +142,8 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		qcx /= ws;
 		qcy /= ws;
 		
-		float a00, a01, a11;
-		float b00, b01, b10, b11;
+		double a00, a01, a11;
+		double b00, b01, b10, b11;
 		a00 = a01 = a11 = b00 = b01 = b10 = b11 = 0;
 		for ( int i = 0; i < l; ++i )
 		{
@@ -152,10 +152,10 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 			final float[] qX = q[ 0 ];
 			final float[] qY = q[ 1 ];
 			
-			final float ww = w[ i ];
+			final double ww = w[ i ];
 			
-			final float px = pX[ i ] - pcx, py = pY[ i ] - pcy;
-			final float qx = qX[ i ] - qcx, qy = qY[ i ] - qcy;
+			final double px = pX[ i ] - pcx, py = pY[ i ] - pcy;
+			final double qx = qX[ i ] - qcx, qy = qY[ i ] - qcy;
 			a00 += ww * px * px;
 			a01 += ww * px * py;
 			a11 += ww * py * py;
@@ -165,18 +165,18 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 			b11 += ww * py * qy;
 		}
 		
-		final float det = a00 * a11 - a01 * a01;
+		final double det = a00 * a11 - a01 * a01;
 		
 		if ( det == 0 )
 			throw new IllDefinedDataPointsException();
 		
-		m00 = ( a11 * b00 - a01 * b10 ) / det;
-		m01 = ( a00 * b10 - a01 * b00 ) / det;
-		m10 = ( a11 * b01 - a01 * b11 ) / det;
-		m11 = ( a00 * b11 - a01 * b01 ) / det;
+		m00 = ( float )( ( a11 * b00 - a01 * b10 ) / det );
+		m01 = ( float )( ( a00 * b10 - a01 * b00 ) / det );
+		m10 = ( float )( ( a11 * b01 - a01 * b11 ) / det );
+		m11 = ( float )( ( a00 * b11 - a01 * b01 ) / det );
 		
-		m02 = qcx - m00 * pcx - m01 * pcy;
-		m12 = qcy - m10 * pcx - m11 * pcy;
+		m02 = ( float )( qcx - m00 * pcx - m01 * pcy );
+		m12 = ( float )( qcy - m10 * pcx - m11 * pcy );
 		
 		invert();
 	}
@@ -192,8 +192,8 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		if ( matches.size() < MIN_NUM_MATCHES )
 			throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
 		
-		float pcx = 0, pcy = 0;
-		float qcx = 0, qcy = 0;
+		double pcx = 0, pcy = 0;
+		double qcx = 0, qcy = 0;
 		
 		double ws = 0.0;
 		
@@ -202,7 +202,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 			final float[] p = m.getP1().getL(); 
 			final float[] q = m.getP2().getW(); 
 			
-			final float w = m.getWeight();
+			final double w = m.getWeight();
 			ws += w;
 			
 			pcx += w * p[ 0 ];
@@ -215,17 +215,17 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		qcx /= ws;
 		qcy /= ws;
 		
-		float a00, a01, a11;
-		float b00, b01, b10, b11;
+		double a00, a01, a11;
+		double b00, b01, b10, b11;
 		a00 = a01 = a11 = b00 = b01 = b10 = b11 = 0;
 		for ( final P m : matches )
 		{
 			final float[] p = m.getP1().getL();
 			final float[] q = m.getP2().getW();
-			final float w = m.getWeight();
+			final double w = m.getWeight();
 			
-			final float px = p[ 0 ] - pcx, py = p[ 1 ] - pcy;
-			final float qx = q[ 0 ] - qcx, qy = q[ 1 ] - qcy;
+			final double px = p[ 0 ] - pcx, py = p[ 1 ] - pcy;
+			final double qx = q[ 0 ] - qcx, qy = q[ 1 ] - qcy;
 			a00 += w * px * px;
 			a01 += w * px * py;
 			a11 += w * py * py;
@@ -235,18 +235,18 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 			b11 += w * py * qy;
 		}
 		
-		final float det = a00 * a11 - a01 * a01;
+		final double det = a00 * a11 - a01 * a01;
 		
 		if ( det == 0 )
 			throw new IllDefinedDataPointsException();
 		
-		m00 = ( a11 * b00 - a01 * b10 ) / det;
-		m01 = ( a00 * b10 - a01 * b00 ) / det;
-		m10 = ( a11 * b01 - a01 * b11 ) / det;
-		m11 = ( a00 * b11 - a01 * b01 ) / det;
+		m00 = ( float )( ( a11 * b00 - a01 * b10 ) / det );
+		m01 = ( float )( ( a00 * b10 - a01 * b00 ) / det );
+		m10 = ( float )( ( a11 * b01 - a01 * b11 ) / det );
+		m11 = ( float )( ( a00 * b11 - a01 * b01 ) / det );
 		
-		m02 = qcx - m00 * pcx - m01 * pcy;
-		m12 = qcy - m10 * pcx - m11 * pcy;
+		m02 = ( float )( qcx - m00 * pcx - m01 * pcy );
+		m12 = ( float )( qcy - m10 * pcx - m11 * pcy );
 		
 		invert();
 	}
@@ -288,7 +288,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	
 	final protected void invert()
 	{
-		final float det = m00 * m11 - m01 * m10;
+		final double det = m00 * m11 - m01 * m10;
 		if ( det == 0 )
 		{
 			isInvertible = false;
@@ -297,33 +297,33 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		
 		isInvertible = true;
 		
-		i00 = m11 / det;
-		i01 = -m01 / det;
-		i02 = ( m01 * m12 - m02 * m11 ) / det;
+		i00 = ( float )( m11 / det );
+		i01 = ( float )( -m01 / det );
+		i02 = ( float )( ( m01 * m12 - m02 * m11 ) / det );
 		
-		i10 = -m10 / det;
-		i11 = m00 / det;
-		i12 = ( m02 * m10 - m00 * m12 ) / det;		
+		i10 = ( float )( -m10 / det );
+		i11 = ( float )( m00 / det );
+		i12 = ( float )( ( m02 * m10 - m00 * m12 ) / det );		
 	}
 	
 	@Override
 	final public void preConcatenate( final AffineModel2D model )
 	{
-		final float a00 = model.m00 * m00 + model.m01 * m10;
-		final float a01 = model.m00 * m01 + model.m01 * m11;
-		final float a02 = model.m00 * m02 + model.m01 * m12 + model.m02;
+		final double a00 = model.m00 * m00 + model.m01 * m10;
+		final double a01 = model.m00 * m01 + model.m01 * m11;
+		final double a02 = model.m00 * m02 + model.m01 * m12 + model.m02;
 		
-		final float a10 = model.m10 * m00 + model.m11 * m10;
-		final float a11 = model.m10 * m01 + model.m11 * m11;
-		final float a12 = model.m10 * m02 + model.m11 * m12 + model.m12;
+		final double a10 = model.m10 * m00 + model.m11 * m10;
+		final double a11 = model.m10 * m01 + model.m11 * m11;
+		final double a12 = model.m10 * m02 + model.m11 * m12 + model.m12;
 		
-		m00 = a00;
-		m01 = a01;
-		m02 = a02;
+		m00 = ( float )a00;
+		m01 = ( float )a01;
+		m02 = ( float )a02;
 		
-		m10 = a10;
-		m11 = a11;
-		m12 = a12;
+		m10 = ( float )a10;
+		m11 = ( float )a11;
+		m12 = ( float )a12;
 		
 		invert();
 	}
@@ -347,21 +347,21 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	@Override
 	final public void concatenate( final AffineModel2D model )
 	{
-		final float a00 = m00 * model.m00 + m01 * model.m10;
-		final float a01 = m00 * model.m01 + m01 * model.m11;
-		final float a02 = m00 * model.m02 + m01 * model.m12 + m02;
+		final double a00 = m00 * model.m00 + m01 * model.m10;
+		final double a01 = m00 * model.m01 + m01 * model.m11;
+		final double a02 = m00 * model.m02 + m01 * model.m12 + m02;
 		
-		final float a10 = m10 * model.m00 + m11 * model.m10;
-		final float a11 = m10 * model.m01 + m11 * model.m11;
-		final float a12 = m10 * model.m02 + m11 * model.m12 + m12;
+		final double a10 = m10 * model.m00 + m11 * model.m10;
+		final double a11 = m10 * model.m01 + m11 * model.m11;
+		final double a12 = m10 * model.m02 + m11 * model.m12 + m12;
 		
-		m00 = a00;
-		m01 = a01;
-		m02 = a02;
+		m00 = ( float )a00;
+		m01 = ( float )a01;
+		m02 = ( float )a02;
 		
-		m10 = a10;
-		m11 = a11;
-		m12 = a12;
+		m10 = ( float )a10;
+		m11 = ( float )a11;
+		m12 = ( float )a12;
 		
 		invert();
 	}
@@ -443,7 +443,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	}
 
 	@Override
-	public void toArray( float[] data )
+	public void toArray( final float[] data )
 	{
 		data[ 0 ] = m00;
 		data[ 1 ] = m10;
@@ -454,7 +454,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	}
 
 	@Override
-	public void toArray( double[] data )
+	public void toArray( final double[] data )
 	{
 		data[ 0 ] = m00;
 		data[ 1 ] = m10;
@@ -465,7 +465,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	}
 
 	@Override
-	public void toMatrix( float[][] data )
+	public void toMatrix( final float[][] data )
 	{
 		data[ 0 ][ 0 ] = m00;
 		data[ 0 ][ 1 ] = m01;
@@ -476,7 +476,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	}
 
 	@Override
-	public void toMatrix( double[][] data )
+	public void toMatrix( final double[][] data )
 	{
 		data[ 0 ][ 0 ] = m00;
 		data[ 0 ][ 1 ] = m01;

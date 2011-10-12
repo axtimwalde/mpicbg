@@ -80,10 +80,10 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 			throw new NotEnoughDataPointsException( l + " data points are not enough to estimate a 2d translation model, at least " + MIN_NUM_MATCHES + " data points required." );
 		
 		// center of mass:
-		float pcx = 0, pcy = 0;
-		float qcx = 0, qcy = 0;
+		double pcx = 0, pcy = 0;
+		double qcx = 0, qcy = 0;
 		
-		float ws = 0.0f;
+		double ws = 0.0f;
 		
 		for ( int i = 0; i < l; ++i )
 		{
@@ -92,7 +92,7 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 			final float[] qX = q[ 0 ];
 			final float[] qY = q[ 1 ];
 			
-			final float ww = w[ i ];
+			final double ww = w[ i ];
 			ws += ww;
 			
 			pcx += ww * pX[ i ];
@@ -105,8 +105,8 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 		qcx /= ws;
 		qcy /= ws;
 
-		tx = qcx - pcx;
-		ty = qcy - pcy;
+		tx = ( float )( qcx - pcx );
+		ty = ( float )( qcy - pcy );
 	}
 	
 	@Override
@@ -115,17 +115,17 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 		if ( matches.size() < MIN_NUM_MATCHES ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d translation model, at least " + MIN_NUM_MATCHES + " data points required." );
 		
 		// center of mass:
-		float pcx = 0, pcy = 0;
-		float qcx = 0, qcy = 0;
+		double pcx = 0, pcy = 0;
+		double qcx = 0, qcy = 0;
 		
-		float ws = 0.0f;
+		double ws = 0.0f;
 		
 		for ( final P m : matches )
 		{
 			final float[] p = m.getP1().getL(); 
 			final float[] q = m.getP2().getW(); 
 			
-			final float w = m.getWeight();
+			final double w = m.getWeight();
 			ws += w;
 			
 			pcx += w * p[ 0 ];
@@ -138,8 +138,8 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 		qcx /= ws;
 		qcy /= ws;
 
-		tx = qcx - pcx;
-		ty = qcy - pcy;
+		tx = ( float )( qcx - pcx );
+		ty = ( float )( qcy - pcy );
 	}
 	
 //	@Override
@@ -214,7 +214,7 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 	}
 	
 	@Override
-	public void toArray( float[] data )
+	public void toArray( final float[] data )
 	{
 		data[ 0 ] = 1;
 		data[ 1 ] = 0;
@@ -225,7 +225,7 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 	}
 
 	@Override
-	public void toArray( double[] data )
+	public void toArray( final double[] data )
 	{
 		data[ 0 ] = 1;
 		data[ 1 ] = 0;
@@ -236,7 +236,7 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 	}
 
 	@Override
-	public void toMatrix( float[][] data )
+	public void toMatrix( final float[][] data )
 	{
 		data[ 0 ][ 0 ] = 1;
 		data[ 0 ][ 1 ] = 0;
@@ -247,7 +247,7 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 	}
 
 	@Override
-	public void toMatrix( double[][] data )
+	public void toMatrix( final double[][] data )
 	{
 		data[ 0 ][ 0 ] = 1;
 		data[ 0 ][ 1 ] = 0;

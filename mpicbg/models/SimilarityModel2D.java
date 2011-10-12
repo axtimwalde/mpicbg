@@ -119,8 +119,8 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 		if ( l < MIN_NUM_MATCHES )
 			throw new NotEnoughDataPointsException( l + " data points are not enough to estimate a 2d rigid model, at least " + MIN_NUM_MATCHES + " data points required." );
 		
-		float pcx = 0, pcy = 0;
-		float qcx = 0, qcy = 0;
+		double pcx = 0, pcy = 0;
+		double qcx = 0, qcy = 0;
 		
 		double ws = 0.0f;
 		
@@ -131,7 +131,7 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 			final float[] qX = q[ 0 ];
 			final float[] qY = q[ 1 ];
 			
-			final float ww = w[ i ];
+			final double ww = w[ i ];
 			ws += ww;
 			
 			pcx += ww * pX[ i ];
@@ -144,11 +144,11 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 		qcx /= ws;
 		qcy /= ws;
 
-		final float dx = pcx - qcx;
-		final float dy = pcy - qcy;
+		final double dx = pcx - qcx;
+		final double dy = pcy - qcy;
 		
-		scos = 0;
-		ssin = 0;
+		double scosd = 0;
+		double ssind = 0;
 		
 		ws = 0.0f;
 		
@@ -159,22 +159,25 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 			final float[] qX = q[ 0 ];
 			final float[] qY = q[ 1 ];
 			
-			final float ww = w[ i ];
+			final double ww = w[ i ];
 			
-			final float x1 = pX[ i ] - pcx; // x1
-			final float y1 = pY[ i ] - pcy; // x2
-			final float x2 = qX[ i ] - qcx + dx; // y1
-			final float y2 = qY[ i ] - qcy + dy; // y2
-			ssin += ww * ( x1 * y2 - y1 * x2 ); //   x1 * y2 - x2 * y1 // assuming p1 is x1,x2 and p2 is y1,y2
-			scos += ww * ( x1 * x2 + y1 * y2 ); //   x1 * y1 + x2 * y2
+			final double x1 = pX[ i ] - pcx; // x1
+			final double y1 = pY[ i ] - pcy; // x2
+			final double x2 = qX[ i ] - qcx + dx; // y1
+			final double y2 = qY[ i ] - qcy + dy; // y2
+			ssind += ww * ( x1 * y2 - y1 * x2 ); //   x1 * y2 - x2 * y1 // assuming p1 is x1,x2 and p2 is y1,y2
+			scosd += ww * ( x1 * x2 + y1 * y2 ); //   x1 * y1 + x2 * y2
 			
 			ws += ww * ( x1 * x1 + y1 * y1 );
 		}
-		scos /= ws;
-		ssin /= ws;
+		scosd /= ws;
+		ssind /= ws;
 		
-		tx = qcx - scos * pcx + ssin * pcy;
-		ty = qcy - ssin * pcx - scos * pcy;
+		scos = ( float )scosd;
+		ssin = ( float )ssind;
+		
+		tx = ( float )( qcx - scosd * pcx + ssind * pcy );
+		ty = ( float )( qcy - ssind * pcx - scosd * pcy );
 		
 		invert();
 	}
@@ -189,8 +192,8 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 	{
 		if ( matches.size() < MIN_NUM_MATCHES ) throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d rigid model, at least " + MIN_NUM_MATCHES + " data points required." );
 		
-		float pcx = 0, pcy = 0;
-		float qcx = 0, qcy = 0;
+		double pcx = 0, pcy = 0;
+		double qcx = 0, qcy = 0;
 		
 		double ws = 0.0f;
 		
@@ -199,7 +202,7 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 			final float[] p = m.getP1().getL(); 
 			final float[] q = m.getP2().getW();
 			
-			final float w = m.getWeight();
+			final double w = m.getWeight();
 			ws += w;
 			
 			pcx += w * p[ 0 ];
@@ -212,11 +215,11 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 		qcx /= ws;
 		qcy /= ws;
 
-		final float dx = pcx - qcx;
-		final float dy = pcy - qcy;
+		final double dx = pcx - qcx;
+		final double dy = pcy - qcy;
 		
-		scos = 0;
-		ssin = 0;
+		double scosd = 0;
+		double ssind = 0;
 		
 		ws = 0.0f;
 		
@@ -224,22 +227,25 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 		{
 			final float[] p = m.getP1().getL(); 
 			final float[] q = m.getP2().getW();
-			final float w = m.getWeight();
+			final double w = m.getWeight();
 
-			final float x1 = p[ 0 ] - pcx; // x1
-			final float y1 = p[ 1 ] - pcy; // x2
-			final float x2 = q[ 0 ] - qcx + dx; // y1
-			final float y2 = q[ 1 ] - qcy + dy; // y2
-			ssin += w * ( x1 * y2 - y1 * x2 ); //   x1 * y2 - x2 * y1 // assuming p1 is x1,x2 and p2 is y1,y2
-			scos += w * ( x1 * x2 + y1 * y2 ); //   x1 * y1 + x2 * y2
+			final double x1 = p[ 0 ] - pcx; // x1
+			final double y1 = p[ 1 ] - pcy; // x2
+			final double x2 = q[ 0 ] - qcx + dx; // y1
+			final double y2 = q[ 1 ] - qcy + dy; // y2
+			ssind += w * ( x1 * y2 - y1 * x2 ); //   x1 * y2 - x2 * y1 // assuming p1 is x1,x2 and p2 is y1,y2
+			scosd += w * ( x1 * x2 + y1 * y2 ); //   x1 * y1 + x2 * y2
 			
 			ws += w * ( x1 * x1 + y1 * y1 );
 		}
-		scos /= ws;
-		ssin /= ws;
+		scosd /= ws;
+		ssind /= ws;
 		
-		tx = qcx - scos * pcx + ssin * pcy;
-		ty = qcy - ssin * pcx - scos * pcy;
+		scos = ( float )scosd;
+		ssin = ( float )ssind;
+		
+		tx = ( float )( qcx - scosd * pcx + ssind * pcy );
+		ty = ( float )( qcy - ssind * pcx - scosd * pcy );
 		
 		invert();
 	}
@@ -285,28 +291,28 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 	
 	final protected void invert()
 	{
-		final float det = scos * scos + ssin * ssin;
+		final double det = scos * scos + ssin * ssin;
 		
-		iscos = scos / det;
-		issin = -ssin / det;
+		iscos = ( float )( scos / det );
+		issin = ( float )( -ssin / det );
 		
-		itx = ( -ssin * ty - scos * tx ) / det;
-		ity = ( ssin * tx - scos * ty ) / det;
+		itx = ( float )( ( -ssin * ty - scos * tx ) / det );
+		ity = ( float )( ( ssin * tx - scos * ty ) / det );
 	}
 
 
 	@Override
 	final public void preConcatenate( final SimilarityModel2D model )
 	{
-		final float a = model.scos * scos - model.ssin * ssin;
-		final float b = model.ssin * scos + model.scos * ssin;
-		final float c = model.scos * tx - model.ssin * ty + model.tx;
-		final float d = model.ssin * tx + model.scos * ty + model.ty;
+		final double a = model.scos * scos - model.ssin * ssin;
+		final double b = model.ssin * scos + model.scos * ssin;
+		final double c = model.scos * tx - model.ssin * ty + model.tx;
+		final double d = model.ssin * tx + model.scos * ty + model.ty;
 		
-		scos = a;
-		ssin = b;
-		tx = c;
-		ty = d;
+		scos = ( float )a;
+		ssin = ( float )b;
+		tx = ( float )c;
+		ty = ( float )d;
 		
 		invert();
 	}
@@ -314,15 +320,15 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 	@Override
 	final public void concatenate( final SimilarityModel2D model )
 	{
-		final float a = scos * model.scos - ssin * model.ssin;
-		final float b = ssin * model.scos + scos * model.ssin;
-		final float c = scos * model.tx - ssin * model.ty + tx;
-		final float d = ssin * model.tx + scos * model.ty + ty;
+		final double a = scos * model.scos - ssin * model.ssin;
+		final double b = ssin * model.scos + scos * model.ssin;
+		final double c = scos * model.tx - ssin * model.ty + tx;
+		final double d = ssin * model.tx + scos * model.ty + ty;
 		
-		scos = a;
-		ssin = b;
-		tx = c;
-		ty = d;
+		scos = ( float )a;
+		ssin = ( float )b;
+		tx = ( float )c;
+		ty = ( float )d;
 		
 		invert();
 	}
@@ -388,7 +394,7 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 	}
 	
 	@Override
-	public void toArray( float[] data )
+	public void toArray( final float[] data )
 	{
 		data[ 0 ] = scos;
 		data[ 1 ] = ssin;
@@ -399,7 +405,7 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 	}
 
 	@Override
-	public void toArray( double[] data )
+	public void toArray( final double[] data )
 	{
 		data[ 0 ] = scos;
 		data[ 1 ] = ssin;
@@ -410,7 +416,7 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 	}
 
 	@Override
-	public void toMatrix( float[][] data )
+	public void toMatrix( final float[][] data )
 	{
 		data[ 0 ][ 0 ] = scos;
 		data[ 0 ][ 1 ] = -ssin;
@@ -421,7 +427,7 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 	}
 
 	@Override
-	public void toMatrix( double[][] data )
+	public void toMatrix( final double[][] data )
 	{
 		data[ 0 ][ 0 ] = scos;
 		data[ 0 ][ 1 ] = -ssin;
