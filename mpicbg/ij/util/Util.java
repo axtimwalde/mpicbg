@@ -139,4 +139,47 @@ public class Util
 		
 		return new Color( r, g, b );
 	}
+    
+    /**
+     * Generate an integer encoded 24bit RGB color that encodes a 2d vector
+     * with amplitude being intensity and color being orientation.
+     * 
+     * Only amplitudes in [0,1] will render into useful colors, so the vector
+     * should be normalized to an expected max amplitude.
+     * @param xs
+     * @param ys
+     * @return
+     */
+    final static public int colorVector( float xs, float ys )
+	{
+		final double a = Math.sqrt( xs * xs + ys * ys );
+		if ( a == 0.0 ) return 0;
+		
+		double o = ( Math.atan2( xs / a, ys / a ) + Math.PI ) / Math.PI * 3;
+		
+		final double r, g, b;
+		
+		if ( o < 3 )
+			r = Math.min( 1.0, Math.max( 0.0, 2.0 - o ) ) * a;
+		else
+			r = Math.min( 1.0, Math.max( 0.0, o - 4.0 ) ) * a;
+		
+		o += 2;
+		if ( o >= 6 ) o -= 6;
+		
+		if ( o < 3 )
+			g = Math.min( 1.0, Math.max( 0.0, 2.0 - o ) ) * a;
+		else
+			g = Math.min( 1.0, Math.max( 0.0, o - 4.0 ) ) * a;
+		
+		o += 2;
+		if ( o >= 6 ) o -= 6;
+		
+		if ( o < 3 )
+			b = Math.min( 1.0, Math.max( 0.0, 2.0 - o ) ) * a;
+		else
+			b = Math.min( 1.0, Math.max( 0.0, o - 4.0 ) ) * a;
+		
+		return ( ( ( ( int )( r * 255 ) << 8 ) | ( int )( g * 255 ) ) << 8 ) | ( int )( b * 255 );
+	}
 }
