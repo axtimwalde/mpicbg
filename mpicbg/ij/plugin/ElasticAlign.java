@@ -96,7 +96,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 	
 	final static private class Param implements Serializable
 	{
-		private static final long serialVersionUID = 7188730392559018852L;
+		private static final long serialVersionUID = -4772614223784150836L;
 
 		public String outputPath = "";
 
@@ -156,6 +156,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 		public int searchRadius = 200;
 		public int blockRadius = -1;
 		
+		public boolean useLocalSmoothnessFilter = true;
 		public int localModelIndex = 1;
 		public float localRegionSigma = searchRadius / 4;
 		public float maxLocalEpsilon = searchRadius / 4;
@@ -247,6 +248,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 			gdBlockMatching.addNumericField( "maximal_second_best_r/best_r :", rodR, 2 );
 			
 			gdBlockMatching.addMessage( "Local Smoothness Filter:" );
+			gdBlockMatching.addCheckbox( "use_local_smoothness_filter", useLocalSmoothnessFilter );
 			gdBlockMatching.addChoice( "approximate_local_transformation :", Param.modelStrings, Param.modelStrings[ localModelIndex ] );
 			gdBlockMatching.addNumericField( "local_region_sigma:", localRegionSigma, 2, 6, "px" );
 			gdBlockMatching.addNumericField( "maximal_local_displacement (absolute):", maxLocalEpsilon, 2, 6, "px" );
@@ -270,6 +272,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 			minR = ( float )gdBlockMatching.getNextNumber();
 			maxCurvatureR = ( float )gdBlockMatching.getNextNumber();
 			rodR = ( float )gdBlockMatching.getNextNumber();
+			useLocalSmoothnessFilter = gdBlockMatching.getNextBoolean();
 			localModelIndex = gdBlockMatching.getNextChoiceIndex();
 			localRegionSigma = ( float )gdBlockMatching.getNextNumber();
 			maxLocalEpsilon = ( float )gdBlockMatching.getNextNumber();
@@ -744,9 +747,16 @@ J:				for ( int j = i + 1; j < range; )
 				return;
 			}
 			
-			IJ.log( pair.a + " > " + pair.b + ": found " + pm12.size() + " correspondence candidates." );
-			localSmoothnessFilterModel.localSmoothnessFilter( pm12, pm12, p.localRegionSigma, p.maxLocalEpsilon, p.maxLocalTrust );
-			IJ.log( pair.a + " > " + pair.b + ": " + pm12.size() + " candidates passed local smoothness filter." );
+			if ( p.useLocalSmoothnessFilter )
+			{
+				IJ.log( pair.a + " > " + pair.b + ": found " + pm12.size() + " correspondence candidates." );
+				localSmoothnessFilterModel.localSmoothnessFilter( pm12, pm12, p.localRegionSigma, p.maxLocalEpsilon, p.maxLocalTrust );
+				IJ.log( pair.a + " > " + pair.b + ": " + pm12.size() + " candidates passed local smoothness filter." );
+			}
+			else
+			{
+				IJ.log( pair.a + " > " + pair.b + ": found " + pm12.size() + " correspondences." );
+			}
 			
 			/* <visualisation> */
 			//			final List< Point > s1 = new ArrayList< Point >();
@@ -791,9 +801,16 @@ J:				for ( int j = i + 1; j < range; )
 				return;
 			}
 
-			IJ.log( pair.a + " < " + pair.b + ": found " + pm21.size() + " correspondence candidates." );
-			localSmoothnessFilterModel.localSmoothnessFilter( pm21, pm21, p.localRegionSigma, p.maxLocalEpsilon, p.maxLocalTrust );
-			IJ.log( pair.a + " < " + pair.b + ": " + pm21.size() + " candidates passed local smoothness filter." );
+			if ( p.useLocalSmoothnessFilter )
+			{
+				IJ.log( pair.a + " < " + pair.b + ": found " + pm21.size() + " correspondence candidates." );
+				localSmoothnessFilterModel.localSmoothnessFilter( pm21, pm21, p.localRegionSigma, p.maxLocalEpsilon, p.maxLocalTrust );
+				IJ.log( pair.a + " < " + pair.b + ": " + pm21.size() + " candidates passed local smoothness filter." );
+			}
+			else
+			{
+				IJ.log( pair.a + " < " + pair.b + ": found " + pm21.size() + " correspondences." );
+			}
 			
 			/* <visualisation> */
 			//			final List< Point > s2 = new ArrayList< Point >();

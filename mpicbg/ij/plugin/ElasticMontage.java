@@ -88,7 +88,7 @@ public class ElasticMontage implements PlugIn
 	
 	final static private class Param implements Serializable
 	{
-		private static final long serialVersionUID = 4528036326879138673L;
+		private static final long serialVersionUID = -4602300995235309506L;
 
 		public String outputPath = "";
 
@@ -127,6 +127,7 @@ public class ElasticMontage implements PlugIn
 		public float maxCurvatureR = 3f;
 		public float rodR = 0.8f;
 		
+		public boolean useLocalSmoothnessFilter = true;
 		public int localModelIndex = 1;
 		public float localRegionSigma = maxEpsilon / 4;
 		public float maxLocalEpsilon = maxEpsilon / 4;
@@ -236,6 +237,7 @@ public class ElasticMontage implements PlugIn
 			gdBlockMatching.addNumericField( "maximal_second_best_r/best_r :", rodR, 2 );
 			
 			gdBlockMatching.addMessage( "Local Smoothness Filter:" );
+			gdBlockMatching.addCheckbox( "use_local_smoothness_filter", useLocalSmoothnessFilter );
 			gdBlockMatching.addChoice( "approximate_local_transformation :", Param.modelStrings, Param.modelStrings[ localModelIndex ] );
 			gdBlockMatching.addNumericField( "local_region_sigma:", localRegionSigma, 2, 6, "px" );
 			gdBlockMatching.addNumericField( "maximal_local_displacement (absolute):", maxLocalEpsilon, 2, 6, "px" );
@@ -251,6 +253,7 @@ public class ElasticMontage implements PlugIn
 			minR = ( float )gdBlockMatching.getNextNumber();
 			maxCurvatureR = ( float )gdBlockMatching.getNextNumber();
 			rodR = ( float )gdBlockMatching.getNextNumber();
+			useLocalSmoothnessFilter = gdBlockMatching.getNextBoolean();
 			localModelIndex = gdBlockMatching.getNextChoiceIndex();
 			localRegionSigma = ( float )gdBlockMatching.getNextNumber();
 			maxLocalEpsilon = ( float )gdBlockMatching.getNextNumber();
@@ -566,10 +569,16 @@ public class ElasticMontage implements PlugIn
 					pm12,
 					new ErrorStatistic( 1 ) );
 
-			IJ.log( pair.a + " > " + pair.b + ": found " + pm12.size() + " correspondence candidates." );
-			localSmoothnessFilterModel.localSmoothnessFilter( pm12, pm12, p.localRegionSigma, p.maxLocalEpsilon, p.maxLocalTrust );
-			IJ.log( pair.a + " > " + pair.b + ": " + pm12.size() + " candidates passed local smoothness filter." );
-			
+			if ( p.useLocalSmoothnessFilter )
+			{
+				IJ.log( pair.a + " > " + pair.b + ": found " + pm12.size() + " correspondence candidates." );
+				localSmoothnessFilterModel.localSmoothnessFilter( pm12, pm12, p.localRegionSigma, p.maxLocalEpsilon, p.maxLocalTrust );
+				IJ.log( pair.a + " > " + pair.b + ": " + pm12.size() + " candidates passed local smoothness filter." );
+			}
+			else
+			{
+				IJ.log( pair.a + " > " + pair.b + ": found " + pm12.size() + " correspondences." );
+			}
 
 			/* <visualisation> */
 			//			final List< Point > s1 = new ArrayList< Point >();
@@ -599,10 +608,17 @@ public class ElasticMontage implements PlugIn
 					pm21,
 					new ErrorStatistic( 1 ) );
 
-			IJ.log( pair.a + " < " + pair.b + ": found " + pm21.size() + " correspondence candidates." );
-			localSmoothnessFilterModel.localSmoothnessFilter( pm21, pm21, p.localRegionSigma, p.maxLocalEpsilon, p.maxLocalTrust );
-			IJ.log( pair.a + " < " + pair.b + ": " + pm21.size() + " candidates passed local smoothness filter." );
-					
+			if ( p.useLocalSmoothnessFilter )
+			{
+				IJ.log( pair.a + " < " + pair.b + ": found " + pm21.size() + " correspondence candidates." );
+				localSmoothnessFilterModel.localSmoothnessFilter( pm21, pm21, p.localRegionSigma, p.maxLocalEpsilon, p.maxLocalTrust );
+				IJ.log( pair.a + " < " + pair.b + ": " + pm21.size() + " candidates passed local smoothness filter." );
+			}
+			else
+			{
+				IJ.log( pair.a + " < " + pair.b + ": found " + pm21.size() + " correspondences." );
+			}
+			
 			/* <visualisation> */
 			//			final List< Point > s2 = new ArrayList< Point >();
 			//			PointMatch.sourcePoints( pm21, s2 );
