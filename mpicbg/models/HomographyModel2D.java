@@ -303,10 +303,24 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 				final float[] p = pm.getP1().getL();
 				final float[] q = pm.getP2().getW();
 				
-				final double px = p[ 0 ];
-				final double py = p[ 1 ];
-				final double qx = q[ 0 ];
-				final double qy = q[ 1 ];
+				double px = p[ 0 ];
+				double py = p[ 1 ];
+				double qx = q[ 0 ];
+				double qy = q[ 1 ];
+				
+				// without testing that, it will send the SingularValueDecomposition
+				// into an infinite loop if one of them is NaN or Infinite
+				if ( Double.isInfinite( px ) || Double.isNaN( px ) )
+					px = 1;
+
+				if ( Double.isInfinite( py ) || Double.isNaN( py ))
+					py = 1;
+
+				if ( Double.isInfinite( qx ) || Double.isNaN( qx ))
+					qx = 1;
+
+				if ( Double.isInfinite( qy ) || Double.isNaN( qy ))
+					qy = 1;
 				
 				a[ i ][ 0 ] = -px;
 				a[ i ][ 1 ] = -py;
