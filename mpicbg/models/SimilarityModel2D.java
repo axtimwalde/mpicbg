@@ -333,38 +333,42 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 		invert();
 	}
 	
-//	/**
-//	 * Initialize the model such that the respective affine transform is:
-//	 * 
-//	 * s * cos(&theta;) -sin(&theta;) tx
-//	 * sin(&theta;)      s * cos(&theta;) ty
-//	 * 0           0          1
-//	 * 
-//	 * @param theta &theta;
-//	 * @param tx
-//	 * @param ty
-//	 */
-//	final public void set( final float s, final float theta, final float tx, final float ty )
-//	{
-//		set( s * ( float )Math.cos( theta ), ( float )Math.sin( theta ), tx, ty );
-//	}
+	/**
+	 * Initialize the model such that the respective affine transform is:
+	 * 
+	 * <pre>
+	 * s * cos(&theta;)	-sin(&theta;)		tx
+	 * sin(&theta;)		s * cos(&theta;)	ty
+	 * 0		0		1
+	 * </pre>
+	 * 
+	 * @param theta &theta; in radians
+	 * @param tx
+	 * @param ty
+	 */
+	final public void setScaleRotationTranslation( final float s, final float theta, final float tx, final float ty )
+	{
+		set( s * ( float )Math.cos( theta ), s * ( float )Math.sin( theta ), tx, ty );
+	}
 	
 	/**
 	 * Initialize the model such that the respective affine transform is:
 	 * 
+	 * <pre>
 	 * scos -sin  tx
 	 * sin   scos ty
 	 * 0     0    1
+	 * </pre>
 	 * 
 	 * @param scos
-	 * @param sin
+	 * @param ssin
 	 * @param tx
 	 * @param ty
 	 */
-	final public void set( final float scos, final float sin, final float tx, final float ty )
+	final public void set( final float scos, final float ssin, final float tx, final float ty )
 	{
 		this.scos = scos;
-		this.ssin = sin;
+		this.ssin = ssin;
 		this.tx = tx;
 		this.ty = ty;
 		invert();
