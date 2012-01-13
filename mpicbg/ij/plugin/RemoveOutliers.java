@@ -23,8 +23,11 @@ import ij.gui.DialogListener;
 import ij.gui.GenericDialog;
 import ij.plugin.filter.ExtendedPlugInFilter;
 import ij.plugin.filter.PlugInFilterRunner;
+import ij.process.ByteProcessor;
+import ij.process.ColorProcessor;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
+import ij.process.ShortProcessor;
 
 import java.awt.AWTEvent;
 
@@ -38,9 +41,47 @@ public class RemoveOutliers implements ExtendedPlugInFilter, DialogListener
 {
 	static protected int blockRadiusX = 40, blockRadiusY = 40;
 	static protected double standardDeviations = 3;
-	final static protected int flags = CONVERT_TO_FLOAT | DOES_8G | DOES_16 | DOES_32 | DOES_RGB | DOES_STACKS;
+	final static protected int flags = DOES_8G | DOES_16 | DOES_32 | DOES_RGB;
 	
-	protected mpicbg.ij.integral.RemoveOutliers rmo;
+	protected mpicbg.ij.integral.RemoveOutliers[] rmos;
+	protected FloatProcessor[] fps;
+	protected ImageProcessor pip = null;
+	
+	protected void init( final ImagePlus imp )
+	{
+		pip = imp.getProcessor();
+		if ( imp.getType() == ImagePlus.COLOR_RGB )
+		{
+			final int[] rgbs = ( int[] )pip.getPixels();
+			final float[] rs = new float[ rgbs.length ];
+			final float[] gs = new float[ rgbs.length ];
+			final float[] bs = new float[ rgbs.length ];
+			for ( int i = 0; i < rgbs.length; ++i )
+			{
+				final int rgb = rgbs[ i ];
+				rs[ i ] = ( rgb >> 16 ) & 0xff;
+				gs[ i ] = ( rgb >> 8 ) & 0xff;
+				bs[ i ] = rgb & 0xff;
+			}
+			fps = new FloatProcessor[]{
+					new FloatProcessor( imp.getWidth(), imp.getHeight(), rs, null ),
+					new FloatProcessor( imp.getWidth(), imp.getHeight(), gs, null ),
+					new FloatProcessor( imp.getWidth(), imp.getHeight(), bs, null ) };
+			rmos = new mpicbg.ij.integral.RemoveOutliers[]{
+					new mpicbg.ij.integral.RemoveOutliers( fps[ 0 ] ),
+					new mpicbg.ij.integral.RemoveOutliers( fps[ 1 ] ),
+					new mpicbg.ij.integral.RemoveOutliers( fps[ 2 ] ) };
+		}
+		else
+		{
+			if ( imp.getType() == ImagePlus.GRAY32 )
+				fps = new FloatProcessor[]{ ( FloatProcessor )pip };
+			else
+				fps = new FloatProcessor[]{ ( FloatProcessor )pip.convertToFloat() };
+			
+			rmos = new mpicbg.ij.integral.RemoveOutliers[]{ new mpicbg.ij.integral.RemoveOutliers( fps[ 0 ] ) };
+		}
+	}
 	
 	public int setup( final String arg, final ImagePlus imp )
 	{
@@ -56,8 +97,7 @@ public class RemoveOutliers implements ExtendedPlugInFilter, DialogListener
 		gd.addPreviewCheckbox( pfr );
 		gd.addDialogListener( this );
 
-		/* initialize summed area tables for statistical outlier removal */
-		rmo = new mpicbg.ij.integral.RemoveOutliers( ( FloatProcessor )imp.getProcessor().convertToFloat() );
+		init( imp );
 		
 		gd.showDialog();
 		if ( gd.wasCanceled() )
@@ -83,18 +123,16 @@ public class RemoveOutliers implements ExtendedPlugInFilter, DialogListener
 	{
 		int brx, bry;
 		double stds;
-		if ( rmo == null )
+		
+		/*
+		 * While processing a stack, ImageJ re-uses the same ImageProcessor instance
+		 * but changes its pixel data using setPixels(Object).  Conversely, it uses
+		 * a new ImageProcessor on apply than during preview.  At least the pixels
+		 * seem not to be copied so hopefully that will do it for the long run
+		 */
+		if ( ip.getPixels() != pip.getPixels() )
 		{
-			try
-			{
-				rmo = new mpicbg.ij.integral.RemoveOutliers( ( FloatProcessor )ip );
-			}
-			catch ( final ClassCastException e )
-			{
-				IJ.error( "Processor type not yet supported." );
-				e.printStackTrace();
-				return;
-			}
+			init( new ImagePlus( "", ip ) );
 		}
 		synchronized( this )
 		{
@@ -102,7 +140,42 @@ public class RemoveOutliers implements ExtendedPlugInFilter, DialogListener
 			bry = blockRadiusY;
 			stds = standardDeviations;
 		}
-		rmo.removeOutliers( brx, bry, ( float )stds );
+		for ( int i = 0; i < rmos.length; ++i )
+			rmos[ i ].removeOutliers( brx, bry, ( float )stds );
+		
+		if ( FloatProcessor.class.isInstance( ip ) )
+			return;
+		else if ( ColorProcessor.class.isInstance( ip ) )
+		{
+			final int[] rgbs = ( int[] )ip.getPixels();
+			final float[] rs = ( float[] )fps[ 0 ].getPixels();
+			final float[] gs = ( float[] )fps[ 1 ].getPixels();
+			final float[] bs = ( float[] )fps[ 2 ].getPixels();
+			
+			for ( int i = 0; i < rgbs.length; ++i )
+			{
+				final int r = Math.round( rs[ i ] );
+				final int g = Math.round( gs[ i ] );
+				final int b = Math.round( bs[ i ] );
+				
+				/* preserves alpha even though ImageJ ignores it */
+				rgbs[ i ] = ( rgbs[ i ] & 0xff000000 ) | ( ( ( ( r << 8 ) | g ) << 8 ) | b );
+			}
+		}
+		else if ( ByteProcessor.class.isInstance( ip ) )
+		{
+			final byte[] bytes = ( byte[] )ip.getPixels();
+			final float[] fs = ( float[] )fps[ 0 ].getPixels();
+			for ( int i = 0; i < bytes.length; ++i )
+				bytes[ i ] = ( byte )Math.round( fs[ i ] );
+		}
+		else if ( ShortProcessor.class.isInstance( ip ) )
+		{
+			final short[] shorts = ( short[] )ip.getPixels();
+			final float[] fs = ( float[] )fps[ 0 ].getPixels();
+			for ( int i = 0; i < shorts.length; ++i )
+				shorts[ i ] = ( short )Math.round( fs[ i ] );
+		}
 	}
 
 	@Override
