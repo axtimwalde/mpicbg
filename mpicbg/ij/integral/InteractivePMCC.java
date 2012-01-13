@@ -16,17 +16,18 @@
  */
 package mpicbg.ij.integral;
 
-import java.awt.Rectangle;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import ij.IJ;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.gui.Roi;
+import ij.gui.Toolbar;
 import ij.process.Blitter;
 import ij.process.FloatProcessor;
+
+import java.awt.Rectangle;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseEvent;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 
@@ -68,6 +69,36 @@ public class InteractivePMCC extends AbstractInteractiveBlockFilter
 		stack.addSlice( "r", fpR2 );
 		
 		imp.setStack( stack );
+	}
+	
+	@Override
+	public void run( String arg )
+	{
+		ij = IJ.getInstance();
+		imp = IJ.getImage();
+		
+		if ( imp.getStackSize() < 2 )
+		{
+			IJ.error( "This plugin only works on stacks with at least two slices." );
+			return;
+		}
+		window = imp.getWindow();
+		canvas = imp.getCanvas();
+		
+		canvas.addKeyListener( this );
+		window.addKeyListener( this );
+		canvas.addMouseMotionListener( this );
+		canvas.addMouseListener( this );
+		ij.addKeyListener( this );
+		
+		init();
+		
+		imp.getProcessor().snapshot();
+		
+		Toolbar.getInstance().setTool( Toolbar.RECTANGLE );
+		
+		painter = new PaintThread();
+		painter.start();
 	}
 	
 	protected void calculate()
