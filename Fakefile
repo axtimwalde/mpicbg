@@ -1,4 +1,4 @@
-javaVersion=1.5
+javaVersion=1.6
 all <- mpicbg_.jar clahe_.jar
 
 mpicbg.jar <- \
@@ -48,6 +48,11 @@ clahe_.jar <- \
 	
 integral_image.jar <- \
 	mpicbg/ij/integral/*.java \
+	mpicbg/ij/plugin/AbstractBlockStatistics.java \
+	mpicbg/ij/plugin/Mean.java \
+	mpicbg/ij/plugin/RemoveOutliers.java \
+	mpicbg/ij/plugin/SampleVariance.java \
+	mpicbg/ij/plugin/StandardDeviation.java \
 	plugins.config[integral.config] \
 	LICENSE[LICENSE.GPL]
 	
