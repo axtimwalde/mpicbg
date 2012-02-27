@@ -1,5 +1,9 @@
 package mpicbg.ij.util;
 
+import ij.gui.PointRoi;
+import ij.process.ByteProcessor;
+import ij.process.FloatProcessor;
+
 import java.awt.Color;
 import java.awt.Rectangle;
 import java.util.ArrayList;
@@ -9,9 +13,6 @@ import java.util.Random;
 
 import mpicbg.models.Point;
 import mpicbg.models.PointMatch;
-
-import ij.gui.PointRoi;
-import ij.process.FloatProcessor;
 
 public class Util
 {
@@ -63,6 +64,14 @@ public class Util
 		return matches;
 	}
 	
+	final static public void fillWithNoise( final ByteProcessor bp )
+    {
+    	final byte[] data = ( byte[] )bp.getPixels();
+    	final Random random = new Random( System.nanoTime() );
+    	for ( int i = 0; i < data.length; ++i )
+    		data[ i ] = ( byte )random.nextInt( 256 );
+    }
+	
 	final static public void fillWithNoise( final FloatProcessor fp )
     {
     	final float[] data = ( float[] )fp.getPixels();
@@ -108,7 +117,7 @@ public class Util
      * 
      * @return
      */
-    final static public Color createSaturatedColor( float i, float interval )
+    final static public Color createSaturatedColor( final float i, final float interval )
 	{
 		float o = i / interval * 6;
 		
@@ -150,7 +159,7 @@ public class Util
      * @param ys
      * @return
      */
-    final static public int colorVector( float xs, float ys )
+    final static public int colorVector( final float xs, final float ys )
 	{
 		final double a = Math.sqrt( xs * xs + ys * ys );
 		if ( a == 0.0 ) return 0;

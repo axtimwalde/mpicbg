@@ -1,8 +1,7 @@
 package mpicbg.models;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Collection;
+import java.util.List;
 
 /**
  * {@link CoordinateTransform} whose parameters can be estimated through
@@ -88,7 +87,7 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 	 * squares minimization.</p>
 	 * 
 	 * <p>This is a lower level version of {@link #fit(Collection)} for
-	 * optimal emory efficiency.</p>
+	 * optimal memory efficiency.</p>
 	 * 
 	 * <p>The estimated model transfers p to q.</p>
 	 * 
