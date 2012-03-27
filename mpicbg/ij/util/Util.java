@@ -2,6 +2,7 @@ package mpicbg.ij.util;
 
 import ij.gui.PointRoi;
 import ij.process.ByteProcessor;
+import ij.process.ColorProcessor;
 import ij.process.FloatProcessor;
 
 import java.awt.Color;
@@ -190,5 +191,29 @@ public class Util
 			b = Math.min( 1.0, Math.max( 0.0, o - 4.0 ) ) * a;
 		
 		return ( ( ( ( int )( r * 255 ) << 8 ) | ( int )( g * 255 ) ) << 8 ) | ( int )( b * 255 );
+	}
+    
+    
+    /**
+     * Draw a color circle into a {@link ColorProcessor}.
+     * 
+     * @param ip
+     */
+    final static public void colorCircle( final ColorProcessor ip )
+	{
+		final int r1 = Math.min( ip.getWidth(), ip.getHeight() ) / 2;
+		
+		for ( int y = 0; y < ip.getHeight(); ++y )
+		{
+			final float dy = y - ip.getHeight() / 2;
+			for ( int x = 0; x < ip.getWidth(); ++x )
+			{
+				final float dx = x - ip.getWidth() / 2;
+				final float l = ( float )Math.sqrt( dx * dx + dy * dy );
+				
+				if ( l <= r1 )
+					ip.putPixel( x, y, colorVector( dx / r1, dy / r1 ) );
+			}
+		}
 	}
 }
