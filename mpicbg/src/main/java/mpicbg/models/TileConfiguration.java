@@ -9,6 +9,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 import mpicbg.util.RealSum;
 
@@ -259,6 +260,16 @@ public class TileConfiguration
 		}
 	}
 	
+	public void optimizeSilentlyConcurrent(
+			final ErrorStatistic observer,
+			final float maxAllowedError,
+			final int maxIterations,
+			final int maxPlateauwidth ) throws NotEnoughDataPointsException, IllDefinedDataPointsException, InterruptedException, ExecutionException 
+	{
+		TileUtil.optimizeConcurrently(observer, maxAllowedError, maxIterations, maxPlateauwidth,
+				this, tiles, fixedTiles, Runtime.getRuntime().availableProcessors());
+	}
+
 	/**
 	 * Minimize the displacement of all {@link PointMatch Correspondence pairs}
 	 * of all {@link Tile Tiles} and tell about it.
@@ -297,7 +308,15 @@ public class TileConfiguration
 	{
 		println( "Optimizing..." );
 		
-		optimizeSilently( observer, maxAllowedError, maxIterations, maxPlateauwidth );
+		//optimizeSilently( observer, maxAllowedError, maxIterations, maxPlateauwidth );
+		
+		try {
+			optimizeSilentlyConcurrent( observer, maxAllowedError, maxIterations, maxPlateauwidth );
+		} catch (InterruptedException e) {
+			throw new RuntimeException(e);
+		} catch (ExecutionException e) {
+			throw new RuntimeException(e);
+		}
 		
 		println( new StringBuffer( "Successfully optimized configuration of " ).append( tiles.size() ).append( " tiles after " ).append( observer.n() ).append( " iterations:" ).toString() );
 		println( new StringBuffer( "  average displacement: " ).append( decimalFormat.format( error ) ).append( "px" ).toString() );
