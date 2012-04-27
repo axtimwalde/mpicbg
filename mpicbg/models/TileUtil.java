@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -212,5 +213,150 @@ public class TileUtil
 		} finally { 
 			exe.shutdownNow();
 		}
+	}
+	
+	static public final void optimizeConcurrently2(
+			final ErrorStatistic observer,
+			final float maxAllowedError,
+			final int maxIterations,
+			final int maxPlateauwidth,
+			final TileConfiguration tc,
+			final Set< Tile< ? > > tiles,
+			final Set< Tile< ? > > fixedTiles,
+			final int nThreads) throws InterruptedException, ExecutionException
+	{
+		final ThreadGroup tg = Thread.currentThread().getThreadGroup();
+		final ExecutorService exe = Executors.newFixedThreadPool(
+				nThreads,
+				new ThreadFactory() {
+					final AtomicInteger c = new AtomicInteger(0);
+					@Override
+					public Thread newThread(Runnable r) {
+						Thread t = new Thread(tg, r, "tile-fit-and-apply-" + c.incrementAndGet());
+						t.setPriority(Thread.NORM_PRIORITY);
+						return t;
+					}
+				});
+		
+		try {
+
+			long t0 = System.currentTimeMillis();
+
+			final ArrayList<Tile<?>> shuffledTiles = new ArrayList<Tile<?>>(tiles.size() - fixedTiles.size());
+			for (final Tile<?> t : tiles) {
+				if (fixedTiles.contains(t)) continue;
+				shuffledTiles.add(t);
+			}
+			Collections.shuffle(shuffledTiles);
+	
+
+			long t1 = System.currentTimeMillis();
+			System.out.println("Shuffling took " + (t1 - t0) + " ms");
+
+			int i = 0;
+
+			boolean proceed = i < maxIterations;
+
+			/* initialize the configuration with the current model of each tile */
+			tc.apply();
+			
+			long t2 = System.currentTimeMillis();
+			
+			System.out.println("First apply took " + (t2 - t1) + " ms");
+			
+			final LinkedList< Future< ? > > futures = new LinkedList< Future< ? > >();
+			final HashSet<Tile<?>> executingTiles = new HashSet<Tile<?>>(nThreads);
+
+			while ( proceed )
+			{
+				/*
+				for ( final Tile< ? > tile : tiles )
+				{
+					if ( fixedTiles.contains( tile ) ) continue;
+					tile.fitModel();
+					tile.apply();
+				}
+				*/
+				
+				final LinkedList<Tile<?>> pending = new LinkedList<Tile<?>>(shuffledTiles);
+				while (!pending.isEmpty()) {
+					final Tile<?> tile = pending.removeFirst();
+					synchronized (executingTiles) {
+						if (intersects(tile.getConnectedTiles(), executingTiles)) {
+							pending.addLast(tile);
+							continue;
+						}
+						executingTiles.add(tile);
+					}
+					futures.add(exe.submit(new Runnable() {
+						@Override
+						public void run() {
+							try {
+								tile.fitModel();
+								tile.apply();
+								synchronized (executingTiles) {
+									executingTiles.remove(tile);
+								}
+							} catch (Exception e) {
+								throw new RuntimeException(e);
+							}
+						}
+					}));
+					if (futures.size() > nThreads * 4) {
+						for (int k=0; k<nThreads; ++k) {
+							futures.removeFirst().get();
+						}
+					}
+				}
+				
+				executingTiles.clear();
+				futures.clear();
+
+
+				tc.updateErrors();
+				observer.add( tc.getError() );
+
+				if ( i > maxPlateauwidth )
+				{
+					proceed = tc.getError() > maxAllowedError;
+
+					int d = maxPlateauwidth;
+					while ( !proceed && d >= 1 )
+					{
+						try
+						{
+							proceed |= Math.abs( observer.getWideSlope( d ) ) > 0.0001;
+						}
+						catch ( Exception e ) { e.printStackTrace(); }
+						d /= 2;
+					}
+				}
+
+				proceed &= ++i < maxIterations;
+			}
+			
+			long t3 = System.currentTimeMillis();
+			
+			System.out.println("Concurrent tile optimization loop took " + (t3 - t2) + " ms, total took " + (t3 - t0) + " ms");
+			
+		} finally { 
+			exe.shutdownNow();
+		}
+	}
+
+	/** Whether {@param a} and {@param b} have any element in common. */
+	private static boolean intersects(final Set<Tile<?>> a, final Set<Tile<?>> b) {
+		final Set<Tile<?>> large, small;
+		if (a.size() > b.size()) {
+			large = a;
+			small = b;
+		} else {
+			large = b;
+			small = a;
+		}
+		for (final Tile<?> t : small) {
+			if (large.contains(t)) return true;
+		}
+		return false;
 	}
 }
