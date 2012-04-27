@@ -266,7 +266,7 @@ public class TileConfiguration
 			final int maxIterations,
 			final int maxPlateauwidth ) throws NotEnoughDataPointsException, IllDefinedDataPointsException, InterruptedException, ExecutionException 
 	{
-		TileUtil.optimizeConcurrently(observer, maxAllowedError, maxIterations, maxPlateauwidth,
+		TileUtil.optimizeConcurrently2(observer, maxAllowedError, maxIterations, maxPlateauwidth,
 				this, tiles, fixedTiles, Runtime.getRuntime().availableProcessors());
 	}
 
