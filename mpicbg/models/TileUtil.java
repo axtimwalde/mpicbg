@@ -248,7 +248,7 @@ public class TileUtil
 				shuffledTiles.add(t);
 			}
 			Collections.shuffle(shuffledTiles);
-	
+
 
 			long t1 = System.currentTimeMillis();
 			System.out.println("Shuffling took " + (t1 - t0) + " ms");
@@ -307,6 +307,11 @@ public class TileUtil
 							futures.removeFirst().get();
 						}
 					}
+				}
+				
+				// Wait until all finish
+				for (final Future<?> fu : futures) {
+					fu.get();
 				}
 				
 				executingTiles.clear();
