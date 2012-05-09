@@ -23,6 +23,7 @@ mpicbg_.jar <- \
 	SIFT_ExtractPointRoi.java \
 	Stack_Rotate.java \
 	Transform_Affine.java \
+	Transform_RegularizedAffine.java \
 	Transform_MovingLeastSquaresMesh.java \
 	Transform_Perspective.java \
 	Transform_Rigid.java \
