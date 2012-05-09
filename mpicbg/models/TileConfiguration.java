@@ -1,14 +1,14 @@
 package mpicbg.models;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
-
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
 
 import mpicbg.util.RealSum;
 
@@ -51,7 +51,7 @@ public class TileConfiguration
 		decimalFormat.setMinimumFractionDigits( 3 );		
 	}
 	
-	protected void println( String s ){ System.out.println( s ); }
+	protected void println( final String s ){ System.out.println( s ); }
 	
 	/**
 	 * Cleanup.
@@ -132,10 +132,10 @@ public class TileConfiguration
 		double cd = 0.0;
 		minError = Double.MAX_VALUE;
 		maxError = 0.0;
-		for ( Tile< ? > t : tiles )
+		for ( final Tile< ? > t : tiles )
 		{
 			t.updateCost();
-			double d = t.getDistance();
+			final double d = t.getDistance();
 			if ( d < minError ) minError = d;
 			if ( d > maxError ) maxError = d;
 			cd += d;
@@ -185,10 +185,10 @@ public class TileConfiguration
 		double cd = 0.0;
 		minError = Double.MAX_VALUE;
 		maxError = 0.0;
-		for ( Tile< ? > t : tiles )
+		for ( final Tile< ? > t : tiles )
 		{
 			t.update();
-			double d = t.getDistance();
+			final double d = t.getDistance();
 			if ( d < minError ) minError = d;
 			if ( d > maxError ) maxError = d;
 			cd += d;
@@ -248,7 +248,7 @@ public class TileConfiguration
 					{
 						proceed |= Math.abs( observer.getWideSlope( d ) ) > 0.0001;
 					}
-					catch ( Exception e ) { e.printStackTrace(); }
+					catch ( final Exception e ) { e.printStackTrace(); }
 					d /= 2;
 				}
 			}
@@ -370,7 +370,7 @@ A:				for ( final Tile< ? > t : tiles )
 				proceed = false;
 		}
 	}
-
+	
 	/**
 	 * Computes a pre-alignemnt of all non-fixed {@link Tile}s by propagating the pairwise
 	 * models. This does not give a correct registration but a very good starting point
@@ -389,12 +389,23 @@ A:				for ( final Tile< ? > t : tiles )
 		final ArrayList< Tile< ? > > unAlignedTiles = new ArrayList< Tile< ? > >();
 		final ArrayList< Tile< ? > > alignedTiles = new ArrayList< Tile< ? > >();
 
-		for ( final Tile< ? > tile : this.getTiles() )
+		// if no tile is fixed, take another */
+		if ( getFixedTiles().size() == 0 )
 		{
-			if ( this.getFixedTiles().contains( tile ) )
-				alignedTiles.add( tile );
-			else
-				unAlignedTiles.add( tile );
+			final Iterator< Tile< ? > > it = this.getTiles().iterator();
+			alignedTiles.add( it.next() );
+			while ( it.hasNext() )
+				unAlignedTiles.add( it.next() );
+		}
+		else
+		{
+			for ( final Tile< ? > tile : this.getTiles() )
+			{
+				if ( this.getFixedTiles().contains( tile ) )
+					alignedTiles.add( tile );
+				else
+					unAlignedTiles.add( tile );
+			}
 		}
 		
 		// we go through each fixed/aligned tile and try to find a pre-alignment
