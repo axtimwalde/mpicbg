@@ -24,8 +24,8 @@ package mpicbg.models;
  */
 public interface Affine3D< T extends Affine3D< T > > extends InvertibleCoordinateTransform
 {
-	public void preConcatenate( final T affine2d );
-	public void concatenate( final T affine2d );
+	public void preConcatenate( final T affine3d );
+	public void concatenate( final T affine3d );
 	
 	/**
 	 * Write the 12 parameters of the affine into a float array.  The order is
