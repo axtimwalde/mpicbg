@@ -3,16 +3,16 @@ import mpicbg.ij.InteractiveInvertibleCoordinateTransform;
 import mpicbg.models.AffineModel2D;
 import mpicbg.models.Point;
 import mpicbg.models.PointMatch;
-import mpicbg.models.RegularizedAffineModel2D;
+import mpicbg.models.InterpolatedAffineModel2D;
 import mpicbg.models.RigidModel2D;
 
-public class Transform_RegularizedAffine extends InteractiveInvertibleCoordinateTransform< RegularizedAffineModel2D< AffineModel2D, RigidModel2D > >
+public class Transform_RegularizedAffine extends InteractiveInvertibleCoordinateTransform< InterpolatedAffineModel2D< AffineModel2D, RigidModel2D > >
 {
-	final protected RegularizedAffineModel2D< AffineModel2D, RigidModel2D > model =
-			new RegularizedAffineModel2D< AffineModel2D, RigidModel2D >( new AffineModel2D(), new RigidModel2D(), 0.5f );
+	final protected InterpolatedAffineModel2D< AffineModel2D, RigidModel2D > model =
+			new InterpolatedAffineModel2D< AffineModel2D, RigidModel2D >( new AffineModel2D(), new RigidModel2D(), 0.5f );
 	
 	@Override
-	final protected RegularizedAffineModel2D< AffineModel2D, RigidModel2D > myModel() { return model; }
+	final protected InterpolatedAffineModel2D< AffineModel2D, RigidModel2D > myModel() { return model; }
 	
 	@Override
 	final protected void setHandles()
