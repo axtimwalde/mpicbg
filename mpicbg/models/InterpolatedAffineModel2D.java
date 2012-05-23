@@ -22,6 +22,9 @@ import java.util.Collection;
 /**
  * 2D affine specialization of {@link InterpolatedModel}.  Implements
  * interpolation directly by linear matrix interpolation.
+ * 
+ * No multiple inheritance in Java, so it cannot be an AffineModel2D
+ * by itself. 
  *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  */
@@ -133,6 +136,16 @@ final public class InterpolatedAffineModel2D<
 		affine.preConcatenate( affine2d.affine );
 	}
 
+	public void concatenate( final AffineModel2D affine2d )
+	{
+		affine.concatenate( affine2d );
+	}
+
+	public void preConcatenate( final AffineModel2D affine2d )
+	{
+		affine.preConcatenate( affine2d );
+	}
+
 	@Override
 	public void concatenate( final InterpolatedAffineModel2D< A, B > affine2d )
 	{
@@ -161,5 +174,38 @@ final public class InterpolatedAffineModel2D<
 	public void toMatrix( final double[][] data )
 	{
 		affine.toMatrix( data );
+	}
+	
+	/**
+	 * Initialize the model such that the respective affine transform is:
+	 * 
+	 * <pre>
+	 * m00 m01 m02
+	 * m10 m11 m12
+	 * 0   0   1
+	 * </pre>
+	 * 
+	 * @param m00
+	 * @param m10
+	 * 
+	 * @param m01
+	 * @param m11
+	 * 
+	 * @param m02
+	 * @param m12
+	 */
+	final public void set( final float m00, final float m10, final float m01, final float m11, final float m02, final float m12 )
+	{
+		affine.set( m00, m10, m01, m11, m02, m12 );
+	}
+	
+	/**
+	 * Initialize the model with the parameters of an {@link AffineTransform}.
+	 * 
+	 * @param a
+	 */
+	final public void set( final AffineTransform a )
+	{
+		affine.set( a );
 	}
 }
