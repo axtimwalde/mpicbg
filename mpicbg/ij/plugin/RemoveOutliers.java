@@ -83,11 +83,13 @@ public class RemoveOutliers implements ExtendedPlugInFilter, DialogListener
 		}
 	}
 	
+	@Override
 	public int setup( final String arg, final ImagePlus imp )
 	{
 		return flags;
 	}
 	
+	@Override
 	public int showDialog( final ImagePlus imp, final String command, final PlugInFilterRunner pfr )
 	{
 		final GenericDialog gd = new GenericDialog( "Remove Outliers" );
@@ -107,7 +109,8 @@ public class RemoveOutliers implements ExtendedPlugInFilter, DialogListener
 	}
 	
 
-    public boolean dialogItemChanged( GenericDialog gd, AWTEvent e )
+    @Override
+	public boolean dialogItemChanged( final GenericDialog gd, final AWTEvent e )
     {
         blockRadiusX = ( int )gd.getNextNumber();
         blockRadiusY = ( int )gd.getNextNumber();
@@ -119,6 +122,7 @@ public class RemoveOutliers implements ExtendedPlugInFilter, DialogListener
         return true;
     }
 	
+	@Override
 	public void run( final ImageProcessor ip )
 	{
 		int brx, bry;
@@ -129,11 +133,14 @@ public class RemoveOutliers implements ExtendedPlugInFilter, DialogListener
 		 * but changes its pixel data using setPixels(Object).  Conversely, it uses
 		 * a new ImageProcessor on apply than during preview.  At least the pixels
 		 * seem not to be copied so hopefully that will do it for the long run
+		 * 
+		 * 2012-06-13 of course not---something has changed and so we do it again for
+		 *   each ImageProcessor...
 		 */
-		if ( ip.getPixels() != pip.getPixels() )
-		{
+//		if ( ip.getPixels() != pip.getPixels() )
+//		{
 			init( new ImagePlus( "", ip ) );
-		}
+//		}
 		synchronized( this )
 		{
 			brx = blockRadiusX;

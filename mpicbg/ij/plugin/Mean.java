@@ -41,11 +41,13 @@ public class Mean implements ExtendedPlugInFilter, DialogListener
 	protected mpicbg.ij.integral.Mean mean = null;
 	protected ImageProcessor pip = null;
 	
+	@Override
 	public int setup( final String arg, final ImagePlus imp )
 	{
 		return flags;
 	}
 	
+	@Override
 	public int showDialog( final ImagePlus imp, final String command, final PlugInFilterRunner pfr )
 	{
 		final GenericDialog gd = new GenericDialog( "Mean" );
@@ -65,7 +67,8 @@ public class Mean implements ExtendedPlugInFilter, DialogListener
 	}
 	
 
-    public boolean dialogItemChanged( GenericDialog gd, AWTEvent e )
+    @Override
+	public boolean dialogItemChanged( final GenericDialog gd, final AWTEvent e )
     {
         blockRadiusX = ( int )gd.getNextNumber();
         blockRadiusY = ( int )gd.getNextNumber();
@@ -76,6 +79,7 @@ public class Mean implements ExtendedPlugInFilter, DialogListener
         return true;
     }
 	
+	@Override
 	public void run( final ImageProcessor ip )
 	{
 		int brx, bry;
@@ -85,12 +89,15 @@ public class Mean implements ExtendedPlugInFilter, DialogListener
 		 * but changes its pixel data using setPixels(Object).  Conversely, it uses
 		 * a new ImageProcessor on apply than during preview.  At least the pixels
 		 * seem not to be copied so hopefully that will do it for the long run
+		 * 
+		 * 2012-06-13 of course not---something has changed and so we do it again for
+		 *   each ImageProcessor...
 		 */
-		if ( ip.getPixels() != pip.getPixels() )
-		{
+//		if ( ip.getPixels() != pip.getPixels() )
+//		{
 			pip = ip;
 			mean = mpicbg.ij.integral.Mean.create( pip );
-		}
+//		}
 
 		synchronized( this )
 		{
