@@ -1,4 +1,3 @@
-package mpicbg.ij.plugin;
 /**
  * License: GPL
  *
@@ -15,7 +14,7 @@ package mpicbg.ij.plugin;
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-
+package mpicbg.ij.plugin;
 
 import ij.IJ;
 import ij.ImagePlus;
@@ -25,22 +24,25 @@ import ij.plugin.filter.PlugInFilterRunner;
 import java.awt.AWTEvent;
 
 /**
- * Remove saturated pixels by diffusing the neighbors in.
+ * Normalize contrast based on per-pixel mean and STD. 
  *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.1a
  */
-public class RemoveOutliers extends AbstractBlockFilter
+public class NormalizeLocalContrast extends AbstractBlockFilter
 {
 	static protected double standardDeviations = 3;
 	protected double stds;
+	static protected boolean center = true;
+	protected boolean cent = true;
+	static protected boolean stretch = true;	
+	protected boolean stret = true;
 	
-	protected mpicbg.ij.integral.RemoveOutliers[] rmos;
+	protected mpicbg.ij.integral.NormalizeLocalContrast[] nlcs;
 	
 	@Override
 	protected String dialogTitle()
 	{
-		return "Remove Outliers";
+		return "Normalize Local Contrast";
 	}
 	
 	@Override
@@ -49,13 +51,13 @@ public class RemoveOutliers extends AbstractBlockFilter
 		super.init( imp );
 		if ( imp.getType() == ImagePlus.COLOR_RGB )
 		{
-			rmos = new mpicbg.ij.integral.RemoveOutliers[]{
-					new mpicbg.ij.integral.RemoveOutliers( fps[ 0 ] ),
-					new mpicbg.ij.integral.RemoveOutliers( fps[ 1 ] ),
-					new mpicbg.ij.integral.RemoveOutliers( fps[ 2 ] ) };
+			nlcs = new mpicbg.ij.integral.NormalizeLocalContrast[]{
+					new mpicbg.ij.integral.NormalizeLocalContrast( fps[ 0 ] ),
+					new mpicbg.ij.integral.NormalizeLocalContrast( fps[ 1 ] ),
+					new mpicbg.ij.integral.NormalizeLocalContrast( fps[ 2 ] ) };
 		}
 		else
-			rmos = new mpicbg.ij.integral.RemoveOutliers[]{ new mpicbg.ij.integral.RemoveOutliers( fps[ 0 ] ) };
+			nlcs = new mpicbg.ij.integral.NormalizeLocalContrast[]{ new mpicbg.ij.integral.NormalizeLocalContrast( fps[ 0 ] ) };
 	}
 	
 	@Override
@@ -65,6 +67,8 @@ public class RemoveOutliers extends AbstractBlockFilter
 		gd.addNumericField( "Block_radius_x : ", blockRadiusX, 0, 6, "pixels" );
 		gd.addNumericField( "Block_radius_y : ", blockRadiusY, 0, 6, "pixels" );
 		gd.addNumericField( "Standard_deviations : ", standardDeviations, 2 );
+		gd.addCheckbox( "center", center );
+		gd.addCheckbox( "stretch", stretch );
 		gd.addPreviewCheckbox( pfr );
 		gd.addDialogListener( this );
 
@@ -84,6 +88,8 @@ public class RemoveOutliers extends AbstractBlockFilter
         blockRadiusX = ( int )gd.getNextNumber();
         blockRadiusY = ( int )gd.getNextNumber();
         standardDeviations = gd.getNextNumber();
+        center = gd.getNextBoolean();
+        stretch = gd.getNextBoolean();
         
         if ( gd.invalidNumber() )
             return false;
@@ -99,12 +105,14 @@ public class RemoveOutliers extends AbstractBlockFilter
 			brx = blockRadiusX;
 			bry = blockRadiusY;
 			stds = standardDeviations;
+			cent = center;
+			stret = stretch;
 		}
     }
     
     @Override
     protected void process( final int i )
     {
-    	rmos[ i ].removeOutliers( brx, bry, ( float )stds );
+    	nlcs[ i ].run( brx, bry, ( float )stds, center, stret );
     }
 }

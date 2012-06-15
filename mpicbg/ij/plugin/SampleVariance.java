@@ -67,7 +67,7 @@ public class SampleVariance extends AbstractBlockStatistics
 	}
 	
 	@Override
-	protected void process( final int i, final int brx, final int bry )
+	protected void process( final int i )
 	{
 		bss[ i ].sampleVariance( brx, bry );
 	}

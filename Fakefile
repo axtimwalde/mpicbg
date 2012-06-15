@@ -51,6 +51,7 @@ integral_image.jar <- \
 	mpicbg/ij/integral/*.java \
 	mpicbg/ij/plugin/AbstractBlockStatistics.java \
 	mpicbg/ij/plugin/Mean.java \
+	mpicbg/ij/plugin/NormalizeLocalContrast.java \
 	mpicbg/ij/plugin/RemoveOutliers.java \
 	mpicbg/ij/plugin/SampleVariance.java \
 	mpicbg/ij/plugin/StandardDeviation.java \

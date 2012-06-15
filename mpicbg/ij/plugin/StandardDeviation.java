@@ -33,7 +33,7 @@ public class StandardDeviation extends AbstractBlockStatistics
 	}
 	
 	@Override
-	protected void process( final int i, final int brx, final int bry )
+	protected void process( final int i )
 	{
 		bss[ i ].std( brx, bry );
 	}
