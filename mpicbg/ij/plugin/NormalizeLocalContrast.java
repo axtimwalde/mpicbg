@@ -20,6 +20,11 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
 import ij.plugin.filter.PlugInFilterRunner;
+import ij.process.ByteProcessor;
+import ij.process.ColorProcessor;
+import ij.process.FloatProcessor;
+import ij.process.ImageProcessor;
+import ij.process.ShortProcessor;
 
 import java.awt.AWTEvent;
 
@@ -113,6 +118,59 @@ public class NormalizeLocalContrast extends AbstractBlockFilter
     @Override
     protected void process( final int i )
     {
-    	nlcs[ i ].run( brx, bry, ( float )stds, center, stret );
+    	nlcs[ i ].run( brx, bry, ( float )stds, cent, stret );
+    }
+    
+    
+    
+    /**
+     * Apply local contrast enhancement to and {@link ImageProcessor}.
+     * The method performs best when you adjust the {@link ImageProcessor}s
+     * min and max range such that a region of interest in the image has
+     * optimal contrast and spans the full range.
+     * 
+     * @param ip
+     * @param brx block width
+     * @param bry block height
+     * @param stds in case that the contrast is to be stretched, how many STDs
+     *   wide should it be
+     * @param cent local contrast range at the estimated mean (the original
+     *   mean is at (max-min)/2), that is mean is mapped to min+(max-min)/2.
+     * @param stret stretch contrast such that mean-stds*STD is mapped to min
+     *   and mean+stds*STD is mapped to max (if cent is true) otherwise only
+     *   the scaling is performed such that max-min = 2*stds*STD
+     */
+    static public void run(
+    		final ImageProcessor ip,
+    		final int brx,
+    		final int bry,
+    		final float stds,
+    		final boolean cent,
+    		final boolean stret )
+    {
+    	final NormalizeLocalContrast nlc = new NormalizeLocalContrast();
+    	
+    	nlc.init( new ImagePlus( "", ip ) );
+    	
+    	for ( int i = 0; i < nlc.nlcs.length; ++i )
+    		nlc.nlcs[ i ].run( brx, bry, stds, cent, stret );
+    	
+    	if ( FloatProcessor.class.isInstance( ip ) )
+			return;
+		else if ( ColorProcessor.class.isInstance( ip ) )
+		{
+			final int[] rgbs = ( int[] )ip.getPixels();
+			nlc.toRGB( rgbs );
+		}
+		else if ( ByteProcessor.class.isInstance( ip ) )
+		{
+			final byte[] bytes = ( byte[] )ip.getPixels();
+			nlc.toByte( bytes );
+		}
+		else if ( ShortProcessor.class.isInstance( ip ) )
+		{
+			final short[] shorts = ( short[] )ip.getPixels();
+			nlc.toShort( shorts );
+		}
     }
 }
