@@ -42,46 +42,60 @@ final public class LongRGBIntegralImage implements IntegralImage
 		
 		w = width + 1;
 		w1 = w + 1;
-
-		sumR = new long[ w * ( height + 1 ) ];
-		sumG = new long[ w * ( height + 1 ) ];
-		sumB = new long[ w * ( height + 1 ) ];
 		
-		long sR = 0;
-		long sG = 0;
-		long sB = 0;
-		for ( int x = 0; x < width; ++x )
-		{
-			final int xw = w + x + 1;
-			final int rgb = pixels[ x ];
+		final int w2 = w + w;
+		
+		final int n = w * height + w;
+		final int n1 = n - w1;
+		final int n2 = n1 - w + 2;
+		
+		sumR = new long[ n ];
+		sumG = new long[ n ];
+		sumB = new long[ n ];
 
-			sR += ( rgb >> 16 ) & 0xff;;
-			sG += ( rgb >> 8 ) & 0xff;
-			sB += rgb & 0xff;
-
-			sumR[ xw ] = sR;
-			sumG[ xw ] = sG;
-			sumB[ xw ] = sB;
-		}
-		for ( int y = 1; y < height; ++y )
+		/* rows */
+		for ( int i = 0, j = w1; j < n; ++j )
 		{
-			final int ywidth = y * width;
-			final int yw = y * w + w1;
-			final int rgb = pixels[ ywidth ];
-			final int k = yw - w;
-			sumR[ yw ] = sumR[ k ] + ( ( rgb >> 16 ) & 0xff );
-			sumG[ yw ] = sumG[ k ] + ( ( rgb >> 8 ) & 0xff );
-			sumB[ yw ] = sumB[ k ] + ( rgb & 0xff );
-			for ( int x = 1; x < width; ++x )
+			final int end = i + width;
+			
+			int rgb = pixels[ i ];
+			
+			long sR = sumR[ j ] = ( rgb >> 16 ) & 0xff;;
+			long sG = sumG[ j ] = ( rgb >> 8 ) & 0xff;
+			long sB = sumB[ j ] = rgb & 0xff;
+			
+			for ( ++i, ++j; i < end; ++i, ++j )
 			{
-				final int ywx = yw + x;
-				final int a = ywx - w;
-				final int b = ywx - 1;
-				final int c = a - 1;
-				final int rgbb = pixels[ ywidth + x ];
-				sumR[ ywx ] = sumR[ a ] + sumR[ b ] + ( ( rgbb >> 16 ) & 0xff ) - sumR[ c ];
-				sumG[ ywx ] = sumG[ a ] + sumG[ b ] + ( ( rgbb >> 8 ) & 0xff ) - sumG[ c ];
-				sumB[ ywx ] = sumB[ a ] + sumB[ b ] + ( rgbb & 0xff ) - sumB[ c ];
+				rgb = pixels[ i ];
+				
+				sR += ( rgb >> 16 ) & 0xff;;
+				sG += ( rgb >> 8 ) & 0xff;
+				sB += rgb & 0xff;
+				
+				sumR[ j ] = sR;
+				sumG[ j ] = sG;
+				sumB[ j ] = sB;
+			}
+		}
+		
+		/* columns */
+		for ( int j = w1; j < w2; j -= n1 )
+		{
+			final int end = j + n2;
+			
+			long sR = sumR[ j ];
+			long sG = sumG[ j ];
+			long sB = sumB[ j ];
+			
+			for ( j += w; j < end; j += w )
+			{
+				sR += sumR[ j ];
+				sG += sumG[ j ];
+				sB += sumB[ j ];
+				
+				sumR[ j ] = sR;
+				sumG[ j ] = sG;
+				sumB[ j ] = sB;
 			}
 		}
 	}

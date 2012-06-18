@@ -48,41 +48,43 @@ final public class BlockPMCC
 		final int height = fp.getHeight();
 		
 		final int w = width + 1;
-
-		double s = 0;
-		double ss = 0;
-		for ( int x = 0; x < width; )
+		final int w1 = w + 1;
+		final int w2 = w + w;
+		
+		final int n = w * height + w;
+		final int n1 = n - w1;
+		final int n2 = n1 - w + 2;
+		
+		/* rows */
+		for ( int i = 0, j = w1; j < n; ++j )
 		{
-			final float a = fp.getf( x );
-			final int i = ++x + w;
-			
-			s += a;
-			sum[ i ] = s;
-			
-			ss += a * a;
-			sumOfSquares[ i ] = ss;
-		}
-		for ( int y = 1; y < height; ++y )
-		{
-			final int ywidth = y * width;
-			final int yw = y * w + w + 1;
-			final int yww = yw - w;
-			
-			final float a = fp.getf( ywidth );
-			
-			sum[ yw ] = sum[ yww ] + a;
-			sumOfSquares[ yw ] = sumOfSquares[ yww ] + a * a;
-			for ( int x = 1; x < width; ++x )
+			final int end = i + width;
+			double s = sum[ j ] = fp.getf( i );
+			double ss = sumOfSquares[ j ] = s * s;
+			for ( ++i, ++j; i < end; ++i, ++j )
 			{
-				final int ywx = yw + x;
-				final int ywx1 = ywx - 1;
-				final int ywxw = ywx - w;
-				final int ywxw1 = ywxw - 1;
+				final float a = fp.getf( i );
+				s += a;
+				ss += a * a;
+				sum[ j ] = s;
+				sumOfSquares[ j ] = ss;
+			}
+		}
+		
+		/* columns */
+		for ( int j = w1; j < w2; j -= n1 )
+		{
+			final int end = j + n2;
+			
+			double s = sum[ j ];
+			double ss = sumOfSquares[ j ];
+			for ( j += w; j < end; j += w )
+			{
+				s += sum[ j ];
+				ss += sumOfSquares[ j ];
 				
-				final float b = fp.getf( ywidth + x );
-				
-				sum[ ywx ] = b + sum[ ywxw ] + sum[ ywx1 ] - sum[ ywxw1 ];
-				sumOfSquares[ ywx ] = b * b + sumOfSquares[ ywxw ] + sumOfSquares[ ywx1 ] - sumOfSquares[ ywxw1 ];
+				sum[ j ] = s;
+				sumOfSquares[ j ] = ss;
 			}
 		}
 	}
@@ -98,55 +100,57 @@ final public class BlockPMCC
 			final double[] sumOfSquares2 )
 	{
 		final int w = width + 1;
-
-		double s1 = 0;
-		double ss1 = 0;
-		double s2 = 0;
-		double ss2 = 0;
-		for ( int x = 0; x < width; )
+		final int w1 = w + 1;
+		final int w2 = w + w;
+		
+		final int n = w * height + w;
+		final int n1 = n - w1;
+		final int n2 = n1 - w + 2;
+		
+		/* rows */
+		for ( int i = 0, j = w1; j < n; ++j )
 		{
-			final float a1 = fp1.getf( x );
-			final float a2 = fp2.getf( x );
-			final int i = ++x + w;
-			
-			s1 += a1;
-			sum1[ i ] = s1;
-			s2 += a2;
-			sum2[ i ] = s2;
-			
-			ss1 += a1 * a1;
-			sumOfSquares1[ i ] = ss1;
-			ss2 += a2 * a2;
-			sumOfSquares2[ i ] = ss2;
-		}
-		for ( int y = 1; y < height; ++y )
-		{
-			final int ywidth = y * width;
-			final int yw = y * w + w + 1;
-			final int yww = yw - w;
-			
-			final float a1 = fp1.getf( ywidth );
-			final float a2 = fp2.getf( ywidth );
-			
-			sum1[ yw ] = sum1[ yww ] + a1;
-			sumOfSquares1[ yw ] = sumOfSquares1[ yww ] + a1 * a1;
-			sum2[ yw ] = sum2[ yww ] + a2;
-			sumOfSquares2[ yw ] = sumOfSquares2[ yww ] + a2 * a2;
-			
-			for ( int x = 1; x < width; ++x )
+			final int end = i + width;
+			double s1 = sum1[ j ] = fp1.getf( i );
+			double ss1 = sumOfSquares1[ j ] = s1 * s1;
+			double s2 = sum2[ j ] = fp2.getf( i );
+			double ss2 = sumOfSquares2[ j ] = s2 * s2;
+			for ( ++i, ++j; i < end; ++i, ++j )
 			{
-				final int ywx = yw + x;
-				final int ywx1 = ywx - 1;
-				final int ywxw = ywx - w;
-				final int ywxw1 = ywxw - 1;
+				final float a1 = fp1.getf( i );
+				s1 += a1;
+				ss1 += a1 * a1;
+				sum1[ j ] = s1;
+				sumOfSquares1[ j ] = ss1;
 				
-				final float b1 = fp1.getf( ywidth + x );
-				final float b2 = fp2.getf( ywidth + x );
+				final float a2 = fp2.getf( i );
+				s2 += a2;
+				ss2 += a2 * a2;
+				sum2[ j ] = s2;
+				sumOfSquares2[ j ] = ss2;
+			}
+		}
+		
+		/* columns */
+		for ( int j = w1; j < w2; j -= n1 )
+		{
+			final int end = j + n2;
+			
+			double s1 = sum1[ j ];
+			double ss1 = sumOfSquares1[ j ];
+			double s2 = sum2[ j ];
+			double ss2 = sumOfSquares2[ j ];
+			for ( j += w; j < end; j += w )
+			{
+				s1 += sum1[ j ];
+				ss1 += sumOfSquares1[ j ];
+				s2 += sum2[ j ];
+				ss2 += sumOfSquares2[ j ];
 				
-				sum1[ ywx ] = b1 + sum1[ ywxw ] + sum1[ ywx1 ] - sum1[ ywxw1 ];
-				sumOfSquares1[ ywx ] = b1 * b1 + sumOfSquares1[ ywxw ] + sumOfSquares1[ ywx1 ] - sumOfSquares1[ ywxw1 ];
-				sum2[ ywx ] = b2 + sum2[ ywxw ] + sum2[ ywx1 ] - sum2[ ywxw1 ];
-				sumOfSquares2[ ywx ] = b2 * b2 + sumOfSquares2[ ywxw ] + sumOfSquares2[ ywx1 ] - sumOfSquares2[ ywxw1 ];
+				sum1[ j ] = s1;
+				sumOfSquares1[ j ] = ss1;
+				sum2[ j ] = s2;
+				sumOfSquares2[ j ] = ss2;
 			}
 		}
 	}

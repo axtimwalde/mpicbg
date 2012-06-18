@@ -44,44 +44,46 @@ public class BlockStatistics
 		final int height = fp.getHeight();
 		
 		final int w = width + 1;
-
-		final double[] sum = new double[ w * ( height + 1 ) ];
-		final double[] sumOfSquares = new double[ sum.length ];
+		final int w1 = w + 1;
+		final int w2 = w + w;
 		
-		double s = 0;
-		double ss = 0;
-		for ( int x = 0; x < width; )
+		final int n = w * height + w;
+		final int n1 = n - w1;
+		final int n2 = n1 - w + 2;
+		
+		final double[] sum = new double[ n ];
+		final double[] sumOfSquares = new double[ n ];
+		
+		/* rows */
+		for ( int i = 0, j = w1; j < n; ++j )
 		{
-			final float a = fp.getf( x );
-			final int i = ++x + w;
-			
-			s += a;
-			sum[ i ] = s;
-			
-			ss += a * a;
-			sumOfSquares[ i ] = ss;
-		}
-		for ( int y = 1; y < height; ++y )
-		{
-			final int ywidth = y * width;
-			final int yw = y * w + w + 1;
-			final int yww = yw - w;
-			
-			final float a = fp.getf( ywidth );
-			
-			sum[ yw ] = sum[ yww ] + a;
-			sumOfSquares[ yw ] = sumOfSquares[ yww ] + a * a;
-			for ( int x = 1; x < width; ++x )
+			final int end = i + width;
+			double s = sum[ j ] = fp.getf( i );
+			double ss = sumOfSquares[ j ] = s * s;
+			for ( ++i, ++j; i < end; ++i, ++j )
 			{
-				final int ywx = yw + x;
-				final int ywx1 = ywx - 1;
-				final int ywxw = ywx - w;
-				final int ywxw1 = ywxw - 1;
+				final float a = fp.getf( i );
+				s += a;
+				ss += a * a;
+				sum[ j ] = s;
+				sumOfSquares[ j ] = ss;
+			}
+		}
+		
+		/* columns */
+		for ( int j = w1; j < w2; j -= n1 )
+		{
+			final int end = j + n2;
+			
+			double s = sum[ j ];
+			double ss = sumOfSquares[ j ];
+			for ( j += w; j < end; j += w )
+			{
+				s += sum[ j ];
+				ss += sumOfSquares[ j ];
 				
-				final float b = fp.getf( ywidth + x );
-				
-				sum[ ywx ] = b + sum[ ywxw ] + sum[ ywx1 ] - sum[ ywxw1 ];
-				sumOfSquares[ ywx ] = b * b + sumOfSquares[ ywxw ] + sumOfSquares[ ywx1 ] - sumOfSquares[ ywxw1 ];
+				sum[ j ] = s;
+				sumOfSquares[ j ] = ss;
 			}
 		}
 		

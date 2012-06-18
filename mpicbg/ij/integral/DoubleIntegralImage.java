@@ -41,24 +41,37 @@ final public class DoubleIntegralImage implements IntegralImage
 		
 		w = width + 1;
 		w1 = w + 1;
+		
+		final int w2 = w + w;
+		
+		final int n = w * height + w;
+		final int n1 = n - w1;
+		final int n2 = n1 - w + 2;
+		
+		sum = new double[ n ];
 
-		sum = new double[ w * ( height + 1 ) ];
-
-		double s = 0;
-		for ( int x = 0; x < width; )
+		/* rows */
+		for ( int i = 0, j = w1; j < n; ++j )
 		{
-			s += pixels[ x ];
-			sum[ ++x + w ] = s;
-		}
-		for ( int y = 1; y < height; ++y )
-		{
-			final int ywidth = y * width;
-			final int yw = y * w + w1;
-			sum[ yw ] = sum[ yw - w ] + pixels[ ywidth ];
-			for ( int x = 1; x < width; ++x )
+			final int end = i + width;
+			double s = sum[ j ] = pixels[ i ];
+			for ( ++i, ++j; i < end; ++i, ++j )
 			{
-				final int ywx = yw + x;
-				sum[ ywx ] = sum[ ywx - w ] + sum[ ywx - 1 ] + pixels[ ywidth + x ] - sum[ ywx - w - 1 ];
+				s += pixels[ i ];
+				sum[ j ] = s;
+			}
+		}
+		
+		/* columns */
+		for ( int j = w1; j < w2; j -= n1 )
+		{
+			final int end = j + n2;
+			
+			double s = sum[ j ];
+			for ( j += w; j < end; j += w )
+			{
+				s += sum[ j ];
+				sum[ j ] = s;
 			}
 		}
 	}
@@ -95,24 +108,37 @@ final public class DoubleIntegralImage implements IntegralImage
 
 		w = width + 1;
 		w1 = w + 1;
+		
+		final int w2 = w + w;
+		
+		final int n = w * height + w;
+		final int n1 = n - w1;
+		final int n2 = n1 - w + 2;
+		
+		sum = new double[ n ];
 
-		sum = new double[ w * ( height + 1 ) ];
-
-		double s = 0;
-		for ( int x = 0; x < width; )
+		/* rows */
+		for ( int i = 0, j = w1; j < n; ++j )
 		{
-			s += ip.getf( x );
-			sum[ ++x + w ] = s;
-		}
-		for ( int y = 1; y < height; ++y )
-		{
-			final int ywidth = y * width;
-			final int yw = y * w + w1;
-			sum[ yw ] = sum[ yw - w ] + ip.getf( ywidth );
-			for ( int x = 1; x < width; ++x )
+			final int end = i + width;
+			double s = sum[ j ] = ip.getf( i );
+			for ( ++i, ++j; i < end; ++i, ++j )
 			{
-				final int ywx = yw + x;
-				sum[ ywx ] = sum[ ywx - w ] + sum[ ywx - 1 ] + ip.getf( ywidth + x ) - sum[ ywx - w - 1 ];
+				s += ip.getf( i );
+				sum[ j ] = s;
+			}
+		}
+		
+		/* columns */
+		for ( int j = w1; j < w2; j -= n1 )
+		{
+			final int end = j + n2;
+			
+			double s = sum[ j ];
+			for ( j += w; j < end; j += w )
+			{
+				s += sum[ j ];
+				sum[ j ] = s;
 			}
 		}
 	}
