@@ -141,8 +141,6 @@ public class NormalizeLocalContrast extends BlockStatistics
 		
 		final double fpMin = fp.getMin();
 		final double fpLength = fp.getMax() - fpMin;
-		final double fpMean = fpLength / 2.0 + fpMin;
-		
 		
 		final int w = width - 1;
 		final int h = height - 1;
