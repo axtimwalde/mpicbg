@@ -1,0 +1,1 @@
+../../../../../../../mpicbg/src/main/java/mpicbg/ij/plugin/Mean.java
