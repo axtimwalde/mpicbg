@@ -124,6 +124,7 @@ public class NormalizeLocalContrast extends BlockStatistics
 		}
 	}
 	
+	
 	/**
 	 * 
 	 * @param ip

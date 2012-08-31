@@ -2,10 +2,9 @@ package mpicbg.models;
 
 import java.util.Collection;
 
+import mpicbg.util.Matrix3x3;
 import Jama.Matrix;
 import Jama.SingularValueDecomposition;
-
-import mpicbg.util.Matrix3x3;
 
 /**
  * 2d-homography {@link AbstractModel} to be applied to points in 2d-space.
@@ -38,7 +37,7 @@ import mpicbg.util.Matrix3x3;
  * @version 0.3b
  * 
  */
-public class HomographyModel2D extends AbstractModel< HomographyModel2D > implements Model< HomographyModel2D >, InvertibleBoundable
+public class HomographyModel2D extends AbstractModel< HomographyModel2D > implements InvertibleBoundable
 {
 	static final protected int MIN_NUM_MATCHES = 4;
 	
@@ -135,6 +134,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 	}
 	
 	//@Override
+	@Override
 	final public float[] apply( final float[] point )
 	{
 		assert point.length == 2 : "2d homographies can be applied to 2d points only.";
@@ -145,6 +145,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 	}
 
 	//@Override
+	@Override
 	final public void applyInPlace( final float[] point )
 	{
 		assert point.length == 2 : "2d homographies can be applied to 2d points only.";
@@ -158,6 +159,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 	}
 
 	//@Override
+	@Override
 	final public float[] applyInverse( final float[] point ) throws NoninvertibleModelException
 	{
 		assert point.length == 2 : "2d homographies can be applied to 2d points only.";
@@ -168,6 +170,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 	}
 
 	//@Override
+	@Override
 	final public void applyInverseInPlace( final float[] point ) throws NoninvertibleModelException
 	{
 		assert point.length == 2 : "2d homographies can be applied to 2d points only.";
@@ -287,7 +290,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 				
 				invert();
 			}
-			catch ( NoninvertibleModelException e )
+			catch ( final NoninvertibleModelException e )
 			{
 				throw new IllDefinedDataPointsException();
 			}
@@ -485,6 +488,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 	 * TODO Not yet tested
 	 */
 	//@Override
+	@Override
 	final public HomographyModel2D createInverse()
 	{
 		final HomographyModel2D m = new HomographyModel2D();

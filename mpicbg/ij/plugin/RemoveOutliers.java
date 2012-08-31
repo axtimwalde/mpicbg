@@ -21,6 +21,11 @@ import ij.IJ;
 import ij.ImagePlus;
 import ij.gui.GenericDialog;
 import ij.plugin.filter.PlugInFilterRunner;
+import ij.process.ByteProcessor;
+import ij.process.ColorProcessor;
+import ij.process.FloatProcessor;
+import ij.process.ImageProcessor;
+import ij.process.ShortProcessor;
 
 import java.awt.AWTEvent;
 
@@ -106,5 +111,46 @@ public class RemoveOutliers extends AbstractBlockFilter
     protected void process( final int i )
     {
     	rmos[ i ].removeOutliers( brx, bry, ( float )stds );
+    }
+    
+    
+    /**
+     * Remove outlier pixels from an {@link ImageProcessor}.
+     * 
+     * @param ip
+     * @param brx block width
+     * @param bry block height
+     * @param stds how many STDs consititute the threshold for an outlier
+     */
+    static public void run(
+    		final ImageProcessor ip,
+    		final int brx,
+    		final int bry,
+    		final float stds )
+    {
+    	final RemoveOutliers rmo = new RemoveOutliers();
+    	
+    	rmo.init( new ImagePlus( "", ip ) );
+    	
+    	for ( int i = 0; i < rmo.rmos.length; ++i )
+    		rmo.rmos[ i ].removeOutliers( brx, bry, stds );
+    	
+    	if ( FloatProcessor.class.isInstance( ip ) )
+			return;
+		else if ( ColorProcessor.class.isInstance( ip ) )
+		{
+			final int[] rgbs = ( int[] )ip.getPixels();
+			rmo.toRGB( rgbs );
+		}
+		else if ( ByteProcessor.class.isInstance( ip ) )
+		{
+			final byte[] bytes = ( byte[] )ip.getPixels();
+			rmo.toByte( bytes );
+		}
+		else if ( ShortProcessor.class.isInstance( ip ) )
+		{
+			final short[] shorts = ( short[] )ip.getPixels();
+			rmo.toShort( shorts );
+		}
     }
 }
