@@ -156,11 +156,11 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 		{
 			final float[] pX = p[ 0 ];
 			final float[] pY = p[ 1 ];
-			final float[] pZ = p[ 1 ];
+			final float[] pZ = p[ 2 ];
 			final float[] qX = q[ 0 ];
 			final float[] qY = q[ 1 ];
-			final float[] qZ = q[ 1 ];
-			
+			final float[] qZ = q[ 2 ];
+
 			final float ww = w[ i ];
 			ws += ww;
 			
@@ -192,11 +192,11 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 		{
 			final float[] pX = p[ 0 ];
 			final float[] pY = p[ 1 ];
-			final float[] pZ = p[ 1 ];
+			final float[] pZ = p[ 2 ];
 			final float[] qX = q[ 0 ];
 			final float[] qY = q[ 1 ];
-			final float[] qZ = q[ 1 ];
-			
+			final float[] qZ = q[ 2 ];
+
 			final float ww = w[ i ];
 			
 			final float px = pX[ i ] - pcx, py = pY[ i ] - pcy, pz = pZ[ i ] - pcz;
