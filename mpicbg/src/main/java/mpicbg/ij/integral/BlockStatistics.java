@@ -36,6 +36,123 @@ public class BlockStatistics
 	final protected DoubleIntegralImage sumsOfSquares;
 	final protected FloatProcessor fp;
 	
+	final protected class RowIntegrator extends Thread
+	{
+		final protected double[] sum;
+		final protected double[] sumOfSquares;
+		final protected int n;
+		final protected int w1;
+		final protected int width;
+		public int i;
+		
+		public RowIntegrator(
+				final double[] sum,
+				final double[] sumOfSquares,
+				final int n,
+				final int w1,
+				final int width )
+		{
+			this.sum = sum;
+			this.sumOfSquares = sumOfSquares;
+			this.n = n;
+			this.w1 = w1;
+			this.width = width;
+		}
+		
+		@Override
+		public void run()
+		{
+			for ( int j = i + w1; j < n; ++j )
+			{
+				final int end = i + width;
+				double s = sum[ j ] = fp.getf( i );
+				double ss = sumOfSquares[ j ] = s * s;
+				for ( ++i, ++j; i < end; ++i, ++j )
+				{
+					final float a = fp.getf( i );
+					s += a;
+					ss += a * a;
+					sum[ j ] = s;
+					sumOfSquares[ j ] = ss;
+				}
+			}
+		}
+	}
+	
+	final protected void integrateRows(
+			final int w1,
+			final int n,
+			final int width,
+			final double[] sum,
+			final double[] sumOfSquares )
+	{
+		for ( int i = 0, j = w1; j < n; ++j )
+		{
+			final int end = i + width;
+			double s = sum[ j ] = fp.getf( i );
+			double ss = sumOfSquares[ j ] = s * s;
+			for ( ++i, ++j; i < end; ++i, ++j )
+			{
+				final float a = fp.getf( i );
+				s += a;
+				ss += a * a;
+				sum[ j ] = s;
+				sumOfSquares[ j ] = ss;
+			}
+		}
+	}
+	
+	final protected void integrateRowsParallel(
+			final int w1,
+			final int n,
+			final int width,
+			final int height,
+			final double[] sum,
+			final double[] sumOfSquares )
+	{
+		final int rowsPerThread = ( int )Math.ceil( ( double )height / Runtime.getRuntime().availableProcessors() );
+		for ( int i = 0, j = w1; j < n; ++j )
+		{
+			final int end = i + width;
+			double s = sum[ j ] = fp.getf( i );
+			double ss = sumOfSquares[ j ] = s * s;
+			for ( ++i, ++j; i < end; ++i, ++j )
+			{
+				final float a = fp.getf( i );
+				s += a;
+				ss += a * a;
+				sum[ j ] = s;
+				sumOfSquares[ j ] = ss;
+			}
+		}
+	}
+	
+	final static protected void integrateColumns(
+			final int w1,
+			final int w2,
+			final int n1,
+			final int n2,
+			final double[] sum,
+			final double[] sumOfSquares,
+			final int w )
+	{
+		for ( int j = w1; j < w2; j -= n1 )
+		{
+			final int end = j + n2;
+			
+			double s = sum[ j ];
+			double ss = sumOfSquares[ j ];
+			for ( j += w; j < end; j += w )
+			{
+				s += sum[ j ];
+				ss += sumOfSquares[ j ];
+				
+				sum[ j ] = s;
+				sumOfSquares[ j ] = ss;
+			}
+		}
+	}
+	
 	public BlockStatistics( final FloatProcessor fp )
 	{
 		this.fp = fp;
@@ -55,37 +172,10 @@ public class BlockStatistics
 		final double[] sumOfSquares = new double[ n ];
 		
 		/* rows */
-		for ( int i = 0, j = w1; j < n; ++j )
-		{
-			final int end = i + width;
-			double s = sum[ j ] = fp.getf( i );
-			double ss = sumOfSquares[ j ] = s * s;
-			for ( ++i, ++j; i < end; ++i, ++j )
-			{
-				final float a = fp.getf( i );
-				s += a;
-				ss += a * a;
-				sum[ j ] = s;
-				sumOfSquares[ j ] = ss;
-			}
-		}
+		integrateRows( w1, n, width, sum, sumOfSquares );
 		
 		/* columns */
-		for ( int j = w1; j < w2; j -= n1 )
-		{
-			final int end = j + n2;
-			
-			double s = sum[ j ];
-			double ss = sumOfSquares[ j ];
-			for ( j += w; j < end; j += w )
-			{
-				s += sum[ j ];
-				ss += sumOfSquares[ j ];
-				
-				sum[ j ] = s;
-				sumOfSquares[ j ] = ss;
-			}
-		}
+		integrateColumns( w1, w2, n1, n2, sum, sumOfSquares, w );
 		
 		sums = new DoubleIntegralImage( sum, width, height );
 		sumsOfSquares = new DoubleIntegralImage( sumOfSquares, width, height );
