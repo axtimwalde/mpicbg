@@ -20,7 +20,7 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 	@Override
 	final public float[] apply( final float[] point )
 	{
-		assert point.length == 3 : "3d translations can be applied to 3d points only.";
+		assert point.length >= 3 : "3d translations can be applied to 3d points only.";
 		
 		return new float[]{
 			point[ 0 ] + translation[ 0 ],
@@ -31,7 +31,7 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 	@Override
 	final public void applyInPlace( final float[] point )
 	{
-		assert point.length == 3 : "3d translations can be applied to 3d points only.";
+		assert point.length >= 3 : "3d translations can be applied to 3d points only.";
 		
 		point[ 0 ] += translation[ 0 ];
 		point[ 1 ] += translation[ 1 ];
@@ -41,7 +41,7 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 	@Override
 	final public float[] applyInverse( final float[] point )
 	{
-		assert point.length == 3 : "3d translations can be applied to 3d points only.";
+		assert point.length >= 3 : "3d translations can be applied to 3d points only.";
 		
 		return new float[]{
 				point[ 0 ] - translation[ 0 ],
@@ -52,7 +52,7 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 	@Override
 	final public void applyInverseInPlace( final float[] point )
 	{
-		assert point.length == 3 : "3d translations can be applied to 3d points only.";
+		assert point.length >= 3 : "3d translations can be applied to 3d points only.";
 		
 		point[ 0 ] -= translation[ 0 ];
 		point[ 1 ] -= translation[ 1 ];
@@ -129,6 +129,7 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 		cost = m.getCost();
 	}
 	
+	@Override
 	public TranslationModel3D copy()
 	{
 		final TranslationModel3D m = new TranslationModel3D();
@@ -143,6 +144,7 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 	 * TODO Not yet tested
 	 */
 	//@Override
+	@Override
 	public TranslationModel3D createInverse()
 	{
 		final TranslationModel3D ict = new TranslationModel3D();
@@ -156,13 +158,15 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 		return ict;
 	}
 
-	public void estimateBounds( float[] min, float[] max )
+	@Override
+	public void estimateBounds( final float[] min, final float[] max )
 	{
 		applyInPlace( min );
 		applyInPlace( max );
 	}
 
-	public void estimateInverseBounds( float[] min, float[] max ) throws NoninvertibleModelException
+	@Override
+	public void estimateInverseBounds( final float[] min, final float[] max ) throws NoninvertibleModelException
 	{
 		applyInverseInPlace( min );
 		applyInverseInPlace( max );		
