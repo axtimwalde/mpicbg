@@ -169,15 +169,4 @@ public class Util
 		clipHistogram( hist, clippedHist, limit );
 		return transferValue( v, clippedHist );
 	}
-	
-	
-	final static int roundPositive( float a )
-	{
-		return ( int )( a + 0.5f );
-	}
-	
-	final static int roundPositive( double a )
-	{
-		return ( int )( a + 0.5 );
-	}
 }

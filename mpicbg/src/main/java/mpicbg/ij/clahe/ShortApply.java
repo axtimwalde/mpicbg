@@ -66,7 +66,7 @@ final class ShortApply extends Apply< ShortProcessor >
 				else
 					a = ( float )( dstPixels[ i ] & 0xff ) / vSrc;
 				final float b = m * ( a * ( v - min ) + min - v ) + v;
-				ipPixels[ i ] =  ( short )Math.max( 0, Math.min( 65535, Util.roundPositive( b ) ) );
+				ipPixels[ i ] =  ( short )Math.max( 0, Math.min( 65535, mpicbg.util.Util.roundPos( b ) ) );
 				++i;
 			}
 		}

@@ -1,6 +1,5 @@
 package mpicbg.util;
 
-import java.util.Arrays;
 
 /**
  * Methods collection for general purpose that do not have a common context

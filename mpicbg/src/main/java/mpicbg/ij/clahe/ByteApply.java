@@ -64,7 +64,7 @@ final class ByteApply extends Apply< ByteProcessor >
 				else
 					a = ( float )( dstPixels[ i ] & 0xff ) / vSrc;
 				final float b = v * ( 1.0f + m * ( a - 1.0f ) );
-				ipPixels[ i ] = ( byte )Math.max( 0, Math.min( 255, Util.roundPositive( b ) ) );
+				ipPixels[ i ] = ( byte )Math.max( 0, Math.min( 255, mpicbg.util.Util.roundPos( b ) ) );
 				++i;
 			}
 		}

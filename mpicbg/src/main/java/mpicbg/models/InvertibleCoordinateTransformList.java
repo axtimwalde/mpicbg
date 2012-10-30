@@ -15,11 +15,17 @@ public class InvertibleCoordinateTransformList< E extends InvertibleCoordinateTr
 {
 	final protected List< E > transforms = new ArrayList< E >();
 	
-	public void add( E t ){ transforms.add( t ); }
-	public void remove( E t ){ transforms.remove( t ); }
-	public E remove( int i ){ return transforms.remove( i ); }
-	public E get( int i ){ return transforms.get( i ); }
+	@Override
+	public void add( final E t ){ transforms.add( t ); }
+	@Override
+	public void remove( final E t ){ transforms.remove( t ); }
+	@Override
+	public E remove( final int i ){ return transforms.remove( i ); }
+	@Override
+	public E get( final int i ){ return transforms.get( i ); }
+	@Override
 	final public void clear(){ transforms.clear(); }
+	@Override
 	final public List< E > getList( final List< E > preAllocatedList )
 	{
 		final List< E > returnList = ( preAllocatedList == null ) ? new ArrayList< E >() : preAllocatedList;
@@ -28,6 +34,7 @@ public class InvertibleCoordinateTransformList< E extends InvertibleCoordinateTr
 	}
 	
 	//@Override
+	@Override
 	final public float[] apply( final float[] location )
 	{
 		final float[] a = location.clone();
@@ -36,6 +43,7 @@ public class InvertibleCoordinateTransformList< E extends InvertibleCoordinateTr
 	}
 
 	//@Override
+	@Override
 	final public void applyInPlace( final float[] location )
 	{
 		for ( final E t : transforms )
@@ -43,7 +51,8 @@ public class InvertibleCoordinateTransformList< E extends InvertibleCoordinateTr
 	}
 	
 	//@Override
-	final public float[] applyInverse( float[] location ) throws NoninvertibleModelException
+	@Override
+	final public float[] applyInverse( final float[] location ) throws NoninvertibleModelException
 	{
 		final float[] a = location.clone();
 		applyInverseInPlace( a );
@@ -51,7 +60,8 @@ public class InvertibleCoordinateTransformList< E extends InvertibleCoordinateTr
 	}
 
 	//@Override
-	final public void applyInverseInPlace( float[] location ) throws NoninvertibleModelException
+	@Override
+	final public void applyInverseInPlace( final float[] location ) throws NoninvertibleModelException
 	{
 		final ListIterator< E > i = transforms.listIterator( transforms.size() );
 		while ( i.hasPrevious() )
@@ -67,6 +77,7 @@ public class InvertibleCoordinateTransformList< E extends InvertibleCoordinateTr
 	 * TODO Find a better solution.
 	 */
 	//@Override
+	@Override
 	public void estimateBounds( final float[] min, final float[] max )
 	{
 		assert min.length == max.length : "min and max have to have equal length.";
@@ -128,6 +139,7 @@ public class InvertibleCoordinateTransformList< E extends InvertibleCoordinateTr
 	 * TODO Find a better solution.
 	 */
 	//@Override
+	@Override
 	public void estimateInverseBounds( final float[] min, final float[] max ) throws NoninvertibleModelException
 	{
 		assert min.length == max.length : "min and max have to have equal length.";
@@ -180,6 +192,7 @@ public class InvertibleCoordinateTransformList< E extends InvertibleCoordinateTr
 		}
 	}
 	
+	@SuppressWarnings( "unchecked" )
 	@Override
 	public InvertibleCoordinateTransformList< E > createInverse()
 	{

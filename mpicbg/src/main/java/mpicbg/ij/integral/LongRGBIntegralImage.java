@@ -17,6 +17,7 @@
 package mpicbg.ij.integral;
 
 import ij.process.ColorProcessor;
+import mpicbg.util.Util;
 
 /**
  * 
@@ -182,9 +183,9 @@ final public class LongRGBIntegralImage implements IntegralImage
 		final int c = y1w + xMax;
 		final int d = y2w + xMin;
 		
-		final int r = Util.roundPositive( ( sumR[ a ] + sumR[ b ] - sumR[ c ] - sumR[ d ] ) * scale );
-		final int g = Util.roundPositive( ( sumG[ a ] + sumG[ b ] - sumG[ c ] - sumG[ d ] ) * scale );
-		final int x = Util.roundPositive( ( sumB[ a ] + sumB[ b ] - sumB[ c ] - sumB[ d ] ) * scale );
+		final int r = Util.roundPos( ( sumR[ a ] + sumR[ b ] - sumR[ c ] - sumR[ d ] ) * scale );
+		final int g = Util.roundPos( ( sumG[ a ] + sumG[ b ] - sumG[ c ] - sumG[ d ] ) * scale );
+		final int x = Util.roundPos( ( sumB[ a ] + sumB[ b ] - sumB[ c ] - sumB[ d ] ) * scale );
 		
 		return ( ( ( r << 8 ) | g ) << 8 ) | x;
 	}

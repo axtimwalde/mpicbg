@@ -1,1 +1,0 @@
-../../../../../../../mpicbg/src/main/java/mpicbg/ij/integral/InteractivePMCC.java

@@ -71,9 +71,9 @@ final class RGBApply extends Apply< ColorProcessor >
 				final float bg = vg * ( 1.0f + m * ( a - 1.0f ) );
 				final float bb = vb * ( 1.0f + m * ( a - 1.0f ) );
 				
-				final int r = Math.max( 0, Math.min( 255, Util.roundPositive( br ) ) );  
-				final int g = Math.max( 0, Math.min( 255, Util.roundPositive( bg ) ) );
-				final int b = Math.max( 0, Math.min( 255, Util.roundPositive( bb ) ) );
+				final int r = Math.max( 0, Math.min( 255, mpicbg.util.Util.roundPos( br ) ) );  
+				final int g = Math.max( 0, Math.min( 255, mpicbg.util.Util.roundPos( bg ) ) );
+				final int b = Math.max( 0, Math.min( 255, mpicbg.util.Util.roundPos( bb ) ) );
 				ipPixels[ i ] = ( r << 16 ) | ( g << 8 ) | b;
 				++i;
 			}

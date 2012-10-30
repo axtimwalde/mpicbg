@@ -17,6 +17,7 @@
 package mpicbg.ij.integral;
 
 import ij.process.ImageProcessor;
+import mpicbg.util.Util;
 
 /**
  * 
@@ -165,6 +166,6 @@ final public class IntIntegralImage implements IntegralImage
 	{
 		final int y1w = yMin * w + w1;
 		final int y2w = yMax * w + w1;
-		return Util.roundPositive( ( sum[ y1w + xMin ] + sum[ y2w + xMax ] - sum[ y1w + xMax ] - sum[ y2w + xMin ] ) * scale );
+		return Util.roundPos( ( sum[ y1w + xMin ] + sum[ y2w + xMax ] - sum[ y1w + xMax ] - sum[ y2w + xMin ] ) * scale );
 	}
 }

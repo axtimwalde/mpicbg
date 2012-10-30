@@ -1,6 +1,5 @@
 package mpicbg.ij.util;
 
-import ij.ImagePlus;
 import ij.plugin.filter.GaussianBlur;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
@@ -404,7 +403,7 @@ public class Filter
 		final float sourceSigma,
 		final float targetSigma )
 	{
-		float s = targetSigma / scale;
+		final float s = targetSigma / scale;
 		final float v = s * s - sourceSigma * sourceSigma;
 		if ( v <= 0 )
 			return;

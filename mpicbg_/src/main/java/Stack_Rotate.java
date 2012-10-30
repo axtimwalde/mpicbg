@@ -6,14 +6,7 @@ import ij.gui.ImageWindow;
 import ij.gui.StackWindow;
 import ij.measure.Calibration;
 import ij.plugin.PlugIn;
-import ij.process.*;
-
-import mpicbg.ij.stack.Mapping;
-import mpicbg.ij.stack.InverseTransformMapping;
-import mpicbg.models.AffineModel3D;
-import mpicbg.models.InvertibleCoordinateTransform;
-import mpicbg.models.InvertibleCoordinateTransformList;
-import mpicbg.models.TranslationModel3D;
+import ij.process.ImageProcessor;
 
 import java.awt.Canvas;
 import java.awt.Event;
@@ -28,6 +21,12 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
 import java.awt.event.MouseWheelListener;
+
+import mpicbg.ij.stack.InverseTransformMapping;
+import mpicbg.models.AffineModel3D;
+import mpicbg.models.InvertibleCoordinateTransform;
+import mpicbg.models.InvertibleCoordinateTransformList;
+import mpicbg.models.TranslationModel3D;
 
 public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, MouseWheelListener, MouseListener, MouseMotionListener
 {
@@ -191,27 +190,21 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 	
 	public class MappingThread extends Thread
 	{
-		final protected ImagePlus imp;
 		final protected ImageStack source;
 		final protected ImageProcessor target;
 		final protected ImageProcessor temp;
-		final protected Mapping< ? > mapping;
 		protected boolean interpolate;
 		private boolean pleaseRepaint;
 		
 		public MappingThread(
-				final ImagePlus imp,
 				final ImageStack source,
 				final ImageProcessor target,
-				final Mapping< ? > mapping,
 				final boolean interpolate )
 		{
-			this.imp = imp;
 			this.source = source;
 			this.target = target;
 			this.temp = target.createProcessor( target.getWidth(), target.getHeight() );
 			temp.snapshot();
-			this.mapping = mapping;
 			this.interpolate = interpolate;
 			this.setName( "MappingThread" );
 		}
@@ -246,7 +239,7 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 					{
 						if ( !pleaseRepaint ) wait();
 					}
-					catch ( InterruptedException e ){}
+					catch ( final InterruptedException e ){}
 				}
 			}
 		}
@@ -268,7 +261,8 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 
 	private MappingThread painter;
 	
-	public void run( String arg )
+	@Override
+	public void run( final String arg )
     {
 		imp = IJ.getImage();
 		if ( imp == null || imp.getStackSize() == 1 )
@@ -283,7 +277,7 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 		{
 			gui = new GUI( imp );
 		}
-		catch ( ClassCastException e )
+		catch ( final ClassCastException e )
 		{
 			IJ.log( "Could not acquire GUI.  Probably, the AWT components of the stack window changed.  Write an e-mail to saalfed@mpi-cbg.de to fix this." );
 			final StackTraceElement[] stackTraceElements = e.getStackTrace();
@@ -340,7 +334,7 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 		gui.backupGui();
 		gui.takeOverGui();
 		
-		painter = new MappingThread( imp, stack, ip, mapping, true );
+		painter = new MappingThread( stack, ip, true );
 		
 		painter.start();
     }
@@ -365,6 +359,7 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 	{
 		new Thread(
 				new Runnable(){
+					@Override
 					final public void run()
 					{
 						imp.lock();
@@ -387,8 +382,8 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 						a.preConcatenate( minShift );
 						
 						/* TODO calculate optimal slice thickness, for now uses the previous x,y spacing isotropicly */
-						final TranslationModel3D sliceShift = new TranslationModel3D();
-						sliceShift.set( 0, 0, -1 );
+						final TranslationModel3D sliceOffset = new TranslationModel3D();
+						sliceOffset.set( 0, 0, -1 );
 						final InverseTransformMapping< AffineModel3D> aMapping = new InverseTransformMapping< AffineModel3D >( a );
 						
 						final ImageProcessor source = stack.getProcessor( 1 );
@@ -399,11 +394,11 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 						
 						for ( int i = 0; i <= d; ++i )
 						{
-							final ImageProcessor ip = source.createProcessor( w, h );
-							aMapping.mapInterpolated( stack, ip );
+							final ImageProcessor ipSlice = source.createProcessor( w, h );
+							aMapping.mapInterpolated( stack, ipSlice );
 //							aMapping.map( stack, ip );
-							result.addSlice( "" + i, ip );
-							a.preConcatenate( sliceShift );
+							result.addSlice( "" + i, ipSlice );
+							a.preConcatenate( sliceOffset );
 							IJ.showProgress( i, d );
 						}
 						final Calibration resultCalibration = imp.getCalibration().copy();
@@ -418,9 +413,9 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 				} ).start();
 	}
 	
-	private void rotate( final int axis, final float d )
+	private void rotate( final int a, final float d )
 	{
-		rotation.rotate( axis, d * step );
+		rotation.rotate( a, d * step );
 	}
 	
 	final private void shift( final float d )
@@ -448,7 +443,8 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 		affine.set( a );
 	}
 	
-	public void keyPressed( KeyEvent e )
+	@Override
+	public void keyPressed( final KeyEvent e )
 	{
 		if ( e.getKeyCode() == KeyEvent.VK_ESCAPE || e.getKeyCode() == KeyEvent.VK_ENTER )
 		{
@@ -562,7 +558,8 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 			return 1;
 	}
 
-	public void keyReleased( KeyEvent e )
+	@Override
+	public void keyReleased( final KeyEvent e )
 	{
 		if ( e.getKeyCode() == KeyEvent.VK_SHIFT )
 		{
@@ -575,9 +572,10 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 			oY -= 9 * dY / 10;
 		}
 	}
-	public void keyTyped( KeyEvent e ){}
+	@Override
+	public void keyTyped( final KeyEvent e ){}
 	
-	public static String modifiers( int flags )
+	public static String modifiers( final int flags )
 	{
 		String s = " [ ";
 		if ( flags == 0 )
@@ -596,6 +594,7 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 		return s;
 	}
 
+	@Override
 	public void adjustmentValueChanged( final AdjustmentEvent e )
 	{
 		currentSlice = e.getValue();
@@ -603,15 +602,17 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 		update();
 	}
 
+	@Override
 	public void mouseWheelMoved( final MouseWheelEvent e )
 	{
 		final float v = keyModfiedSpeed( e.getModifiersEx() );
-		int s = e.getWheelRotation();
+		final int s = e.getWheelRotation();
 		shift( v * s );
 		gui.scrollBar.setValue( Math.round( currentSlice ) );
 		update();		
 	}
 
+	@Override
 	public void mouseDragged( final MouseEvent e )
 	{
 		final float v = 10 * step * keyModfiedSpeed( e.getModifiersEx() );
@@ -624,12 +625,18 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 		update();
 	}
 
-	public void mouseMoved( MouseEvent e ){}
-	public void mouseClicked( MouseEvent e ){}
-	public void mouseEntered( MouseEvent e ){}
-	public void mouseExited( MouseEvent e ){}
-	public void mouseReleased( MouseEvent e ){}
-	public void mousePressed( MouseEvent e )
+	@Override
+	public void mouseMoved( final MouseEvent e ){}
+	@Override
+	public void mouseClicked( final MouseEvent e ){}
+	@Override
+	public void mouseEntered( final MouseEvent e ){}
+	@Override
+	public void mouseExited( final MouseEvent e ){}
+	@Override
+	public void mouseReleased( final MouseEvent e ){}
+	@Override
+	public void mousePressed( final MouseEvent e )
 	{
 		oX = e.getX();
 		oY = e.getY();

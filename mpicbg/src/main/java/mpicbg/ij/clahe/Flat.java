@@ -16,9 +16,6 @@
  */
 package mpicbg.ij.clahe;
 
-import java.awt.Rectangle;
-import java.util.ArrayList;
-
 import ij.CompositeImage;
 import ij.IJ;
 import ij.ImagePlus;
@@ -28,6 +25,9 @@ import ij.process.ColorProcessor;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 import ij.process.ShortProcessor;
+
+import java.awt.Rectangle;
+import java.util.ArrayList;
 
 /**
  * &lsquot;Contrast Limited Adaptive Histogram Equalization&rsquot; as
@@ -125,7 +125,7 @@ public class Flat
 					final byte[] roiMaskPixels = ( byte[] )roiMask.getPixels();
 					final byte[] cropMaskPixels = ( byte[] )cropMask.getPixels();
 					for ( int i = 0; i < roiMaskPixels.length; ++i )
-						cropMaskPixels[ i ] = ( byte )Util.roundPositive( ( cropMaskPixels[ i ] & 0xff ) * ( roiMaskPixels[ i ] & 0xff ) / 255.0f );
+						cropMaskPixels[ i ] = ( byte )mpicbg.util.Util.roundPos( ( cropMaskPixels[ i ] & 0xff ) * ( roiMaskPixels[ i ] & 0xff ) / 255.0f );
 				}
 				run( imp, blockRadius, bins, slope, roiBox, cropMask, composite );
 				mask.setRoi( oldRoi );
@@ -258,7 +258,7 @@ public class Flat
 				}
 			}
 		}
-		catch ( Exception e )
+		catch ( final Exception e )
 		{
 			IJ.error( e.getMessage() );
 			return;
@@ -317,11 +317,11 @@ public class Flat
 			final int[] clippedHist = new int[ bins + 1 ];
 			for ( int yi = yMin; yi < yMax; ++yi )
 				for ( int xi = xMin0; xi < xMax0; ++xi )
-					++hist[ Util.roundPositive( src.get( xi, yi ) / 255.0f * bins ) ];
+					++hist[ mpicbg.util.Util.roundPos( src.get( xi, yi ) / 255.0f * bins ) ];
 			
 			for ( int x = boxXMin; x < boxXMax; ++x )
 			{
-				final int v = Util.roundPositive( src.get( x, y ) / 255.0f * bins );
+				final int v = mpicbg.util.Util.roundPos( src.get( x, y ) / 255.0f * bins );
 				
 				final int xMin = Math.max( 0, x - blockRadius );
 				final int xMax = x + blockRadius + 1;
@@ -339,7 +339,7 @@ public class Flat
 				{
 					final int xMin1 = xMin - 1;
 					for ( int yi = yMin; yi < yMax; ++yi )
-						--hist[ Util.roundPositive( src.get( xMin1, yi ) / 255.0f * bins ) ];						
+						--hist[ mpicbg.util.Util.roundPos( src.get( xMin1, yi ) / 255.0f * bins ) ];						
 				}
 					
 				/* add newly included values to histogram */
@@ -347,10 +347,10 @@ public class Flat
 				{
 					final int xMax1 = xMax - 1;
 					for ( int yi = yMin; yi < yMax; ++yi )
-						++hist[ Util.roundPositive( src.get( xMax1, yi ) / 255.0f * bins ) ];						
+						++hist[ mpicbg.util.Util.roundPos( src.get( xMax1, yi ) / 255.0f * bins ) ];						
 				}
 				
-				dst.set( x, y, Util.roundPositive( Util.transferValue( v, hist, clippedHist, limit ) * 255.0f ) );
+				dst.set( x, y, mpicbg.util.Util.roundPos( Util.transferValue( v, hist, clippedHist, limit ) * 255.0f ) );
 			}
 			
 			/* multiply the current row into ip or the respective channel */

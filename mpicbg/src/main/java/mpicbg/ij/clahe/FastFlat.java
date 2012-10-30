@@ -16,13 +16,13 @@
  */
 package mpicbg.ij.clahe;
 
-import java.util.ArrayList;
-
 import ij.CompositeImage;
 import ij.ImagePlus;
 import ij.gui.Roi;
 import ij.process.ByteProcessor;
 import ij.process.ImageProcessor;
+
+import java.util.ArrayList;
 
 /**
  * &lsquot;Contrast Limited Adaptive Histogram Equalization&rsquot; as
@@ -98,7 +98,7 @@ public class FastFlat extends Flat
 			final int row = src.getWidth() * y;
 			for ( int x = xMin; x < xMax; ++x )
 			{
-				++hist[ Util.roundPositive( src.get( row + x ) / 255.0f * bins ) ];
+				++hist[ mpicbg.util.Util.roundPos( src.get( row + x ) / 255.0f * bins ) ];
 			}
 		}
 		
@@ -253,7 +253,7 @@ public class FastFlat extends Flat
 					for ( int x = xMin; x < xMax; ++x )
 					{
 						final float wx = ( float )( cs[ c1 ] - x ) / dc;
-						final int v = Util.roundPositive( src.get( o + x ) / 255.0f * bins );
+						final int v = mpicbg.util.Util.roundPos( src.get( o + x ) / 255.0f * bins );
 						
 						final float t00 = tl[ v ];
 						final float t01 = tr[ v ];
@@ -278,7 +278,7 @@ public class FastFlat extends Flat
 						else
 							t = wy * t0 + ( 1.0f - wy ) * t1;
 						
-						dst.set( o + x, Math.max( 0, Math.min( 255, Util.roundPositive( t * 255.0f ) ) ) );
+						dst.set( o + x, Math.max( 0, Math.min( 255, mpicbg.util.Util.roundPos( t * 255.0f ) ) ) );
 					}
 				}
 				

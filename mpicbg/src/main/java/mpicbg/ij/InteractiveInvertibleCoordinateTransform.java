@@ -6,24 +6,29 @@ import ij.ImageListener;
 import ij.ImagePlus;
 import ij.ImageStack;
 import ij.WindowManager;
+import ij.gui.ImageWindow;
+import ij.gui.PointRoi;
+import ij.gui.Roi;
+import ij.gui.Toolbar;
 import ij.plugin.PlugIn;
-import ij.process.*;
-import ij.gui.*;
-
-import mpicbg.models.*;
+import ij.process.ImageProcessor;
 
 import java.awt.Event;
 import java.awt.TextField;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
+
+import mpicbg.models.IllDefinedDataPointsException;
+import mpicbg.models.InvertibleCoordinateTransform;
+import mpicbg.models.Model;
+import mpicbg.models.NotEnoughDataPointsException;
+import mpicbg.models.Point;
+import mpicbg.models.PointMatch;
 
 /**
  * 
@@ -65,7 +70,8 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Model<
 	abstract protected void setHandles();
 	abstract protected void updateHandles( int x, int y );
 	
-	public void run( String arg )
+	@Override
+	public void run( final String arg )
     {
 		// cleanup
 		m.clear();
@@ -116,16 +122,20 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Model<
 		imp.getCanvas().addKeyListener( this );
     }
 	
-	public void imageClosed( ImagePlus imp )
+	@Override
+	public void imageClosed( final ImagePlus imp2 )
 	{
-		if ( imp == this.imp )
+		if ( imp2 == this.imp )
 			for ( final Tuple tuple : tuples )
 				tuple.painter.interrupt();
 	}
-	public void imageOpened( ImagePlus imp ){}
-	public void imageUpdated( ImagePlus imp ){}
+	@Override
+	public void imageOpened( final ImagePlus imp2 ){}
+	@Override
+	public void imageUpdated( final ImagePlus imp2 ){}
 	
-	public void keyPressed( KeyEvent e)
+	@Override
+	public void keyPressed( final KeyEvent e)
 	{
 		if ( e.getKeyCode() == KeyEvent.VK_ESCAPE || e.getKeyCode() == KeyEvent.VK_ENTER )
 		{
@@ -194,24 +204,27 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Model<
 				( e.getSource() instanceof TextField ) ){}
 	}
 
-	public void keyReleased( KeyEvent e ){}
-	public void keyTyped( KeyEvent e ){}
+	@Override
+	public void keyReleased( final KeyEvent e ){}
+	@Override
+	public void keyTyped( final KeyEvent e ){}
 	
-	public void mousePressed( MouseEvent e )
+	@Override
+	public void mousePressed( final MouseEvent e )
 	{
 		targetIndex = -1;
 		if ( e.getButton() == MouseEvent.BUTTON1 )
 		{
-			ImageWindow win = WindowManager.getCurrentWindow();
-			int x = win.getCanvas().offScreenX( e.getX() );
-			int y = win.getCanvas().offScreenY( e.getY() );
+			final ImageWindow win = WindowManager.getCurrentWindow();
+			final int x = win.getCanvas().offScreenX( e.getX() );
+			final int y = win.getCanvas().offScreenY( e.getY() );
 			
 			double target_d = Double.MAX_VALUE;
 			for ( int i = 0; i < q.length; ++i )
 			{
-				double dx = win.getCanvas().getMagnification() * ( q[ i ].getW()[ 0 ] - x );
-				double dy = win.getCanvas().getMagnification() * ( q[ i ].getW()[ 1 ] - y );
-				double d =  dx * dx + dy * dy;
+				final double dx = win.getCanvas().getMagnification() * ( q[ i ].getW()[ 0 ] - x );
+				final double dy = win.getCanvas().getMagnification() * ( q[ i ].getW()[ 1 ] - y );
+				final double d =  dx * dx + dy * dy;
 				if ( d < 64.0 && d < target_d )
 				{
 					targetIndex = i;
@@ -221,18 +234,23 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Model<
 		}
 	}
 
-	public void mouseReleased( MouseEvent e ){}
-	public void mouseExited( MouseEvent e ) {}
-	public void mouseClicked( MouseEvent e ) {}	
-	public void mouseEntered( MouseEvent e ) {}
+	@Override
+	public void mouseReleased( final MouseEvent e ){}
+	@Override
+	public void mouseExited( final MouseEvent e ) {}
+	@Override
+	public void mouseClicked( final MouseEvent e ) {}	
+	@Override
+	public void mouseEntered( final MouseEvent e ) {}
 	
-	public void mouseDragged( MouseEvent e )
+	@Override
+	public void mouseDragged( final MouseEvent e )
 	{
 		if ( targetIndex >= 0 )
 		{
-			ImageWindow win = WindowManager.getCurrentWindow();
-			int x = win.getCanvas().offScreenX( e.getX() );
-			int y = win.getCanvas().offScreenY( e.getY() );
+			final ImageWindow win = WindowManager.getCurrentWindow();
+			final int x = win.getCanvas().offScreenX( e.getX() );
+			final int y = win.getCanvas().offScreenY( e.getY() );
 			
 			updateHandles( x, y );
 					
@@ -248,15 +266,16 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Model<
 					}
 				}
 			}
-			catch ( NotEnoughDataPointsException ex ) { ex.printStackTrace(); }
-			catch ( IllDefinedDataPointsException ex ) { ex.printStackTrace(); }
+			catch ( final NotEnoughDataPointsException ex ) { ex.printStackTrace(); }
+			catch ( final IllDefinedDataPointsException ex ) { ex.printStackTrace(); }
 		}
 	}
 	
-	public void mouseMoved( MouseEvent e ){}
+	@Override
+	public void mouseMoved( final MouseEvent e ){}
 	
 	
-	public static String modifiers( int flags )
+	public static String modifiers( final int flags )
 	{
 		String s = " [ ";
 		if ( flags == 0 )

@@ -59,7 +59,7 @@ final class FastByteApply extends Apply< ByteProcessor >
 				final float v = srcPixels[ i ] & 0xff;
 				final float a = dstPixels[ i ] & 0xff;
 				final float b = m * a + ( 1.0f - m ) * v;
-				ipPixels[ i ] = ( byte )Util.roundPositive( b );
+				ipPixels[ i ] = ( byte )mpicbg.util.Util.roundPos( b );
 				++i;
 			}
 		}
