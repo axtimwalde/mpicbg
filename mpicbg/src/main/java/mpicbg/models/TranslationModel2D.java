@@ -201,6 +201,7 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 	 * TODO Not yet tested
 	 */
 	//@Override
+	@Override
 	public TranslationModel2D createInverse()
 	{
 		final TranslationModel2D ict = new TranslationModel2D();
@@ -218,8 +219,8 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 	{
 		data[ 0 ] = 1;
 		data[ 1 ] = 0;
-		data[ 2 ] = 1;
-		data[ 3 ] = 0;
+		data[ 2 ] = 0;
+		data[ 3 ] = 1;
 		data[ 4 ] = tx;
 		data[ 5 ] = ty;
 	}
@@ -229,8 +230,8 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 	{
 		data[ 0 ] = 1;
 		data[ 1 ] = 0;
-		data[ 2 ] = 1;
-		data[ 3 ] = 0;
+		data[ 2 ] = 0;
+		data[ 3 ] = 1;
 		data[ 4 ] = tx;
 		data[ 5 ] = ty;
 	}

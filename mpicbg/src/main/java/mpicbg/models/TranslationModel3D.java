@@ -129,6 +129,7 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 		cost = m.getCost();
 	}
 	
+	@Override
 	public TranslationModel3D copy()
 	{
 		final TranslationModel3D m = new TranslationModel3D();
@@ -143,6 +144,7 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 	 * TODO Not yet tested
 	 */
 	//@Override
+	@Override
 	public TranslationModel3D createInverse()
 	{
 		final TranslationModel3D ict = new TranslationModel3D();
@@ -156,13 +158,15 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 		return ict;
 	}
 
-	public void estimateBounds( float[] min, float[] max )
+	@Override
+	public void estimateBounds( final float[] min, final float[] max )
 	{
 		applyInPlace( min );
 		applyInPlace( max );
 	}
 
-	public void estimateInverseBounds( float[] min, float[] max ) throws NoninvertibleModelException
+	@Override
+	public void estimateInverseBounds( final float[] min, final float[] max ) throws NoninvertibleModelException
 	{
 		applyInverseInPlace( min );
 		applyInverseInPlace( max );		
@@ -182,15 +186,15 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 	@Override
 	public void toArray( final float[] data ) 
 	{
-		data[ 0 ] = 0;
+		data[ 0 ] = 1;
 		data[ 1 ] = 0;
 		data[ 2 ] = 0;
 		data[ 3 ] = 0;
-		data[ 4 ] = 0;
+		data[ 4 ] = 1;
 		data[ 5 ] = 0;
 		data[ 6 ] = 0;
 		data[ 7 ] = 0;
-		data[ 8 ] = 0;
+		data[ 8 ] = 1;
 		data[ 9 ] = translation[ 0 ];
 		data[ 10 ] = translation[ 1 ];
 		data[ 11 ] = translation[ 2 ];
@@ -199,15 +203,15 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 	@Override
 	public void toArray( final double[] data ) 
 	{
-		data[ 0 ] = 0;
+		data[ 0 ] = 1;
 		data[ 1 ] = 0;
 		data[ 2 ] = 0;
 		data[ 3 ] = 0;
-		data[ 4 ] = 0;
+		data[ 4 ] = 1;
 		data[ 5 ] = 0;
 		data[ 6 ] = 0;
 		data[ 7 ] = 0;
-		data[ 8 ] = 0;
+		data[ 8 ] = 1;
 		data[ 9 ] = translation[ 0 ];
 		data[ 10 ] = translation[ 1 ];
 		data[ 11 ] = translation[ 2 ];
@@ -222,19 +226,19 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 		else
 			a = m;
 		
-		a[ 0 ] = 0;
+		a[ 0 ] = 1;
 		a[ 1 ] = 0;
 		a[ 2 ] = 0;
 		a[ 3 ] = translation[ 0 ];
 		
 		a[ 4 ] = 0;
-		a[ 5 ] = 0;
+		a[ 5 ] = 1;
 		a[ 6 ] = 0;
 		a[ 7 ] = translation[ 1 ];
 		
 		a[ 8 ] = 0;
 		a[ 9 ] = 0;
-		a[ 10 ] = 0;
+		a[ 10 ] = 1;
 		a[ 11 ] = translation[ 2 ];
 		
 		return a;
@@ -243,34 +247,34 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 	@Override
 	public void toMatrix( final float[][] data ) 
 	{
-		data[ 0 ][ 0 ] = 0;
+		data[ 0 ][ 0 ] = 1;
 		data[ 0 ][ 1 ] = 0;
 		data[ 0 ][ 2 ] = 0;
 		data[ 0 ][ 3 ] = translation[ 0 ];
 		data[ 1 ][ 0 ] = 0;
-		data[ 1 ][ 1 ] = 0;
+		data[ 1 ][ 1 ] = 1;
 		data[ 1 ][ 2 ] = 0;
 		data[ 1 ][ 3 ] = translation[ 1 ];
 		data[ 2 ][ 0 ] = 0;
 		data[ 2 ][ 1 ] = 0;
-		data[ 2 ][ 2 ] = 0;
+		data[ 2 ][ 2 ] = 1;
 		data[ 2 ][ 3 ] = translation[ 2 ];
 	}
 
 	@Override
 	public void toMatrix( final double[][] data ) 
 	{
-		data[ 0 ][ 0 ] = 0;
+		data[ 0 ][ 0 ] = 1;
 		data[ 0 ][ 1 ] = 0;
 		data[ 0 ][ 2 ] = 0;
 		data[ 0 ][ 3 ] = translation[ 0 ];
 		data[ 1 ][ 0 ] = 0;
-		data[ 1 ][ 1 ] = 0;
+		data[ 1 ][ 1 ] = 1;
 		data[ 1 ][ 2 ] = 0;
 		data[ 1 ][ 3 ] = translation[ 1 ];
 		data[ 2 ][ 0 ] = 0;
 		data[ 2 ][ 1 ] = 0;
-		data[ 2 ][ 2 ] = 0;
+		data[ 2 ][ 2 ] = 1;
 		data[ 2 ][ 3 ] = translation[ 2 ];
 	}
 
