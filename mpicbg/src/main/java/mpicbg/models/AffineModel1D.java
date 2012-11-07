@@ -43,7 +43,7 @@ public class AffineModel1D extends AbstractAffineModel1D< AffineModel1D > implem
 	@Override
 	final public void applyInPlace( final float[] l )
 	{
-		assert l.length == 1 : "1d affine transformations can be applied to 1d points only.";
+		assert l.length >= 1 : "1d affine transformations can be applied to 1d points only.";
 		l[ 0 ] = l[ 0 ] * m00 + m01;
 	}
 
@@ -59,7 +59,7 @@ public class AffineModel1D extends AbstractAffineModel1D< AffineModel1D > implem
 	@Override
 	final public void applyInverseInPlace( final float[] l ) throws NoninvertibleModelException
 	{
-		assert l.length == 1 : "1d affine transformations can be applied to 1d points only.";
+		assert l.length >= 1 : "1d affine transformations can be applied to 1d points only.";
 
 		if ( isInvertible )
 			l[ 0 ] = l[ 0 ] * i00 + i01;
@@ -79,8 +79,8 @@ public class AffineModel1D extends AbstractAffineModel1D< AffineModel1D > implem
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
 		assert
-		p.length == 1 &&
-		q.length == 1 : "1d affine transformations can be applied to 3d points only.";
+		p.length >= 1 &&
+		q.length >= 1 : "1d affine transformations can be applied to 3d points only.";
 
 		assert
 			p[ 0 ].length == p[ 1 ].length &&

@@ -20,7 +20,7 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 	@Override
 	final public float[] apply( final float[] point )
 	{
-		assert point.length == 3 : "3d translations can be applied to 3d points only.";
+		assert point.length >= 3 : "3d translations can be applied to 3d points only.";
 		
 		return new float[]{
 			point[ 0 ] + translation[ 0 ],
@@ -31,7 +31,7 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 	@Override
 	final public void applyInPlace( final float[] point )
 	{
-		assert point.length == 3 : "3d translations can be applied to 3d points only.";
+		assert point.length >= 3 : "3d translations can be applied to 3d points only.";
 		
 		point[ 0 ] += translation[ 0 ];
 		point[ 1 ] += translation[ 1 ];
@@ -41,7 +41,7 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 	@Override
 	final public float[] applyInverse( final float[] point )
 	{
-		assert point.length == 3 : "3d translations can be applied to 3d points only.";
+		assert point.length >= 3 : "3d translations can be applied to 3d points only.";
 		
 		return new float[]{
 				point[ 0 ] - translation[ 0 ],
@@ -52,7 +52,7 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 	@Override
 	final public void applyInverseInPlace( final float[] point )
 	{
-		assert point.length == 3 : "3d translations can be applied to 3d points only.";
+		assert point.length >= 3 : "3d translations can be applied to 3d points only.";
 		
 		point[ 0 ] -= translation[ 0 ];
 		point[ 1 ] -= translation[ 1 ];

@@ -16,6 +16,7 @@ public abstract class AbstractAffineModel2D< M extends AbstractAffineModel2D< M 
 	 * 
 	 * @return {@link AffineTransform}
 	 */
+	@Override
 	abstract public AffineTransform createAffine();
 	
 	/**
@@ -24,12 +25,14 @@ public abstract class AbstractAffineModel2D< M extends AbstractAffineModel2D< M 
 	 * 
 	 * @return {@link AffineTransform}
 	 */
+	@Override
 	abstract public AffineTransform createInverseAffine();
 	
 	//@Override
+	@Override
 	public void estimateBounds( final float[] min, final float[] max )
 	{
-		assert min.length == 2 && max.length == 2 : "2d affine transformations can be applied to 2d points only.";
+		assert min.length >= 2 && max.length >= 2 : "2d affine transformations can be applied to 2d points only.";
 		
 		float minX = Float.MAX_VALUE, minY = Float.MAX_VALUE;
 		float maxX = -Float.MAX_VALUE, maxY = -Float.MAX_VALUE;
@@ -76,9 +79,10 @@ public abstract class AbstractAffineModel2D< M extends AbstractAffineModel2D< M 
 	}
 	
 	//@Override
+	@Override
 	public void estimateInverseBounds( final float[] min, final float[] max ) throws NoninvertibleModelException
 	{
-		assert min.length == 2 && max.length == 2 : "2d affine transformations can be applied to 2d points only.";
+		assert min.length >= 2 && max.length >= 2 : "2d affine transformations can be applied to 2d points only.";
 		
 		float minX = Float.MAX_VALUE, minY = Float.MAX_VALUE;
 		float maxX = -Float.MAX_VALUE, maxY = -Float.MAX_VALUE;
@@ -130,9 +134,12 @@ public abstract class AbstractAffineModel2D< M extends AbstractAffineModel2D< M 
 		return ( "[3,3](" + createAffine() + ") " + cost );
 	}
 	
+	@Override
 	abstract public void preConcatenate( final M model );
+	@Override
 	abstract public void concatenate( final M model );
 	
 	//@Override
+	@Override
 	abstract public M createInverse();
 }

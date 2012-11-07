@@ -46,9 +46,10 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	final public AffineTransform createInverseAffine(){ return new AffineTransform( cos, -sin, sin, cos, itx, ity ); }
 	
 	//@Override
+	@Override
 	final public float[] apply( final float[] l )
 	{
-		assert l.length == 2 : "2d rigid transformations can be applied to 2d points only.";
+		assert l.length >= 2 : "2d rigid transformations can be applied to 2d points only.";
 		
 		final float[] transformed = l.clone();
 		applyInPlace( transformed );
@@ -56,9 +57,10 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	}
 	
 	//@Override
+	@Override
 	final public void applyInPlace( final float[] l )
 	{
-		assert l.length == 2 : "2d rigid transformations can be applied to 2d points only.";
+		assert l.length >= 2 : "2d rigid transformations can be applied to 2d points only.";
 		
 		final float l0 = l[ 0 ];
 		l[ 0 ] = cos * l0 - sin * l[ 1 ] + tx;
@@ -66,9 +68,10 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	}
 	
 	//@Override
+	@Override
 	final public float[] applyInverse( final float[] l )
 	{
-		assert l.length == 2 : "2d rigid transformations can be applied to 2d points only.";
+		assert l.length >= 2 : "2d rigid transformations can be applied to 2d points only.";
 		
 		final float[] transformed = l.clone();
 		applyInverseInPlace( transformed );
@@ -76,9 +79,10 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	}
 
 	//@Override
+	@Override
 	final public void applyInverseInPlace( final float[] l )
 	{
-		assert l.length == 2 : "2d rigid transformations can be applied to 2d points only.";
+		assert l.length >= 2 : "2d rigid transformations can be applied to 2d points only.";
 		
 		final float l0 = l[ 0 ];
 		l[ 0 ] = cos * l0  + sin * l[ 1 ] + itx;
@@ -97,8 +101,8 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 		throws NotEnoughDataPointsException
 	{
 		assert
-			p.length == 2 &&
-			q.length == 2 : "2d rigid transformations can be applied to 2d points only.";
+			p.length >= 2 &&
+			q.length >= 2 : "2d rigid transformations can be applied to 2d points only.";
 	
 		assert
 			p[ 0 ].length == p[ 1 ].length &&
@@ -350,6 +354,7 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	 * TODO Not yet tested
 	 */
 	//@Override
+	@Override
 	public RigidModel2D createInverse()
 	{
 		final RigidModel2D ict = new RigidModel2D();

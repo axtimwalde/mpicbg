@@ -46,9 +46,10 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	final public AffineTransform createInverseAffine(){ return new AffineTransform( i00, i10, i01, i11, i02, i12 ); }
 	
 	//@Override
+	@Override
 	final public float[] apply( final float[] l )
 	{
-		assert l.length == 2 : "2d affine transformations can be applied to 2d points only.";
+		assert l.length >= 2 : "2d affine transformations can be applied to 2d points only.";
 		
 		final float[] transformed = l.clone();
 		applyInPlace( transformed );
@@ -56,9 +57,10 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	}
 	
 	//@Override
+	@Override
 	final public void applyInPlace( final float[] l )
 	{
-		assert l.length == 2 : "2d affine transformations can be applied to 2d points only.";
+		assert l.length >= 2 : "2d affine transformations can be applied to 2d points only.";
 		
 		final float l0 = l[ 0 ];
 		l[ 0 ] = l0 * m00 + l[ 1 ] * m01 + m02;
@@ -66,9 +68,10 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	}
 	
 	//@Override
+	@Override
 	final public float[] applyInverse( final float[] l ) throws NoninvertibleModelException
 	{
-		assert l.length == 2 : "2d affine transformations can be applied to 2d points only.";
+		assert l.length >= 2 : "2d affine transformations can be applied to 2d points only.";
 		
 		final float[] transformed = l.clone();
 		applyInverseInPlace( transformed );
@@ -77,9 +80,10 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 
 
 	//@Override
+	@Override
 	final public void applyInverseInPlace( final float[] l ) throws NoninvertibleModelException
 	{
-		assert l.length == 2 : "2d affine transformations can be applied to 2d points only.";
+		assert l.length >= 2 : "2d affine transformations can be applied to 2d points only.";
 		
 		if ( isInvertible )
 		{
@@ -103,8 +107,8 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
 		assert
-			p.length == 2 &&
-			q.length == 2 : "2d affine transformations can be applied to 2d points only.";
+			p.length >= 2 &&
+			q.length >= 2 : "2d affine transformations can be applied to 2d points only.";
 		
 		assert
 			p[ 0 ].length == p[ 1 ].length &&
@@ -270,7 +274,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	@Override
 	public AffineModel2D copy()
 	{
-		AffineModel2D m = new AffineModel2D();
+		final AffineModel2D m = new AffineModel2D();
 		m.m00 = m00;
 		m.m01 = m01;
 		m.m10 = m10;
@@ -419,6 +423,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	 * TODO Not yet tested
 	 */
 	//@Override
+	@Override
 	public AffineModel2D createInverse()
 	{
 		final AffineModel2D ict = new AffineModel2D();

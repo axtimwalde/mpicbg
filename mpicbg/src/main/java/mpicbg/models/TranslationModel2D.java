@@ -26,7 +26,7 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 	@Override
 	final public float[] apply( final float[] l )
 	{
-		assert l.length == 2 : "2d translation transformations can be applied to 2d points only.";
+		assert l.length >= 2 : "2d translation transformations can be applied to 2d points only.";
 		
 		return new float[]{ l[ 0 ] + tx, l[ 1 ] + ty };
 	}
@@ -34,7 +34,7 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 	@Override
 	final public void applyInPlace( final float[] l )
 	{
-		assert l.length == 2 : "2d translation transformations can be applied to 2d points only.";
+		assert l.length >= 2 : "2d translation transformations can be applied to 2d points only.";
 		
 		l[ 0 ] += tx;
 		l[ 1 ] += ty;
@@ -43,7 +43,7 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 	@Override
 	final public float[] applyInverse( final float[] l )
 	{
-		assert l.length == 2 : "2d translation transformations can be applied to 2d points only.";
+		assert l.length >= 2 : "2d translation transformations can be applied to 2d points only.";
 		
 		return new float[]{ l[ 0 ] - tx, l[ 1 ] - ty };
 	}
@@ -51,7 +51,7 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 	@Override
 	final public void applyInverseInPlace( final float[] l )
 	{
-		assert l.length == 2 : "2d translation transformations can be applied to 2d points only.";
+		assert l.length >= 2 : "2d translation transformations can be applied to 2d points only.";
 		
 		l[ 0 ] -= tx;
 		l[ 1 ] -= ty;
@@ -65,8 +65,8 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 		throws NotEnoughDataPointsException
 	{
 		assert
-			p.length == 2 &&
-			q.length == 2 : "2d translations can be applied to 2d points only.";
+			p.length >= 2 &&
+			q.length >= 2 : "2d translations can be applied to 2d points only.";
 	
 		assert
 			p[ 0 ].length == p[ 1 ].length &&

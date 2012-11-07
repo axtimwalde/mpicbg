@@ -81,7 +81,7 @@ public class RigidModel3D extends AbstractAffineModel3D< RigidModel3D > implemen
 	@Override
 	final public void applyInPlace( final float[] l )
 	{
-		assert l.length == 3 : "3d affine transformations can be applied to 3d points only.";
+		assert l.length >= 3 : "3d affine transformations can be applied to 3d points only.";
 		
 		final float l0 = l[ 0 ];
 		final float l1 = l[ 1 ];
@@ -102,7 +102,7 @@ public class RigidModel3D extends AbstractAffineModel3D< RigidModel3D > implemen
 	@Override
 	final public void applyInverseInPlace( final float[] l ) throws NoninvertibleModelException
 	{
-		assert l.length == 3 : "3d affine transformations can be applied to 3d points only.";
+		assert l.length >= 3 : "3d affine transformations can be applied to 3d points only.";
 		
 		if ( isInvertible )
 		{
@@ -262,7 +262,7 @@ public class RigidModel3D extends AbstractAffineModel3D< RigidModel3D > implemen
 	@Override
 	public RigidModel3D copy()
 	{
-		RigidModel3D m = new RigidModel3D();
+		final RigidModel3D m = new RigidModel3D();
 		m.m00 = m00;
 		m.m10 = m10;
 		m.m20 = m20;
@@ -311,6 +311,7 @@ public class RigidModel3D extends AbstractAffineModel3D< RigidModel3D > implemen
 		i23 = -i20 * m03 - i21 * m13 - i22 * m23;
 	}
 	
+	@Override
 	final public void preConcatenate( final RigidModel3D model )
 	{
 		final float a00 = model.m00 * m00 + model.m01 * m10 + model.m02 * m20;
@@ -346,6 +347,7 @@ public class RigidModel3D extends AbstractAffineModel3D< RigidModel3D > implemen
 		invert();
 	}
 	
+	@Override
 	final public void concatenate( final RigidModel3D model )
 	{
 		final float a00 = m00 * model.m00 + m01 * model.m10 + m02 * model.m20;
@@ -532,7 +534,7 @@ public class RigidModel3D extends AbstractAffineModel3D< RigidModel3D > implemen
 	}
 
 	@Override
-	public void toArray( float[] data )
+	public void toArray( final float[] data )
 	{
 		data[ 0 ] = m00;
 		data[ 1 ] = m10;
@@ -549,7 +551,7 @@ public class RigidModel3D extends AbstractAffineModel3D< RigidModel3D > implemen
 	}
 
 	@Override
-	public void toArray( double[] data )
+	public void toArray( final double[] data )
 	{
 		data[ 0 ] = m00;
 		data[ 1 ] = m10;
@@ -566,7 +568,7 @@ public class RigidModel3D extends AbstractAffineModel3D< RigidModel3D > implemen
 	}
 
 	@Override
-	public void toMatrix( float[][] data )
+	public void toMatrix( final float[][] data )
 	{
 		data[ 0 ][ 0 ] = m00;
 		data[ 0 ][ 1 ] = m01;
@@ -583,7 +585,7 @@ public class RigidModel3D extends AbstractAffineModel3D< RigidModel3D > implemen
 	}
 
 	@Override
-	public void toMatrix( double[][] data )
+	public void toMatrix( final double[][] data )
 	{
 		data[ 0 ][ 0 ] = m00;
 		data[ 0 ][ 1 ] = m01;

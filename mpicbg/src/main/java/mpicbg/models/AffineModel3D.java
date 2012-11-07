@@ -86,7 +86,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 	@Override
 	final public void applyInPlace( final float[] l )
 	{
-		assert l.length == 3 : "3d affine transformations can be applied to 3d points only.";
+		assert l.length >= 3 : "3d affine transformations can be applied to 3d points only.";
 		
 		final float l0 = l[ 0 ];
 		final float l1 = l[ 1 ];
@@ -107,7 +107,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 	@Override
 	final public void applyInverseInPlace( final float[] l ) throws NoninvertibleModelException
 	{
-		assert l.length == 3 : "3d affine transformations can be applied to 3d points only.";
+		assert l.length >= 3 : "3d affine transformations can be applied to 3d points only.";
 		
 		if ( isInvertible )
 		{
@@ -133,8 +133,8 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
 		assert
-		p.length == 3 &&
-		q.length == 3 : "3d affine transformations can be applied to 3d points only.";
+		p.length >= 3 &&
+		q.length >= 3 : "3d affine transformations can be applied to 3d points only.";
 	
 		assert
 			p[ 0 ].length == p[ 1 ].length &&
@@ -404,7 +404,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 	@Override
 	public AffineModel3D copy()
 	{
-		AffineModel3D m = new AffineModel3D();
+		final AffineModel3D m = new AffineModel3D();
 		m.m00 = m00;
 		m.m10 = m10;
 		m.m20 = m20;
@@ -453,6 +453,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 		i23 = -i20 * m03 - i21 * m13 - i22 * m23;
 	}
 	
+	@Override
 	final public void preConcatenate( final AffineModel3D model )
 	{
 		final float a00 = model.m00 * m00 + model.m01 * m10 + model.m02 * m20;
@@ -488,6 +489,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 		invert();
 	}
 	
+	@Override
 	final public void concatenate( final AffineModel3D model )
 	{
 		final float a00 = m00 * model.m00 + m01 * model.m10 + m02 * model.m20;
@@ -684,7 +686,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 	}
 
 	@Override
-	public void toArray( float[] data )
+	public void toArray( final float[] data )
 	{
 		data[ 0 ] = m00;
 		data[ 1 ] = m10;
@@ -701,7 +703,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 	}
 
 	@Override
-	public void toArray( double[] data )
+	public void toArray( final double[] data )
 	{
 		data[ 0 ] = m00;
 		data[ 1 ] = m10;
@@ -718,7 +720,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 	}
 
 	@Override
-	public void toMatrix( float[][] data )
+	public void toMatrix( final float[][] data )
 	{
 		data[ 0 ][ 0 ] = m00;
 		data[ 0 ][ 1 ] = m01;
@@ -735,7 +737,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 	}
 
 	@Override
-	public void toMatrix( double[][] data )
+	public void toMatrix( final double[][] data )
 	{
 		data[ 0 ][ 0 ] = m00;
 		data[ 0 ][ 1 ] = m01;

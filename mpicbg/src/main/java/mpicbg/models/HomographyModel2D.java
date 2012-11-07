@@ -137,7 +137,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 	@Override
 	final public float[] apply( final float[] point )
 	{
-		assert point.length == 2 : "2d homographies can be applied to 2d points only.";
+		assert point.length >= 2 : "2d homographies can be applied to 2d points only.";
 		
 		final float[] t = point.clone();
 		applyInPlace( t );
@@ -148,7 +148,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 	@Override
 	final public void applyInPlace( final float[] point )
 	{
-		assert point.length == 2 : "2d homographies can be applied to 2d points only.";
+		assert point.length >= 2 : "2d homographies can be applied to 2d points only.";
 		
 		final double s = m20 * point[ 0 ] + m21 * point[ 1 ] + m22;
 		final double t0 = m00 * point[ 0 ] + m01 * point[ 1 ] + m02;
@@ -162,7 +162,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 	@Override
 	final public float[] applyInverse( final float[] point ) throws NoninvertibleModelException
 	{
-		assert point.length == 2 : "2d homographies can be applied to 2d points only.";
+		assert point.length >= 2 : "2d homographies can be applied to 2d points only.";
 		
 		final float[] t = point.clone();
 		applyInPlace( t );
@@ -173,7 +173,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 	@Override
 	final public void applyInverseInPlace( final float[] point ) throws NoninvertibleModelException
 	{
-		assert point.length == 2 : "2d homographies can be applied to 2d points only.";
+		assert point.length >= 2 : "2d homographies can be applied to 2d points only.";
 		
 		final double s = i20 * point[ 0 ] + i21 * point[ 1 ] + i22;
 		final double t0 = i00 * point[ 0 ] + i01 * point[ 1 ] + i02;
@@ -389,7 +389,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 	@Override
 	public void estimateBounds( final float[] min, final float[] max )
 	{
-		assert min.length == 2 && max.length == 2 : "2d homographies can be applied to 2d points only.";
+		assert min.length >= 2 && max.length >= 2 : "2d homographies can be applied to 2d points only.";
 		
 		float minX = Float.MAX_VALUE, minY = Float.MAX_VALUE;
 		float maxX = -Float.MAX_VALUE, maxY = -Float.MAX_VALUE;
@@ -438,7 +438,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 	@Override
 	public void estimateInverseBounds( final float[] min, final float[] max ) throws NoninvertibleModelException
 	{
-		assert min.length == 2 && max.length == 2 : "2d affine transformations can be applied to 2d points only.";
+		assert min.length >= 2 && max.length >= 2 : "2d affine transformations can be applied to 2d points only.";
 		
 		float minX = Float.MAX_VALUE, minY = Float.MAX_VALUE;
 		float maxX = -Float.MAX_VALUE, maxY = -Float.MAX_VALUE;

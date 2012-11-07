@@ -43,7 +43,7 @@ public abstract class AbstractMovingLeastSquaresTransform implements CoordinateT
 	abstract public void setMatches( final Collection< PointMatch > matches )
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException;
 	
-	final protected double weigh( final double d )
+	protected double weigh( final double d )
 	{
 		return 1.0 / Math.pow( d, alpha );
 	}
