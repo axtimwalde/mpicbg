@@ -286,7 +286,7 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 		gradientROI[ 1 ] = new FloatArray2D( gaussianMask.width, gaussianMask.width );
 		
 		int half_size = gaussianMask.width / 2;
-		int p = gaussianMask.width * gaussianMask.width - 1;
+		int n = gaussianMask.width * gaussianMask.width - 1;
 		for ( int yi = gaussianMask.width - 1; yi >= 0; --yi )
 		{
 			int ra_y = src[ 0 ].width * Math.max( 0, Math.min( src[ 0 ].height - 1, ( int )c[ 1 ] + yi - half_size ) );
@@ -295,9 +295,9 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 			for ( int xi = gaussianMask.width - 1; xi >= 0; --xi )
 			{
 				int pt = Math.max( ra_y, Math.min( ra_y + src[ 0 ].width - 2, ra_x + xi - half_size ) );
-				gradientROI[ 0 ].data[ p ] = src[ 0 ].data[ pt ];
-				gradientROI[ 1 ].data[ p ] = src[ 1 ].data[ pt ];
-				--p;
+				gradientROI[ 0 ].data[ n ] = src[ 0 ].data[ pt ];
+				gradientROI[ 1 ].data[ n ] = src[ 1 ].data[ pt ];
+				--n;
 			}
 		}
 		

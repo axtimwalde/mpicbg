@@ -12,9 +12,10 @@ import mpicbg.models.NoninvertibleModelException;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.1b
  */
-public class InvertibleTransformMapping< T extends InvertibleCoordinateTransform > implements InvertibleMapping
+public class InvertibleTransformMapping< T extends InvertibleCoordinateTransform > implements InvertibleMapping< T >
 {
 	final protected T transform;
+	@Override
 	final public T getTransform(){ return transform; }
 	
 	public InvertibleTransformMapping( final T t )
@@ -23,6 +24,7 @@ public class InvertibleTransformMapping< T extends InvertibleCoordinateTransform
 	}
 	
 	//@Override
+	@Override
 	public void map( final ImageProcessor source, final ImageProcessor target )
 	{
 		final float[] t = new float[ 2 ];
@@ -48,12 +50,13 @@ public class InvertibleTransformMapping< T extends InvertibleCoordinateTransform
 							t[ 1 ] <= sh )
 						target.putPixel( x, y, source.getPixel( tx, ty ) );
 				}
-				catch ( NoninvertibleModelException e ){}
+				catch ( final NoninvertibleModelException e ){}
 			}
 		}
 	}
 	
 	//@Override
+	@Override
 	public void mapInterpolated( final ImageProcessor source, final ImageProcessor target )
 	{
 		final float[] t = new float[ 2 ];
@@ -77,12 +80,13 @@ public class InvertibleTransformMapping< T extends InvertibleCoordinateTransform
 							t[ 1 ] <= sh )
 						target.putPixel( x, y, source.getPixelInterpolated( t[ 0 ], t[ 1 ] ) );
 				}
-				catch ( NoninvertibleModelException e ){}
+				catch ( final NoninvertibleModelException e ){}
 			}
 		}
 	}
 	
 	//@Override
+	@Override
 	public void mapInverse( final ImageProcessor source, final ImageProcessor target )
 	{
 		final float[] t = new float[ 2 ];
@@ -110,6 +114,7 @@ public class InvertibleTransformMapping< T extends InvertibleCoordinateTransform
 	}
 
 	//@Override
+	@Override
 	public void mapInverseInterpolated( final ImageProcessor source, final ImageProcessor target )
 	{
 		final float[] t = new float[ 2 ];

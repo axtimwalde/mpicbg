@@ -1,7 +1,6 @@
 package mpicbg.ij.blockmatching;
 
 import ij.IJ;
-import ij.ImagePlus;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
 
@@ -314,6 +313,7 @@ public class BlockMatching
 		{
 			tasks.add( exec.submit( new Callable< PointMatch >()
 			{
+				@Override
 				public PointMatch call()
 				{
 					IJ.showProgress( k.getAndIncrement(), query.size() );
@@ -494,7 +494,7 @@ public class BlockMatching
 			} ) );
 		}
 		
-		for ( Future< PointMatch > fu : tasks )
+		for ( final Future< PointMatch > fu : tasks )
 		{
 			try
 			{
@@ -502,7 +502,7 @@ public class BlockMatching
 				if ( pm != null )
 					results.add( pm );
 			}
-			catch ( InterruptedException e )
+			catch ( final InterruptedException e )
 			{
 				exec.shutdownNow();
 				throw e;
@@ -556,7 +556,7 @@ public class BlockMatching
 			FloatProcessor source,
 			FloatProcessor target,
 			FloatProcessor sourceMask,
-			FloatProcessor targetMask,
+			final FloatProcessor targetMask,
 			final float scale,
 			final CoordinateTransform transform,
 			final int blockRadiusX,
@@ -763,7 +763,7 @@ public class BlockMatching
 			{
 				mlst.setModel( localModelClass );
 			}
-			catch ( Exception e )
+			catch ( final Exception e )
 			{
 				IJ.error( "Invalid local model selected." );
 				return;
@@ -818,7 +818,7 @@ public class BlockMatching
 					mlst.setMatches( sourceMatches );
 					ict = mlst;
 				}
-				catch ( Exception e ) {}
+				catch ( final Exception e ) {}
 			}
 		}
 		// TODO refine the search results by rematching at higher resolution with lower search radius
@@ -833,7 +833,7 @@ public class BlockMatching
 	 */
 	static public Shape illustrateMatches( final Collection< PointMatch > matches)
 	{
-		GeneralPath path = new GeneralPath();
+		final GeneralPath path = new GeneralPath();
 		
 		for ( final PointMatch m : matches )
 		{
