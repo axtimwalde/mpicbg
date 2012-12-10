@@ -3,10 +3,10 @@ package mpicbg.ij.util;
 import ij.gui.PointRoi;
 import ij.process.ByteProcessor;
 import ij.process.ColorProcessor;
+import ij.process.FloatPolygon;
 import ij.process.FloatProcessor;
 
 import java.awt.Color;
-import java.awt.Rectangle;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -19,36 +19,47 @@ public class Util
 {
 	private Util(){}
 	
+	
+	/**
+	 * Create an ImageJ {@link PointRoi} from a {@link Collection} of
+	 * {@link Point Points}.
+	 * 
+	 * Since ImageJ 1.46a, PointRois have sub-pixel coordinates.
+	 * 
+	 * @param points
+	 * @return
+	 */
 	final static public PointRoi pointsToPointRoi( final Collection< ? extends Point > points )
 	{
-		final int[] x = new int[ points.size() ];
-		final int[] y = new int[ points.size() ];
+		final float[] x = new float[ points.size() ];
+		final float[] y = new float[ points.size() ];
 		
 		int i = 0;
 		for ( final Point p : points )
 		{
 			final float[] l = p.getL();
-			x[ i ] = Math.round( l[ 0 ] );
-			y[ i ] = Math.round( l[ 1 ] );
+			x[ i ] = l[ 0 ];
+			y[ i ] = l[ 1 ];
 			++i;
 		}
+		
 		return new PointRoi( x, y, x.length );
 	}
 	
+	
 	final static public List< Point > pointRoiToPoints( final PointRoi roi )
 	{
-		final Rectangle bounds = roi.getBounds();
-		final int offsetX = ( int )bounds.getX();
-		final int offsetY = ( int )bounds.getY();
-		final int[] x = roi.getXCoordinates();
-		final int[] y = roi.getYCoordinates();
+		final FloatPolygon fp = roi.getFloatPolygon();
+		final float[] x = fp.xpoints;
+		final float[] y = fp.ypoints;
 		
 		final ArrayList< Point > points = new ArrayList< Point >();
 		for ( int i = 0; i < x.length; ++i )
-			points.add( new Point( new float[]{ x[ i ] + offsetX, y[ i ] + offsetY } ) );
+			points.add( new Point( new float[]{ x[ i ], y[ i ] } ) );
 		
 		return points;
 	}
+	
 	
 	final static public List< PointMatch > pointRoisToPointMatches( final PointRoi sourceRoi, final PointRoi targetRoi )
 	{
@@ -64,6 +75,7 @@ public class Util
 		
 		return matches;
 	}
+	
 	
 	final static public void fillWithNoise( final ByteProcessor bp )
     {

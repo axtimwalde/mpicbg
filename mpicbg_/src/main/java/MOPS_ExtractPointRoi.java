@@ -17,28 +17,44 @@
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.3b
  */
-import mpicbg.ij.MOPS;
-import mpicbg.imagefeatures.*;
-import mpicbg.models.*;
+import ij.IJ;
+import ij.ImageListener;
+import ij.ImagePlus;
+import ij.WindowManager;
+import ij.gui.GenericDialog;
+import ij.gui.ImageWindow;
+import ij.gui.Roi;
+import ij.gui.Toolbar;
+import ij.plugin.PlugIn;
+import ij.process.FloatProcessor;
 
-import ij.plugin.*;
-import ij.gui.*;
-import ij.*;
-import ij.process.*;
-
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.util.List;
-import java.util.HashMap;
-import java.util.ArrayList;
-import java.awt.geom.GeneralPath;
+import java.awt.Event;
 import java.awt.Shape;
 import java.awt.TextField;
-import java.awt.Event;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.geom.GeneralPath;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import mpicbg.ij.MOPS;
+import mpicbg.ij.util.Util;
+import mpicbg.imagefeatures.Feature;
+import mpicbg.imagefeatures.FloatArray2DMOPS;
+import mpicbg.models.AbstractModel;
+import mpicbg.models.AffineModel2D;
+import mpicbg.models.HomographyModel2D;
+import mpicbg.models.NotEnoughDataPointsException;
+import mpicbg.models.Point;
+import mpicbg.models.PointMatch;
+import mpicbg.models.RigidModel2D;
+import mpicbg.models.SimilarityModel2D;
+import mpicbg.models.TranslationModel2D;
 
 /**
  * Extract landmark correspondences in two images as PointRoi.
@@ -134,7 +150,8 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		decimalFormat.setMinimumFractionDigits( 3 );		
 	}
 	
-	final public void run( String args )
+	@Override
+	final public void run( final String args )
 	{
 		// cleanup
 		impFeature1 = null;
@@ -148,14 +165,14 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		
 		if ( IJ.versionLessThan( "1.40" ) ) return;
 		
-		int[] ids = WindowManager.getIDList();
+		final int[] ids = WindowManager.getIDList();
 		if ( ids == null || ids.length < 2 )
 		{
 			IJ.showMessage( "You should have at least two images open." );
 			return;
 		}
 		
-		String[] titles = new String[ ids.length ];
+		final String[] titles = new String[ ids.length ];
 		for ( int i = 0; i < ids.length; ++i )
 		{
 			titles[ i ] = ( WindowManager.getImage( ids[ i ] ) ).getTitle();
@@ -223,14 +240,17 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		
 		start_time = System.currentTimeMillis();
 		IJ.log( "Identifying correspondence candidates using brute force ..." );
-		List< PointMatch > candidates = 
+		final List< PointMatch > candidates = 
 			FloatArray2DMOPS.createMatches( fs1, fs2, p.rod, m1, m2 );
 		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );	
 		IJ.log( candidates.size() + " potentially corresponding features identified." );
 			
 		start_time = System.currentTimeMillis();
 		IJ.log( "Filtering correspondence candidates by geometric consensus ..." );
-		List< PointMatch > inliers = new ArrayList< PointMatch >();
+		final List< PointMatch > inliers = new ArrayList< PointMatch >();
+		
+		final ArrayList< Point > p1 = new ArrayList< Point >();
+		final ArrayList< Point > p2 = new ArrayList< Point >();
 		
 		AbstractModel< ? > model;
 		switch ( p.modelIndex )
@@ -264,7 +284,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 					p.maxEpsilon,
 					p.minInlierRatio );
 		}
-		catch ( NotEnoughDataPointsException e )
+		catch ( final NotEnoughDataPointsException e )
 		{
 			modelFound = false;
 		}
@@ -273,34 +293,16 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		
 		if ( modelFound )
 		{
-			int x1[] = new int[ inliers.size() ];
-			int y1[] = new int[ inliers.size() ];
-			int x2[] = new int[ inliers.size() ];
-			int y2[] = new int[ inliers.size() ];
+			PointMatch.sourcePoints( inliers, p1 );
+			PointMatch.targetPoints( inliers, p2 );
+			imp1.setRoi( Util.pointsToPointRoi( p1 ) );
+			imp2.setRoi( Util.pointsToPointRoi( p2 ) );
 			
-			int i = 0;
-			
-			for ( PointMatch m : inliers )
+			for ( final PointMatch m : inliers )
 			{
-				float[] m_p1 = m.getP1().getL(); 
-				float[] m_p2 = m.getP2().getL();
-				
-				x1[ i ] = Math.round( m_p1[ 0 ] );
-				y1[ i ] = Math.round( m_p1[ 1 ] );
-				x2[ i ] = Math.round( m_p2[ 0 ] );
-				y2[ i ] = Math.round( m_p2[ 1 ] );
-				
 				i1.add( m1.get( m.getP1() ) );
 				i2.add( m2.get( m.getP2() ) );
-				
-				++i;
 			}
-			
-			PointRoi pr1 = new PointRoi( x1, y1, inliers.size() );
-			PointRoi pr2 = new PointRoi( x2, y2, inliers.size() );
-			
-			imp1.setRoi( pr1 );
-			imp2.setRoi( pr2 );
 			
 			IJ.log( inliers.size() + " corresponding features with a maximal displacement of " + decimalFormat.format( model.getCost() ) + "px identified." );
 			IJ.log( "Estimated transformation model: " + model );
@@ -324,18 +326,18 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 	 * @param f the feature to be illustrated
 	 * @return the illustration
 	 */
-	public static Shape createFeatureDescriptorShape( Feature f )
+	public static Shape createFeatureDescriptorShape( final Feature f )
 	{
-		GeneralPath path = new GeneralPath();
+		final GeneralPath path = new GeneralPath();
 		
-		int w = ( int )Math.sqrt( f.descriptor.length );
-		double scale = f.scale * ( double )w * 4.0  / 2.0;
-		double sin = Math.sin( f.orientation );
-		double cos = Math.cos( f.orientation );
+		final int w = ( int )Math.sqrt( f.descriptor.length );
+		final double scale = f.scale * ( double )w * 4.0  / 2.0;
+		final double sin = Math.sin( f.orientation );
+		final double cos = Math.cos( f.orientation );
 
-		double fx = f.location[ 0 ];
-		double fy = f.location[ 1 ];
-		double pd = 4.0 / scale;
+		final double fx = f.location[ 0 ];
+		final double fy = f.location[ 1 ];
+		final double pd = 4.0 / scale;
 
 		
 		path.moveTo(
@@ -369,7 +371,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		
 		for ( int y = 1; y < w; ++y )
 		{
-			double dy = 1.0 - y * 2.0 / w;
+			final double dy = 1.0 - y * 2.0 / w;
 			path.moveTo(
 					fx + ( -cos + dy * sin ) * scale,
 					fy + ( -sin - dy * cos ) * scale );
@@ -379,7 +381,7 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		}
 	    for ( int x = 1; x < w; ++x )
 	    {
-	    	double dx = 1.0 - x * 2.0 / w;
+	    	final double dx = 1.0 - x * 2.0 / w;
 	    	path.moveTo(
 	    			fx + ( dx * cos + sin ) * scale,
 	    			fy + ( dx * sin - cos ) * scale );
@@ -391,24 +393,25 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 	    return path;
 	}
 	
-	public static void drawFeatureDescriptor( FloatProcessor fp, Feature f )
+	public static void drawFeatureDescriptor( final FloatProcessor fp, final Feature f )
 	{
 		fp.setMinAndMax( 0.0, 1.0 );
-		int w = ( int )Math.sqrt( f.descriptor.length );
+		final int w = ( int )Math.sqrt( f.descriptor.length );
 		for ( int y = 0; y < w; ++ y )
 			for ( int x = 0; x < w; ++x )
 				fp.setf( x, y, f.descriptor[ y * w + x ] );
 	}
 	
-	public static ImagePlus createFeatureDescriptorImage( String title, Feature f )
+	public static ImagePlus createFeatureDescriptorImage( final String title, final Feature f )
 	{
-		int w = ( int )Math.sqrt( f.descriptor.length );
-		FloatProcessor fp = new FloatProcessor( w, w );
+		final int w = ( int )Math.sqrt( f.descriptor.length );
+		final FloatProcessor fp = new FloatProcessor( w, w );
 		drawFeatureDescriptor( fp, f );
 		return new ImagePlus( title, fp );
 	}
 	
-	public void imageClosed( ImagePlus imp )
+	@Override
+	public void imageClosed( final ImagePlus imp )
 	{
 		if ( imp == imp1 && impFeature1 != null )
 			impFeature1.close();
@@ -416,10 +419,13 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 			impFeature2.close();
 	}
 	
-	public void imageOpened( ImagePlus imp ){}
-	public void imageUpdated( ImagePlus imp ){}
+	@Override
+	public void imageOpened( final ImagePlus imp ){}
+	@Override
+	public void imageUpdated( final ImagePlus imp ){}
 	
-	public void keyPressed( KeyEvent e)
+	@Override
+	public void keyPressed( final KeyEvent e)
 	{
 		if ( e.getKeyCode() == KeyEvent.VK_ESCAPE )
 		{
@@ -445,16 +451,19 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 				( e.getSource() instanceof TextField ) ){}
 	}
 
-	public void keyReleased( KeyEvent e ){}
-	public void keyTyped( KeyEvent e ){}
+	@Override
+	public void keyReleased( final KeyEvent e ){}
+	@Override
+	public void keyTyped( final KeyEvent e ){}
 	
-	public void mousePressed( MouseEvent e )
+	@Override
+	public void mousePressed( final MouseEvent e )
 	{
 		if ( e.getButton() == MouseEvent.BUTTON1 )
 		{
-			ImageWindow win = WindowManager.getCurrentWindow();
-			int x = win.getCanvas().offScreenX( e.getX() );
-			int y = win.getCanvas().offScreenY( e.getY() );
+			final ImageWindow win = WindowManager.getCurrentWindow();
+			final double x = win.getCanvas().offScreenXD( e.getX() );
+			final double y = win.getCanvas().offScreenYD( e.getY() );
 			
 			Feature f1;
 			Feature f2;
@@ -467,11 +476,11 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 			else
 				fl = i2;
 		
-			for ( Feature f : fl )
+			for ( final Feature f : fl )
 			{
-				double dx = win.getCanvas().getMagnification() * ( f.location[ 0 ] - x );
-				double dy = win.getCanvas().getMagnification() * ( f.location[ 1 ] - y );
-				double d =  dx * dx + dy * dy;
+				final double dx = win.getCanvas().getMagnification() * ( f.location[ 0 ] - x );
+				final double dy = win.getCanvas().getMagnification() * ( f.location[ 1 ] - y );
+				final double d =  dx * dx + dy * dy;
 				if ( d < 64.0 && d < target_d )
 				{
 					target = f;
@@ -539,13 +548,17 @@ public class MOPS_ExtractPointRoi implements PlugIn, MouseListener, KeyListener,
 		//IJ.log( "Mouse pressed: " + x + ", " + y + " " + modifiers( e.getModifiers() ) );
 	}
 	
-	public void mouseReleased( MouseEvent e ){}
-	public void mouseExited(MouseEvent e) {}
-	public void mouseClicked(MouseEvent e) {}	
-	public void mouseEntered(MouseEvent e) {}
+	@Override
+	public void mouseReleased( final MouseEvent e ){}
+	@Override
+	public void mouseExited(final MouseEvent e) {}
+	@Override
+	public void mouseClicked(final MouseEvent e) {}	
+	@Override
+	public void mouseEntered(final MouseEvent e) {}
 	
 	
-	public static String modifiers( int flags )
+	public static String modifiers( final int flags )
 	{
 		String s = " [ ";
 		if ( flags == 0 )

@@ -1,17 +1,28 @@
-import mpicbg.ij.FeatureTransform;
-import mpicbg.ij.SIFT;
-import mpicbg.ij.util.Util;
-import mpicbg.imagefeatures.*;
-import mpicbg.models.*;
-
-import ij.plugin.*;
-import ij.gui.*;
-import ij.*;
+import ij.IJ;
+import ij.ImagePlus;
+import ij.WindowManager;
+import ij.gui.GenericDialog;
+import ij.plugin.PlugIn;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
+
+import mpicbg.ij.FeatureTransform;
+import mpicbg.ij.SIFT;
+import mpicbg.ij.util.Util;
+import mpicbg.imagefeatures.Feature;
+import mpicbg.imagefeatures.FloatArray2DSIFT;
+import mpicbg.models.AbstractModel;
+import mpicbg.models.AffineModel2D;
+import mpicbg.models.HomographyModel2D;
+import mpicbg.models.NotEnoughDataPointsException;
+import mpicbg.models.Point;
+import mpicbg.models.PointMatch;
+import mpicbg.models.RigidModel2D;
+import mpicbg.models.SimilarityModel2D;
+import mpicbg.models.TranslationModel2D;
 
 /**
  * Extract landmark correspondences in two images as PointRoi.
@@ -105,7 +116,8 @@ public class SIFT_ExtractPointRoi implements PlugIn
 		decimalFormat.setMinimumFractionDigits( 3 );		
 	}
 	
-	public void run( String args )
+	@Override
+	public void run( final String args )
 	{
 		// cleanup
 		fs1.clear();
@@ -113,14 +125,14 @@ public class SIFT_ExtractPointRoi implements PlugIn
 		
 		if ( IJ.versionLessThan( "1.40" ) ) return;
 		
-		int[] ids = WindowManager.getIDList();
+		final int[] ids = WindowManager.getIDList();
 		if ( ids == null || ids.length < 2 )
 		{
 			IJ.showMessage( "You should have at least two images open." );
 			return;
 		}
 		
-		String[] titles = new String[ ids.length ];
+		final String[] titles = new String[ ids.length ];
 		for ( int i = 0; i < ids.length; ++i )
 		{
 			titles[ i ] = ( WindowManager.getImage( ids[ i ] ) ).getTitle();
@@ -216,8 +228,8 @@ public class SIFT_ExtractPointRoi implements PlugIn
 	/** Execute with default parameters (model is Rigid) */
 	public void exec(final ImagePlus imp1, final ImagePlus imp2) {
 
-		FloatArray2DSIFT sift = new FloatArray2DSIFT( p.sift );
-		SIFT ijSIFT = new SIFT( sift );
+		final FloatArray2DSIFT sift = new FloatArray2DSIFT( p.sift );
+		final SIFT ijSIFT = new SIFT( sift );
 		
 		long start_time = System.currentTimeMillis();
 		IJ.log( "Processing SIFT ..." );
@@ -237,13 +249,17 @@ public class SIFT_ExtractPointRoi implements PlugIn
 		FeatureTransform.matchFeatures( fs1, fs2, candidates, p.rod );
 		IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );	
 		
+		final ArrayList< Point > p1 = new ArrayList< Point >();
+		final ArrayList< Point > p2 = new ArrayList< Point >();
+		final List< PointMatch > inliers;
+		
 		if ( p.useGeometricConsensusFilter )
 		{
 			IJ.log( candidates.size() + " potentially corresponding features identified." );
 			
 			start_time = System.currentTimeMillis();
 			IJ.log( "Filtering correspondence candidates by geometric consensus ..." );
-			List< PointMatch > inliers = new ArrayList< PointMatch >();
+			inliers = new ArrayList< PointMatch >();
 			
 			AbstractModel< ? > model;
 			switch ( p.modelIndex )
@@ -278,60 +294,35 @@ public class SIFT_ExtractPointRoi implements PlugIn
 						p.minInlierRatio,
 						p.minNumInliers );
 			}
-			catch ( NotEnoughDataPointsException e )
+			catch ( final NotEnoughDataPointsException e )
 			{
 				modelFound = false;
 			}
 				
-			IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );	
+			IJ.log( " took " + ( System.currentTimeMillis() - start_time ) + "ms." );
 			
 			if ( modelFound )
 			{
-				int x1[] = new int[ inliers.size() ];
-				int y1[] = new int[ inliers.size() ];
-				int x2[] = new int[ inliers.size() ];
-				int y2[] = new int[ inliers.size() ];
-				
-				int i = 0;
-				
-				for ( PointMatch m : inliers )
-				{
-					float[] m_p1 = m.getP1().getL(); 
-					float[] m_p2 = m.getP2().getL();
-					
-					x1[ i ] = Math.round( m_p1[ 0 ] );
-					y1[ i ] = Math.round( m_p1[ 1 ] );
-					x2[ i ] = Math.round( m_p2[ 0 ] );
-					y2[ i ] = Math.round( m_p2[ 1 ] );
-					
-					++i;
-				}
-			
-				PointRoi pr1 = new PointRoi( x1, y1, inliers.size() );
-				PointRoi pr2 = new PointRoi( x2, y2, inliers.size() );
-				
-				imp1.setRoi( pr1 );
-				imp2.setRoi( pr2 );
-				
 				PointMatch.apply( inliers, model );
 				
 				IJ.log( inliers.size() + " corresponding features with an average displacement of " + decimalFormat.format( PointMatch.meanDistance( inliers ) ) + "px identified." );
 				IJ.log( "Estimated transformation model: " + model );
 			}
 			else
-			{
 				IJ.log( "No correspondences found." );
-			}
 		}
 		else
 		{
-			final ArrayList< Point > p1 = new ArrayList< Point >();
-			final ArrayList< Point > p2 = new ArrayList< Point >();
-			PointMatch.sourcePoints( candidates, p1 );
-			PointMatch.targetPoints( candidates, p2 );
+			inliers = candidates;
+			IJ.log( candidates.size() + " corresponding features identified." );
+		}
+		
+		if ( inliers.size() > 0 )
+		{
+			PointMatch.sourcePoints( inliers, p1 );
+			PointMatch.targetPoints( inliers, p2 );
 			imp1.setRoi( Util.pointsToPointRoi( p1 ) );
 			imp2.setRoi( Util.pointsToPointRoi( p2 ) );
-			IJ.log( candidates.size() + " corresponding features identified." );
 		}
 	}
 }
