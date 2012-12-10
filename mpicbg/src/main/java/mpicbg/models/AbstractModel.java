@@ -131,7 +131,7 @@ public abstract class AbstractModel< M extends AbstractModel< M > > implements M
 	{
 		inliers.clear();
 		
-		for ( P m : candidates )
+		for ( final P m : candidates )
 		{
 			m.apply( this );
 			if ( m.getDistance() < epsilon ) inliers.add( m );
@@ -202,11 +202,11 @@ public abstract class AbstractModel< M extends AbstractModel< M > > implements M
 			{
 				copy.fit( inliers );
 			}
-			catch ( NotEnoughDataPointsException e )
+			catch ( final NotEnoughDataPointsException e )
 			{
 				return false;
 			}
-			catch ( IllDefinedDataPointsException e )
+			catch ( final IllDefinedDataPointsException e )
 			{
 				return false;
 			}
@@ -318,7 +318,7 @@ A:		while ( i < iterations )
 				minMatches.add( p );
 			}
 			try { m.fit( minMatches ); }
-			catch ( IllDefinedDataPointsException e )
+			catch ( final IllDefinedDataPointsException e )
 			{
 				++i;
 				continue;
@@ -332,7 +332,7 @@ A:		while ( i < iterations )
 			{
 				numInliers = tempInliers.size();
 				try { m.fit( tempInliers ); }
-				catch ( IllDefinedDataPointsException e )
+				catch ( final IllDefinedDataPointsException e )
 				{
 					++i;
 					continue A;
@@ -380,7 +380,6 @@ A:		while ( i < iterations )
 	 * \citet[{FischlerB81} and filter potential outliers by robust iterative
 	 * regression.
 	 * 
-	 * @param modelClass class of the model to be estimated
 	 * @param candidates candidate data points inluding (many) outliers
 	 * @param inliers remaining candidates after RANSAC
 	 * @param iterations number of iterations
@@ -519,7 +518,7 @@ A:		while ( i < iterations )
 			{
 				m.fit( currentMatches );
 			}
-			catch ( Exception e )
+			catch ( final Exception e )
 			{
 				e.printStackTrace();
 				return null;
@@ -640,7 +639,7 @@ A:		while ( i < iterations )
 				{
 					filteredLocalModelFound = filter( candidates, localInliers, ( float )maxTrust );
 				}
-				catch ( NotEnoughDataPointsException e )
+				catch ( final NotEnoughDataPointsException e )
 				{
 					filteredLocalModelFound = false;
 				}
