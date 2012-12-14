@@ -1,5 +1,6 @@
 package mpicbg.models;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -53,7 +54,7 @@ import java.util.Random;
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.4b
  */
-public abstract class AbstractModel< M extends AbstractModel< M > > implements Model< M >
+public abstract class AbstractModel< M extends AbstractModel< M > > implements Model< M >, Serializable
 {
 	/**
 	 * @deprecated "getMinSetSize" doesn't mean anything---use the more
