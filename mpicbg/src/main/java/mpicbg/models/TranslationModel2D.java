@@ -1,6 +1,7 @@
 package mpicbg.models;
 
 import java.awt.geom.AffineTransform;
+import java.io.Serializable;
 import java.util.Collection;
 
 /**
