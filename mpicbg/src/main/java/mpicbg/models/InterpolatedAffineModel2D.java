@@ -32,7 +32,7 @@ final public class InterpolatedAffineModel2D<
 		A extends Model< A > & Affine2D< A >,
 		B extends Model< B > & Affine2D< B > >
 	extends InvertibleInterpolatedModel< A, B, InterpolatedAffineModel2D< A, B > >
-	implements Affine2D< InterpolatedAffineModel2D< A, B > >
+	implements Affine2D< InterpolatedAffineModel2D< A, B > >, InvertibleBoundable
 {
 	final protected AffineModel2D affine = new AffineModel2D();
 	final protected float[] afs = new float[ 6 ];
@@ -207,5 +207,17 @@ final public class InterpolatedAffineModel2D<
 	final public void set( final AffineTransform a )
 	{
 		affine.set( a );
+	}
+
+	@Override
+	public void estimateBounds( final float[] min, final float[] max )
+	{
+		affine.estimateBounds( min, max );
+	}
+
+	@Override
+	public void estimateInverseBounds( final float[] min, final float[] max ) throws NoninvertibleModelException
+	{
+		affine.estimateInverseBounds( min, max );
 	}
 }

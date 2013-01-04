@@ -28,7 +28,7 @@ final public class InterpolatedAffineModel3D<
 		A extends Model< A > & Affine3D< A >,
 		B extends Model< B > & Affine3D< B > >
 	extends InvertibleInterpolatedModel< A, B, InterpolatedAffineModel3D< A, B > >
-	implements Affine3D< InterpolatedAffineModel3D< A, B > >
+	implements Affine3D< InterpolatedAffineModel3D< A, B > >, InvertibleBoundable
 {
 	final protected AffineModel3D affine = new AffineModel3D();
 	final protected float[] afs = new float[ 12 ];
@@ -151,5 +151,17 @@ final public class InterpolatedAffineModel3D<
 	public void toMatrix( final double[][] data )
 	{
 		affine.toMatrix( data );
+	}
+
+	@Override
+	public void estimateBounds( final float[] min, final float[] max )
+	{
+		affine.estimateBounds( min, max );
+	}
+
+	@Override
+	public void estimateInverseBounds( final float[] min, final float[] max ) throws NoninvertibleModelException
+	{
+		affine.estimateInverseBounds( min, max );
 	}
 }
