@@ -170,7 +170,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 		
 		public int resolutionSpringMesh = 16;
 		public float stiffnessSpringMesh = 0.1f;
-		public float dampSpringMesh = 0.6f;
+		public float dampSpringMesh = 0.9f;
 		public float maxStretchSpringMesh = 2000.0f;
 		public int maxIterationsSpringMesh = 1000;
 		public int maxPlateauwidthSpringMesh = 200;
@@ -402,11 +402,12 @@ public class ElasticAlign implements PlugIn, KeyListener
 	
 	final static Param p = new Param(); 
 
+	@Override
 	final public void run( final String args )
 	{
 		if ( IJ.versionLessThan( "1.41n" ) ) return;
 		try { run(); }
-		catch ( Throwable t ) { t.printStackTrace(); }
+		catch ( final Throwable t ) { t.printStackTrace(); }
 	}
 	
 	final public void run() throws Exception
@@ -465,6 +466,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 				siftTasks.add(
 						execSift.submit( new Callable< ArrayList< Feature > >()
 						{
+							@Override
 							public ArrayList< Feature > call()
 							{
 								IJ.showProgress( counter.getAndIncrement(), stack.getSize() );
@@ -498,7 +500,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 			}
 			
 			/* join */
-			for ( Future< ArrayList< Feature > > fu : siftTasks )
+			for ( final Future< ArrayList< Feature > > fu : siftTasks )
 				fu.get();
 			
 			siftTasks.clear();
@@ -533,6 +535,7 @@ J:				for ( int j = i + 1; j < range; )
 						
 						final Thread thread = new Thread()
 						{
+							@Override
 							public void run()
 							{
 								IJ.showProgress( sliceA, stack.getSize() - 1 );
@@ -540,21 +543,21 @@ J:				for ( int j = i + 1; j < range; )
 								IJ.log( "matching " + sliceB + " -> " + sliceA + "..." );
 								
 								ArrayList< PointMatch > candidates = null;
-								String path = p.outputPath + String.format( "%05d", sliceB ) + "-" + String.format( "%05d", sliceA ) + ".pointmatches";
+								final String path = p.outputPath + String.format( "%05d", sliceB ) + "-" + String.format( "%05d", sliceA ) + ".pointmatches";
 								if ( !p.clearCache )
 									candidates = deserializePointMatches( p, path );
 								
 								if ( null == candidates )
 								{
-									ArrayList< Feature > fs1 = deserializeFeatures( p.sift, p.outputPath + String.format( "%05d", sliceA ) + ".features" );
-									ArrayList< Feature > fs2 = deserializeFeatures( p.sift, p.outputPath + String.format( "%05d", sliceB ) + ".features" );
+									final ArrayList< Feature > fs1 = deserializeFeatures( p.sift, p.outputPath + String.format( "%05d", sliceA ) + ".features" );
+									final ArrayList< Feature > fs2 = deserializeFeatures( p.sift, p.outputPath + String.format( "%05d", sliceB ) + ".features" );
 									candidates = new ArrayList< PointMatch >( FloatArray2DSIFT.createMatches( fs2, fs1, p.rod ) );
 									
 									if ( !serializePointMatches( p, candidates, path ) )
 										IJ.log( "Could not store point matches!" );
 								}
 			
-								AbstractModel< ? > model = createModel( p.modelIndex );
+								final AbstractModel< ? > model = createModel( p.modelIndex );
 								if ( model == null ) return;
 								
 								final ArrayList< PointMatch > inliers = new ArrayList< PointMatch >();
@@ -588,7 +591,7 @@ J:				for ( int j = i + 1; j < range; )
 									}
 									while ( again );
 								}
-								catch ( Exception e )
+								catch ( final Exception e )
 								{
 									modelFound = false;
 									System.err.println( e.getMessage() );
@@ -616,7 +619,7 @@ J:				for ( int j = i + 1; j < range; )
 						for ( final Thread thread : threads )
 							thread.join();
 					}
-					catch ( InterruptedException e )
+					catch ( final InterruptedException e )
 					{
 						IJ.log( "Establishing feature correspondences interrupted." );
 						for ( final Thread thread : threads )
@@ -626,7 +629,7 @@ J:				for ( int j = i + 1; j < range; )
 							for ( final Thread thread : threads )
 								thread.join();
 						}
-						catch ( InterruptedException f ) {}
+						catch ( final InterruptedException f ) {}
 						return;
 					}
 					
@@ -692,8 +695,8 @@ J:				for ( int j = i + 1; j < range; )
 			final SpringMesh m1 = meshes.get( pair.a );
 			final SpringMesh m2 = meshes.get( pair.b );
 
-			ArrayList< PointMatch > pm12 = new ArrayList< PointMatch >();
-			ArrayList< PointMatch > pm21 = new ArrayList< PointMatch >();
+			final ArrayList< PointMatch > pm12 = new ArrayList< PointMatch >();
+			final ArrayList< PointMatch > pm21 = new ArrayList< PointMatch >();
 
 			final Collection< Vertex > v1 = m1.getVertices();
 			final Collection< Vertex > v2 = m2.getVertices();
@@ -734,7 +737,7 @@ J:				for ( int j = i + 1; j < range; )
 						pm12,
 						new ErrorStatistic( 1 ) );
 			}
-			catch ( InterruptedException e )
+			catch ( final InterruptedException e )
 			{
 				IJ.log( "Block matching interrupted." );
 				IJ.showProgress( 1.0 );
@@ -788,7 +791,7 @@ J:				for ( int j = i + 1; j < range; )
 						pm21,
 						new ErrorStatistic( 1 ) );
 			}
-			catch ( InterruptedException e )
+			catch ( final InterruptedException e )
 			{
 				IJ.log( "Block matching interrupted." );
 				IJ.showProgress( 1.0 );
@@ -869,7 +872,7 @@ J:				for ( int j = i + 1; j < range; )
 		/* optimize the meshes */
 		try
 		{
-			long t0 = System.currentTimeMillis();
+			final long t0 = System.currentTimeMillis();
 			IJ.log("Optimizing spring meshes...");
 			
 			SpringMesh.optimizeMeshes(
@@ -882,7 +885,7 @@ J:				for ( int j = i + 1; j < range; )
 			IJ.log( "Done optimizing spring meshes. Took " + ( System.currentTimeMillis() - t0 ) + " ms" );
 			
 		}
-		catch ( NotEnoughDataPointsException e )
+		catch ( final NotEnoughDataPointsException e )
 		{
 			IJ.log( "There were not enough data points to get the spring mesh optimizing." );
 			e.printStackTrace();
@@ -981,7 +984,8 @@ J:				for ( int j = i + 1; j < range; )
 		return mask;
 	}
 
-	public void keyPressed(KeyEvent e)
+	@Override
+	public void keyPressed(final KeyEvent e)
 	{
 		if (
 				( e.getKeyCode() == KeyEvent.VK_F1 ) &&
@@ -991,9 +995,11 @@ J:				for ( int j = i + 1; j < range; )
 		}
 	}
 
-	public void keyReleased(KeyEvent e) { }
+	@Override
+	public void keyReleased(final KeyEvent e) { }
 
-	public void keyTyped(KeyEvent e) { }
+	@Override
+	public void keyTyped(final KeyEvent e) { }
 	
 	
 	
@@ -1020,9 +1026,9 @@ J:				for ( int j = i + 1; j < range; )
 
 	final static private ArrayList< Feature > deserializeFeatures( final FloatArray2DSIFT.Param param, final String path )
 	{
-		Object o = deserialize( path );
+		final Object o = deserialize( path );
 		if ( null == o ) return null;
-		Features fs = (Features) o;
+		final Features fs = (Features) o;
 		if ( param.equals( fs.param ) )
 			return fs.features;
 		return null;
@@ -1051,9 +1057,9 @@ J:				for ( int j = i + 1; j < range; )
 	
 	final static private ArrayList< PointMatch > deserializePointMatches( final ElasticAlign.Param param, final String path )
 	{
-		Object o = deserialize( path );
+		final Object o = deserialize( path );
 		if ( null == o ) return null;
-		PointMatches pms = (PointMatches) o;
+		final PointMatches pms = (PointMatches) o;
 		if ( param.equalSiftPointMatchParams( pms.param ) )
 			return pms.pointMatches;
 		return null;
@@ -1063,7 +1069,7 @@ J:				for ( int j = i + 1; j < range; )
 	static public boolean serialize(final Object ob, final String path) {
 		try {
 			// 1 - Check that the parent chain of folders exists, and attempt to create it when not:
-			File fdir = new File(path).getParentFile();
+			final File fdir = new File(path).getParentFile();
 			if (null == fdir) return false;
 			fdir.mkdirs();
 			if (!fdir.exists()) {
@@ -1075,7 +1081,7 @@ J:				for ( int j = i + 1; j < range; )
 			out.writeObject(ob);
 			out.close();
 			return true;
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			e.printStackTrace();
 		}
 		return false;
@@ -1089,7 +1095,7 @@ J:				for ( int j = i + 1; j < range; )
 			final Object ob = in.readObject();
 			in.close();
 			return ob;
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			e.printStackTrace();
 		}
 		return null;

@@ -139,7 +139,7 @@ public class ElasticMontage implements PlugIn
 		
 		public int resolutionSpringMesh = 16;
 		public float stiffnessSpringMesh = 0.1f;
-		public float dampSpringMesh = 0.6f;
+		public float dampSpringMesh = 0.9f;
 		public float maxStretchSpringMesh = 2000.0f;
 		public int maxIterationsSpringMesh = 1000;
 		public int maxPlateauwidthSpringMesh = 200;
@@ -303,11 +303,12 @@ public class ElasticMontage implements PlugIn
 	
 	final static Param p = new Param(); 
 
+	@Override
 	final public void run( final String args )
 	{
 		if ( IJ.versionLessThan( "1.41n" ) ) return;
 		try { run(); }
-		catch ( Throwable t ) { t.printStackTrace(); }
+		catch ( final Throwable t ) { t.printStackTrace(); }
 	}
 	
 	final public void run() throws Exception
@@ -358,6 +359,7 @@ public class ElasticMontage implements PlugIn
 			siftTasks.add(
 					execSift.submit( new Callable< ArrayList< Feature > >()
 					{
+						@Override
 						public ArrayList< Feature > call()
 						{
 							IJ.showProgress( counter.getAndIncrement(), stack.getSize() );
@@ -389,7 +391,7 @@ public class ElasticMontage implements PlugIn
 		}
 		
 		/* join */
-		for ( Future< ArrayList< Feature > > fu : siftTasks )
+		for ( final Future< ArrayList< Feature > > fu : siftTasks )
 			fu.get();
 		
 		siftTasks.clear();
@@ -423,6 +425,7 @@ public class ElasticMontage implements PlugIn
 					
 					final Thread thread = new Thread()
 					{
+						@Override
 						public void run()
 						{
 							IJ.showProgress( counter.getAndIncrement(), stack.getSize() - 1 );
@@ -430,15 +433,15 @@ public class ElasticMontage implements PlugIn
 							IJ.log( "matching " + sliceB + " -> " + sliceA + "..." );
 							
 							//String path = p.outputPath + stack.getSliceLabel( slice ) + ".pointmatches";
-							String path = p.outputPath + String.format( "%05d", sliceB ) + "-" + String.format( "%05d", sliceA ) + ".pointmatches";
+							final String path = p.outputPath + String.format( "%05d", sliceB ) + "-" + String.format( "%05d", sliceA ) + ".pointmatches";
 							ArrayList< PointMatch > candidates = deserializePointMatches( p, path );
 							
 							if ( null == candidates )
 							{
 								//ArrayList< Feature > fs1 = deserializeFeatures( p.sift, p.outputPath + stack.getSliceLabel( slice - 1 ) + ".features" );
-								ArrayList< Feature > fs1 = deserializeFeatures( p.sift, p.outputPath + String.format( "%05d", sliceA ) + ".features" );
+								final ArrayList< Feature > fs1 = deserializeFeatures( p.sift, p.outputPath + String.format( "%05d", sliceA ) + ".features" );
 								//ArrayList< Feature > fs2 = deserializeFeatures( p.sift, p.outputPath + stack.getSliceLabel( slice ) + ".features" );
-								ArrayList< Feature > fs2 = deserializeFeatures( p.sift, p.outputPath + String.format( "%05d", sliceB ) + ".features" );
+								final ArrayList< Feature > fs2 = deserializeFeatures( p.sift, p.outputPath + String.format( "%05d", sliceB ) + ".features" );
 								candidates = new ArrayList< PointMatch >( FloatArray2DSIFT.createMatches( fs2, fs1, p.rod ) );
 								
 								if ( !serializePointMatches( p, candidates, path ) )
@@ -480,7 +483,7 @@ public class ElasticMontage implements PlugIn
 										p.minInlierRatio,
 										p.minNumInliers );
 							}
-							catch ( Exception e )
+							catch ( final Exception e )
 							{
 								modelFound = false;
 								System.err.println( e.getMessage() );
@@ -542,8 +545,8 @@ public class ElasticMontage implements PlugIn
 			final SpringMesh m1 = meshes.get( pair.a );
 			final SpringMesh m2 = meshes.get( pair.b );
 
-			ArrayList< PointMatch > pm12 = new ArrayList< PointMatch >();
-			ArrayList< PointMatch > pm21 = new ArrayList< PointMatch >();
+			final ArrayList< PointMatch > pm12 = new ArrayList< PointMatch >();
+			final ArrayList< PointMatch > pm21 = new ArrayList< PointMatch >();
 
 			final Collection< Vertex > v1 = m1.getVertices();
 			final Collection< Vertex > v2 = m2.getVertices();
@@ -662,7 +665,7 @@ public class ElasticMontage implements PlugIn
 		/* optimize the meshes */
 		try
 		{
-			long t0 = System.currentTimeMillis();
+			final long t0 = System.currentTimeMillis();
 			IJ.log("Optimizing spring meshes...");
 			
 			SpringMesh.optimizeMeshes( meshes, p.maxEpsilon, p.maxIterationsSpringMesh, p.maxPlateauwidthSpringMesh, p.visualize );
@@ -670,7 +673,7 @@ public class ElasticMontage implements PlugIn
 			IJ.log("Done optimizing spring meshes. Took " + (System.currentTimeMillis() - t0) + " ms");
 			
 		}
-		catch ( NotEnoughDataPointsException e ) { e.printStackTrace(); }
+		catch ( final NotEnoughDataPointsException e ) { e.printStackTrace(); }
 		
 		/* calculate rotation of first mesh */
 		final Set< PointMatch > firstMeshVertices = meshes.get( 0 ).getVA().keySet();
@@ -779,9 +782,9 @@ public class ElasticMontage implements PlugIn
 
 	final static private ArrayList< Feature > deserializeFeatures( final FloatArray2DSIFT.Param param, final String path )
 	{
-		Object o = deserialize( path );
+		final Object o = deserialize( path );
 		if ( null == o ) return null;
-		Features fs = (Features) o;
+		final Features fs = (Features) o;
 		if ( param.equals( fs.param ) )
 			return fs.features;
 		return null;
@@ -810,9 +813,9 @@ public class ElasticMontage implements PlugIn
 	
 	final static private ArrayList< PointMatch > deserializePointMatches( final ElasticMontage.Param param, final String path )
 	{
-		Object o = deserialize( path );
+		final Object o = deserialize( path );
 		if ( null == o ) return null;
-		PointMatches pms = (PointMatches) o;
+		final PointMatches pms = (PointMatches) o;
 		if ( param.equalSiftPointMatchParams( pms.param ) )
 			return pms.pointMatches;
 		return null;
@@ -822,7 +825,7 @@ public class ElasticMontage implements PlugIn
 	static public boolean serialize(final Object ob, final String path) {
 		try {
 			// 1 - Check that the parent chain of folders exists, and attempt to create it when not:
-			File fdir = new File(path).getParentFile();
+			final File fdir = new File(path).getParentFile();
 			if (null == fdir) return false;
 			fdir.mkdirs();
 			if (!fdir.exists()) {
@@ -834,7 +837,7 @@ public class ElasticMontage implements PlugIn
 			out.writeObject(ob);
 			out.close();
 			return true;
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			e.printStackTrace();
 		}
 		return false;
@@ -848,7 +851,7 @@ public class ElasticMontage implements PlugIn
 			final Object ob = in.readObject();
 			in.close();
 			return ob;
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			e.printStackTrace();
 		}
 		return null;

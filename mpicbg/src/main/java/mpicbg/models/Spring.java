@@ -21,8 +21,8 @@ public class Spring implements Serializable
 	public void setLength( final float length ) { this.length = length; }
 	
 	static protected float length(
-			float[] p1,
-			float[] p2 )
+			final float[] p1,
+			final float[] p2 )
 	{
 		assert
 				p1.length == p2.length :
@@ -105,7 +105,7 @@ public class Spring implements Serializable
 		final float[] w1 = p1.getW();
 		final float[] w2 = p2.getW();
 		
-		float lw = length( w1, w2 );
+		final float lw = length( w1, w2 );
 		final float d = lw - length;
 		
 		/**
@@ -211,7 +211,7 @@ public class Spring implements Serializable
 	 * 
 	 * @param length
 	 */
-	public Spring( float length )
+	public Spring( final float length )
 	{
 		this.length = length;
 		weight = 1.0f;
