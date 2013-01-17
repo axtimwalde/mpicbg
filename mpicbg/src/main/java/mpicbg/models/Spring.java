@@ -16,11 +16,11 @@ public class Spring implements Serializable
 
 	final static protected Random rnd = new Random( 0 );
 	
-	protected float length;
-	public float getLength() { return length; }
-	public void setLength( final float length ) { this.length = length; }
+	protected double length;
+	public double getLength() { return length; }
+	public void setLength( final double length ) { this.length = length; }
 	
-	static protected float length(
+	static protected double squareLength(
 			final float[] p1,
 			final float[] p2 )
 	{
@@ -28,27 +28,34 @@ public class Spring implements Serializable
 				p1.length == p2.length :
 				"Both locations have to have the same dimensionality.";
 		
-		float l = 0;
+		double l = 0;
 		for ( int i = 0; i < p1.length; ++i )
 		{
-			final float dl = p1[ i ] - p2[ i ];
+			final double dl = p1[ i ] - p2[ i ];
 			l += dl * dl;
 		}
-		return ( float )Math.sqrt( l );			
+		return l;	
 	}
 	
-	final protected float maxStretch;
+	static protected double length(
+			final float[] p1,
+			final float[] p2 )
+	{
+		return Math.sqrt( squareLength( p1, p2 ) );			
+	}
+	
+	final protected double maxStretch;
 	
 	protected float[] weights;
-	protected float weight;
+	protected double weight;
 	protected void calculateWeight()
 	{
-		weight = 1.0f;
+		weight = 1.0;
 		for ( final float wi : weights )
 			weight *= wi;
 	}
 	
-	public float getWeight(){ return weight; }
+	public double getWeight(){ return weight; }
 	public float[] getWeights(){ return weights; }
 	public void setWeights( final float[] weights )
 	{
@@ -95,7 +102,7 @@ public class Spring implements Serializable
 	public void calculateForce(
 			final Point p1,
 			final Point p2,
-			final float[] force )
+			final double[] force )
 	{
 		assert
 				force.length == p1.getL().length &&
@@ -105,8 +112,8 @@ public class Spring implements Serializable
 		final float[] w1 = p1.getW();
 		final float[] w2 = p2.getW();
 		
-		final float lw = length( w1, w2 );
-		final float d = lw - length;
+		final double lw = length( w1, w2 );
+		final double d = lw - length;
 		
 		/**
 		 * If stretched more than maxStretch then disrupt.
@@ -136,7 +143,7 @@ public class Spring implements Serializable
 	 * @param weights Array of weights
 	 */
 	public Spring(
-			final float length,
+			final double length,
 			final float[] weights )
 	{
 		this.length = length;
@@ -156,9 +163,9 @@ public class Spring implements Serializable
 	 * @param maxStretch stretch limit
 	 */
 	public Spring(
-			final float length,
+			final double length,
 			final float[] weights,
-			final float maxStretch )
+			final double maxStretch )
 	{
 		this.length = length;
 		this.weights = weights.clone();
@@ -175,13 +182,13 @@ public class Spring implements Serializable
 	 * @param weight (spring constant)
 	 */
 	public Spring(
-			final float length,
-			final float weight )
+			final double length,
+			final double weight )
 	{
 		this.length = length;
-		weights = new float[]{ weight };
+		weights = new float[]{ ( float )weight };
 		this.weight = weight;
-		this.maxStretch = Float.MAX_VALUE;
+		this.maxStretch = Double.MAX_VALUE;
 	}
 	
 	/**
@@ -194,12 +201,12 @@ public class Spring implements Serializable
 	 * @param maxStretch stretch limit
 	 */
 	public Spring(
-			final float length,
-			final float weight,
-			final float maxStretch )
+			final double length,
+			final double weight,
+			final double maxStretch )
 	{
 		this.length = length;
-		weights = new float[]{ weight };
+		weights = new float[]{ ( float )weight };
 		this.weight = weight;
 		this.maxStretch = maxStretch;
 	}
@@ -211,10 +218,10 @@ public class Spring implements Serializable
 	 * 
 	 * @param length
 	 */
-	public Spring( final float length )
+	public Spring( final double length )
 	{
 		this.length = length;
-		weight = 1.0f;
+		weight = 1.0;
 		this.maxStretch = Float.MAX_VALUE;
 	}
 	
@@ -251,7 +258,7 @@ public class Spring implements Serializable
 			final Point p1,
 			final Point p2,
 			final float[] weights,
-			final float maxStretch )
+			final double maxStretch )
 	{
 		this( length( p1.getL(), p2.getL() ), weights, maxStretch );
 	}
@@ -269,7 +276,7 @@ public class Spring implements Serializable
 	public Spring(
 			final Point p1,
 			final Point p2,
-			final float weight )
+			final double weight )
 	{
 		this( length( p1.getL(), p2.getL() ), weight );
 	}
@@ -287,8 +294,8 @@ public class Spring implements Serializable
 	public Spring(
 			final Point p1,
 			final Point p2,
-			final float weight,
-			final float maxStretch )
+			final double weight,
+			final double maxStretch )
 	{
 		this( length( p1.getL(), p2.getL() ), weight, maxStretch );
 	}

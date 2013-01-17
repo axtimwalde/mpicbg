@@ -42,8 +42,8 @@ public class SpringMesh extends TransformMesh
 	final static private int VIS_SIZE = 512;
 	
 	final protected HashSet< Vertex > fixedVertices = new HashSet< Vertex >();
-	final protected HashSet< Vertex > vertices = new HashSet< Vertex >();
-	public Set< Vertex > getVertices(){ return vertices; }
+	final protected ArrayList< Vertex > vertices = new ArrayList< Vertex >();
+	public Collection< Vertex > getVertices(){ return vertices; }
 	final protected HashMap< Vertex, PointMatch > vp = new HashMap< Vertex, PointMatch >();
 	final protected HashMap< PointMatch, Vertex > pv = new HashMap< PointMatch, Vertex >();
 	public int numVertices(){ return pv.size(); }
@@ -538,14 +538,14 @@ public class SpringMesh extends TransformMesh
 		final ColorProcessor ip = new ColorProcessor( width, height );
 		
 		/* estimate maximal spring stretch */
-		float maxSpringStretch = 0;
+		double maxSpringStretch = 0;
 		for ( final SpringMesh m : meshes )
 			for ( final Vertex vertex : m.getVertices() )
 			{
 				for ( final Vertex v : vertex.getConnectedVertices() )
 				{
 					final Spring spring = vertex.getSpring( v );
-					final float stretch = Math.abs( Point.distance( vertex, v ) - spring.getLength() );
+					final double stretch = Math.abs( Point.distance( vertex, v ) - spring.getLength() );
 					if ( stretch > maxSpringStretch ) maxSpringStretch = stretch;
 				}
 			}
@@ -568,7 +568,7 @@ public class SpringMesh extends TransformMesh
 		final float[] max = new float[ 2 ];
 		
 		/* estimate maximal spring stretch */
-		float maxSpringStretch = 0;
+		double maxSpringStretch = 0;
 		for ( final SpringMesh mesh : meshes )
 		{
 			final float[] meshMin = new float[ 2 ];
@@ -584,7 +584,7 @@ public class SpringMesh extends TransformMesh
 				for ( final Vertex v : vertex.getConnectedVertices() )
 				{
 					final Spring spring = vertex.getSpring( v );
-					final float stretch = Math.abs( Point.distance( vertex, v ) - spring.getLength() );
+					final double stretch = Math.abs( Point.distance( vertex, v ) - spring.getLength() );
 					if ( stretch > maxSpringStretch ) maxSpringStretch = stretch;
 				}
 			}
@@ -829,7 +829,7 @@ public class SpringMesh extends TransformMesh
 	 * 
 	 * @return illustration
 	 */
-	public void illustrateSprings( final ColorProcessor ip, final float scale, final float maxStretch )
+	public void illustrateSprings( final ColorProcessor ip, final float scale, final double maxStretch )
 	{
 		for ( final Vertex vertex : vertices )
 		{
@@ -838,12 +838,12 @@ public class SpringMesh extends TransformMesh
 			{
 				final Spring spring = vertex.getSpring( v );
 				//final float stretch = mpicbg.util.Util.pow( Math.min( 1.0f, Math.abs( Point.distance( vertex, v ) - spring.getLength() ) / maxStretch ), 2 );
-				final float stretch = Math.min( 1.0f, Math.abs( Point.distance( vertex, v ) - spring.getLength() ) / maxStretch );
+				final double stretch = Math.min( 1.0, Math.abs( Point.distance( vertex, v ) - spring.getLength() ) / maxStretch );
 				
-				final float r = Math.min( 1, stretch * 2 );
-				final float g = Math.min( 1, 2 - stretch * 2 );
+				final double r = Math.min( 1, stretch * 2 );
+				final double g = Math.min( 1, 2 - stretch * 2 );
 				
-				ip.setColor( new Color( r, g, 0 ) );
+				ip.setColor( new Color( ( float )r, ( float )g, 0 ) );
 				
 				final float[] v2 = v.getW();
 				
@@ -862,7 +862,7 @@ public class SpringMesh extends TransformMesh
 	 * 
 	 * @return illustration
 	 */
-	public void illustrateSprings( final ColorProcessor ip, final float scale, final float maxStretch, final float offsetX, final float offsetY )
+	public void illustrateSprings( final ColorProcessor ip, final float scale, final double maxStretch, final float offsetX, final float offsetY )
 	{
 		for ( final Vertex vertex : vertices )
 		{
@@ -871,12 +871,12 @@ public class SpringMesh extends TransformMesh
 			{
 				final Spring spring = vertex.getSpring( v );
 				//final float stretch = mpicbg.util.Util.pow( Math.min( 1.0f, Math.abs( Point.distance( vertex, v ) - spring.getLength() ) / maxStretch ), 2 );
-				final float stretch = Math.min( 1.0f, Math.abs( Point.distance( vertex, v ) - spring.getLength() ) / maxStretch );
+				final double stretch = Math.min( 1.0, Math.abs( Point.distance( vertex, v ) - spring.getLength() ) / maxStretch );
 				
-				final float r = Math.min( 1, stretch * 2 );
-				final float g = Math.min( 1, 2 - stretch * 2 );
+				final double r = Math.min( 1, stretch * 2 );
+				final double g = Math.min( 1, 2 - stretch * 2 );
 				
-				ip.setColor( new Color( r, g, 0 ) );
+				ip.setColor( new Color( ( float )r, ( float )g, 0 ) );
 				
 				final float[] v2 = v.getW();
 				

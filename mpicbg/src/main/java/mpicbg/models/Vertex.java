@@ -189,7 +189,7 @@ public class Vertex extends Point
 		forceSum = 0;
 		
 		double fAmplitude;
-		final float[] f = new float[ force.length ];
+		final double[] f = new double[ force.length ];
 		
 		final Set< Vertex > vertices = springs.keySet();
 		for ( final Vertex vertex : vertices )
