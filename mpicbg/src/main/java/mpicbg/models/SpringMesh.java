@@ -43,7 +43,7 @@ public class SpringMesh extends TransformMesh
 	
 	final protected HashSet< Vertex > fixedVertices = new HashSet< Vertex >();
 	final protected ArrayList< Vertex > vertices = new ArrayList< Vertex >();
-	public Collection< Vertex > getVertices(){ return vertices; }
+	public ArrayList< Vertex > getVertices(){ return vertices; }
 	final protected HashMap< Vertex, PointMatch > vp = new HashMap< Vertex, PointMatch >();
 	final protected HashMap< PointMatch, Vertex > pv = new HashMap< PointMatch, Vertex >();
 	public int numVertices(){ return pv.size(); }

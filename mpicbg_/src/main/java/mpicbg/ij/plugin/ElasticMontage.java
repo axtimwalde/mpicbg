@@ -34,7 +34,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -548,8 +547,8 @@ public class ElasticMontage implements PlugIn
 			final ArrayList< PointMatch > pm12 = new ArrayList< PointMatch >();
 			final ArrayList< PointMatch > pm21 = new ArrayList< PointMatch >();
 
-			final Collection< Vertex > v1 = m1.getVertices();
-			final Collection< Vertex > v2 = m2.getVertices();
+			final ArrayList< Vertex > v1 = m1.getVertices();
+			final ArrayList< Vertex > v2 = m2.getVertices();
 
 			final FloatProcessor ip1 = ( FloatProcessor )stack.getProcessor( pair.a + 1 ).convertToFloat().duplicate();
 			final FloatProcessor ip2 = ( FloatProcessor )stack.getProcessor( pair.b + 1 ).convertToFloat().duplicate();
