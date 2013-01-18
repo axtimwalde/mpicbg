@@ -76,7 +76,7 @@ public class Vertex extends Point
 	public void addSpring(
 			final Vertex v2,
 			final float[] weights,
-			final float maxStretch )
+			final double maxStretch )
 	{
 		addSpring( v2, new Spring( this, v2, weights, maxStretch ) );
 	}
@@ -90,7 +90,7 @@ public class Vertex extends Point
 	 */
 	public void addSpring(
 			final Vertex v2,
-			final float weight )
+			final double weight )
 	{
 		addSpring( v2, new Spring( this, v2, weight ) );
 	}
@@ -105,8 +105,8 @@ public class Vertex extends Point
 	 */
 	public void addSpring(
 			final Vertex v2,
-			final float weight,
-			final float maxStretch )
+			final double weight,
+			final double maxStretch )
 	{
 		addSpring( v2, new Spring( this, v2, weight, maxStretch ) );
 	}
@@ -115,10 +115,10 @@ public class Vertex extends Point
 	 * The current moving direction of the {@link Vertex}.  The length of this
 	 * vector gives the current speed. 
 	 */
-	final protected float[] direction;
-	public float[] getDirection(){ return direction; }
-	protected float speed;
-	public float getSpeed() { return speed; }
+	final protected double[] direction;
+	public double[] getDirection(){ return direction; }
+	protected double speed;
+	public double getSpeed() { return speed; }
 	
 	/**
 	 * The sum of all forces amplitudes applied to this {@link Vertex}.
@@ -129,10 +129,10 @@ public class Vertex extends Point
 	/**
 	 * The resulting force amplitude applied to this {@link Vertex}.
 	 */
-	final private float[] force;
-	public float[] getForces(){ return force; }
-	private float forceAmplitude;
-	public float getForce(){ return forceAmplitude; }
+	final protected double[] force;
+	public double[] getForces(){ return force; }
+	protected double forceAmplitude;
+	public double getForce(){ return forceAmplitude; }
 	
 	/**
 	 * Constructor
@@ -142,8 +142,8 @@ public class Vertex extends Point
 	public Vertex( final float[] l )
 	{
 		super( l );
-		direction = new float[ l.length ];
-		force = new float[ direction.length ];
+		direction = new double[ l.length ];
+		force = new double[ direction.length ];
 	}
 	
 	/**
@@ -155,8 +155,8 @@ public class Vertex extends Point
 	public Vertex( final float[] l, final float[] w )
 	{
 		super( l, w );
-		direction = new float[ l.length ];
-		force = new float[ direction.length ];
+		direction = new double[ l.length ];
+		force = new double[ direction.length ];
 	}
 	
 	/**
@@ -202,13 +202,13 @@ public class Vertex extends Point
 				force[ i ] += f[ i ];
 				fAmplitude += f[ i ] * f[ i ];
 			}
-			forceSum += ( float )Math.sqrt( fAmplitude );
+			forceSum += Math.sqrt( fAmplitude );
 		}
 		
 		forceAmplitude = 0;
 		for ( int i = 0; i < force.length; ++i )
 			forceAmplitude += force[ i ] * force[ i ];
-		forceAmplitude = ( float )Math.sqrt( forceAmplitude );
+		forceAmplitude = Math.sqrt( forceAmplitude );
 	}
 	
 	/**
@@ -228,7 +228,7 @@ public class Vertex extends Point
 			direction[ i ] *= dampDt;
 			speed += direction[ i ] * direction[ i ];
 		}
-		speed = ( float )Math.sqrt( speed );
+		speed = Math.sqrt( speed );
 	}
 	
 	/**
@@ -236,7 +236,7 @@ public class Vertex extends Point
 	 * 
 	 * @param damp damping factor (0.0 fully damped, 1.0 not damped)
 	 */
-	public void update( final float damp, final double dt )
+	public void update( final double damp, final double dt )
 	{
 		updateForce();
 		updateDirection( Math.pow( damp, dt ), dt );
@@ -247,7 +247,7 @@ public class Vertex extends Point
 	 * 
 	 * @param t time
 	 */
-	final public void move( final float t )
+	final public void move( final double t )
 	{
 		for ( int i = 0; i < w.length; ++i )
 			w[ i ] += t * direction[ i ];
