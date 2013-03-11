@@ -215,7 +215,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 	}
 	
 	@Override
-	final public HomographyModel2D copy()
+	public HomographyModel2D copy()
 	{
 		final HomographyModel2D m = new HomographyModel2D();
 		
@@ -373,7 +373,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 //	}
 
 	@Override
-	final public String toString()
+	public String toString()
 	{
 //		final double[][] b = a.getArray();
 //		return (
