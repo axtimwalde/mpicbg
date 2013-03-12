@@ -22,7 +22,7 @@ public class Vertex extends Point
 	 * this {@link Vertex} and {@link Spring#getV2() v2} being the
 	 * {@link Vertex} at the other side of the {@link Spring}.
 	 */
-	final protected HashMap< Vertex, Spring > springs = new HashMap< Vertex, Spring >();
+	final transient protected HashMap< Vertex, Spring > springs = new HashMap< Vertex, Spring >();
 	public Collection< Spring > getSprings(){ return springs.values(); }
 	/**
 	 * Get all {@link Vertex Vertices} that are connected to this
