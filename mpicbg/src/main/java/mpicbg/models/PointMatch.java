@@ -19,13 +19,11 @@ public class PointMatch implements Serializable
 
 	protected float strength = 1.0f;
 	
-	protected Point p1;
+	final protected Point p1;
 	public Point getP1() { return p1; }
-    public void setP1(final Point p) { p1 = p; }
 	
-	protected Point p2;
+	final protected Point p2;
 	public Point getP2() { return p2; }
-    public void setP2(final Point p) { p2 = p; }
 	
 	protected float[] weights;
 	
