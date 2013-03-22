@@ -26,26 +26,7 @@ public class Point implements Serializable
 	 */
 	final protected float[] l;
 	public float[] getL() { return l; }
-
-    private long id = 0;
-    public void setID(final long id) {this.id = id; }
-    public long getID() { return id; }
-
 	
-    public void set(final Point p)
-    {
-        // Assume w.length and l.length are the same for this and p
-        for (int i = 0; i < w.length; ++i)
-        {
-            w[i] = p.w[i];
-        }
-        
-        for (int i = 0; i < l.length; ++i)
-        {
-            l[i] = p.l[i];
-        }
-    }
-    
 	/**
 	 * Constructor
 	 *          
