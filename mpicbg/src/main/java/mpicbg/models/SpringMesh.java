@@ -17,8 +17,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import mpicbg.ij.util.Util;
 
@@ -42,8 +42,8 @@ public class SpringMesh extends TransformMesh
 	final static private int VIS_SIZE = 512;
 	
 	final protected HashSet< Vertex > fixedVertices = new HashSet< Vertex >();
-	final protected HashSet< Vertex > vertices = new HashSet< Vertex >();
-	public Set< Vertex > getVertices(){ return vertices; }
+	final protected ArrayList< Vertex > vertices = new ArrayList< Vertex >();
+	public ArrayList< Vertex > getVertices(){ return vertices; }
 	final protected HashMap< Vertex, PointMatch > vp = new HashMap< Vertex, PointMatch >();
 	final protected HashMap< PointMatch, Vertex > pv = new HashMap< PointMatch, Vertex >();
 	public int numVertices(){ return pv.size(); }
@@ -61,16 +61,16 @@ public class SpringMesh extends TransformMesh
 	
 	protected double maxSpeed = 0.0;
 
-	protected float damp;
+	protected double damp;
 	
 	public SpringMesh(
 			final int numX,
 			final int numY,
 			final float width,
 			final float height,
-			final float springWeight,
-			final float maxStretch,
-			final float damp )
+			final double springWeight,
+			final double maxStretch,
+			final double damp )
 	{
 		super( numX, numY, width, height );
 		
@@ -100,15 +100,15 @@ public class SpringMesh extends TransformMesh
 		 * {@link Spring} from both sides and thus interconnects both
 		 * {@link mpicbg.models.Vertex Vertices}.
 		 */
-		for ( Vertex vertex : vertices )
+		for ( final Vertex vertex : vertices )
 		{
-			PointMatch p = vp.get( vertex );
-			for ( AffineModel2D ai : va.get( p ) )
+			final PointMatch p = vp.get( vertex );
+			for ( final AffineModel2D ai : va.get( p ) )
 			{
-				Set< Vertex > connectedVertices = vertex.getConnectedVertices();
-				for ( PointMatch m : av.get( ai ) )
+				final Set< Vertex > connectedVertices = vertex.getConnectedVertices();
+				for ( final PointMatch m : av.get( ai ) )
 				{
-					Vertex connectedVertex = pv.get( m );
+					final Vertex connectedVertex = pv.get( m );
 					if ( p != m && !connectedVertices.contains( connectedVertex ) )
 						vertex.addSpring( connectedVertex, springWeight, maxStretch );
 				}
@@ -173,19 +173,19 @@ public class SpringMesh extends TransformMesh
 			final int numX,
 			final float width,
 			final float height,
-			final float springWeight,
-			final float maxStretch,
-			final float damp )
+			final double springWeight,
+			final double maxStretch,
+			final double damp )
 	{
 		this( numX, numY( numX, width, height ), width, height, springWeight, maxStretch, damp );
 	}
 	
-	protected float weigh( final float d, final float alpha )
+	protected double weigh( final double d, final double alpha )
 	{
-		return 1.0f / ( float )Math.pow( d, alpha );
+		return 1.0 / Math.pow( d, alpha );
 	}
 	
-	static protected void println( String s ){ IJ.log( s ); }
+	static protected void println( final String s ){ IJ.log( s ); }
 	
 	/**
 	 * Find the closest {@link Vertex} to a given coordinate in terms of its
@@ -196,16 +196,16 @@ public class SpringMesh extends TransformMesh
 	 */
 	final public Vertex findClosestTargetVertex( final float[] there )
 	{
-		Set< Vertex > vs = vp.keySet();
+		final Set< Vertex > vs = vp.keySet();
 		
 		Vertex closest = null;
-		float cd = Float.MAX_VALUE;
+		double cd = Double.MAX_VALUE;
 		for ( final Vertex v : vs )
 		{
 			final float[] here = v.getW();
-			final float dx = here[ 0 ] - there[ 0 ];
-			final float dy = here[ 1 ] - there[ 1 ];
-			final float d = dx * dx + dy * dy;
+			final double dx = here[ 0 ] - there[ 0 ];
+			final double dy = here[ 1 ] - there[ 1 ];
+			final double d = dx * dx + dy * dy;
 			if ( d < cd )
 			{
 				cd = d;
@@ -224,16 +224,16 @@ public class SpringMesh extends TransformMesh
 	 */
 	final public Vertex findClosestSourceVertex( final float[] there )
 	{
-		Set< Vertex > vs = vp.keySet();
+		final Set< Vertex > vs = vp.keySet();
 		
 		Vertex closest = null;
-		float cd = Float.MAX_VALUE;
+		double cd = Double.MAX_VALUE;
 		for ( final Vertex v : vs )
 		{
 			final float[] here = v.getL();
-			final float dx = here[ 0 ] - there[ 0 ];
-			final float dy = here[ 1 ] - there[ 1 ];
-			final float d = dx * dx + dy * dy;
+			final double dx = here[ 0 ] - there[ 0 ];
+			final double dy = here[ 1 ] - there[ 1 ];
+			final double d = dx * dx + dy * dy;
 			if ( d < cd )
 			{
 				cd = d;
@@ -283,7 +283,7 @@ public class SpringMesh extends TransformMesh
 	 * @param vertex
 	 * @param weights
 	 */
-	public void addVertex( final Vertex vertex, final float weight )
+	public void addVertex( final Vertex vertex, final double weight )
 	{
 		final Vertex closest = findClosestTargetVertex( vertex.getW() ); 
 		vertex.addSpring( closest, weight );
@@ -300,21 +300,21 @@ public class SpringMesh extends TransformMesh
 	 */
 	final public void addVertexWeightedByDistance(
 			final Vertex vertex,
-			final float weight,
-			final float alpha )
+			final double weight,
+			final double alpha )
 	{
 		final Set< Vertex > vs = vp.keySet();
 		final float[] there = vertex.getW();
 		
-		float[] weights = new float[]{ weight, 1.0f };
+		final float[] weights = new float[]{ ( float )weight, 1.0f };
 		
 		for ( final Vertex v : vs )
 		{
 			final float[] here = v.getL();
-			final float dx = here[ 0 ] - there[ 0 ];
-			final float dy = here[ 1 ] - there[ 1 ];
+			final double dx = here[ 0 ] - there[ 0 ];
+			final double dy = here[ 1 ] - there[ 1 ];
 			
-			weights[ 1 ] = weigh( 1f + dx * dx + dy * dy, alpha );
+			weights[ 1 ] = ( float )weigh( 1.0 + dx * dx + dy * dy, alpha );
 			
 			// add a Spring if the Vertex is one of the observed ones
 			if ( vs.contains( v ) )
@@ -324,13 +324,12 @@ public class SpringMesh extends TransformMesh
 	
 	
 	/**
-	 * Calculate force and speed vectors for all vertices.
+	 * Update force vectors for all vertices.
 	 * 
 	 * @param observer
 	 */
-	protected void calculateForceAndSpeed( final ErrorStatistic observer )
+	protected void updateForce( final ErrorStatistic observer )
 	{
-		maxSpeed = 0.0;
 		minForce = Double.MAX_VALUE;
 		maxForce = 0.0;
 		force = 0;
@@ -339,11 +338,9 @@ public class SpringMesh extends TransformMesh
 			/* active vertices */
 			for ( final Vertex vertex : vertices )
 			{
-				vertex.update( damp );
-				final float vertexForce = vertex.getForce();
+				vertex.updateForce();
+				final double vertexForce = vertex.getForce();
 				force += vertexForce;
-				final float speed = vertex.getSpeed();
-				if ( speed > maxSpeed ) maxSpeed = speed;
 				if ( vertexForce < minForce ) minForce = vertexForce;
 				if ( vertexForce > maxForce ) maxForce = vertexForce;
 			}
@@ -355,10 +352,30 @@ public class SpringMesh extends TransformMesh
 	
 	
 	/**
+	 * Calculate motion vectors for all vertices.
+	 * 
+	 * @param observer
+	 */
+	protected void updateDirection( final double dt )
+	{
+		final double dampDt = Math.pow( damp, dt );
+		synchronized ( this )
+		{
+			/* active vertices */
+			for ( final Vertex vertex : vertices )
+			{
+				vertex.updateDirection( dampDt, dt );
+				final double speed = vertex.getSpeed();
+				if ( speed > maxSpeed ) maxSpeed = speed;
+			}
+		}
+	}
+	
+	/**
 	 * Move all vertices for a given &Delta;t
 	 * @param t
 	 */
-	protected void update( final float dt )
+	protected void update( final double dt )
 	{
 		synchronized ( this )
 		{
@@ -383,15 +400,27 @@ public class SpringMesh extends TransformMesh
 		minForce = Double.MAX_VALUE;
 		maxForce = 0.0;
 		force = 0;
+		
 		synchronized ( this )
 		{
 			/* active vertices */
 			for ( final Vertex vertex : vertices )
 			{
-				vertex.update( damp );
-				final float vertexForce = vertex.getForce();
+				vertex.updateForce();
+				final double vertexForce = vertex.getForce();
+				if ( vertexForce < minForce ) minForce = vertexForce;
+				if ( vertexForce > maxForce ) maxForce = vertexForce;
+			}			
+		
+			double dt = Math.min( 1000.0, 1.0 / maxForce );
+		
+			/* active vertices */
+			for ( final Vertex vertex : vertices )
+			{
+				vertex.update( damp, dt );
+				final double vertexForce = vertex.getForce();
 				force += vertexForce;
-				final float speed = vertex.getSpeed();
+				final double speed = vertex.getSpeed();
 				if ( speed > maxSpeed ) maxSpeed = speed;
 				if ( vertexForce < minForce ) minForce = vertexForce;
 				if ( vertexForce > maxForce ) maxForce = vertexForce;
@@ -399,13 +428,15 @@ public class SpringMesh extends TransformMesh
 			
 			force /= vertices.size();
 			
+			dt = Math.min( dt, 1.0 / maxSpeed );
+			
 			for ( final Vertex vertex : vertices )
-				vertex.move( Math.min( 1000.0f, ( float )( 2.0 / maxSpeed ) ) );
+				vertex.move( dt );
 			
 			/* passive vertices */
 			
 			updateAffines();
-			updatePassiveVertices();			
+			updatePassiveVertices();
 		}
 		observer.add( force );
 	}
@@ -434,7 +465,7 @@ public class SpringMesh extends TransformMesh
 	 * 
 	 */
 	public void optimize(
-			final float maxError,
+			final double maxError,
 			final int maxIterations,
 			final int maxPlateauwidth ) throws NotEnoughDataPointsException 
 	{
@@ -459,7 +490,7 @@ public class SpringMesh extends TransformMesh
 					{
 						proceed |= Math.abs( observer.getWideSlope( d ) ) > 0.0;
 					}
-					catch ( Exception e ) { e.printStackTrace(); }
+					catch ( final Exception e ) { e.printStackTrace(); }
 					d /= 2;
 				}
 			}
@@ -500,21 +531,21 @@ public class SpringMesh extends TransformMesh
 	
 	
 	/* <visualization> */
-	final static public ColorProcessor paintSprings( final Collection< SpringMesh > meshes, final float scale, final float maxStretch )
+	final static public ColorProcessor paintSprings( final Collection< SpringMesh > meshes, final float scale, final double maxStretch )
 	{
 		final int width = mpicbg.util.Util.round( meshes.iterator().next().getWidth() * scale );
 		final int height = mpicbg.util.Util.round( meshes.iterator().next().getHeight() * scale );
 		final ColorProcessor ip = new ColorProcessor( width, height );
 		
 		/* estimate maximal spring stretch */
-		float maxSpringStretch = 0;
+		double maxSpringStretch = 0;
 		for ( final SpringMesh m : meshes )
 			for ( final Vertex vertex : m.getVertices() )
 			{
 				for ( final Vertex v : vertex.getConnectedVertices() )
 				{
 					final Spring spring = vertex.getSpring( v );
-					final float stretch = Math.abs( Point.distance( vertex, v ) - spring.getLength() );
+					final double stretch = Math.abs( Point.distance( vertex, v ) - spring.getLength() );
 					if ( stretch > maxSpringStretch ) maxSpringStretch = stretch;
 				}
 			}
@@ -528,7 +559,7 @@ public class SpringMesh extends TransformMesh
 	
 	
 	/* <visualization> */
-	final static public ColorProcessor paintSprings( final Collection< SpringMesh > meshes, final int width, final int height, final float maxStretch )
+	final static public ColorProcessor paintSprings( final Collection< SpringMesh > meshes, final int width, final int height, final double maxStretch )
 	{
 		final ColorProcessor ip = new ColorProcessor( width, height );
 		
@@ -537,7 +568,7 @@ public class SpringMesh extends TransformMesh
 		final float[] max = new float[ 2 ];
 		
 		/* estimate maximal spring stretch */
-		float maxSpringStretch = 0;
+		double maxSpringStretch = 0;
 		for ( final SpringMesh mesh : meshes )
 		{
 			final float[] meshMin = new float[ 2 ];
@@ -553,7 +584,7 @@ public class SpringMesh extends TransformMesh
 				for ( final Vertex v : vertex.getConnectedVertices() )
 				{
 					final Spring spring = vertex.getSpring( v );
-					final float stretch = Math.abs( Point.distance( vertex, v ) - spring.getLength() );
+					final double stretch = Math.abs( Point.distance( vertex, v ) - spring.getLength() );
 					if ( stretch > maxSpringStretch ) maxSpringStretch = stretch;
 				}
 			}
@@ -588,7 +619,7 @@ public class SpringMesh extends TransformMesh
 	 */
 	public static void optimizeMeshes(
 			final Collection< SpringMesh > meshes,
-			final float maxError,
+			final double maxError,
 			final int maxIterations,
 			final int maxPlateauwidth ) throws NotEnoughDataPointsException 
 	{
@@ -608,9 +639,31 @@ public class SpringMesh extends TransformMesh
 	 */
 	public static void optimizeMeshes(
 			final Collection< SpringMesh > meshes,
-			final float maxError,
+			final double maxError,
 			final int maxIterations,
 			final int maxPlateauwidth,
+			final boolean visualize ) throws NotEnoughDataPointsException 
+	{
+		optimizeMeshes( meshes, maxError, maxIterations, maxPlateauwidth, 0.5, visualize );
+	}
+	
+	/**
+	 * Optimize a {@link Collection} of connected {@link SpringMesh SpringMeshes}.
+	 * 
+	 * @param maxError do not accept convergence if error is > max_error
+	 * @param maxIterations stop after that many iterations even if there was
+	 *   no minimum found
+	 * @param maxPlateauwidth convergence is reached if the average slope in
+	 *   an interval of this size is 0.0 (in double accuracy).  This prevents
+	 *   the algorithm from stopping at plateaus smaller than this value.
+	 * 
+	 */
+	public static void optimizeMeshes(
+			final Collection< SpringMesh > meshes,
+			final double maxError,
+			final int maxIterations,
+			final int maxPlateauwidth,
+			final double maxStepSize,
 			final boolean visualize ) throws NotEnoughDataPointsException 
 	{
 		final ErrorStatistic observer = new ErrorStatistic( maxPlateauwidth + 1 );
@@ -625,11 +678,36 @@ public class SpringMesh extends TransformMesh
 		boolean proceed = i < maxIterations;
 		
 		/* <visualization> */
-		final ImageStack stackAnimation = new ImageStack( VIS_SIZE, VIS_SIZE );
-		final ImagePlus impAnimation = new ImagePlus();
+		final ImageStack stackAnimation;
+		final ImagePlus impAnimation;
+		if ( visualize )
+		{
+			stackAnimation = new ImageStack( VIS_SIZE, VIS_SIZE );
+			impAnimation = new ImagePlus();
+		}
+		else
+		{
+			stackAnimation = null;
+			impAnimation = null;
+		}
 		/* </visualization> */
 		
 		println( "i mean min max" );
+		
+		/* initialize dt */
+		maxForce = 0;
+		for ( final SpringMesh mesh : meshes )
+		{
+			mesh.updateForce( singleMeshObserver );
+			force += mesh.getForce();
+			
+			final double meshMaxForce = mesh.maxForce;
+			final double meshMinForce = mesh.minForce;
+			if ( meshMaxForce > maxForce ) maxForce = meshMaxForce;
+			if ( meshMinForce < minForce ) minForce = meshMinForce;
+		}
+		double dt = Math.min( 1000, maxStepSize / maxForce );
+		double dt1 = dt;
 		
 		while ( proceed )
 		{
@@ -653,12 +731,11 @@ public class SpringMesh extends TransformMesh
 			}
 			/* </visualization> */
 			
+			/* update force vectors */
 			for ( final SpringMesh mesh : meshes )
 			{
-				mesh.calculateForceAndSpeed( singleMeshObserver );
+				mesh.updateForce( singleMeshObserver );
 				force += mesh.getForce();
-				if ( mesh.maxSpeed > maxSpeed )
-					maxSpeed = mesh.maxSpeed;
 				
 				final double meshMaxForce = mesh.maxForce;
 				final double meshMinForce = mesh.minForce;
@@ -667,14 +744,31 @@ public class SpringMesh extends TransformMesh
 			}
 			observer.add( force / meshes.size() );
 			
-			final float dt = ( float )Math.min( 1000, 1.0 / maxSpeed );
+			/* adjust step size to maximum force vector */
+			double dt0 = Math.min( 1000, maxStepSize / maxForce );
+			dt = Math.min( dt0, ( dt1 + dt0 ) / 2.0 );
+			
+			/* update motion vectors */
+			for ( final SpringMesh mesh : meshes )
+			{
+				mesh.updateDirection( dt );
+				if ( mesh.maxSpeed > maxSpeed )
+					maxSpeed = mesh.maxSpeed;	
+			}
+			
+			/* adjust step size to maximum motion vector */
+			dt0 = Math.min( dt0, maxStepSize / maxSpeed );
+			dt = Math.min( dt0, ( dt1 + dt0 ) / 2.0 );
+			
+			dt1 = dt;
+			
 			
 			for ( final SpringMesh mesh : meshes )
 			{
 				mesh.update( dt );
 			}
 			
-			println( new StringBuffer( i + " " ).append( force / meshes.size() ).append( " " ).append( minForce ).append( " " ).append( maxForce ).toString() );
+			println( new StringBuffer( i + " " ).append( force / meshes.size() ).append( " " ).append( minForce ).append( " " ).append( maxForce ).append( " " ).append( dt ).toString() );
 			
 			if ( i > maxPlateauwidth )
 			{
@@ -687,7 +781,7 @@ public class SpringMesh extends TransformMesh
 					{
 						proceed |= Math.abs( observer.getWideSlope( d ) ) > 0.0;
 					}
-					catch ( Exception e ) { e.printStackTrace(); }
+					catch ( final Exception e ) { e.printStackTrace(); }
 					d /= 2;
 				}
 			}
@@ -735,7 +829,7 @@ public class SpringMesh extends TransformMesh
 	 * 
 	 * @return illustration
 	 */
-	public void illustrateSprings( final ColorProcessor ip, final float scale, final float maxStretch )
+	public void illustrateSprings( final ColorProcessor ip, final float scale, final double maxStretch )
 	{
 		for ( final Vertex vertex : vertices )
 		{
@@ -744,12 +838,12 @@ public class SpringMesh extends TransformMesh
 			{
 				final Spring spring = vertex.getSpring( v );
 				//final float stretch = mpicbg.util.Util.pow( Math.min( 1.0f, Math.abs( Point.distance( vertex, v ) - spring.getLength() ) / maxStretch ), 2 );
-				final float stretch = Math.min( 1.0f, Math.abs( Point.distance( vertex, v ) - spring.getLength() ) / maxStretch );
+				final double stretch = Math.min( 1.0, Math.abs( Point.distance( vertex, v ) - spring.getLength() ) / maxStretch );
 				
-				final float r = Math.min( 1, stretch * 2 );
-				final float g = Math.min( 1, 2 - stretch * 2 );
+				final double r = Math.min( 1, stretch * 2 );
+				final double g = Math.min( 1, 2 - stretch * 2 );
 				
-				ip.setColor( new Color( r, g, 0 ) );
+				ip.setColor( new Color( ( float )r, ( float )g, 0 ) );
 				
 				final float[] v2 = v.getW();
 				
@@ -768,7 +862,7 @@ public class SpringMesh extends TransformMesh
 	 * 
 	 * @return illustration
 	 */
-	public void illustrateSprings( final ColorProcessor ip, final float scale, final float maxStretch, final float offsetX, final float offsetY )
+	public void illustrateSprings( final ColorProcessor ip, final float scale, final double maxStretch, final float offsetX, final float offsetY )
 	{
 		for ( final Vertex vertex : vertices )
 		{
@@ -777,12 +871,12 @@ public class SpringMesh extends TransformMesh
 			{
 				final Spring spring = vertex.getSpring( v );
 				//final float stretch = mpicbg.util.Util.pow( Math.min( 1.0f, Math.abs( Point.distance( vertex, v ) - spring.getLength() ) / maxStretch ), 2 );
-				final float stretch = Math.min( 1.0f, Math.abs( Point.distance( vertex, v ) - spring.getLength() ) / maxStretch );
+				final double stretch = Math.min( 1.0, Math.abs( Point.distance( vertex, v ) - spring.getLength() ) / maxStretch );
 				
-				final float r = Math.min( 1, stretch * 2 );
-				final float g = Math.min( 1, 2 - stretch * 2 );
+				final double r = Math.min( 1, stretch * 2 );
+				final double g = Math.min( 1, 2 - stretch * 2 );
 				
-				ip.setColor( new Color( r, g, 0 ) );
+				ip.setColor( new Color( ( float )r, ( float )g, 0 ) );
 				
 				final float[] v2 = v.getW();
 				
@@ -839,8 +933,8 @@ public class SpringMesh extends TransformMesh
 		/* active vertices */
 		for ( final Vertex v : vertices )
 		{
-			final float[] d = v.getDirection();
-			final float[] f = v.getForces();
+			final double[] d = v.getDirection();
+			final double[] f = v.getForces();
 			for ( int i = 0; i < d.length; ++i )
 			{
 				d[ i ] *= scale;
@@ -853,8 +947,8 @@ public class SpringMesh extends TransformMesh
 		/* passive vertices */
 		for ( final Vertex v : pva.keySet() )
 		{
-			final float[] d = v.getDirection();
-			final float[] f = v.getForces();
+			final double[] d = v.getDirection();
+			final double[] f = v.getForces();
 			for ( int i = 0; i < d.length; ++i )
 			{
 				d[ i ] *= scale;
