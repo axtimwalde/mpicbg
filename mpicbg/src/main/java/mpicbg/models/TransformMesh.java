@@ -3,9 +3,9 @@ package mpicbg.models;
 import java.awt.Shape;
 import java.awt.geom.GeneralPath;
 import java.util.ArrayList;
-import java.util.Set;
 import java.util.HashMap;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import mpicbg.util.Util;
 
@@ -56,11 +56,37 @@ public class TransformMesh implements InvertibleCoordinateTransform
 	final protected HashMap< PointMatch, ArrayList< AffineModel2D > > va = new HashMap< PointMatch, ArrayList< AffineModel2D > >();
 	public HashMap< PointMatch, ArrayList< AffineModel2D > > getVA(){ return va; };
 	
-	public TransformMesh(
+	final static protected PointFactory< Point > defaultPointFactory = new PointFactory< Point >()
+	{
+		@Override
+		final public Point createPoint( final float[] l )
+		{
+			return new Point( l );
+		}
+	};
+	
+	final static protected PointMatchFactory< PointMatch > defaultPointMatchFactory = new PointMatchFactory< PointMatch >()
+	{
+		@Override
+		final public PointMatch createPointMatch( final Point p1, final Point p2 )
+		{
+			return new PointMatch( p1, p2 );
+		}
+		
+		@Override
+		final public PointMatch createPointMatch( final Point p1, final Point p2, final float w )
+		{
+			return new PointMatch( p1, p2, w );
+		}
+	};
+	
+	protected TransformMesh(
 			final int numX,
 			final int numY,
 			final float width,
-			final float height )
+			final float height,
+			final PointFactory< ? > pointFactory,
+			final PointMatchFactory< ? > pointMatchFactory )
 	{
 		final int numXs = Math.max( 2, numX );
 		final int numYs = Math.max( 2, numY );
@@ -78,8 +104,8 @@ public class TransformMesh implements InvertibleCoordinateTransform
 		for ( int xi = 0; xi < numXs; ++xi )
 		{
 			final float xip = xi * dx;
-			final Point p = new Point( new float[]{ xip, 0 } );
-			pq[ i ] = new PointMatch( p, p.clone() );
+			final Point p = pointFactory.createPoint( new float[]{ xip, 0 } );
+			pq[ i ] = pointMatchFactory.createPointMatch( p, p.clone(), w );
 			
 			++i;
 		}
@@ -93,8 +119,8 @@ public class TransformMesh implements InvertibleCoordinateTransform
 			// odd row
 			float yip = yi * dy - dy / 2;
 
-			p  = new Point( new float[]{ dx - dx / 2, yip } );
-			pq[ i ] = new PointMatch( p, p.clone(), w );
+			p  = pointFactory.createPoint( new float[]{ dx - dx / 2, yip } );
+			pq[ i ] = pointMatchFactory.createPointMatch( p, p.clone(), w );
 			
 			i1 = i - numXs;
 			i2 = i1 + 1;
@@ -112,8 +138,8 @@ public class TransformMesh implements InvertibleCoordinateTransform
 			{
 				final float xip = xi * dx - dx / 2;
 				
-				p  = new Point( new float[]{ xip, yip } );
-				pq[ i ] = new PointMatch( p, p.clone(), w );
+				p  = pointFactory.createPoint( new float[]{ xip, yip } );
+				pq[ i ] = pointMatchFactory.createPointMatch( p, p.clone(), w );
 				
 				i1 = i - numXs;
 				i2 = i1 + 1;
@@ -138,8 +164,8 @@ public class TransformMesh implements InvertibleCoordinateTransform
 			
 			// even row
 			yip = yi * dy;
-			p  = new Point( new float[]{ 0, yip } );
-			pq[ i ] = new PointMatch( p, p.clone(), w );
+			p  = pointFactory.createPoint( new float[]{ 0, yip } );
+			pq[ i ] = pointMatchFactory.createPointMatch( p, p.clone(), w );
 			
 			i1 = i - numXs + 1;
 			i2 = i1 - numXs;
@@ -157,8 +183,8 @@ public class TransformMesh implements InvertibleCoordinateTransform
 			{
 				final float xip = xi * dx;
 								
-				p = new Point( new float[]{ xip, yip } );
-				pq[ i ] = new PointMatch( p, p.clone(), w );
+				p = pointFactory.createPoint( new float[]{ xip, yip } );
+				pq[ i ] = pointMatchFactory.createPointMatch( p, p.clone(), w );
 				
 				i1 = i - numXs;
 				i2 = i1 + 1;
@@ -181,8 +207,8 @@ public class TransformMesh implements InvertibleCoordinateTransform
 				++i;
 			}
 			
-			p  = new Point( new float[]{ width - 1, yip } );
-			pq[ i ] = new PointMatch( p, p.clone(), w );
+			p  = pointFactory.createPoint( new float[]{ width - 1, yip } );
+			pq[ i ] = pointMatchFactory.createPointMatch( p, p.clone(), w );
 			
 			i1 = i - numXs;
 			i2 = i1 - numXs + 1;
@@ -204,6 +230,21 @@ public class TransformMesh implements InvertibleCoordinateTransform
 			
 			++i;
 		}
+	}
+	
+	public TransformMesh(
+			final int numX,
+			final int numY,
+			final float width,
+			final float height )
+	{
+		this(
+				numX,
+				numY,
+				width,
+				height,
+				defaultPointFactory,
+				defaultPointMatchFactory );
 	}
 	
 	final static protected int numY(
@@ -240,8 +281,8 @@ public class TransformMesh implements InvertibleCoordinateTransform
 		{
 			m.fit( t );
 		}
-		catch ( NotEnoughDataPointsException e ) { e.printStackTrace(); }
-		catch ( IllDefinedDataPointsException e ) { e.printStackTrace(); }
+		catch ( final NotEnoughDataPointsException e ) { e.printStackTrace(); }
+		catch ( final IllDefinedDataPointsException e ) { e.printStackTrace(); }
 		av.put( m, t );
 		
 		for ( final PointMatch pm : t )
@@ -311,8 +352,8 @@ public class TransformMesh implements InvertibleCoordinateTransform
 	public String illustrateMeshSVG()
 	{
 		String svg = "<path style=\"fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1\" d=\"";
-		Set< AffineModel2D > s = av.keySet();
-		for ( AffineModel2D ai : s )
+		final Set< AffineModel2D > s = av.keySet();
+		for ( final AffineModel2D ai : s )
 			svg += illustrateTriangleSVG( ai );
 		
 		svg += "\" />";
@@ -335,7 +376,7 @@ public class TransformMesh implements InvertibleCoordinateTransform
 		{
 			m.fit( s );
 		}
-		catch ( NotEnoughDataPointsException ex )
+		catch ( final NotEnoughDataPointsException ex )
 		{
 			ex.printStackTrace();
 			return "";
@@ -381,8 +422,8 @@ public class TransformMesh implements InvertibleCoordinateTransform
 			{
 				ai.fit( av.get( ai ) );
 			}
-			catch ( NotEnoughDataPointsException e ) { e.printStackTrace(); }
-			catch ( IllDefinedDataPointsException e ) { e.printStackTrace(); }
+			catch ( final NotEnoughDataPointsException e ) { e.printStackTrace(); }
+			catch ( final IllDefinedDataPointsException e ) { e.printStackTrace(); }
 		}
 	}
 	
@@ -399,8 +440,8 @@ public class TransformMesh implements InvertibleCoordinateTransform
 			{
 				ai.fit( av.get( ai ) );
 			}
-			catch ( NotEnoughDataPointsException e ) { e.printStackTrace(); }
-			catch ( IllDefinedDataPointsException e ) { e.printStackTrace(); }
+			catch ( final NotEnoughDataPointsException e ) { e.printStackTrace(); }
+			catch ( final IllDefinedDataPointsException e ) { e.printStackTrace(); }
 		}
 	}
 	
@@ -528,6 +569,7 @@ public class TransformMesh implements InvertibleCoordinateTransform
 	}
 	
 	//@Override
+	@Override
 	public float[] apply( final float[] location )
 	{
 		assert location.length == 2 : "2d transform meshs can be applied to 2d points only.";
@@ -538,6 +580,7 @@ public class TransformMesh implements InvertibleCoordinateTransform
 	}
 
 	//@Override
+	@Override
 	public void applyInPlace( final float[] location )
 	{
 		assert location.length == 2 : "2d transform meshs can be applied to 2d points only.";
@@ -555,6 +598,7 @@ public class TransformMesh implements InvertibleCoordinateTransform
 	}
 
 	//@Override
+	@Override
 	public float[] applyInverse( final float[] location ) throws NoninvertibleModelException
 	{
 		assert location.length == 2 : "2d transform meshs can be applied to 2d points only.";
@@ -565,6 +609,7 @@ public class TransformMesh implements InvertibleCoordinateTransform
 	}
 
 	//@Override
+	@Override
 	public void applyInverseInPlace( final float[] location ) throws NoninvertibleModelException
 	{
 		assert location.length == 2 : "2d transform meshs can be applied to 2d points only.";
@@ -586,6 +631,7 @@ public class TransformMesh implements InvertibleCoordinateTransform
 	 * TODO Not yet tested
 	 */
 	//@Override
+	@Override
 	public TransformMesh createInverse()
 	{
 		final TransformMesh ict = new TransformMesh( 0, 0, width, height );
