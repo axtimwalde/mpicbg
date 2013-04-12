@@ -12,11 +12,11 @@
     </manifest>
     <selectedElements exportClassFiles="true" exportJavaFiles="true" exportOutputFolder="false">
         <javaElement handleIdentifier="=mpicbg_/src\/main\/java&lt;mpicbg.ij.plugin{MSEBlockFlow.java"/>
+        <javaElement handleIdentifier="=mpicbg_/src\/main\/java&lt;mpicbg.ij.plugin{RemoveOutliers.java"/>
         <javaElement handleIdentifier="=mpicbg_/src\/main\/java&lt;mpicbg.ij.plugin{AbstractBlockStatistics.java"/>
         <javaElement handleIdentifier="=mpicbg/src\/main\/java&lt;mpicbg.ij.integral"/>
-        <javaElement handleIdentifier="=mpicbg_/src\/main\/java&lt;mpicbg.ij.plugin{RemoveOutliers.java"/>
-        <javaElement handleIdentifier="=mpicbg_/src\/main\/java&lt;mpicbg.ij.plugin{SampleVariance.java"/>
         <javaElement handleIdentifier="=mpicbg_/src\/main\/java&lt;mpicbg.ij.plugin{NormalizeLocalContrast.java"/>
+        <javaElement handleIdentifier="=mpicbg_/src\/main\/java&lt;mpicbg.ij.plugin{SampleVariance.java"/>
         <javaElement handleIdentifier="=mpicbg_/src\/main\/java&lt;mpicbg.ij.plugin{AbstractBlockFilter.java"/>
         <javaElement handleIdentifier="=mpicbg_/src\/main\/java&lt;mpicbg.ij.plugin{StandardDeviation.java"/>
         <javaElement handleIdentifier="=mpicbg_/src\/main\/java&lt;mpicbg.ij.plugin{PMCCBlockFlow.java"/>
