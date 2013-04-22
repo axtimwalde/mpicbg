@@ -35,7 +35,6 @@ import mpicbg.ij.util.Util;
  * {@linkplain SpringMesh SpringMeshes}.
  *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.2b
  */
 public class SpringMesh extends TransformMesh
 {

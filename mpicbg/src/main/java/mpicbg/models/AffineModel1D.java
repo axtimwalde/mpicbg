@@ -80,7 +80,7 @@ public class AffineModel1D extends AbstractAffineModel1D< AffineModel1D > implem
 	{
 		assert
 		p.length >= 1 &&
-		q.length >= 1 : "1d affine transformations can be applied to 3d points only.";
+		q.length >= 1 : "1d affine transformations can be applied to 1d points only.";
 
 		assert
 			p[ 0 ].length == p[ 1 ].length &&
