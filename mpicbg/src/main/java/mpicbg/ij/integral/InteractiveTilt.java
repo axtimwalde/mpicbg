@@ -92,8 +92,8 @@ public class InteractiveTilt extends AbstractInteractiveBlockFilter
 			{
 				x1 = poly.xpoints[ 0 ];
 				y1 = poly.ypoints[ 0 ];
-				x2 = poly.xpoints[ 1 ];
-				y2 = poly.ypoints[ 1 ];
+				x2 = poly.xpoints[ poly.xpoints.length - 1 ];
+				y2 = poly.ypoints[ poly.ypoints.length - 1 ];
 			}
 		}
 		else
