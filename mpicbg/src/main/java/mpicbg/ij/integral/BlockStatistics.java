@@ -110,7 +110,7 @@ public class BlockStatistics
 			final double[] sum,
 			final double[] sumOfSquares )
 	{
-		final int rowsPerThread = ( int )Math.ceil( ( double )height / Runtime.getRuntime().availableProcessors() );
+//		final int rowsPerThread = ( int )Math.ceil( ( double )height / Runtime.getRuntime().availableProcessors() );
 		for ( int i = 0, j = w1; j < n; ++j )
 		{
 			final int end = i + width;
