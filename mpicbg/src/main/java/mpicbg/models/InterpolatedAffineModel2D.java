@@ -34,6 +34,8 @@ final public class InterpolatedAffineModel2D<
 	extends InvertibleInterpolatedModel< A, B, InterpolatedAffineModel2D< A, B > >
 	implements Affine2D< InterpolatedAffineModel2D< A, B > >, InvertibleBoundable
 {
+	private static final long serialVersionUID = 3986603413957889626L;
+	
 	final protected AffineModel2D affine = new AffineModel2D();
 	final protected float[] afs = new float[ 6 ];
 	final protected float[] bfs = new float[ 6 ];

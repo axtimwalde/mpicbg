@@ -3,6 +3,8 @@ package mpicbg.models;
 
 public abstract class AbstractAffineModel1D< M extends AbstractAffineModel1D< M > > extends AbstractModel< M > implements InvertibleBoundable, Affine1D< M >
 {
+	private static final long serialVersionUID = -1479918295700200535L;
+
 	public abstract float[] getMatrix( final float[] m );
 
 	@Override

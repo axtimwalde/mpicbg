@@ -8,8 +8,6 @@ import java.util.Set;
  * An n-dimensional {@link Vertex} being connected to other
  * {@link Vertex Vertices} by {@link Spring Springs}
  * 
- * TODO Moivng vertices does not move points any more!!!!!!!!!!!!!!!!!!!!!!!!!!! 
- * 
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.2b
  */

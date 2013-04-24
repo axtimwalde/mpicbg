@@ -56,6 +56,8 @@ import java.util.Random;
  */
 public abstract class AbstractModel< M extends AbstractModel< M > > implements Model< M >, Serializable
 {
+	private static final long serialVersionUID = -1427631349865842779L;
+	
 	/**
 	 * @deprecated "getMinSetSize" doesn't mean anything---use the more
 	 *   speaking {@link #getMinNumMatches()} instead.  

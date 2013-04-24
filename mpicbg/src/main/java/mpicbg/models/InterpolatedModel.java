@@ -27,6 +27,8 @@ import java.util.Collection;
  */
 public class InterpolatedModel< A extends Model< A >, B extends Model< B >, M extends InterpolatedModel< A, B, M > > extends AbstractModel< M >
 {
+	private static final long serialVersionUID = 536894588954163993L;
+	
 	final protected A a;
 	final protected B b;
 	protected float lambda;

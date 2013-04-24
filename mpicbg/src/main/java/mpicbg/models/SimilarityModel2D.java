@@ -29,6 +29,8 @@ import java.util.Collection;
  */
 public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D >
 {
+	private static final long serialVersionUID = -3951366523410108894L;
+
 	static final protected int MIN_NUM_MATCHES = 2;
 	
 	protected float scos = 1.0f, ssin = 0.0f, tx = 0.0f, ty = 0.0f;
