@@ -16,6 +16,8 @@
  */
 package mpicbg.util;
 
+
+
 /**
  * Generate a stream of `random' saturated RGB colors with all colors being
  * maximally distinct from each other.  
@@ -24,8 +26,7 @@ package mpicbg.util;
  */
 public class ColorStream
 {
-	final static protected double goldenRatio = 0.5 * Math.sqrt( 5 ) + 0.5;
-	final static protected double stepSize = 6.0 * goldenRatio;
+	final static protected double goldenRatio = 1.0 / ( 0.5 * Math.sqrt( 5 ) + 0.5 );
 	final static protected double[] rs = new double[]{ 1, 1, 0, 0, 0, 1, 1 };
 	final static protected double[] gs = new double[]{ 0, 1, 1, 1, 0, 0, 0 };
 	final static protected double[] bs = new double[]{ 0, 0, 0, 1, 1, 1, 0 };
