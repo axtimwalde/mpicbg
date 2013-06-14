@@ -2,6 +2,7 @@ import mpicbg.ij.InverseTransformMapping;
 import mpicbg.ij.Mapping;
 import mpicbg.ij.TransformMeshMapping;
 import mpicbg.ij.util.Util;
+import mpicbg.models.Affine2D;
 import mpicbg.models.AffineModel2D;
 import mpicbg.models.CoordinateTransform;
 import mpicbg.models.CoordinateTransformMesh;
@@ -22,9 +23,11 @@ import ij.gui.*;
 import ij.*;
 import ij.process.*;
 
+import java.awt.geom.AffineTransform;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -52,6 +55,7 @@ public class Transform_Roi implements PlugIn
 	
 	protected ImagePlus source;
 	protected ImagePlus template;
+	private boolean showMatrix;
 	
 	public Transform_Roi()
 	{
@@ -166,7 +170,14 @@ public class Transform_Roi implements PlugIn
 				IJ.showMessage( "The set of landmarks is ill-defined in terms of the desired transformation." );
 				return;
 			}
-			
+
+			if (showMatrix) {
+				final AffineTransform transformation = ((Affine2D<?>)model).createAffine();
+				final double[] flatmatrix = new double[6];
+				transformation.getMatrix(flatmatrix);
+				IJ.log("Matrix: " + Arrays.toString(flatmatrix));
+			}
+
 			mapping = new InverseTransformMapping< InverseCoordinateTransform >( ict );
 		}
 		else
@@ -215,6 +226,9 @@ public class Transform_Roi implements PlugIn
 			{
 				IJ.showMessage( "The set of landmarks is ill-defined in terms of the desired transformation." );
 				return;
+			}
+			if (showMatrix) {
+				IJ.log("Cannot show matrix for non-linear transformation");
 			}
 		}
 		
@@ -276,6 +290,7 @@ public class Transform_Roi implements PlugIn
 		gd.addNumericField( "mesh_resolution", meshResolution, 0 );
 		gd.addChoice( "transformation_class", modelClasses, modelClasses[ modelClassIndex ] );
 		gd.addCheckbox( "interpolate", interpolate );
+		gd.addCheckbox("show_matrix", false);
 		gd.showDialog();
 		
 		if ( gd.wasCanceled() ) return false;
@@ -287,6 +302,7 @@ public class Transform_Roi implements PlugIn
 		meshResolution = ( int )gd.getNextNumber();
 		modelClassIndex = gd.getNextChoiceIndex();
 		interpolate = gd.getNextBoolean();
+		showMatrix = gd.getNextBoolean();
 		
 		return true;		
 	}
