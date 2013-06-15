@@ -1,3 +1,18 @@
+import ij.IJ;
+import ij.ImagePlus;
+import ij.WindowManager;
+import ij.gui.GenericDialog;
+import ij.gui.PointRoi;
+import ij.gui.Roi;
+import ij.plugin.PlugIn;
+import ij.process.ImageProcessor;
+
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import mpicbg.ij.InverseTransformMapping;
 import mpicbg.ij.Mapping;
 import mpicbg.ij.TransformMeshMapping;
@@ -17,18 +32,6 @@ import mpicbg.models.PointMatch;
 import mpicbg.models.RigidModel2D;
 import mpicbg.models.SimilarityModel2D;
 import mpicbg.models.TranslationModel2D;
-
-import ij.plugin.*;
-import ij.gui.*;
-import ij.*;
-import ij.process.*;
-
-import java.awt.geom.AffineTransform;
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * Use two sets of {@link PointRoi landmarks} selected in two images to map
@@ -52,10 +55,10 @@ public class Transform_Roi implements PlugIn
 	static private int modelClassIndex = 1;
 	
 	static private boolean interpolate = true;
+	static private boolean showMatrix = false;
 	
 	protected ImagePlus source;
 	protected ImagePlus template;
-	private boolean showMatrix;
 	
 	public Transform_Roi()
 	{
@@ -75,7 +78,7 @@ public class Transform_Roi implements PlugIn
 		{
 			for ( int x = 0; x < target.getWidth(); ++x )
 			{
-				float[] t = new float[]{ x, y };
+				final float[] t = new float[]{ x, y };
 				transform.applyInPlace( t );
 				target.putPixel( x, y, source.getPixel( ( int )t[ 0 ], ( int )t[ 1 ] ) );
 			}
@@ -91,14 +94,15 @@ public class Transform_Roi implements PlugIn
 		{
 			for ( int x = 0; x < target.getWidth(); ++x )
 			{
-				float[] t = new float[]{ x, y };
+				final float[] t = new float[]{ x, y };
 				transform.applyInPlace( t );
 				target.putPixel( x, y, source.getPixelInterpolated( t[ 0 ], t[ 1 ] ) );
 			}
 		}	
 	}
 	
-	final public void run( String args )
+	@Override
+	final public void run( final String args )
 	{
 		final ArrayList< PointMatch > matches = new ArrayList< PointMatch >();
 		
@@ -160,21 +164,21 @@ public class Transform_Roi implements PlugIn
 			{
 				model.fit( matches );
 			}
-			catch ( NotEnoughDataPointsException e )
+			catch ( final NotEnoughDataPointsException e )
 			{
 				IJ.showMessage( "Not enough landmarks selected to find a transformation model." );
 				return;
 			}
-			catch ( IllDefinedDataPointsException e )
+			catch ( final IllDefinedDataPointsException e )
 			{
 				IJ.showMessage( "The set of landmarks is ill-defined in terms of the desired transformation." );
 				return;
 			}
 
-			if (showMatrix) {
-				final AffineTransform transformation = ((Affine2D<?>)model).createAffine();
+			if ( showMatrix )
+			{
 				final double[] flatmatrix = new double[6];
-				transformation.getMatrix(flatmatrix);
+				( ( Affine2D< ? > )model ).toArray( flatmatrix );
 				IJ.log("Matrix: " + Arrays.toString(flatmatrix));
 			}
 
@@ -209,7 +213,7 @@ public class Transform_Roi implements PlugIn
 					return;
 				}
 			}
-			catch ( Exception e ) { return; }
+			catch ( final Exception e ) { return; }
 			t.setAlpha( alpha );
 			
 			try
@@ -217,19 +221,18 @@ public class Transform_Roi implements PlugIn
 				t.setMatches( matches );
 				mapping = new TransformMeshMapping< CoordinateTransformMesh >( new CoordinateTransformMesh( t, meshResolution, source.getWidth(), source.getHeight() ) );
 			}
-			catch ( NotEnoughDataPointsException e )
+			catch ( final NotEnoughDataPointsException e )
 			{
 				IJ.showMessage( "Not enough landmarks selected to find a transformation model." );
 				return;
 			}
-			catch ( IllDefinedDataPointsException e )
+			catch ( final IllDefinedDataPointsException e )
 			{
 				IJ.showMessage( "The set of landmarks is ill-defined in terms of the desired transformation." );
 				return;
 			}
-			if (showMatrix) {
-				IJ.log("Cannot show matrix for non-linear transformation");
-			}
+			if ( showMatrix )
+				IJ.log( "Cannot show matrix for non-linear transformation" );
 		}
 		
 		if ( interpolate )
