@@ -231,7 +231,8 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 					final Object targetPixels = target.getPixels();
 					target.setPixels( temp.getPixels() );
 					temp.setPixels( targetPixels );
-					imp.updateAndDraw();
+					imp.updateImage();
+					imp.draw();
 				}
 				synchronized ( this )
 				{
@@ -239,7 +240,10 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 					{
 						if ( !pleaseRepaint ) wait();
 					}
-					catch ( final InterruptedException e ){}
+					catch ( final InterruptedException e )
+					{
+						break;
+					}
 				}
 			}
 		}
