@@ -8,7 +8,7 @@
 	<parent>
 		<groupId>mpicbg</groupId>
 		<artifactId>pom-mpicbg</artifactId>
-		<version>0.6.0-SNAPSHOT</version>
+		<version>${mpicbg.version}</version>
 	</parent>
 
 	<artifactId>mpicbg_</artifactId>

@@ -13,7 +13,7 @@
 
 	<groupId>mpicbg</groupId>
 	<artifactId>pom-mpicbg</artifactId>
-	<version>0.6.0-SNAPSHOT</version>
+	<version>${mpicbg.version}</version>
 	<packaging>pom</packaging>
 
 	<name>Aggregator project for Stephan Saalfeld's mpicbg library and plugin collection</name>
@@ -53,5 +53,8 @@
 		</profile>
 	</profiles>
 
+	<properties>
+		<mpicbg.version>0.6.1-SNAPSHOT</mpicbg.version>
+	</properties>
 </project>
 
