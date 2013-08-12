@@ -4,9 +4,12 @@ import mpicbg.util.Util;
 
 public abstract class AbstractAffineModel3D < M extends AbstractAffineModel3D< M > > extends AbstractModel< M > implements InvertibleBoundable, Affine3D< M > 
 {
+	private static final long serialVersionUID = 3560110462477641790L;
+
 	public abstract float[] getMatrix( final float[] m );
 	
-	public void estimateBounds( float[] min, float[] max )
+	@Override
+	public void estimateBounds( final float[] min, final float[] max )
 	{
 		final float[] rMin = new float[]{ Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE };
 		final float[] rMax = new float[]{ -Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE };
@@ -78,7 +81,8 @@ public abstract class AbstractAffineModel3D < M extends AbstractAffineModel3D< M
 	/**
 	 * TODO not yet tested!
 	 */
-	public void estimateInverseBounds( float[] min, float[] max ) throws NoninvertibleModelException
+	@Override
+	public void estimateInverseBounds( final float[] min, final float[] max ) throws NoninvertibleModelException
 	{
 		final float[] rMin = new float[]{ Float.MAX_VALUE, Float.MAX_VALUE, Float.MAX_VALUE };
 		final float[] rMax = new float[]{ -Float.MAX_VALUE, -Float.MAX_VALUE, -Float.MAX_VALUE };

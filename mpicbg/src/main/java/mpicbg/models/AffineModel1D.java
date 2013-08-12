@@ -4,6 +4,8 @@ import java.util.Collection;
 
 public class AffineModel1D extends AbstractAffineModel1D< AffineModel1D > implements InvertibleBoundable
 {
+	private static final long serialVersionUID = -6691788501310913119L;
+
 	static final protected int MIN_NUM_MATCHES = 2;
 
 	protected float

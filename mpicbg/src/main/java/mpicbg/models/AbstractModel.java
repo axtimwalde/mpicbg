@@ -56,6 +56,8 @@ import java.util.Random;
  */
 public abstract class AbstractModel< M extends AbstractModel< M > > implements Model< M >, Serializable
 {
+	private static final long serialVersionUID = -1427631349865842779L;
+	
 	/**
 	 * @deprecated "getMinSetSize" doesn't mean anything---use the more
 	 *   speaking {@link #getMinNumMatches()} instead.  
@@ -610,8 +612,8 @@ A:		while ( i < iterations )
 				
 		boolean hasChanged = false;
 		
-		final int p = 0;
-		//System.out.print( "Smoothness filter pass  1:   0%" );
+//		final int p = 0;
+//		System.out.print( "Smoothness filter pass  1:   0%" );
 		do
 		{
 			//System.out.print( ( char )13 + "Smoothness filter pass " + String.format( "%2d", ++p ) + ":   0%" );
@@ -620,11 +622,11 @@ A:		while ( i < iterations )
 			final ArrayList< P > toBeRemoved = new ArrayList< P >();
 			final ArrayList< P > localInliers = new ArrayList< P >();
 			
-			final int i = 0;
+//			final int i = 0;
 			
 			for ( final P candidate : inliers )
 			{
-				//System.out.print( ( char )13 + "Smoothness filter pass " + String.format( "%2d", p ) + ": " + String.format( "%3d", ( ++i * 100 / inliers.size() ) ) + "%" );
+//				System.out.print( ( char )13 + "Smoothness filter pass " + String.format( "%2d", p ) + ": " + String.format( "%3d", ( ++i * 100 / inliers.size() ) ) + "%" );
 				
 				/* calculate weights by square distance to reference in local space */
 				for ( final P match : inliers )
@@ -686,7 +688,7 @@ A:		while ( i < iterations )
 				}
 			}
 			inliers.removeAll( toBeRemoved );
-			//System.out.println();
+//			System.out.println();
 		}
 		while ( hasChanged );
 		

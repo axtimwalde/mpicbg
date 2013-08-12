@@ -31,6 +31,8 @@ import mpicbg.util.Matrix3x3;
  */
 public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implements InvertibleBoundable
 {
+	private static final long serialVersionUID = -5157831406137373994L;
+
 	static final protected int MIN_NUM_MATCHES = 4;
 	
 	protected float

@@ -16,31 +16,30 @@
  */
 package mpicbg.models;
 
-import java.awt.geom.AffineTransform;
 import java.util.Collection;
 
 /**
- * 2D affine specialization of {@link InterpolatedModel}.  Implements
+ * 1D affine specialization of {@link InterpolatedModel}.  Implements
  * interpolation directly by linear matrix interpolation.
  * 
- * No multiple inheritance in Java, so it cannot be an AffineModel2D
+ * No multiple inheritance in Java, so it cannot be an AffineModel1D
  * by itself. 
  *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  */
-final public class InterpolatedAffineModel2D<
-		A extends Model< A > & Affine2D< A >,
-		B extends Model< B > & Affine2D< B > >
-	extends InvertibleInterpolatedModel< A, B, InterpolatedAffineModel2D< A, B > >
-	implements Affine2D< InterpolatedAffineModel2D< A, B > >, InvertibleBoundable
+final public class InterpolatedAffineModel1D<
+		A extends Model< A > & Affine1D< A >,
+		B extends Model< B > & Affine1D< B > >
+	extends InvertibleInterpolatedModel< A, B, InterpolatedAffineModel1D< A, B > >
+	implements Affine1D< InterpolatedAffineModel1D< A, B > >, InvertibleBoundable
 {
-	private static final long serialVersionUID = 3986603413957889626L;
+	private static final long serialVersionUID = 6872754667674831584L;
 	
-	final protected AffineModel2D affine = new AffineModel2D();
-	final protected float[] afs = new float[ 6 ];
-	final protected float[] bfs = new float[ 6 ];
+	final protected AffineModel1D affine = new AffineModel1D();
+	final protected float[] afs = new float[ 2 ];
+	final protected float[] bfs = new float[ 2 ];
 	
-	public InterpolatedAffineModel2D( final A model, final B regularizer, final float lambda )
+	public InterpolatedAffineModel1D( final A model, final B regularizer, final float lambda )
 	{
 		super( model, regularizer, lambda );
 		interpolate();
@@ -50,10 +49,10 @@ final public class InterpolatedAffineModel2D<
 	{
 		a.toArray( afs );
 		b.toArray( bfs );
-		for ( int i = 0; i < afs.length; ++i )
-			afs[ i ] = afs[ i ] * l1 + bfs[ i ] * lambda;
 		
-		affine.set( afs[ 0 ], afs[ 1 ], afs[ 2 ], afs[ 3 ], afs[ 4 ], afs[ 5 ] );
+		affine.set(
+				afs[ 0 ] * l1 + bfs[ 0 ] * lambda,
+				afs[ 1 ] * l1 + bfs[ 1 ] * lambda );
 	}
 	
 	@Override
@@ -64,17 +63,17 @@ final public class InterpolatedAffineModel2D<
 	}
 
 	@Override
-	public void set( final InterpolatedAffineModel2D< A, B > m )
+	public void set( final InterpolatedAffineModel1D< A, B > m )
 	{
 		super.set( m );
-		if ( InterpolatedAffineModel2D.class.isInstance( m ) )
-			affine.set( ( ( InterpolatedAffineModel2D< A, B > ) m ).affine );
+		if ( InterpolatedAffineModel1D.class.isInstance( m ) )
+			affine.set( ( ( InterpolatedAffineModel1D< A, B > ) m ).affine );
 	}
 
 	@Override
-	public InterpolatedAffineModel2D< A, B > copy()
+	public InterpolatedAffineModel1D< A, B > copy()
 	{
-		final InterpolatedAffineModel2D< A, B > copy = new InterpolatedAffineModel2D< A, B >( a.copy(), b.copy(), lambda );
+		final InterpolatedAffineModel1D< A, B > copy = new InterpolatedAffineModel1D< A, B >( a.copy(), b.copy(), lambda );
 		copy.cost = cost;
 		return copy;
 	}
@@ -108,50 +107,38 @@ final public class InterpolatedAffineModel2D<
 	}
 
 	@Override
-	public InterpolatedAffineModel2D< A, B > createInverse()
+	public InterpolatedAffineModel1D< A, B > createInverse()
 	{
-		final InterpolatedAffineModel2D< A, B > inverse = new InterpolatedAffineModel2D< A, B >( a.createInverse(), b.createInverse(), lambda );
+		final InterpolatedAffineModel1D< A, B > inverse = new InterpolatedAffineModel1D< A, B >( a.createInverse(), b.createInverse(), lambda );
 		inverse.cost = cost;
 		return inverse;
 	}
 
-	public AffineModel2D createAffineModel2D()
+	public AffineModel1D createAffineModel1D()
 	{
 		return affine.copy();
 	}
 
 	@Override
-	public AffineTransform createAffine()
+	public void preConcatenate( final InterpolatedAffineModel1D< A, B > affine1d )
 	{
-		return affine.createAffine();
+		affine.preConcatenate( affine1d.affine );
+	}
+
+	public void concatenate( final AffineModel1D affine1d )
+	{
+		affine.concatenate( affine1d );
+	}
+
+	public void preConcatenate( final AffineModel1D affine1d )
+	{
+		affine.preConcatenate( affine1d );
 	}
 
 	@Override
-	public AffineTransform createInverseAffine()
+	public void concatenate( final InterpolatedAffineModel1D< A, B > affine1d )
 	{
-		return affine.createInverseAffine();
-	}
-
-	@Override
-	public void preConcatenate( final InterpolatedAffineModel2D< A, B > affine2d )
-	{
-		affine.preConcatenate( affine2d.affine );
-	}
-
-	public void concatenate( final AffineModel2D affine2d )
-	{
-		affine.concatenate( affine2d );
-	}
-
-	public void preConcatenate( final AffineModel2D affine2d )
-	{
-		affine.preConcatenate( affine2d );
-	}
-
-	@Override
-	public void concatenate( final InterpolatedAffineModel2D< A, B > affine2d )
-	{
-		affine.concatenate( affine2d.affine );
+		affine.concatenate( affine1d.affine );
 	}
 
 	@Override
@@ -182,35 +169,18 @@ final public class InterpolatedAffineModel2D<
 	 * Initialize the model such that the respective affine transform is:
 	 * 
 	 * <pre>
-	 * m00 m01 m02
-	 * m10 m11 m12
-	 * 0   0   1
+	 * m0 m1
+	 * 0   1
 	 * </pre>
 	 * 
-	 * @param m00
-	 * @param m10
-	 * 
-	 * @param m01
-	 * @param m11
-	 * 
-	 * @param m02
-	 * @param m12
+	 * @param m0
+	 * @param m1
 	 */
-	final public void set( final float m00, final float m10, final float m01, final float m11, final float m02, final float m12 )
+	final public void set( final float m0, final float m1 )
 	{
-		affine.set( m00, m10, m01, m11, m02, m12 );
+		affine.set( m0, m1 );
 	}
 	
-	/**
-	 * Initialize the model with the parameters of an {@link AffineTransform}.
-	 * 
-	 * @param a
-	 */
-	final public void set( final AffineTransform a )
-	{
-		affine.set( a );
-	}
-
 	@Override
 	public void estimateBounds( final float[] min, final float[] max )
 	{

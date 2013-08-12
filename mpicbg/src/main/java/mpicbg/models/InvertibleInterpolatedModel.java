@@ -27,6 +27,8 @@ public class InvertibleInterpolatedModel<
 		B extends Model< B > & InvertibleCoordinateTransform,
 		M extends InvertibleInterpolatedModel< A, B, M > > extends InterpolatedModel< A, B, M > implements InvertibleCoordinateTransform
 {
+	private static final long serialVersionUID = -8474223426611769525L;
+
 	public InvertibleInterpolatedModel( final A a, final B b, final float lambda )
 	{
 		super( a, b, lambda );

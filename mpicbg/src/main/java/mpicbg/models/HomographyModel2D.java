@@ -39,6 +39,8 @@ import Jama.SingularValueDecomposition;
  */
 public class HomographyModel2D extends AbstractModel< HomographyModel2D > implements InvertibleBoundable
 {
+	private static final long serialVersionUID = -1730876468690649135L;
+	
 	static final protected int MIN_NUM_MATCHES = 4;
 	
 	@Override

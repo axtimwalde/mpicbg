@@ -26,6 +26,8 @@ import Jama.Matrix;
 
 public class RigidModel3D extends AbstractAffineModel3D< RigidModel3D > implements InvertibleBoundable
 {
+	private static final long serialVersionUID = 6765294729560102368L;
+
 	static final protected int MIN_NUM_MATCHES = 3;
 	
 	protected float

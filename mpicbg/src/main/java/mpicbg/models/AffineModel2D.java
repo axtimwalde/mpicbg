@@ -29,6 +29,8 @@ import java.util.Collection;
  */
 public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 {
+	private static final long serialVersionUID = -8254250226807170305L;
+
 	static final protected int MIN_NUM_MATCHES = 3;
 	
 	protected float m00 = 1.0f, m10 = 0.0f, m01 = 0.0f, m11 = 1.0f, m02 = 0.0f, m12 = 0.0f;

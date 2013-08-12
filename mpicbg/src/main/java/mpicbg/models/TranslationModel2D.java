@@ -1,7 +1,6 @@
 package mpicbg.models;
 
 import java.awt.geom.AffineTransform;
-import java.io.Serializable;
 import java.util.Collection;
 
 /**
@@ -11,6 +10,8 @@ import java.util.Collection;
  */
 public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2D >
 {
+	private static final long serialVersionUID = -6720116001832897767L;
+
 	static final protected int MIN_NUM_MATCHES = 1;
 	
 	protected float tx = 0, ty = 0;

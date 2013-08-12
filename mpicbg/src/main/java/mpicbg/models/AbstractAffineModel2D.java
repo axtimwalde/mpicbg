@@ -10,6 +10,8 @@ import java.awt.geom.AffineTransform;
  */
 public abstract class AbstractAffineModel2D< M extends AbstractAffineModel2D< M > > extends AbstractModel< M > implements InvertibleBoundable, InvertibleCoordinateTransform, Affine2D< M >
 {
+	private static final long serialVersionUID = -1885309124892374359L;
+
 	/**
 	 * Create an {@link AffineTransform} representing the current parameters
 	 * the model.

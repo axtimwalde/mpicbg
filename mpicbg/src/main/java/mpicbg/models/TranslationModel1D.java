@@ -9,6 +9,8 @@ import java.util.Collection;
  */
 public class TranslationModel1D extends AbstractAffineModel1D< TranslationModel1D >
 {
+	private static final long serialVersionUID = 7109240016066264945L;
+
 	static final protected int MIN_NUM_MATCHES = 1;
 	
 	protected float t = 0;

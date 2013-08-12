@@ -9,6 +9,8 @@ import java.util.Collection;
  */
 public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3D > implements InvertibleBoundable
 {
+	private static final long serialVersionUID = -2559703154416788897L;
+	
 	static final protected int MIN_NUM_MATCHES = 1;
 	
 	@Override

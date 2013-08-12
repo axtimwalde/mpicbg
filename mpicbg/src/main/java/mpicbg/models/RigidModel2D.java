@@ -30,6 +30,8 @@ import java.util.Collection;
  */
 public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 {
+	private static final long serialVersionUID = 1897446303972523930L;
+
 	static final protected int MIN_NUM_MATCHES = 2;
 	
 	protected float cos = 1.0f, sin = 0.0f, tx = 0.0f, ty = 0.0f;
