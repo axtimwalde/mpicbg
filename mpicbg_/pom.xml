@@ -8,7 +8,7 @@
 	<parent>
 		<groupId>mpicbg</groupId>
 		<artifactId>pom-mpicbg</artifactId>
-		<version>${mpicbg.version}</version>
+		<version>0.6.1-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>mpicbg_</artifactId>
@@ -34,5 +34,6 @@
 		</dependency>
 	</dependencies>
 
+	<version>${mpicbg.version}</version>
 </project>
 
