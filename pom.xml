@@ -53,8 +53,5 @@
 		</profile>
 	</profiles>
 
-	<properties>
-		<mpicbg.version>0.6.1-SNAPSHOT</mpicbg.version>
-	</properties>
 </project>
 
