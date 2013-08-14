@@ -34,6 +34,4 @@
 		</dependency>
 	</dependencies>
 
-	<version>${mpicbg.version}</version>
 </project>
-
