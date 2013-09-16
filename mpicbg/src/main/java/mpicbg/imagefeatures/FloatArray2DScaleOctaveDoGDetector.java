@@ -273,12 +273,12 @@ public class FloatArray2DScaleOctaveDoGDetector
 					    final float hiii = ( dxx * dyy - dxy * dxy ) / det;
 					    
 					    // localize
-					    ox = -hixx * dx - hixy * dy - hixx * di;
-					    oy = -hixy * dx - hiyy * dy - hixy * di;
+					    ox = -hixx * dx - hixy * dy - hixi * di;
+					    oy = -hixy * dx - hiyy * dy - hiyi * di;
 					    oi = -hixi * dx - hiyi * dy - hiii * di;
 
 					    
-					    float odc = ox * ox + oy * oy + oi * oi;
+					    final float odc = ox * ox + oy * oy + oi * oi;
 					    
 					    if ( odc < 2.0f )
 					    {
