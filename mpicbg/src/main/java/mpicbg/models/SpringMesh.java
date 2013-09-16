@@ -800,6 +800,181 @@ public class SpringMesh extends TransformMesh
 		System.out.println( "  maximal force: " + decimalFormat.format( maxForce ) + "N" );
 	}
 	
+	
+	/* LEGACY OPTIMIZER */
+	
+	/**
+	 * Calculate force and speed vectors for all vertices.
+	 * 
+	 * @deprecated Remains for legacy compatibility 
+	 * 
+	 * @param observer
+	 */
+	@Deprecated
+	protected void calculateForceAndSpeed( final ErrorStatistic observer )
+	{
+		maxSpeed = 0.0;
+		minForce = Double.MAX_VALUE;
+		maxForce = 0.0;
+		force = 0;
+		synchronized ( this )
+		{
+			/* active vertices */
+			for ( final Vertex vertex : vertices )
+			{
+				vertex.update( damp );
+				final double vertexForce = vertex.getForce();
+				force += vertexForce;
+				final double speed = vertex.getSpeed();
+				if ( speed > maxSpeed ) maxSpeed = speed;
+				if ( vertexForce < minForce ) minForce = vertexForce;
+				if ( vertexForce > maxForce ) maxForce = vertexForce;
+			}
+			
+			force /= vertices.size();
+		}
+		observer.add( force );
+	}
+	
+	/**
+	 * Optimize a {@link Collection} of connected {@link SpringMesh SpringMeshes}.
+	 * 
+	 * @deprecated Remains for reproducing legacy results
+	 * 
+	 * @param maxError do not accept convergence if error is > max_error
+	 * @param maxIterations stop after that many iterations even if there was
+	 *   no minimum found
+	 * @param maxPlateauwidth convergence is reached if the average slope in
+	 *   an interval of this size is 0.0 (in double accuracy).  This prevents
+	 *   the algorithm from stopping at plateaus smaller than this value.
+	 * 
+	 */
+	@Deprecated
+	public static void optimizeMeshes2(
+			final Collection< SpringMesh > meshes,
+			final double maxError,
+			final int maxIterations,
+			final int maxPlateauwidth ) throws NotEnoughDataPointsException 
+	{
+		optimizeMeshes2( meshes, maxError, maxIterations, maxPlateauwidth, false );
+	}
+	
+	/**
+	 * Optimize a {@link Collection} of connected {@link SpringMesh SpringMeshes}.
+	 * 
+	 * @deprecated Remains for reproducing legacy results
+
+	 * @param maxError do not accept convergence if error is > max_error
+	 * @param maxIterations stop after that many iterations even if there was
+	 *   no minimum found
+	 * @param maxPlateauwidth convergence is reached if the average slope in
+	 *   an interval of this size is 0.0 (in double accuracy).  This prevents
+	 *   the algorithm from stopping at plateaus smaller than this value.
+	 * 
+	 */
+	@Deprecated
+	public static void optimizeMeshes2(
+			final Collection< SpringMesh > meshes,
+			final double maxError,
+			final int maxIterations,
+			final int maxPlateauwidth,
+			final boolean visualize ) throws NotEnoughDataPointsException 
+	{
+		final ErrorStatistic observer = new ErrorStatistic( maxPlateauwidth + 1 );
+		final ErrorStatistic singleMeshObserver = new ErrorStatistic( maxPlateauwidth + 1 );
+		
+		int i = 0;
+		
+		double force = 0;
+		double maxForce = 0;
+		double minForce = 0;
+		
+		boolean proceed = i < maxIterations;
+		
+		/* <visualization> */
+		final ImageStack stackAnimation = new ImageStack( VIS_SIZE, VIS_SIZE );
+		final ImagePlus impAnimation = new ImagePlus();
+		/* </visualization> */
+		
+		println( "i mean min max" );
+		
+		while ( proceed )
+		{
+			force = 0;
+			maxForce = 0;
+			minForce = Double.MAX_VALUE;
+			
+			double maxSpeed = 0;
+			
+			/* <visualization> */
+//			stackAnimation.addSlice( "" + i, paintMeshes( meshes, scale ) );
+			if ( visualize )
+			{
+				stackAnimation.addSlice( "" + i, paintSprings( meshes, VIS_SIZE, VIS_SIZE, maxError ) );
+				impAnimation.setStack( stackAnimation );
+				impAnimation.updateAndDraw();
+				if ( i == 1 )
+				{
+					impAnimation.show();
+				}
+			}
+			/* </visualization> */
+			
+			for ( final SpringMesh mesh : meshes )
+			{
+				mesh.calculateForceAndSpeed( singleMeshObserver );
+				force += mesh.getForce();
+				if ( mesh.maxSpeed > maxSpeed )
+					maxSpeed = mesh.maxSpeed;
+				
+				final double meshMaxForce = mesh.maxForce;
+				final double meshMinForce = mesh.minForce;
+				if ( meshMaxForce > maxForce ) maxForce = meshMaxForce;
+				if ( meshMinForce < minForce ) minForce = meshMinForce;
+			}
+			observer.add( force / meshes.size() );
+			
+			final float dt = ( float )Math.min( 1000, 1.0 / maxSpeed );
+			
+			for ( final SpringMesh mesh : meshes )
+			{
+				mesh.update( dt );
+			}
+			
+			println( new StringBuffer( i + " " ).append( force / meshes.size() ).append( " " ).append( minForce ).append( " " ).append( maxForce ).toString() );
+			
+			if ( i > maxPlateauwidth )
+			{
+				proceed = force > maxError;
+				
+				int d = maxPlateauwidth;
+				while ( !proceed && d >= 1 )
+				{
+					try
+					{
+						proceed |= Math.abs( observer.getWideSlope( d ) ) > 0.0;
+					}
+					catch ( final Exception e ) { e.printStackTrace(); }
+					d /= 2;
+				}
+			}
+			
+			proceed &= ++i < maxIterations;
+		}
+		
+		for ( final SpringMesh mesh : meshes )
+		{
+			mesh.updateAffines();
+			mesh.updatePassiveVertices();
+		}
+		
+		System.out.println( "Successfully optimized " + meshes.size() + " meshes after " + i + " iterations:" );
+		System.out.println( "  average force: " + decimalFormat.format( force / meshes.size() ) + "N" );
+		System.out.println( "  minimal force: " + decimalFormat.format( minForce ) + "N" );
+		System.out.println( "  maximal force: " + decimalFormat.format( maxForce ) + "N" );
+	}
+	
+	
 	/**
 	 * Create a Shape that illustrates the {@Spring Springs}.
 	 * 

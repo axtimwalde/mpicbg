@@ -9,10 +9,11 @@ import java.util.Set;
  * {@link Vertex Vertices} by {@link Spring Springs}
  * 
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.2b
  */
 public class Vertex extends Point
 {
+	private static final long serialVersionUID = -982453502973125211L;
+
 	/**
 	 * A set of {@link Spring Springs} with {@link Spring#getV1() v1} being
 	 * this {@link Vertex} and {@link Spring#getV2() v2} being the
@@ -240,6 +241,52 @@ public class Vertex extends Point
 	{
 		updateForce();
 		updateDirection( Math.pow( damp, dt ), dt );
+	}
+	
+	
+	/**
+	 * Calculate the current force, direction and speed.
+	 * 
+	 * @deprecated Remains for legacy compatibility
+	 * 
+	 * @param damp damping factor (0.0 fully damped, 1.0 not damped)
+	 */
+	@Deprecated
+	public void update( final double damp )
+	{
+		for ( int i = 0; i < force.length; ++i )
+			force[ i ] = 0;
+		forceSum = 0;
+		
+		final double[] f = new double[ force.length ];
+		float fAmplitude;
+		
+		final Set< Vertex > vertices = springs.keySet();
+		for ( final Vertex vertex : vertices )
+		{
+			final Spring spring = springs.get( vertex );
+			
+			spring.calculateForce( this, vertex, f );
+			fAmplitude = 0;
+			for ( int i = 0; i < force.length; ++i )
+			{
+				force[ i ] += f[ i ];
+				fAmplitude += f[ i ] * f[ i ];
+			}
+			forceSum += Math.sqrt( fAmplitude );
+		}
+		
+		forceAmplitude = 0;
+		speed = 0;
+		for ( int i = 0; i < force.length; ++i )
+		{
+			forceAmplitude += force[ i ] * force[ i ];
+			direction[ i ] += force[ i ];
+			direction[ i ] *= damp;
+			speed += direction[ i ] * direction[ i ];
+		}
+		forceAmplitude = Math.sqrt( forceAmplitude );
+		speed = Math.sqrt( speed );
 	}
 	
 	/**
