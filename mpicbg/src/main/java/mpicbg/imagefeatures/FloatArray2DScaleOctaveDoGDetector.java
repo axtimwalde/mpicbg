@@ -1,6 +1,6 @@
 package mpicbg.imagefeatures;
 
-import java.util.*;
+import java.util.Vector;
 
 import mpicbg.util.Matrix3x3;
 
@@ -58,7 +58,7 @@ public class FloatArray2DScaleOctaveDoGDetector
 		candidates = null;
 	}
 	
-	public void run( FloatArray2DScaleOctave o )
+	public void run( final FloatArray2DScaleOctave o )
 	{
 		octave = o;
 		candidates = new Vector< float[] >();
@@ -67,17 +67,17 @@ public class FloatArray2DScaleOctaveDoGDetector
 	
 	private void detectCandidates()
 	{
-		FloatArray2D[] d = octave.getD();
+		final FloatArray2D[] d = octave.getD();
 		
 		for ( int i = d.length - 2; i >= 1; --i )
 		{
-			int ia = i - 1;
-			int ib = i + 1;
+			final int ia = i - 1;
+			final int ib = i + 1;
 			for ( int y = d[ i ].height - 2; y >= 1; --y )
 			{
-				int r = y * d[ i ].width;
-				int ra = r - d[ i ].width;
-				int rb = r + d[ i ].width;
+				final int r = y * d[ i ].width;
+				final int ra = r - d[ i ].width;
+				final int rb = r + d[ i ].width;
 				
 				X : for ( int x = d[ i ].width - 2; x >= 1; --x )
 				{
@@ -252,7 +252,7 @@ public class FloatArray2DScaleOctaveDoGDetector
 					    di = ( e112 - e110 ) / 2.0f;
 	
 					    // create hessian at (x, y, i) by laplace
-					    float e111_2 = 2.0f * e111;
+					    final float e111_2 = 2.0f * e111;
 					    dxx = e011 - e111_2 + e211;
 					    dyy = e101 - e111_2 + e121;
 					    dii = e110 - e111_2 + e112;
@@ -265,12 +265,14 @@ public class FloatArray2DScaleOctaveDoGDetector
 					    final float det = Matrix3x3.det( dxx, dxy, dxi, dxy, dyy, dyi, dxi, dyi, dii );
 					    if ( det == 0 ) continue X;
 					    
-					    final float hixx = ( dyy * dii - dyi * dyi ) / det;
-					    final float hixy = ( dxi * dyi - dxy * dii ) / det;
-					    final float hixi = ( dxy * dyi - dxi * dyy ) / det;
-					    final float hiyy = ( dxx * dii - dxi * dxi ) / det;
-					    final float hiyi = ( dxi * dxy - dxx * dyi ) / det;
-					    final float hiii = ( dxx * dyy - dxy * dxy ) / det;
+					    final float det1 = 1.0f / det;
+					    
+					    final float hixx = ( dyy * dii - dyi * dyi ) * det1;
+					    final float hixy = ( dxi * dyi - dxy * dii ) * det1;
+					    final float hixi = ( dxy * dyi - dxi * dyy ) * det1;
+					    final float hiyy = ( dxx * dii - dxi * dxi ) * det1;
+					    final float hiyi = ( dxi * dxy - dxx * dyi ) * det1;
+					    final float hiii = ( dxx * dyy - dxy * dxy ) * det1;
 					    
 					    // localize
 					    ox = -hixx * dx - hixy * dy - hixi * di;
@@ -372,8 +374,8 @@ public class FloatArray2DScaleOctaveDoGDetector
 					
 					// reject edge responses
 					
-					float det = dxx * dyy - dxy * dxy;
-				    float trace = dxx + dyy;
+					final float det = dxx * dyy - dxy * dxy;
+				    final float trace = dxx + dyy;
 				    if ( trace * trace / det > MAX_CURVATURE_RATIO ) continue;
 
 				    candidates.addElement( new float[]{ fx, fy, fi } );
