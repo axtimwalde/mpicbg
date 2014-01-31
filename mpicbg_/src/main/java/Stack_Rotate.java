@@ -2,6 +2,7 @@ import ij.IJ;
 import ij.ImageJ;
 import ij.ImagePlus;
 import ij.ImageStack;
+import ij.gui.GenericDialog;
 import ij.gui.ImageWindow;
 import ij.gui.StackWindow;
 import ij.measure.Calibration;
@@ -526,6 +527,44 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 			{
 				IJ.log( rotation.toString() );
 			}
+			else if ( e.getKeyCode() == KeyEvent.VK_T )
+			{
+				GenericDialog gd = new GenericDialog( "Define Rotation Matrix" );
+				
+				final float[] m = rotation.getMatrix( null );
+				
+				gd.addNumericField( "m00", m[ 0 ], 5 );
+				gd.addNumericField( "m01", m[ 1 ], 5 );
+				gd.addNumericField( "m02", m[ 2 ], 5 );
+				gd.addNumericField( "m10", m[ 4 ], 5 );
+				gd.addNumericField( "m11", m[ 5 ], 5 );
+				gd.addNumericField( "m12", m[ 6 ], 5 );
+				gd.addNumericField( "m20", m[ 8 ], 5 );
+				gd.addNumericField( "m21", m[ 9 ], 5 );
+				gd.addNumericField( "m22", m[ 10 ], 5 );
+				
+				gd.showDialog();
+				
+				if ( !gd.wasCanceled() )
+				{
+					m[ 0 ] = (float)gd.getNextNumber();
+					m[ 1 ] = (float)gd.getNextNumber();
+					m[ 2 ] = (float)gd.getNextNumber();
+					m[ 4 ] = (float)gd.getNextNumber();
+					m[ 5 ] = (float)gd.getNextNumber();
+					m[ 6 ] = (float)gd.getNextNumber();
+					m[ 8 ] = (float)gd.getNextNumber();
+					m[ 9 ] = (float)gd.getNextNumber();
+					m[ 10 ] = (float)gd.getNextNumber();
+					
+					rotation.set( m[ 0 ], m[ 1 ], m[ 2 ], 0, m[ 4 ], m[ 5 ], m[ 6 ], 0, m[ 8 ], m[ 9 ], m[ 10 ], 0 );
+					
+					// we need to compute the reducedaffine first, otherwise the scrollbars are off ...
+					reduceAffineTransformList( ictl, reducedAffine );
+					updateScrollBar();
+					painter.repaint();
+				}
+			}
 			else if ( e.getKeyCode() == KeyEvent.VK_F1 )
 			{
 				IJ.showMessage(
@@ -547,7 +586,8 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 						"ENTER - Apply the rotation and render the full stack." + NL +
 						"ESC - Return to the original stack." + NL +
 						"I - Toggle interpolation." + NL +
-						"E - Export the current rotation to the log window." );
+						"E - Export the current rotation to the log window." + NL +
+						"T - Define affine transformation matrix" );
 			}
 		}
 	}
