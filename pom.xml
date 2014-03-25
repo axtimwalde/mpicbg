@@ -26,10 +26,10 @@
 	</modules>
 
 	<scm>
-		<connection>scm:git:git://fiji.sc/mpicbg.git</connection>
-		<developerConnection>scm:git:fiji.sc:/srv/git/mpicbg.git</developerConnection>
+		<connection>scm:git:git://github.com/axtimwalde/mpicbg</connection>
+		<developerConnection>scm:git:git@github.com:axtimwalde/mpicbg</developerConnection>
 		<tag>HEAD</tag>
-		<url>http://fiji.sc/cgi-bin/gitweb.cgi?p=mpicbg.git;a=summary</url>
+		<url>https://github.com/axtimwalde/mpicbg</url>
 	</scm>
 
 	<repositories>
