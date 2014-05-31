@@ -190,6 +190,17 @@ public class Tile< M extends Model< M > >
 	}
 	
 	/**
+	 * Apply the current {@link AbstractModel} to all local point coordinates.
+	 * 
+	 * <em>This method does not recalculate the cost of the tile.</em>
+	 */
+	final public void apply( final float amount )
+	{
+		for ( final PointMatch match : matches )
+			match.apply( model, amount );
+	}
+	
+	/**
 	 * Update {@link #cost} and {@link #distance}.
 	 */
 	final public void updateCost()
@@ -353,15 +364,15 @@ public class Tile< M extends Model< M > >
 	 * @return
 	 */
 	final static public ArrayList< Set< Tile< ?  > > > identifyConnectedGraphs(
-			Collection< ? extends Tile< ? > > tiles )
+			final Collection< ? extends Tile< ? > > tiles )
 	{
-		ArrayList< Set< Tile< ? > > > graphs = new ArrayList< Set< Tile< ? > > >();
+		final ArrayList< Set< Tile< ? > > > graphs = new ArrayList< Set< Tile< ? > > >();
 		int numInspectedTiles = 0;
 A:		for ( final Tile< ? > tile : tiles )
 		{
 			for ( final Set< Tile< ? > > knownGraph : graphs )
 				if ( knownGraph.contains( tile ) ) continue A; 
-			Set< Tile< ? > > current_graph = new HashSet< Tile< ? > >();
+			final Set< Tile< ? > > current_graph = new HashSet< Tile< ? > >();
 			tile.traceConnectedGraph( current_graph );
 			numInspectedTiles += current_graph.size();
 			graphs.add( current_graph );
