@@ -1,5 +1,7 @@
 package mpicbg.models;
 
+import ij.IJ;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -98,6 +100,7 @@ public class TileUtil
 			final float maxAllowedError,
 			final int maxIterations,
 			final int maxPlateauwidth,
+			final float damp,
 			final TileConfiguration tc,
 			final Set< Tile< ? > > tiles,
 			final Set< Tile< ? > > fixedTiles,
@@ -109,8 +112,8 @@ public class TileUtil
 				new ThreadFactory() {
 					final AtomicInteger c = new AtomicInteger(0);
 					@Override
-					public Thread newThread(Runnable r) {
-						Thread t = new Thread(tg, r, "tile-fit-and-apply-" + c.incrementAndGet());
+					public Thread newThread(final Runnable r) {
+						final Thread t = new Thread(tg, r, "tile-fit-and-apply-" + c.incrementAndGet());
 						t.setPriority(Thread.NORM_PRIORITY);
 						return t;
 					}
@@ -118,7 +121,7 @@ public class TileUtil
 		
 		try {
 
-			long t0 = System.currentTimeMillis();
+			final long t0 = System.currentTimeMillis();
 
 			final ArrayList<Tile<?>> shuffledTiles = new ArrayList<Tile<?>>(tiles.size() - fixedTiles.size());
 			for (final Tile<?> t : tiles) {
@@ -128,7 +131,7 @@ public class TileUtil
 			Collections.shuffle(shuffledTiles);
 
 
-			long t1 = System.currentTimeMillis();
+			final long t1 = System.currentTimeMillis();
 			System.out.println("Shuffling took " + (t1 - t0) + " ms");
 
 			int i = 0;
@@ -138,7 +141,7 @@ public class TileUtil
 			/* initialize the configuration with the current model of each tile */
 			tc.apply();
 			
-			long t2 = System.currentTimeMillis();
+			final long t2 = System.currentTimeMillis();
 			
 			System.out.println("First apply took " + (t2 - t1) + " ms");
 			
@@ -171,11 +174,11 @@ public class TileUtil
 						public void run() {
 							try {
 								tile.fitModel();
-								tile.apply();
+								tile.apply( damp );
 								synchronized (executingTiles) {
 									executingTiles.remove(tile);
 								}
-							} catch (Exception e) {
+							} catch (final Exception e) {
 								throw new RuntimeException(e);
 							}
 						}
@@ -198,6 +201,8 @@ public class TileUtil
 
 				tc.updateErrors();
 				observer.add( tc.getError() );
+				
+				IJ.log( i + ": " + observer.mean + " " + observer.max );
 
 				if ( i > maxPlateauwidth )
 				{
@@ -210,7 +215,7 @@ public class TileUtil
 						{
 							proceed |= Math.abs( observer.getWideSlope( d ) ) > 0.0001;
 						}
-						catch ( Exception e ) { e.printStackTrace(); }
+						catch ( final Exception e ) { e.printStackTrace(); }
 						d /= 2;
 					}
 				}
@@ -218,7 +223,7 @@ public class TileUtil
 				proceed &= ++i < maxIterations;
 			}
 			
-			long t3 = System.currentTimeMillis();
+			final long t3 = System.currentTimeMillis();
 			
 			System.out.println("Concurrent tile optimization loop took " + (t3 - t2) + " ms, total took " + (t3 - t0) + " ms");
 			
