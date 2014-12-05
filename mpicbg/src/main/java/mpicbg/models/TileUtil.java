@@ -22,10 +22,10 @@ public class TileUtil
 	/**
 	 * Returns a lazy collection of arrays of {@link Tile}, where none of the tiles of one specific array
 	 * are connected to any of the tiles in that same array.
-	 * 
+	 *
 	 * Assumes that all tiles are not connected to all tiles, otherwise this operation will be very expensive
 	 * and the returned arrays will contain a single {@link Tile} each.
-	 * 
+	 *
 	 * @param tiles The {@link Set} of {@link Tile}, where each {@link Tile} contains a {@link Set} of other {@link Tile} to whom it is connected with {@link PointMatch}es.
 	 * @param maxArrayElements The maximum number of tiles to include in any one of the returned arrays.
 	 * @return A {@link Collection} of {@link Tile} arrays, where, within each array, no one {@link Tile} is connected to any of the other {@link Tile} of the array.
@@ -46,7 +46,7 @@ public class TileUtil
 					 * the probability that neighboring tiles are adjacent when iterating.
 					 */
 					final HashSet<Tile<?>> remaining = new HashSet<Tile<?>>( shuffle(tiles) );
-	
+
 					private final Collection<Tile<?>> shuffle( final Collection<Tile<?>> ts ) {
 						final ArrayList<Tile<?>> s = new ArrayList<Tile<?>>( ts );
 						Collections.shuffle( s );
@@ -94,7 +94,7 @@ public class TileUtil
 			}
 		};
 	}
-	
+
 	static public final void optimizeConcurrently(
 			final ErrorStatistic observer,
 			final float maxAllowedError,
@@ -118,7 +118,7 @@ public class TileUtil
 						return t;
 					}
 				});
-		
+
 		try {
 
 			final long t0 = System.currentTimeMillis();
@@ -140,11 +140,11 @@ public class TileUtil
 
 			/* initialize the configuration with the current model of each tile */
 			tc.apply();
-			
+
 			final long t2 = System.currentTimeMillis();
-			
+
 			System.out.println("First apply took " + (t2 - t1) + " ms");
-			
+
 			final LinkedList< Future< ? > > futures = new LinkedList< Future< ? > >();
 			final HashSet<Tile<?>> executingTiles = new HashSet<Tile<?>>(nThreads);
 
@@ -158,8 +158,10 @@ public class TileUtil
 					tile.apply();
 				}
 				*/
-				
+
 				final LinkedList<Tile<?>> pending = new LinkedList<Tile<?>>(shuffledTiles);
+				Collections.shuffle(pending);
+
 				while (!pending.isEmpty()) {
 					final Tile<?> tile = pending.removeFirst();
 					synchronized (executingTiles) {
@@ -189,19 +191,19 @@ public class TileUtil
 						}
 					}
 				}
-				
+
 				// Wait until all finish
 				for (final Future<?> fu : futures) {
 					fu.get();
 				}
-				
+
 				executingTiles.clear();
 				futures.clear();
 
 
 				tc.updateErrors();
 				observer.add( tc.getError() );
-				
+
 				IJ.log( i + ": " + observer.mean + " " + observer.max );
 
 				if ( i > maxPlateauwidth )
@@ -222,12 +224,12 @@ public class TileUtil
 
 				proceed &= ++i < maxIterations;
 			}
-			
+
 			final long t3 = System.currentTimeMillis();
-			
+
 			System.out.println("Concurrent tile optimization loop took " + (t3 - t2) + " ms, total took " + (t3 - t0) + " ms");
-			
-		} finally { 
+
+		} finally {
 			exe.shutdownNow();
 		}
 	}
