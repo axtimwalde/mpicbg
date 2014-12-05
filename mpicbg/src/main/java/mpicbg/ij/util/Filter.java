@@ -358,7 +358,6 @@ public class Filter
 		final int oh = source.getHeight();
 		final int w = Math.round( ow * scale );
 		final int h = Math.round( oh * scale );
-		final int l = Math.max( w, h );
 		
 		final FloatProcessor temp = ( FloatProcessor )source.duplicate();
 		temp.setMinAndMax( source.getMin(), source.getMax() );
@@ -375,10 +374,10 @@ public class Filter
 		/* LUT for scaled pixel locations */
 		final int ow1 = ow - 1;
 		final int oh1 = oh - 1;
-		final int[] lutx = new int[ l ];
+		final int[] lutx = new int[ w ];
 		for ( int x = 0; x < w; ++x )
 			lutx[ x ] = Math.min( ow1, Math.max( 0, Math.round( x / scale ) ) );
-		final int[] luty = new int[ l ];
+		final int[] luty = new int[ h ];
 		for ( int y = 0; y < h; ++y )
 			luty[ y ] = Math.min( oh1, Math.max( 0, Math.round( y / scale ) ) );
 		
