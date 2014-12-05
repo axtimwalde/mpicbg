@@ -55,6 +55,11 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Model<
 		}
 	}
 	
+	final static protected void useRoi( final float[] x, final float[] y )
+	{
+		
+	}
+	
 	protected InverseTransformMapping< M > mapping;
 	protected ImagePlus imp;
 	final protected ArrayList< Tuple > tuples = new ArrayList< Tuple >();

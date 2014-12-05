@@ -1,7 +1,8 @@
-import ij.gui.*;
-
+import ij.gui.PointRoi;
 import mpicbg.ij.InteractiveInvertibleCoordinateTransform;
-import mpicbg.models.*;
+import mpicbg.models.AffineModel2D;
+import mpicbg.models.Point;
+import mpicbg.models.PointMatch;
 
 public class Transform_Affine extends InteractiveInvertibleCoordinateTransform< AffineModel2D >
 {
@@ -13,13 +14,16 @@ public class Transform_Affine extends InteractiveInvertibleCoordinateTransform< 
 	@Override
 	final protected void setHandles()
 	{
-		int[] x = new int[]{ imp.getWidth() / 4, 3 * imp.getWidth() / 4, imp.getWidth() / 4 };
-		int[] y = new int[]{ imp.getHeight() / 4, imp.getHeight() / 2, 3 * imp.getHeight() / 4 };
+//		final float[] x = new float[ 3 ];
+//		final float[] y = new float[ 3 ];
+		
+		final float[] x = new float[]{ imp.getWidth() / 4f, 3f * imp.getWidth() / 4f, imp.getWidth() / 4f };
+		final float[] y = new float[]{ imp.getHeight() / 4f, imp.getHeight() / 2f, 3f * imp.getHeight() / 4f };
 		
 		p = new Point[]{
-				new Point( new float[]{ ( float )x[ 0 ], ( float )y[ 0 ] } ),
-				new Point( new float[]{ ( float )x[ 1 ], ( float )y[ 1 ] } ),
-				new Point( new float[]{ ( float )x[ 2 ], ( float )y[ 2 ] } ) };
+				new Point( new float[]{ x[ 0 ], y[ 0 ] } ),
+				new Point( new float[]{ x[ 1 ], y[ 1 ] } ),
+				new Point( new float[]{ x[ 2 ], y[ 2 ] } ) };
 		
 		q = new Point[]{
 				p[ 0 ].clone(),
@@ -35,12 +39,12 @@ public class Transform_Affine extends InteractiveInvertibleCoordinateTransform< 
 	}
 	
 	@Override
-	final protected void updateHandles( int x, int y )
+	final protected void updateHandles( final int x, final int y )
 	{
-		float[] fq = q[ targetIndex ].getW();
+		final float[] fq = q[ targetIndex ].getW();
 			
-		int[] rx = new int[ q.length ];
-		int[] ry = new int[ q.length ];
+		final int[] rx = new int[ q.length ];
+		final int[] ry = new int[ q.length ];
 		
 		for ( int i = 0; i < q.length; ++i )
 		{
