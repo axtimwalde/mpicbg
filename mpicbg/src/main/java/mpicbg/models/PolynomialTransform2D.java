@@ -31,13 +31,35 @@ import mpicbg.ij.TransformMeshMapping;
  */
 public class PolynomialTransform2D implements CoordinateTransform
 {
+	/**
+	 * holds two coefficients for each polynomial coefficient, including 1
+	 * initialized at 0 order, i.e. translation, the order follows that
+	 * specified at
+	 *
+	 * http://bishopw.loni.ucla.edu/AIR5/2Dnonlinear.html#default
+	 *
+	 * two times
+	 */
 	protected double[] a = new double[ 2 ];
-	protected double[] polTerms = new double[ 0 ];
-	protected int order = 0;
 
-	final public void set( final double... a ){
-		this.a = a.clone();
+	/**
+	 * register to hold all polynomial terms during applyInPlace following the
+	 * order specified at
+	 *
+	 * http://bishopw.loni.ucla.edu/AIR5/2Dnonlinear.html#default
+	 *
+	 * excluding 1 because we want to avoid repeated multiplication with 1
+	 */
+	protected double[] polTerms = new double[ 0 ];
+
+	public void set( final double... a ){
+		this.a =  a.clone();
 		polTerms = new double[ a.length * 2 ];
+	}
+
+	protected void populateCoefficients()
+	{
+
 	}
 
 	@Override
