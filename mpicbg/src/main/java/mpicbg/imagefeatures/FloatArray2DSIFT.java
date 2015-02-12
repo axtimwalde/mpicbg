@@ -383,7 +383,7 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		final float ORIENTATION_BIN_SIZE = 2.0f * ( float )Math.PI / ( float )ORIENTATION_BINS;
 		final float[] histogram_bins = new float[ ORIENTATION_BINS ];
 		
-		final int scale = ( int )Math.pow( 2, o );
+		final int scale = 1 << o;
 		
 		final FloatArray2DScaleOctave octave = octaves[ o ];
 		
