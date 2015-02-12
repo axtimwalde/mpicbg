@@ -8,7 +8,7 @@
 	<parent>
 		<groupId>mpicbg</groupId>
 		<artifactId>pom-mpicbg</artifactId>
-		<version>0.6.2-SNAPSHOT</version>
+		<version>0.7.0-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>mpicbg</artifactId>
@@ -17,16 +17,32 @@
 	<description></description>
 
 	<dependencies>
-		<dependency>
-			<groupId>jama</groupId>
-			<artifactId>jama</artifactId>
-			<version>1.0.2</version>
-		</dependency>
+		<!-- ImageJ dependencies -->
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>ij</artifactId>
-			<version>${imagej1.version}</version>
+		</dependency>
+
+		<!-- Third party dependencies -->
+		<dependency>
+			<groupId>gov.nist.math</groupId>
+			<artifactId>jama</artifactId>
 		</dependency>
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<configuration>
+					<rules>
+						<requireReleaseDeps>
+							<failWhenParentIsSnapshot>false</failWhenParentIsSnapshot>
+						</requireReleaseDeps>
+					</rules>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
 </project>

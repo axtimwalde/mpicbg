@@ -264,9 +264,10 @@ public class TileConfiguration
 			final ErrorStatistic observer,
 			final float maxAllowedError,
 			final int maxIterations,
-			final int maxPlateauwidth ) throws NotEnoughDataPointsException, IllDefinedDataPointsException, InterruptedException, ExecutionException 
+			final int maxPlateauwidth,
+			final float damp ) throws NotEnoughDataPointsException, IllDefinedDataPointsException, InterruptedException, ExecutionException 
 	{
-		TileUtil.optimizeConcurrently(observer, maxAllowedError, maxIterations, maxPlateauwidth,
+		TileUtil.optimizeConcurrently(observer, maxAllowedError, maxIterations, maxPlateauwidth, damp,
 				this, tiles, fixedTiles, Runtime.getRuntime().availableProcessors());
 	}
 
@@ -283,12 +284,32 @@ public class TileConfiguration
 	public void optimize(
 			final float maxAllowedError,
 			final int maxIterations,
-			final int maxPlateauwidth ) throws NotEnoughDataPointsException, IllDefinedDataPointsException 
+			final int maxPlateauwidth,
+			final float damp ) throws NotEnoughDataPointsException, IllDefinedDataPointsException 
 	{
 		final ErrorStatistic observer = new ErrorStatistic( maxPlateauwidth + 1 );
 		
-		optimize( observer, maxAllowedError, maxIterations, maxPlateauwidth );
+		optimize( observer, maxAllowedError, maxIterations, maxPlateauwidth, damp );
 	}
+	
+	/**
+	 * Minimize the displacement of all {@link PointMatch Correspondence pairs}
+	 * of all {@link Tile Tiles} and tell about it.
+	 *   
+	 * @param maxAllowedError
+	 * @param maxIterations
+	 * @param maxPlateauwidth
+	 * @throws NotEnoughDataPointsException
+	 * @throws IllDefinedDataPointsException
+	 */
+	public void optimize(
+			final float maxAllowedError,
+			final int maxIterations,
+			final int maxPlateauwidth ) throws NotEnoughDataPointsException, IllDefinedDataPointsException 
+	{
+		optimize( maxAllowedError, maxIterations, maxPlateauwidth, 1.0f );
+	}
+	
 	
 	/**
 	 * Minimize the displacement of all {@link PointMatch Correspondence pairs}
@@ -304,17 +325,18 @@ public class TileConfiguration
 			final ErrorStatistic observer,
 			final float maxAllowedError,
 			final int maxIterations,
-			final int maxPlateauwidth ) throws NotEnoughDataPointsException, IllDefinedDataPointsException 
+			final int maxPlateauwidth,
+			final float damp ) throws NotEnoughDataPointsException, IllDefinedDataPointsException 
 	{
 		println( "Optimizing..." );
 		
 		//optimizeSilently( observer, maxAllowedError, maxIterations, maxPlateauwidth );
 		
 		try {
-			optimizeSilentlyConcurrent( observer, maxAllowedError, maxIterations, maxPlateauwidth );
-		} catch (InterruptedException e) {
+			optimizeSilentlyConcurrent( observer, maxAllowedError, maxIterations, maxPlateauwidth, damp );
+		} catch (final InterruptedException e) {
 			throw new RuntimeException(e);
-		} catch (ExecutionException e) {
+		} catch (final ExecutionException e) {
 			throw new RuntimeException(e);
 		}
 		
@@ -329,6 +351,7 @@ public class TileConfiguration
 			final float maxAllowedError,
 			final int maxIterations,
 			final int maxPlateauwidth,
+			final float damp,
 			final float maxMeanFactor ) throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
 		boolean proceed = true;
@@ -336,7 +359,7 @@ public class TileConfiguration
 		{
 			final ErrorStatistic observer = new ErrorStatistic( maxPlateauwidth + 1 );
 			
-			optimize( observer, maxAllowedError, maxIterations, maxPlateauwidth );
+			optimize( observer, maxAllowedError, maxIterations, maxPlateauwidth, damp );
 			
 			/* get all transfer errors */
 			final RealSum sum = new RealSum();
@@ -388,6 +411,15 @@ A:				for ( final Tile< ? > t : tiles )
 			else	
 				proceed = false;
 		}
+	}
+	
+	public void optimizeAndFilter(
+			final float maxAllowedError,
+			final int maxIterations,
+			final int maxPlateauwidth,
+			final float maxMeanFactor ) throws NotEnoughDataPointsException, IllDefinedDataPointsException
+	{
+		optimizeAndFilter( maxAllowedError, maxIterations, maxPlateauwidth, 1.0f, maxMeanFactor );
 	}
 	
 	/**

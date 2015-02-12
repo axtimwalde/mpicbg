@@ -12,7 +12,7 @@ import mpicbg.util.Util;
 
 /**
  * Scale Invariant Feature Transform as described by David Lowe \cite{Loew04}.
- * 
+ *
  * BibTeX:
  * <pre>
  * &#64;article{Lowe04,
@@ -25,7 +25,7 @@ import mpicbg.util.Util;
  *   pages   = {91--110},
  * }
  * </pre>
- * 
+ *
  * NOTE:
  * The SIFT-method is protected by U.S. Patent 6,711,293: "Method and
  * apparatus for identifying scale invariant features in an image and use of
@@ -38,7 +38,7 @@ import mpicbg.util.Util;
  */
 public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2DSIFT.Param >
 {
-	final static public class Param implements Serializable
+	static public class Param implements Serializable
 	{
 		private static final long serialVersionUID = -5989002253597993595L;
 
@@ -47,31 +47,31 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		 *    How many samples per row and column
 		 */
 		public int fdSize = 4;
-		
+
 		/**
 		 * Feature descriptor orientation bins
 		 *    How many bins per local histogram
 		 */
 		public int fdBins = 8;
-		
+
 		/**
 		 * Size limits for scale octaves in px:
-		 * 
+		 *
 		 * minOctaveSize < octave < maxOctaveSize
 		 */
 		public int maxOctaveSize = 1024;
 		public int minOctaveSize = 64;
-		
+
 		/**
-		 * Steps per Scale Octave 
+		 * Steps per Scale Octave
 		 */
 		public int steps = 3;
-		
+
 		/**
 		 * Initial sigma of each Scale Octave
 		 */
 		public float initialSigma = 1.6f;
-		
+
 		public boolean equals( final Param p )
 		{
 			return
@@ -82,7 +82,7 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 				( steps == p.steps ) &&
 				( initialSigma == p.initialSigma );
 		}
-		
+
 		@Override
 		public boolean equals( final Object p )
 		{
@@ -91,7 +91,7 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 			else
 				return false;
 		}
-		
+
 		@Override
 		public Param clone()
 		{
@@ -102,10 +102,10 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 			s.maxOctaveSize = maxOctaveSize;
 			s.minOctaveSize = minOctaveSize;
 			s.steps = steps;
-			
+
 			return s;
 		}
-		
+
 		public void set( final Param p )
 		{
 			fdBins = p.fdBins;
@@ -116,20 +116,20 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 			steps = p.steps;
 		}
 	}
-	
+
 	final private int fdWidth;
 	final private float fdBinWidth;
-	
+
 	private float[] sigma;
 	private float[] sigma_diff;
 	private float[][] kernel_diff;
-	
+
 	/**
 	 * evaluation mask for the feature descriptor square
 	 */
 	final private float[][] descriptorMask;
 
-	
+
 	/**
 	 * octaved scale space
 	 */
@@ -142,15 +142,15 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 	{
 		return octaves[ i ];
 	}
-	
+
 	/**
 	 * Difference of Gaussian detector
 	 */
 	private final FloatArray2DScaleOctaveDoGDetector dog;
-	
+
 	/**
 	 * Constructor
-	 * 
+	 *
 	 * @param feature_descriptor_size
 	 * @param feature_descriptor_size
 	 */
@@ -162,7 +162,7 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 
 		fdWidth = 4 * p.fdSize;
 		fdBinWidth = 2.0f * ( float )Math.PI / ( float )p.fdBins;
-		
+
 		descriptorMask = new float[ fdWidth ][ fdWidth ];
 
 		final float two_sq_sigma = p.fdSize * p.fdSize * 8;
@@ -179,13 +179,13 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 				descriptorMask[ 2 * p.fdSize + y ][ 2 * p.fdSize + x ] = val;
 			}
 		}
-		
+
 		setInitialSigma( p.initialSigma );
 	}
-	
+
 	/**
 	 * initialize the scale space as a scale pyramid having octave stubs only
-	 * 
+	 *
 	 * @param src image having a generating gaussian kernel of
 	 * 	{@link Param#initialSigma} img must be a 2d-array of float
 	 *  values in range [0.0f, ..., 1.0f]
@@ -205,9 +205,9 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 			++o;
 		}
 		octaves = new FloatArray2DScaleOctave[ o ];
-		
+
 		FloatArray2D next;
-		
+
 		for ( int i = 0; i < octaves.length; ++i )
 		{
 			octaves[ i ] = new FloatArray2DScaleOctave(
@@ -225,12 +225,12 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 			src = next;
 		}
 	}
-	
+
 	/**
 	 * sample the scaled and rotated gradients in a region around the
 	 * features location, the regions size is defined by
 	 * ( FEATURE_DESCRIPTOR_SIZE * 4 )^2 ( 4x4 subregions )
-	 * 
+	 *
 	 * @param c candidate 0=>x, 1=>y, 2=>scale index
 	 * @param o octave index
 	 * @param octave_sigma sigma of the corresponding gaussian kernel with
@@ -246,7 +246,7 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		final FloatArray2DScaleOctave octave = octaves[ o ];
 		final FloatArray2D[] gradients = octave.getL1( Math.round( c[ 2 ] ) );
 		final FloatArray2D[] region = new FloatArray2D[ 2 ];
-		
+
 		region[ 0 ] = new FloatArray2D(
 				fdWidth,
 				fdWidth );
@@ -260,7 +260,7 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		//---------------------------------------------------------------------
 		//FloatArray2D image = octave.getL( Math.round( c[ 2 ] ) );
 		//pattern = new FloatArray2D( FEATURE_DESCRIPTOR_WIDTH, FEATURE_DESCRIPTOR_WIDTH );
-		
+
 		//! sample the region arround the keypoint location
 		for ( int y = fdWidth - 1; y >= 0; --y )
 		{
@@ -297,15 +297,15 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 
 				// rotate the gradients orientation it with respect to the features orientation
 				region[ 1 ].data[ region_p ] = gradients[ 1 ].data[ gradient_p ] - orientation;
-				
+
 				// TODO this is for test
 				//---------------------------------------------------------------------
 				//pattern.data[ region_p ] = image.data[ gradient_p ];
 			}
 		}
-		
-		
-		
+
+
+
 		final float[][][] hist = new float[ p.fdSize ][ p.fdSize ][ p.fdBins ];
 
 		// build the orientation histograms of 4x4 subregions
@@ -325,21 +325,21 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 						int bin_b = ( int )( bin_location );
 						int bin_t = bin_b + 1;
 						final float d = bin_location - ( float )bin_b;
-						
+
 						bin_b = ( bin_b + 2 * p.fdBins ) % p.fdBins;
 						bin_t = ( bin_t + 2 * p.fdBins ) % p.fdBins;
 
 						final float t = region[ 0 ].data[ yp + xp + ysrp + xsr ];
-						
+
 						hist[ y ][ x ][ bin_b ] += t * ( 1 - d );
 						hist[ y ][ x ][ bin_t ] += t * d;
 					}
 				}
 			}
 		}
-		
+
 		final float[] desc = new float[ p.fdSize * p.fdSize * p.fdBins ];
-		
+
 		// normalize, cut above 0.2 and renormalize
 		float max_bin_val = 0;
 		int i = 0;
@@ -360,16 +360,16 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		{
 			desc[ i ] = ( float )Math.min( 1.0, desc[ i ] / max_bin_val );
 		}
-		
+
 		return desc;
 	}
-	
+
 	/**
 	 * assign orientation to the given candidate, if more than one orientations
 	 * found, duplicate the feature for each orientation
-	 * 
+	 *
 	 * estimate the feature descriptor for each of those candidates
-	 * 
+	 *
 	 * @param c candidate 0=>x, 1=>y, 2=>scale index
 	 * @param o octave index
 	 * @param features finally contains all processed candidates
@@ -382,13 +382,13 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		final int ORIENTATION_BINS = 36;
 		final float ORIENTATION_BIN_SIZE = 2.0f * ( float )Math.PI / ( float )ORIENTATION_BINS;
 		final float[] histogram_bins = new float[ ORIENTATION_BINS ];
-		
+
 		final int scale = 1 << o;
-		
+
 		final FloatArray2DScaleOctave octave = octaves[ o ];
-		
+
 		final float octave_sigma = octave.SIGMA[ 0 ] * ( float )Math.pow( 2.0f, c[ 2 ] / ( float )octave.STEPS );
-				
+
 		// create a circular gaussian window with sigma 1.5 times that of the feature
 		final FloatArray2D gaussianMask =
 			Filter.createGaussianKernelOffset(
@@ -397,13 +397,13 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 					c[ 1 ] - ( float )Math.floor( c[ 1 ] ),
 					false );
 		//FloatArrayToImagePlus( gaussianMask, "gaussianMask", 0, 0 ).show();
-		
+
 		// get the gradients in a region arround the keypoints location
 		final FloatArray2D[] src = octave.getL1( Math.round( c[ 2 ] ) );
 		final FloatArray2D[] gradientROI = new FloatArray2D[ 2 ];
 		gradientROI[ 0 ] = new FloatArray2D( gaussianMask.width, gaussianMask.width );
 		gradientROI[ 1 ] = new FloatArray2D( gaussianMask.width, gaussianMask.width );
-		
+
 		final int half_size = gaussianMask.width / 2;
 		int n = gaussianMask.width * gaussianMask.width - 1;
 		for ( int yi = gaussianMask.width - 1; yi >= 0; --yi )
@@ -419,13 +419,13 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 				--n;
 			}
 		}
-		
+
 		// and mask this region with the precalculated gaussion window
 		for ( int i = 0; i < gradientROI[ 0 ].data.length; ++i )
 		{
 			gradientROI[ 0 ].data[ i ] *= gaussianMask.data[ i ];
 		}
-		
+
 		// TODO this is for test
 		//---------------------------------------------------------------------
 		//ImageArrayConverter.FloatArrayToImagePlus( gradientROI[ 0 ], "gaussianMaskedGradientROI", 0, 0 ).show();
@@ -444,7 +444,7 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		{
 			if ( histogram_bins[ i ] > histogram_bins[ max_i ] ) max_i = i;
 		}
-		
+
 		/**
 		 * interpolate orientation estimate the offset from center of the
 		 * parabolic extremum of the taylor series through env[1], derivatives
@@ -464,10 +464,10 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 						new float[]{ c[ 0 ] * scale, c[ 1 ] * scale },
 						//new float[]{ ( c[ 0 ] + 0.5f ) * scale - 0.5f, ( c[ 1 ] + 0.5f ) * scale - 0.5f },
 						createDescriptor( c, o, octave_sigma, orientation ) ) );
-		
+
 		/**
 		 * check if there is another significant orientation ( > 80% max )
-		 * if there is one, duplicate the feature and 
+		 * if there is one, duplicate the feature and
 		 */
 		for ( int i = 0; i < ORIENTATION_BINS; ++i )
 		{
@@ -496,19 +496,19 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 									octave_sigma * scale,
 									orientation,
 									new float[]{ c[ 0 ] * scale, c[ 1 ] * scale },
-									createDescriptor( c, o, octave_sigma, orientation ) ) );					
+									createDescriptor( c, o, octave_sigma, orientation ) ) );
 				}
 			}
 		}
 		return;
 	}
 
-	
+
 	/**
 	 * detect features in the specified scale octave
-	 * 
+	 *
 	 * @param o octave index
-	 * 
+	 *
 	 * @return detected features
 	 */
 	final private Vector< Feature > runOctave( final int o )
@@ -522,13 +522,13 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		{
 			this.processCandidate( c, o, features );
 		}
-		
+
 		return features;
 	}
-	
+
 	/**
 	 * detect features in all scale octaves
-	 * 
+	 *
 	 * @return detected features
 	 */
 	public Vector< Feature > run()
@@ -542,10 +542,10 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		}
 		return features;
 	}
-	
+
 	/**
 	 * detect features in all scale octaves
-	 * 
+	 *
 	 * @return detected features
 	 */
 	public Vector< Feature > run( final int max_size )
@@ -559,18 +559,18 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 				features.addAll( more );
 			}
 		}
-		
+
 		//System.out.println( features.size() + " candidates processed in all octaves" );
 		return features;
 	}
-	
+
 	/**
 	 * Identify corresponding features
-	 * 
+	 *
 	 * @param fs1 feature collection from set 1
 	 * @param fs2 feature collection from set 2
 	 * @param rod Ratio of distances (closest/next closest match)
-	 * 
+	 *
 	 * @return matches
 	 */
 	public static Vector< PointMatch > createMatches(
@@ -579,13 +579,13 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 			final float rod )
 	{
 		final Vector< PointMatch > matches = new Vector< PointMatch >();
-		
+
 		for ( final Feature f1 : fs1 )
 		{
 			Feature best = null;
 			float best_d = Float.MAX_VALUE;
 			float second_best_d = Float.MAX_VALUE;
-			
+
 			for ( final Feature f2 : fs2 )
 			{
 				final float d = f1.descriptorDistance( f2 );
@@ -607,17 +607,17 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 										new float[] { best.location[ 0 ], best.location[ 1 ] } ),
 								( f1.scale + best.scale ) / 2.0f ) );
 		}
-		
+
 		// now remove ambiguous matches
 		for ( int i = 0; i < matches.size(); )
 		{
 			boolean amb = false;
 			final PointMatch m = matches.get( i );
-			final float[] m_p2 = m.getP2().getL(); 
+			final float[] m_p2 = m.getP2().getL();
 			for ( int j = i + 1; j < matches.size(); )
 			{
 				final PointMatch n = matches.get( j );
-				final float[] n_p2 = n.getP2().getL(); 
+				final float[] n_p2 = n.getP2().getL();
 				if ( m_p2[ 0 ] == n_p2[ 0 ] && m_p2[ 1 ] == n_p2[ 1 ] )
 				{
 					amb = true;
@@ -631,20 +631,20 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		}
 		return matches;
 	}
-	
-	
+
+
 	/**
 	 * identify corresponding features using spatial constraints
-	 * 
+	 *
 	 * @param fs1 feature collection from set 1 sorted by decreasing size
 	 * @param fs2 feature collection from set 2 sorted by decreasing size
 	 * @param max_sd maximal difference in size (ratio max/min)
 	 * @param model transformation model to be applied to fs2
 	 * @param max_id maximal distance in image space ($\sqrt{x^2+y^2}$)
 	 * @param rod Ratio of distances (closest/next closest match)
-	 * 
+	 *
 	 * @return matches
-	 * 
+	 *
 	 * TODO implement the spatial constraints
 	 */
 	public static Vector< PointMatch > createMatches(
@@ -657,16 +657,16 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 	{
 		final Vector< PointMatch > matches = new Vector< PointMatch >();
 		final float min_sd = 1.0f / max_sd;
-		
+
 		final int size = fs2.size();
 		final int size_1 = size - 1;
-		
+
 		for ( final Feature f1 : fs1 )
 		{
 			Feature best = null;
 			float best_d = Float.MAX_VALUE;
 			float second_best_d = Float.MAX_VALUE;
-			
+
 			int first = 0;
 			int last = size_1;
 			int s = size / 2 + size % 2;
@@ -684,9 +684,9 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 				}
 				//System.out.println( "first = " + first + ", last = " + last + ", first.scale = " + fs2.get( first ).scale + ", last.scale = " + fs2.get( last ).scale + ", this.scale = " + f1.scale );
 			}
-			
+
 			//for ( Feature f2 : fs2 )
-			
+
 			for ( int i = first; i <= last; ++i )
 			{
 				final Feature f2 = fs2.get( i );
@@ -722,11 +722,11 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		{
 			boolean amb = false;
 			final PointMatch m = matches.get( i );
-			final float[] m_p2 = m.getP2().getL(); 
+			final float[] m_p2 = m.getP2().getL();
 			for ( int j = i + 1; j < matches.size(); )
 			{
 				final PointMatch n = matches.get( j );
-				final float[] n_p2 = n.getP2().getL(); 
+				final float[] n_p2 = n.getP2().getL();
 				if ( m_p2[ 0 ] == n_p2[ 0 ] && m_p2[ 1 ] == n_p2[ 1 ] )
 				{
 					amb = true;
@@ -744,16 +744,16 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		}
 		return matches;
 	}
-	
+
 	@Override
 	final public void extractFeatures( final Collection< Feature > features )
 	{
 		features.addAll( run( p.maxOctaveSize ) );
 	}
-	
+
 	/**
 	 * get a histogram of feature sizes
-	 * 
+	 *
 	 * @param rs
 	 */
 	public static float[] featureSizeHistogram(
@@ -766,7 +766,7 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		final int num_features = features.size();
 		final float h[] = new float[ bins ];
 		final int hb[] = new int[ bins ];
-		
+
 		for ( final Feature f : features )
 		{
 			final int bin = ( int )Math.max( 0, Math.min( bins - 1, ( int )( Math.log( f.scale ) / Math.log( 2.0 ) * 28.0f ) ) );
@@ -779,7 +779,7 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		System.out.println( " done" );
 		return h;
 	}
-	
+
 	final public float getInitialSigma(){ return p.initialSigma; }
 	final public void setInitialSigma( final float initialSigma )
 	{
@@ -789,15 +789,15 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		sigma_diff = new float[ p.steps + 3 ];
 		sigma_diff[ 0 ] = 0.0f;
 		kernel_diff = new float[ p.steps + 3 ][];
-		
+
 		for ( int i = 1; i < p.steps + 3; ++i )
 		{
 			sigma[ i ] = p.initialSigma * ( float )Math.pow( 2.0f, ( float )i / ( float )p.steps );
 			sigma_diff[ i ] = ( float )Math.sqrt( sigma[ i ] * sigma[ i ] - p.initialSigma * p.initialSigma );
-			
+
 			kernel_diff[ i ] = Filter.createGaussianKernel( sigma_diff[ i ], true );
 		}
 	}
-	
+
 	final public int getMaxOctaveSize(){ return p.maxOctaveSize; }
 }
