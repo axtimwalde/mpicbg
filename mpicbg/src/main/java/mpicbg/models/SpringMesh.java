@@ -934,7 +934,7 @@ public class SpringMesh extends TransformMesh
 			}
 			observer.add( force / meshes.size() );
 			
-			final float dt = ( float )Math.min( 1000, 1.0 / maxSpeed );
+			final double dt = Math.min( 1000, 1.0 / maxSpeed );
 			
 			for ( final SpringMesh mesh : meshes )
 			{
