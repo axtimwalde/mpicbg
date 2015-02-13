@@ -21,11 +21,11 @@ import java.util.Collection;
 /**
  * 1D affine specialization of {@link InterpolatedModel}.  Implements
  * interpolation directly by linear matrix interpolation.
- * 
- * No multiple inheritance in Java, so it cannot be an AffineModel1D
- * by itself. 
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * No multiple inheritance in Java, so it cannot be an AffineModel1D
+ * by itself.
+ *
+ * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
  */
 final public class InterpolatedAffineModel1D<
 		A extends Model< A > & Affine1D< A >,
@@ -33,28 +33,28 @@ final public class InterpolatedAffineModel1D<
 	extends InvertibleInterpolatedModel< A, B, InterpolatedAffineModel1D< A, B > >
 	implements Affine1D< InterpolatedAffineModel1D< A, B > >, InvertibleBoundable
 {
-	private static final long serialVersionUID = 6872754667674831584L;
-	
+	private static final long serialVersionUID = 2662227348414849267L;
+
 	final protected AffineModel1D affine = new AffineModel1D();
-	final protected float[] afs = new float[ 2 ];
-	final protected float[] bfs = new float[ 2 ];
-	
-	public InterpolatedAffineModel1D( final A model, final B regularizer, final float lambda )
+	final protected double[] afs = new double[ 2 ];
+	final protected double[] bfs = new double[ 2 ];
+
+	public InterpolatedAffineModel1D( final A model, final B regularizer, final double lambda )
 	{
 		super( model, regularizer, lambda );
 		interpolate();
 	}
-	
+
 	protected void interpolate()
 	{
 		a.toArray( afs );
 		b.toArray( bfs );
-		
+
 		affine.set(
 				afs[ 0 ] * l1 + bfs[ 0 ] * lambda,
 				afs[ 1 ] * l1 + bfs[ 1 ] * lambda );
 	}
-	
+
 	@Override
 	public < P extends PointMatch > void fit( final Collection< P > matches ) throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
@@ -79,29 +79,29 @@ final public class InterpolatedAffineModel1D<
 	}
 
 	@Override
-	public float[] apply( final float[] location )
+	public double[] apply( final double[] location )
 	{
-		final float[] copy = location.clone();
+		final double[] copy = location.clone();
 		applyInPlace( copy );
 		return copy;
 	}
 
 	@Override
-	public void applyInPlace( final float[] location )
+	public void applyInPlace( final double[] location )
 	{
 		affine.applyInPlace( location );
 	}
 
 	@Override
-	public float[] applyInverse( final float[] point ) throws NoninvertibleModelException
+	public double[] applyInverse( final double[] point ) throws NoninvertibleModelException
 	{
-		final float[] copy = point.clone();
+		final double[] copy = point.clone();
 		applyInverseInPlace( copy );
 		return copy;
 	}
 
 	@Override
-	public void applyInverseInPlace( final float[] point ) throws NoninvertibleModelException
+	public void applyInverseInPlace( final double[] point ) throws NoninvertibleModelException
 	{
 		affine.applyInverseInPlace( point );
 	}
@@ -142,21 +142,9 @@ final public class InterpolatedAffineModel1D<
 	}
 
 	@Override
-	public void toArray( final float[] data )
-	{
-		affine.toArray( data );
-	}
-
-	@Override
 	public void toArray( final double[] data )
 	{
 		affine.toArray( data );
-	}
-
-	@Override
-	public void toMatrix( final float[][] data )
-	{
-		affine.toMatrix( data );
 	}
 
 	@Override
@@ -164,15 +152,15 @@ final public class InterpolatedAffineModel1D<
 	{
 		affine.toMatrix( data );
 	}
-	
+
 	/**
 	 * Initialize the model such that the respective affine transform is:
-	 * 
+	 *
 	 * <pre>
 	 * m0 m1
 	 * 0   1
 	 * </pre>
-	 * 
+	 *
 	 * @param m0
 	 * @param m1
 	 */
@@ -180,15 +168,15 @@ final public class InterpolatedAffineModel1D<
 	{
 		affine.set( m0, m1 );
 	}
-	
+
 	@Override
-	public void estimateBounds( final float[] min, final float[] max )
+	public void estimateBounds( final double[] min, final double[] max )
 	{
 		affine.estimateBounds( min, max );
 	}
 
 	@Override
-	public void estimateInverseBounds( final float[] min, final float[] max ) throws NoninvertibleModelException
+	public void estimateInverseBounds( final double[] min, final double[] max ) throws NoninvertibleModelException
 	{
 		affine.estimateInverseBounds( min, max );
 	}

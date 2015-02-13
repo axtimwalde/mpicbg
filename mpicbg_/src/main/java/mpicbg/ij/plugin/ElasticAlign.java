@@ -84,7 +84,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 		final public A a;
 		final public B b;
 		final public C c;
-		
+
 		Triple( final A a, final B b, final C c )
 		{
 			this.a = a;
@@ -92,7 +92,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 			this.c = c;
 		}
 	}
-	
+
 	final static private class Param implements Serializable
 	{
 		private static final long serialVersionUID = -4772614223784150836L;
@@ -103,88 +103,88 @@ public class ElasticAlign implements PlugIn, KeyListener
 		{
 			sift.fdSize = 8;
 		}
-		
+
 		public int maxNumThreadsSift = Runtime.getRuntime().availableProcessors();
-		
+
 		/**
 		 * Closest/next closest neighbor distance ratio
 		 */
 		public float rod = 0.92f;
-		
+
 		/**
 		 * Maximal accepted alignment error in px
 		 */
 		public float maxEpsilon = 200.0f;
-		
+
 		/**
 		 * Inlier/candidates ratio
 		 */
 		public float minInlierRatio = 0.0f;
-		
+
 		/**
 		 * Minimal absolute number of inliers
 		 */
 		public int minNumInliers = 12;
-		
+
 		/**
 		 * Transformation models for choice
 		 */
 		final static public String[] modelStrings = new String[]{ "Translation", "Rigid", "Similarity", "Affine", "Perspective" };
 		public int modelIndex = 3;
-		
+
 		/**
 		 * Ignore identity transform up to a given tolerance
 		 */
 		public boolean rejectIdentity = true;
 		public float identityTolerance = 5.0f;
-		
+
 		/**
 		 * Maximal number of consecutive sections to be tested for an alignment model
 		 */
 		public int maxNumNeighbors = 10;
-		
+
 		/**
 		 * Maximal number of consecutive slices for which no model could be found
 		 */
 		public int maxNumFailures = 3;
-		
+
 		public float sectionScale = -1;
 		public float minR = 0.8f;
 		public float maxCurvatureR = 3f;
 		public float rodR = 0.8f;
 		public int searchRadius = 200;
 		public int blockRadius = -1;
-		
+
 		public boolean useLocalSmoothnessFilter = true;
 		public int localModelIndex = 1;
 		public float localRegionSigma = searchRadius / 4;
 		public float maxLocalEpsilon = searchRadius / 4;
 		public float maxLocalTrust = 3;
-		
+
 		public boolean mask = false;
-		
+
 		public int modelIndexOptimize = 1;
 		public int maxIterationsOptimize = 1000;
 		public int maxPlateauwidthOptimize = 200;
-		
+
 		public int resolutionSpringMesh = 16;
 		public float stiffnessSpringMesh = 0.1f;
 		public float dampSpringMesh = 0.9f;
 		public float maxStretchSpringMesh = 2000.0f;
 		public int maxIterationsSpringMesh = 1000;
 		public int maxPlateauwidthSpringMesh = 200;
-		
+
 		public boolean interpolate = true;
 		public boolean visualize = true;
 		public int resolutionOutput = 128;
 		public boolean rgbWithGreenBackground = false;
-		
+
 		public boolean clearCache = true;
-		
+
 		public int maxNumThreads = Runtime.getRuntime().availableProcessors();
-		
+
 		public boolean isAligned = false;
-		
+
 		public boolean setup( final ImagePlus imp )
 		{
 			DirectoryChooser.setDefaultDirectory( outputPath );
@@ -203,26 +203,26 @@ public class ElasticAlign implements PlugIn, KeyListener
 				else
 					return false;
 			}
-			
+
 			final GenericDialog gdOutput = new GenericDialog( "Elastically align stack: Output" );
-			
+
 			gdOutput.addCheckbox( "interpolate", interpolate );
 			gdOutput.addCheckbox( "visualize", visualize );
 			gdOutput.addNumericField( "resolution :", resolutionOutput, 0 );
 			gdOutput.addCheckbox( "render RGB with green background", rgbWithGreenBackground );
-			
+
 			gdOutput.showDialog();
-			
+
 			if ( gdOutput.wasCanceled() )
 				return false;
-			
+
 			interpolate = gdOutput.getNextBoolean();
 			visualize = gdOutput.getNextBoolean();
 			resolutionOutput = ( int )gdOutput.getNextNumber();
 			rgbWithGreenBackground = gdOutput.getNextBoolean();
-			
-			
-			
+
+
+
 			/* Block Matching */
 			if ( sectionScale < 0 )
 			{
@@ -234,36 +234,36 @@ public class ElasticAlign implements PlugIn, KeyListener
 				blockRadius = imp.getWidth() / resolutionSpringMesh / 2;
 			}
 			final GenericDialog gdBlockMatching = new GenericDialog( "Elastically align stack: Block Matching parameters" );
-			
+
 			gdBlockMatching.addMessage( "Block Matching:" );
 			gdBlockMatching.addNumericField( "scale :", sectionScale, 2 );
 			gdBlockMatching.addNumericField( "search_radius :", searchRadius, 0, 6, "px" );
 			gdBlockMatching.addNumericField( "block_radius :", blockRadius, 0, 6, "px" );
 			gdBlockMatching.addNumericField( "resolution :", resolutionSpringMesh, 0 );
-			
+
 			gdBlockMatching.addMessage( "Correlation Filters:" );
 			gdBlockMatching.addNumericField( "minimal_PMCC_r :", minR, 2 );
 			gdBlockMatching.addNumericField( "maximal_curvature_ratio :", maxCurvatureR, 2 );
 			gdBlockMatching.addNumericField( "maximal_second_best_r/best_r :", rodR, 2 );
-			
+
 			gdBlockMatching.addMessage( "Local Smoothness Filter:" );
 			gdBlockMatching.addCheckbox( "use_local_smoothness_filter", useLocalSmoothnessFilter );
 			gdBlockMatching.addChoice( "approximate_local_transformation :", Param.modelStrings, Param.modelStrings[ localModelIndex ] );
 			gdBlockMatching.addNumericField( "local_region_sigma:", localRegionSigma, 2, 6, "px" );
 			gdBlockMatching.addNumericField( "maximal_local_displacement (absolute):", maxLocalEpsilon, 2, 6, "px" );
 			gdBlockMatching.addNumericField( "maximal_local_displacement (relative):", maxLocalTrust, 2 );
-			
+
 			gdBlockMatching.addMessage( "Miscellaneous:" );
 			gdBlockMatching.addCheckbox( "green_mask_(TODO_more_colors)", mask );
 			gdBlockMatching.addCheckbox( "series_is_aligned", isAligned );
 			gdBlockMatching.addNumericField( "test_maximally :", maxNumNeighbors, 0, 6, "layers" );
-			
-			
+
+
 			gdBlockMatching.showDialog();
-			
+
 			if ( gdBlockMatching.wasCanceled() )
 				return false;
-			
+
 			sectionScale = ( float )gdBlockMatching.getNextNumber();
 			searchRadius = ( int )gdBlockMatching.getNextNumber();
 			blockRadius = ( int )gdBlockMatching.getNextNumber();
@@ -279,52 +279,52 @@ public class ElasticAlign implements PlugIn, KeyListener
 			mask = gdBlockMatching.getNextBoolean();
 			isAligned = gdBlockMatching.getNextBoolean();
 			maxNumNeighbors = ( int )gdBlockMatching.getNextNumber();
-			
-			
+
+
 			if ( !isAligned )
 			{
 				/* SIFT */
 				final GenericDialog gdSIFT = new GenericDialog( "Elastically align stack: SIFT parameters" );
-				
+
 				SIFT.addFields( gdSIFT, sift );
-				
+
 				gdSIFT.addMessage( "Local Descriptor Matching:" );
 				gdSIFT.addNumericField( "closest/next_closest_ratio :", rod, 2 );
-				
+
 				gdSIFT.addMessage( "Miscellaneous:" );
 				gdSIFT.addCheckbox( "clear_cache", clearCache );
 				gdSIFT.addNumericField( "feature_extraction_threads :", maxNumThreadsSift, 0 );
-				
+
 				gdSIFT.showDialog();
-				
+
 				if ( gdSIFT.wasCanceled() )
 					return false;
-				
+
 				SIFT.readFields( gdSIFT, sift );
-				
+
 				rod = ( float )gdSIFT.getNextNumber();
 				clearCache = gdSIFT.getNextBoolean();
 				maxNumThreadsSift = ( int )gdSIFT.getNextNumber();
-			
-			
+
+
 				/* Geometric filters */
-				
+
 				final GenericDialog gdGeom = new GenericDialog( "Elastically align stack: Geometric filters" );
-				
+
 				gdGeom.addNumericField( "maximal_alignment_error :", maxEpsilon, 2, 6, "px" );
 				gdGeom.addNumericField( "minimal_inlier_ratio :", minInlierRatio, 2 );
 				gdGeom.addNumericField( "minimal_number_of_inliers :", minNumInliers, 0 );
 				gdGeom.addChoice( "approximate_transformation :", Param.modelStrings, Param.modelStrings[ modelIndex ] );
 				gdGeom.addCheckbox( "ignore constant background", rejectIdentity );
 				gdGeom.addNumericField( "tolerance :", identityTolerance, 2, 6, "px" );
-				
+
 				gdGeom.addNumericField( "give_up_after :", maxNumFailures, 0, 6, "failures" );
-				
+
 				gdGeom.showDialog();
-				
+
 				if ( gdGeom.wasCanceled() )
 					return false;
-				
+
 				maxEpsilon = ( float )gdGeom.getNextNumber();
 				minInlierRatio = ( float )gdGeom.getNextNumber();
 				minNumInliers = ( int )gdGeom.getNextNumber();
@@ -333,39 +333,39 @@ public class ElasticAlign implements PlugIn, KeyListener
 				identityTolerance = ( float )gdGeom.getNextNumber();
 				maxNumFailures = ( int )gdGeom.getNextNumber();
 			}
-			
-			
+
+
 			/* Optimization */
 			final GenericDialog gdOptimize = new GenericDialog( "Elastically align stack: Optimization" );
-			
+
 			gdOptimize.addMessage( "Approximate Optimizer:" );
 			gdOptimize.addChoice( "approximate_transformation :", Param.modelStrings, Param.modelStrings[ modelIndexOptimize ] );
 			gdOptimize.addNumericField( "maximal_iterations :", maxIterationsOptimize, 0 );
 			gdOptimize.addNumericField( "maximal_plateauwidth :", maxPlateauwidthOptimize, 0 );
-			
+
 			gdOptimize.addMessage( "Spring Mesh:" );
 			gdOptimize.addNumericField( "stiffness :", stiffnessSpringMesh, 2 );
 			gdOptimize.addNumericField( "maximal_stretch :", maxStretchSpringMesh, 2, 6, "px" );
 			gdOptimize.addNumericField( "maximal_iterations :", maxIterationsSpringMesh, 0 );
 			gdOptimize.addNumericField( "maximal_plateauwidth :", maxPlateauwidthSpringMesh, 0 );
-			
+
 			gdOptimize.showDialog();
-			
+
 			if ( gdOptimize.wasCanceled() )
 				return false;
-			
+
 			modelIndexOptimize = gdOptimize.getNextChoiceIndex();
 			maxIterationsOptimize = ( int )gdOptimize.getNextNumber();
 			maxPlateauwidthOptimize = ( int )gdOptimize.getNextNumber();
-			
+
 			stiffnessSpringMesh = ( float )gdOptimize.getNextNumber();
 			maxStretchSpringMesh = ( float )gdOptimize.getNextNumber();
 			maxIterationsSpringMesh = ( int )gdOptimize.getNextNumber();
 			maxPlateauwidthSpringMesh = ( int )gdOptimize.getNextNumber();
-			
+
 			return true;
 		}
-		
+
 		public boolean equalSiftPointMatchParams( final Param param )
 		{
 			return sift.equals( param.sift )
@@ -379,7 +379,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 				&& maxNumFailures == param.maxNumFailures;
 		}
 	}
-	
+
 	final static public AbstractModel< ? > createModel( final int modelIndex )
 	{
 		switch ( modelIndex )
@@ -398,8 +398,8 @@ public class ElasticAlign implements PlugIn, KeyListener
 			return null;
 		}
 	}
-	
-	final static Param p = new Param(); 
+
+	final static Param p = new Param();
 
 	@Override
 	final public void run( final String args )
@@ -408,7 +408,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 		try { run(); }
 		catch ( final Throwable t ) { t.printStackTrace(); }
 	}
-	
+
 	final public void run() throws Exception
 	{
 		final ImagePlus imp = WindowManager.getCurrentImage();
@@ -417,13 +417,13 @@ public class ElasticAlign implements PlugIn, KeyListener
 			System.err.println( "There are no images open" );
 			return;
 		}
-		
+
 		if ( !p.setup( imp ) ) return;
-		
+
 		final ImageStack stack = imp.getStack();
 		final double displayRangeMin = imp.getDisplayRangeMin();
 		final double displayRangeMax = imp.getDisplayRangeMax();
-		
+
 		final ArrayList< Tile< ? > > tiles = new ArrayList< Tile<?> >();
 		for ( int i = 0; i < stack.getSize(); ++i )
 		{
@@ -448,17 +448,17 @@ public class ElasticAlign implements PlugIn, KeyListener
 				return;
 			}
 		}
-		
+
 		final ArrayList< Triple< Integer, Integer, AbstractModel< ? > > > pairs = new ArrayList< Triple< Integer, Integer, AbstractModel< ? > > >();
-		
+
 		if ( !p.isAligned )
 		{
 			final ExecutorService execSift = Executors.newFixedThreadPool( p.maxNumThreadsSift );
-			
+
 			/* extract features for all slices and store them to disk */
 			final AtomicInteger counter = new AtomicInteger( 0 );
 			final ArrayList< Future< ArrayList< Feature > > > siftTasks = new ArrayList< Future< ArrayList< Feature > > >();
-			
+
 			for ( int i = 1; i <= stack.getSize(); i++ )
 			{
 				final int slice = i;
@@ -469,7 +469,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 							public ArrayList< Feature > call()
 							{
 								IJ.showProgress( counter.getAndIncrement(), stack.getSize() );
-	
+
 								//final String path = p.outputPath + stack.getSliceLabel( slice ) + ".features";
 								final String path = p.outputPath + String.format( "%05d", slice - 1 ) + ".features";
 								ArrayList< Feature > fs = null;
@@ -483,7 +483,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 									final ImageProcessor ip = stack.getProcessor( slice );
 									ip.setMinAndMax( displayRangeMin, displayRangeMax );
 									ijSIFT.extractFeatures( ip, fs );
-	
+
 									if ( !serializeFeatures( p.sift, fs, path ) )
 									{
 										//IJ.log( "FAILED to store serialized features for " + stack.getSliceLabel( slice ) );
@@ -492,75 +492,75 @@ public class ElasticAlign implements PlugIn, KeyListener
 								}
 								//IJ.log( fs.size() + " features extracted for slice " + stack.getSliceLabel ( slice ) );
 								IJ.log( fs.size() + " features extracted for slice " + String.format( "%05d", slice - 1 ) );
-								
+
 								return fs;
 							}
 						} ) );
 			}
-			
+
 			/* join */
 			for ( final Future< ArrayList< Feature > > fu : siftTasks )
 				fu.get();
-			
+
 			siftTasks.clear();
 			execSift.shutdown();
-		
-		
+
+
 			/* collect all pairs of slices for which a model could be found */
-			
+
 			counter.set( 0 );
 			int numFailures = 0;
-			
+
 			for ( int i = 0; i < stack.getSize(); ++i )
 			{
 				final ArrayList< Thread > threads = new ArrayList< Thread >( p.maxNumThreads );
-				
+
 				final int sliceA = i;
 				final int range = Math.min( stack.getSize(), i + p.maxNumNeighbors + 1 );
-				
+
 J:				for ( int j = i + 1; j < range; )
 				{
 					final int numThreads = Math.min( p.maxNumThreads, range - j );
 					final ArrayList< Triple< Integer, Integer, AbstractModel< ? > > > models =
 						new ArrayList< Triple< Integer, Integer, AbstractModel< ? > > >( numThreads );
-					
+
 					for ( int k = 0; k < numThreads; ++k )
 						models.add( null );
-					
+
 					for ( int t = 0;  t < numThreads && j < range; ++t, ++j )
 					{
 						final int ti = t;
 						final int sliceB = j;
-						
+
 						final Thread thread = new Thread()
 						{
 							@Override
 							public void run()
 							{
 								IJ.showProgress( sliceA, stack.getSize() - 1 );
-								
+
 								IJ.log( "matching " + sliceB + " -> " + sliceA + "..." );
-								
+
 								ArrayList< PointMatch > candidates = null;
 								final String path = p.outputPath + String.format( "%05d", sliceB ) + "-" + String.format( "%05d", sliceA ) + ".pointmatches";
 								if ( !p.clearCache )
 									candidates = deserializePointMatches( p, path );
-								
+
 								if ( null == candidates )
 								{
 									final ArrayList< Feature > fs1 = deserializeFeatures( p.sift, p.outputPath + String.format( "%05d", sliceA ) + ".features" );
 									final ArrayList< Feature > fs2 = deserializeFeatures( p.sift, p.outputPath + String.format( "%05d", sliceB ) + ".features" );
 									candidates = new ArrayList< PointMatch >( FloatArray2DSIFT.createMatches( fs2, fs1, p.rod ) );
-									
+
 									if ( !serializePointMatches( p, candidates, path ) )
 										IJ.log( "Could not store point matches!" );
 								}
-			
+
 								final AbstractModel< ? > model = createModel( p.modelIndex );
 								if ( model == null ) return;
-								
+
 								final ArrayList< PointMatch > inliers = new ArrayList< PointMatch >();
-								
+
 								boolean modelFound;
 								boolean again = false;
 								try
@@ -595,7 +595,7 @@ J:				for ( int j = i + 1; j < range; )
 									modelFound = false;
 									System.err.println( e.getMessage() );
 								}
-			
+
 								if ( modelFound )
 								{
 									IJ.log( sliceB + " -> " + sliceA + ": " + inliers.size() + " corresponding features with an average displacement of " + PointMatch.meanDistance( inliers ) + "px identified." );
@@ -612,7 +612,7 @@ J:				for ( int j = i + 1; j < range; )
 						threads.add( thread );
 						thread.start();
 					}
-					
+
 					try
 					{
 						for ( final Thread thread : threads )
@@ -631,9 +631,9 @@ J:				for ( int j = i + 1; j < range; )
 						catch ( final InterruptedException f ) {}
 						return;
 					}
-					
+
 					threads.clear();
-					
+
 					/* collect successfully matches pairs and break the search on gaps */
 					for ( int t = 0; t < models.size(); ++t )
 					{
@@ -657,19 +657,19 @@ J:				for ( int j = i + 1; j < range; )
 			for ( int i = 0; i < stack.getSize(); ++i )
 			{
 				final int range = Math.min( stack.getSize(), i + p.maxNumNeighbors + 1 );
-				
+
 				for ( int j = i + 1; j < range; ++j )
 				{
 					pairs.add( new Triple< Integer, Integer, AbstractModel< ? > >( i, j, new TranslationModel2D() ) );
 				}
 			}
 		}
-		
+
 		/* Elastic alignment */
-		
+
 		/* Initialization */
 		final TileConfiguration initMeshes = new TileConfiguration();
-		
+
 		final ArrayList< SpringMesh > meshes = new ArrayList< SpringMesh >( stack.getSize() );
 		for ( int i = 0; i < stack.getSize(); ++i )
 			meshes.add(
@@ -680,15 +680,15 @@ J:				for ( int j = i + 1; j < range; )
 							p.stiffnessSpringMesh,
 							p.maxStretchSpringMesh,
 							p.dampSpringMesh ) );
-		
+
 //		final int blockRadius = Math.max( 32, stack.getWidth() / p.resolutionSpringMesh / 2 );
 		final int blockRadius = Math.max( Util.roundPos( 16 / p.sectionScale ), p.blockRadius );
-		
+
 		/** TODO set this something more than the largest error by the approximate model */
 		final int searchRadius = p.searchRadius;
-		
+
 		final AbstractModel< ? > localSmoothnessFilterModel = createModel( p.localModelIndex );
-		
+
 		for ( final Triple< Integer, Integer, AbstractModel< ? > > pair : pairs )
 		{
 			final SpringMesh m1 = meshes.get( pair.a );
@@ -704,7 +704,7 @@ J:				for ( int j = i + 1; j < range; )
 			final FloatProcessor ip2 = ( FloatProcessor )stack.getProcessor( pair.b + 1 ).convertToFloat().duplicate();
 			final FloatProcessor ip1Mask;
 			final FloatProcessor ip2Mask;
-			
+
 			if ( imp.getType() == ImagePlus.COLOR_RGB && p.mask )
 			{
 				ip1Mask = createMask( stack.getProcessor( pair.a + 1 ) );
@@ -715,7 +715,7 @@ J:				for ( int j = i + 1; j < range; )
 				ip1Mask = null;
 				ip2Mask = null;
 			}
-			
+
 			try
 			{
 				BlockMatching.matchByMaximalPMCC(
@@ -748,7 +748,7 @@ J:				for ( int j = i + 1; j < range; )
 				IJ.showProgress( 1.0 );
 				return;
 			}
-			
+
 			if ( p.useLocalSmoothnessFilter )
 			{
 				IJ.log( pair.a + " > " + pair.b + ": found " + pm12.size() + " correspondence candidates." );
@@ -759,7 +759,7 @@ J:				for ( int j = i + 1; j < range; )
 			{
 				IJ.log( pair.a + " > " + pair.b + ": found " + pm12.size() + " correspondences." );
 			}
-			
+
 			/* <visualisation> */
 			//			final List< Point > s1 = new ArrayList< Point >();
 			//			PointMatch.sourcePoints( pm12, s1 );
@@ -813,7 +813,7 @@ J:				for ( int j = i + 1; j < range; )
 			{
 				IJ.log( pair.a + " < " + pair.b + ": found " + pm21.size() + " correspondences." );
 			}
-			
+
 			/* <visualisation> */
 			//			final List< Point > s2 = new ArrayList< Point >();
 			//			PointMatch.sourcePoints( pm21, s2 );
@@ -823,10 +823,10 @@ J:				for ( int j = i + 1; j < range; )
 			//			imp2.setRoi( Util.pointsToPointRoi( s2 ) );
 			//			imp2.updateAndDraw();
 			/* </visualisation> */
-			
+
 			final float springConstant  = 1.0f / ( pair.b - pair.a );
 			IJ.log( pair.a + " <> " + pair.b + " spring constant = " + springConstant );
-	
+
 			for ( final PointMatch pm : pm12 )
 			{
 				final Vertex p1 = ( Vertex )pm.getP1();
@@ -834,7 +834,7 @@ J:				for ( int j = i + 1; j < range; )
 				p1.addSpring( p2, new Spring( 0, springConstant ) );
 				m2.addPassiveVertex( p2 );
 			}
-		
+
 			for ( final PointMatch pm : pm21 )
 			{
 				final Vertex p1 = ( Vertex )pm.getP1();
@@ -842,10 +842,10 @@ J:				for ( int j = i + 1; j < range; )
 				p1.addSpring( p2, new Spring( 0, springConstant ) );
 				m1.addPassiveVertex( p2 );
 			}
-			
+
 			final Tile< ? > t1 = tiles.get( pair.a );
 			final Tile< ? > t2 = tiles.get( pair.b );
-			
+
 			if ( pm12.size() > pair.c.getMinNumMatches() )
 			{
 				initMeshes.addTile( t1 );
@@ -859,8 +859,8 @@ J:				for ( int j = i + 1; j < range; )
 				t2.connect( t1, pm21 );
 			}
 		}
-		
-		/* pre-align by optimizing a piecewise linear model */ 
+
+		/* pre-align by optimizing a piecewise linear model */
 		initMeshes.optimize(
 				p.maxEpsilon,
 				p.maxIterationsSpringMesh,
@@ -873,7 +873,7 @@ J:				for ( int j = i + 1; j < range; )
 		{
 			final long t0 = System.currentTimeMillis();
 			IJ.log("Optimizing spring meshes...");
-			
+
 			SpringMesh.optimizeMeshes(
 					meshes,
 					p.maxEpsilon,
@@ -882,7 +882,7 @@ J:				for ( int j = i + 1; j < range; )
 					p.visualize );
 
 			IJ.log( "Done optimizing spring meshes. Took " + ( System.currentTimeMillis() - t0 ) + " ms" );
-			
+
 		}
 		catch ( final NotEnoughDataPointsException e )
 		{
@@ -890,48 +890,48 @@ J:				for ( int j = i + 1; j < range; )
 			e.printStackTrace();
 			return;
 		}
-		
+
 		/* calculate bounding box */
-		final float[] min = new float[ 2 ];
-		final float[] max = new float[ 2 ];
+		final double[] min = new double[ 2 ];
+		final double[] max = new double[ 2 ];
 		for ( final SpringMesh mesh : meshes )
 		{
-			final float[] meshMin = new float[ 2 ];
-			final float[] meshMax = new float[ 2 ];
-			
+			final double[] meshMin = new double[ 2 ];
+			final double[] meshMax = new double[ 2 ];
+
 			mesh.bounds( meshMin, meshMax );
-			
+
 			Util.min( min, meshMin );
 			Util.max( max, meshMax );
 		}
-		
+
 		/* translate relative to bounding box */
 		for ( final SpringMesh mesh : meshes )
 		{
 			for ( final Vertex vertex : mesh.getVertices() )
 			{
-				final float[] w = vertex.getW();
+				final double[] w = vertex.getW();
 				w[ 0 ] -= min[ 0 ];
 				w[ 1 ] -= min[ 1 ];
 			}
 			mesh.updateAffines();
 			mesh.updatePassiveVertices();
 		}
-		
+
 		final int width = ( int )Math.ceil( max[ 0 ] - min[ 0 ] );
 		final int height = ( int )Math.ceil( max[ 1 ] - min[ 1 ] );
 		for ( int i = 0; i < stack.getSize(); ++i )
 		{
 			final int slice  = i + 1;
-			
+
 			final MovingLeastSquaresTransform mlt = new MovingLeastSquaresTransform();
 			mlt.setModel( AffineModel2D.class );
 			mlt.setAlpha( 2.0f );
 			mlt.setMatches( meshes.get( i ).getVA().keySet() );
-			
+
 			final CoordinateTransformMesh mltMesh = new CoordinateTransformMesh( mlt, p.resolutionOutput, stack.getWidth(), stack.getHeight() );
 			final TransformMeshMapping< CoordinateTransformMesh > mltMapping = new TransformMeshMapping< CoordinateTransformMesh >( mltMesh );
-			
+
 			final ImageProcessor source, target;
 			if ( p.rgbWithGreenBackground )
 			{
@@ -945,7 +945,7 @@ J:				for ( int j = i + 1; j < range; )
 				target = stack.getProcessor( slice ).createProcessor( width, height );
 				source = stack.getProcessor( slice );
 			}
-			
+
 			if ( p.interpolate )
 			{
 				mltMapping.mapInterpolated( source, target );
@@ -962,7 +962,7 @@ J:				for ( int j = i + 1; j < range; )
 			}
 			IJ.save( impTarget, p.outputPath + "elastic-" + String.format( "%05d", i ) + ".tif" );
 		}
-		
+
 		IJ.log( "Done." );
 	}
 
@@ -990,7 +990,7 @@ J:				for ( int j = i + 1; j < range; )
 				( e.getKeyCode() == KeyEvent.VK_F1 ) &&
 				( e.getSource() instanceof TextField ) )
 		{
-			
+
 		}
 	}
 
@@ -999,13 +999,13 @@ J:				for ( int j = i + 1; j < range; )
 
 	@Override
 	public void keyTyped(final KeyEvent e) { }
-	
-	
-	
+
+
+
 	final static private class Features implements Serializable
 	{
 		private static final long serialVersionUID = 2668666732018368958L;
-		
+
 		final FloatArray2DSIFT.Param param;
 		final ArrayList< Feature > features;
 		Features( final FloatArray2DSIFT.Param p, final ArrayList< Feature > features )
@@ -1014,7 +1014,7 @@ J:				for ( int j = i + 1; j < range; )
 			this.features = features;
 		}
 	}
-	
+
 	final static private boolean serializeFeatures(
 			final FloatArray2DSIFT.Param param,
 			final ArrayList< Feature > fs,
@@ -1032,11 +1032,11 @@ J:				for ( int j = i + 1; j < range; )
 			return fs.features;
 		return null;
 	}
-	
+
 	final static private class PointMatches implements Serializable
 	{
 		private static final long serialVersionUID = 3718614767497404447L;
-		
+
 		ElasticAlign.Param param;
 		ArrayList< PointMatch > pointMatches;
 		PointMatches( final ElasticAlign.Param p, final ArrayList< PointMatch > pointMatches )
@@ -1045,7 +1045,7 @@ J:				for ( int j = i + 1; j < range; )
 			this.pointMatches = pointMatches;
 		}
 	}
-	
+
 	final static private boolean serializePointMatches(
 			final ElasticAlign.Param param,
 			final ArrayList< PointMatch > pms,
@@ -1053,7 +1053,7 @@ J:				for ( int j = i + 1; j < range; )
 	{
 		return serialize( new PointMatches( param, pms ), path );
 	}
-	
+
 	final static private ArrayList< PointMatch > deserializePointMatches( final ElasticAlign.Param param, final String path )
 	{
 		final Object o = deserialize( path );
@@ -1063,7 +1063,7 @@ J:				for ( int j = i + 1; j < range; )
 			return pms.pointMatches;
 		return null;
 	}
-	
+
 	/** Serializes the given object into the path. Returns false on failure. */
 	static public boolean serialize(final Object ob, final String path) {
 		try {

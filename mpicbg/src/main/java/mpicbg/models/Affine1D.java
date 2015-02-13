@@ -17,20 +17,14 @@
 package mpicbg.models;
 
 /**
+ *
  * @author Tobias Pietzsch <tobias.pietzsch@gmail.com>
+ * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
  */
 public interface Affine1D< T extends Affine1D< T > > extends InvertibleCoordinateTransform
 {
 	public void preConcatenate( final T affine3d );
 	public void concatenate( final T affine3d );
-
-	/**
-	 * Write the 2 parameters of the affine into a float array.  The order is
-	 * m00, m01
-	 *
-	 * @return
-	 */
-	public void toArray( final float[] data );
 
 	/**
 	 * Write the 2 parameters of the affine into a double array.  The order is
@@ -39,15 +33,6 @@ public interface Affine1D< T extends Affine1D< T > > extends InvertibleCoordinat
 	 * @return
 	 */
 	public void toArray( final double[] data );
-
-	/**
-	 * Write the 2 parameters of the affine into a 2x1 float array.  The order
-	 * is
-	 * [0][0] -> m00; [0][1] -> m01
-	 *
-	 * @return
-	 */
-	public void toMatrix( final float[][] data );
 
 	/**
 	 * Write the 2 parameters of the affine into a 2x1 double array.  The order

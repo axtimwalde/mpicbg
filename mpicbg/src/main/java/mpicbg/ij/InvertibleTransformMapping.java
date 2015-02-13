@@ -8,7 +8,7 @@ import mpicbg.models.NoninvertibleModelException;
  * Use an {@link InvertibleCoordinateTransform} to map
  * {@linkplain ImageProcessor source} into {@linkplain ImageProcessor target}
  * which is a {@link Mapping}.
- * 
+ *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.1b
  */
@@ -17,17 +17,17 @@ public class InvertibleTransformMapping< T extends InvertibleCoordinateTransform
 	final protected T transform;
 	@Override
 	final public T getTransform(){ return transform; }
-	
+
 	public InvertibleTransformMapping( final T t )
 	{
 		this.transform = t;
 	}
-	
+
 	//@Override
 	@Override
 	public void map( final ImageProcessor source, final ImageProcessor target )
 	{
-		final float[] t = new float[ 2 ];
+		final double[] t = new double[ 2 ];
 		final int sw = source.getWidth() - 1;
 		final int sh = source.getHeight() - 1;
 		final int tw = target.getWidth();
@@ -54,12 +54,12 @@ public class InvertibleTransformMapping< T extends InvertibleCoordinateTransform
 			}
 		}
 	}
-	
+
 	//@Override
 	@Override
 	public void mapInterpolated( final ImageProcessor source, final ImageProcessor target )
 	{
-		final float[] t = new float[ 2 ];
+		final double[] t = new double[ 2 ];
 		final int sw = source.getWidth() - 1;
 		final int sh = source.getHeight() - 1;
 		final int tw = target.getWidth();
@@ -84,12 +84,12 @@ public class InvertibleTransformMapping< T extends InvertibleCoordinateTransform
 			}
 		}
 	}
-	
+
 	//@Override
 	@Override
 	public void mapInverse( final ImageProcessor source, final ImageProcessor target )
 	{
-		final float[] t = new float[ 2 ];
+		final double[] t = new double[ 2 ];
 		final int sw = source.getWidth() - 1;
 		final int sh = source.getHeight() - 1;
 		final int tw = target.getWidth();
@@ -117,7 +117,7 @@ public class InvertibleTransformMapping< T extends InvertibleCoordinateTransform
 	@Override
 	public void mapInverseInterpolated( final ImageProcessor source, final ImageProcessor target )
 	{
-		final float[] t = new float[ 2 ];
+		final double[] t = new double[ 2 ];
 		final int sw = source.getWidth() - 1;
 		final int sh = source.getHeight() - 1;
 		final int tw = target.getWidth();

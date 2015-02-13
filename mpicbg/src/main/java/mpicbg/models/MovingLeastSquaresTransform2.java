@@ -1,3 +1,19 @@
+/**
+ * License: GPL
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License 2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
 package mpicbg.models;
 
 import java.util.Collection;
@@ -7,16 +23,16 @@ import java.util.Collection;
  * interpolating between a set of control points that are maped exactly on top
  * of each other using landmark based deformation by means of Moving Least
  * Squares as described by \citet{SchaeferAl06}.</p>
- * 
- * <p>This implementation stores the control points in float arrays thus
+ *
+ * <p>This implementation stores the control points in double arrays thus
  * being significantly more memory efficient than the object based
  * {@link MovingLeastSquaresTransform}.  The object count is constant and does
  * not depend on the number of control points.</p>
- * 
- * <p>Note, the {@link #apply(float[])} and {@link #applyInPlace(float[])}
+ *
+ * <p>Note, the {@link #apply(double[])} and {@link #applyInPlace(double[])}
  * methods are not concurrency safe because they use the same {@link Model}
  * instance to execute the local least squares fit.</p>
- * 
+ *
  * BibTeX:
  * <pre>
  * &#64;article{SchaeferAl06,
@@ -33,20 +49,22 @@ import java.util.Collection;
  *   address   = {New York, NY, USA},
  * }
  * </pre>
- * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ *
+ * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
  */
 public class MovingLeastSquaresTransform2 extends AbstractMovingLeastSquaresTransform
 {
-	protected float[][] p;
-	protected float[][] q;
-	protected float[] w;
-	
+	private static final long serialVersionUID = -8809482252029606075L;
+
+	protected double[][] p;
+	protected double[][] q;
+	protected double[] w;
+
 	/**
 	 * Set the control points.  {@link PointMatch PointMatches} are not stored
 	 * by reference but their data is copied into internal data buffers.
-	 * 
-	 * @param matches 
+	 *
+	 * @param matches
 	 */
 	@Override
 	final public void setMatches( final Collection< PointMatch > matches )
@@ -57,17 +75,17 @@ public class MovingLeastSquaresTransform2 extends AbstractMovingLeastSquaresTran
 		 * consistent
 		 */
 		final int n = ( matches.size() > 0 ) ? matches.iterator().next().getP1().getL().length : 0;
-		
-		p = new float[ n ][ matches.size() ];
-		q = new float[ n ][ matches.size() ];
-		w = new float[ matches.size() ];
-		
+
+		p = new double[ n ][ matches.size() ];
+		q = new double[ n ][ matches.size() ];
+		w = new double[ matches.size() ];
+
 		int i = 0;
 		for ( final PointMatch match : matches )
 		{
-			final float[] pp = match.getP1().getL();
-			final float[] qq = match.getP2().getW();
-			
+			final double[] pp = match.getP1().getL();
+			final double[] qq = match.getP2().getW();
+
 			for ( int d = 0; d < n; ++d )
 			{
 				p[ d ][ i ] = pp[ d ];
@@ -81,44 +99,44 @@ public class MovingLeastSquaresTransform2 extends AbstractMovingLeastSquaresTran
 		else
 			throw new NotEnoughDataPointsException( "No matches passed." );
 	}
-	
+
 	/**
 	 * <p>Set the control points passing them as arrays that are used by
 	 * reference.  The leading index is dimension which usually results in a
 	 * reduced object count.   E.g. four 2d points are:</p>
 	 * <pre>
-	 * float[][]{
+	 * double[][]{
 	 *   {x<sub>1</sub>, x<sub>2</sub>, x<sub>3</sub>, x<sub>4</sub>},
 	 *   {y<sub>1</sub>, y<sub>2</sub>, y<sub>3</sub>, y<sub>4</sub>} }
 	 * </pre>
-	 * 
+	 *
 	 * @param p source points
 	 * @param q target points
 	 * @param w weights
 	 */
 	final public void setMatches(
-			final float[][] p,
-			final float[][] q,
-			final float[] w )
+			final double[][] p,
+			final double[][] q,
+			final double[] w )
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
 		this.p = p;
 		this.q = q;
 		this.w = w;
-		
+
 		model.fit( p, q, w );
 	}
-	
+
 	@Override
-	public void applyInPlace( final float[] location )
+	public void applyInPlace( final double[] location )
 	{
-		final float[] ww = new float[ w.length ];
+		final double[] ww = new double[ w.length ];
 		for ( int i = 0; i < w.length; ++i )
 		{
-			float s = 0;
+			double s = 0;
 			for ( int d = 0; d < location.length; ++d )
 			{
-				final float dx = p[ d ][ i ] - location[ d ];
+				final double dx = p[ d ][ i ] - location[ d ];
 				s += dx * dx;
 			}
 			if ( s <= 0 )
@@ -127,15 +145,15 @@ public class MovingLeastSquaresTransform2 extends AbstractMovingLeastSquaresTran
 					location[ d ] = q[ d ][ i ];
 				return;
 			}
-			ww[ i ] = w[ i ] * ( float )weigh( s );
+			ww[ i ] = w[ i ] * weigh( s );
 		}
-		
-		try 
+
+		try
 		{
 			model.fit( p, q, ww );
 			model.applyInPlace( location );
 		}
-		catch ( IllDefinedDataPointsException e ){}
-		catch ( NotEnoughDataPointsException e ){}
+		catch ( final IllDefinedDataPointsException e ){}
+		catch ( final NotEnoughDataPointsException e ){}
 	}
 }

@@ -13,8 +13,6 @@ import ij.process.ShortProcessor;
  *
  * Bilinear interpolation is supported.
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.1b
  */
 abstract public class AbstractTransformMapping< T > implements Mapping< T >
 {
@@ -23,14 +21,14 @@ abstract public class AbstractTransformMapping< T > implements Mapping< T >
 	/* Here comes the ugly part as required by ImageJ for interpolation in z */
 	abstract static public class Interpolator
 	{
-		abstract public int interpolate( final int a, final int b, final float da );
+		abstract public int interpolate( final int a, final int b, final double da );
 
 		final static protected float interpolate( final float a, final float b, final float da )
 		{
 			return da * ( b - a ) + a;
 		}
 
-		final static protected double interpolate( final double a, final double b, final float da )
+		final static protected double interpolate( final double a, final double b, final double da )
 		{
 			return da * ( b - a ) + a;
 		}
@@ -39,29 +37,29 @@ abstract public class AbstractTransformMapping< T > implements Mapping< T >
 	static public class ByteInterpolator extends Interpolator
 	{
 		@Override
-		public int interpolate( final int a, final int b, final float da )
+		public int interpolate( final int a, final int b, final double da )
 		{
-			final float fa = a & 0xff;
-			final float fb = b & 0xff;
-			return Math.round( interpolate( fa, fb, da ) );
+			final double fa = a & 0xff;
+			final double fb = b & 0xff;
+			return ( int )Math.round( interpolate( fa, fb, da ) );
 		}
 	}
 
 	static public class ShortInterpolator extends Interpolator
 	{
 		@Override
-		public int interpolate( final int a, final int b, final float da )
+		public int interpolate( final int a, final int b, final double da )
 		{
-			final float fa = a & 0xffff;
-			final float fb = b & 0xffff;
-			return Math.round( interpolate( fa, fb, da ) );
+			final double fa = a & 0xffff;
+			final double fb = b & 0xffff;
+			return ( int )Math.round( interpolate( fa, fb, da ) );
 		}
 	}
 
 	static public class FloatInterpolator extends Interpolator
 	{
 		@Override
-		public int interpolate( final int a, final int b, final float da )
+		public int interpolate( final int a, final int b, final double da )
 		{
 			final double fa = Float.intBitsToFloat( a );
 			final double fb = Float.intBitsToFloat( b );
@@ -72,19 +70,19 @@ abstract public class AbstractTransformMapping< T > implements Mapping< T >
 	static public class RGBInterpolator extends Interpolator
 	{
 		@Override
-		public int interpolate( final int a, final int b, final float da )
+		public int interpolate( final int a, final int b, final double da )
 		{
-			final float fra = ( a >> 16 ) & 0xff ;
-			final float frb = ( b >> 16 ) & 0xff ;
-			final float fga = ( a >> 8 ) & 0xff ;
-			final float fgb = ( b >> 8 ) & 0xff ;
-			final float fba = a & 0xff ;
-			final float fbb = b & 0xff ;
-			final float fr = interpolate( fra, frb, da );
-			final float fg = interpolate( fga, fgb, da );
-			final float fb = interpolate( fba, fbb, da );
+			final double fra = ( a >> 16 ) & 0xff ;
+			final double frb = ( b >> 16 ) & 0xff ;
+			final double fga = ( a >> 8 ) & 0xff ;
+			final double fgb = ( b >> 8 ) & 0xff ;
+			final double fba = a & 0xff ;
+			final double fbb = b & 0xff ;
+			final double fr = interpolate( fra, frb, da );
+			final double fg = interpolate( fga, fgb, da );
+			final double fb = interpolate( fba, fbb, da );
 
-			return ( Math.round( fr ) << 16 ) | ( Math.round( fg ) << 8 ) | Math.round( fb );
+			return ( ( int )Math.round( fr ) << 16 ) | ( int )( Math.round( fg ) << 8 ) | ( int )Math.round( fb );
 		}
 	}
 

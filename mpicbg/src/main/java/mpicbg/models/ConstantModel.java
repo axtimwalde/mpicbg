@@ -27,20 +27,20 @@ import java.util.Collection;
  */
 public class ConstantModel< A extends Model< A >, M extends ConstantModel< A, M > > extends AbstractModel< M >
 {
-	private static final long serialVersionUID = 6844417923131274267L;
+	private static final long serialVersionUID = 4028319936789363770L;
 
 	final protected A model;
-	
+
 	public ConstantModel( final A model )
 	{
 		this.model = model;
 	}
-	
+
 	public A getModel()
 	{
 		return model;
 	}
-	
+
 	@Override
 	public int getMinNumMatches()
 	{
@@ -63,15 +63,15 @@ public class ConstantModel< A extends Model< A >, M extends ConstantModel< A, M 
 	}
 
 	@Override
-	public float[] apply( final float[] location )
+	public double[] apply( final double[] location )
 	{
-		final float[] copy = location.clone();
+		final double[] copy = location.clone();
 		applyInPlace( copy );
 		return copy;
 	}
 
 	@Override
-	public void applyInPlace( final float[] location )
+	public void applyInPlace( final double[] location )
 	{
 		model.applyInPlace( location );
 	}

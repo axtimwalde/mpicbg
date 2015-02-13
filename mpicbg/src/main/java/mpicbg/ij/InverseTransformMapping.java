@@ -8,26 +8,27 @@ import mpicbg.models.NoninvertibleModelException;
  * Use an {@link InverseCoordinateTransform} to map
  * {@linkplain ImageProcessor source} into {@linkplain ImageProcessor target}
  * which is a {@link Mapping}.
- * 
+ *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.1b
  */
 public class InverseTransformMapping< T extends InverseCoordinateTransform > implements Mapping< T >
 {
 	final protected T transform;
-	final public T getTransform(){ return transform; }	
-	
+	@Override
+	final public T getTransform(){ return transform; }
+
 	public InverseTransformMapping( final T t )
 	{
 		this.transform = t;
 	}
-	
+
 	@Override
 	public void map(
 			final ImageProcessor source,
 			final ImageProcessor target )
 	{
-		final float[] t = new float[ 2 ];
+		final double[] t = new double[ 2 ];
 		final int sw = source.getWidth() - 1;
 		final int sh = source.getHeight() - 1;
 		final int tw = target.getWidth();
@@ -50,17 +51,17 @@ public class InverseTransformMapping< T extends InverseCoordinateTransform > imp
 							ty <= sh )
 						target.putPixel( x, y, source.getPixel( tx, ty ) );
 				}
-				catch ( NoninvertibleModelException e ){}
+				catch ( final NoninvertibleModelException e ){}
 			}
 		}
 	}
-	
+
 	@Override
 	public void mapInterpolated(
 			final ImageProcessor source,
 			final ImageProcessor target )
 	{
-		final float[] t = new float[ 2 ];
+		final double[] t = new double[ 2 ];
 		final int sw = source.getWidth() - 1;
 		final int sh = source.getHeight() - 1;
 		final int tw = target.getWidth();
@@ -81,7 +82,7 @@ public class InverseTransformMapping< T extends InverseCoordinateTransform > imp
 							t[ 1 ] <= sh )
 						target.putPixel( x, y, source.getPixelInterpolated( t[ 0 ], t[ 1 ] ) );
 				}
-				catch ( NoninvertibleModelException e ){}
+				catch ( final NoninvertibleModelException e ){}
 			}
 		}
 	}

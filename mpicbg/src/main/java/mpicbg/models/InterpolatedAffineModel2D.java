@@ -22,11 +22,11 @@ import java.util.Collection;
 /**
  * 2D affine specialization of {@link InterpolatedModel}.  Implements
  * interpolation directly by linear matrix interpolation.
- * 
- * No multiple inheritance in Java, so it cannot be an AffineModel2D
- * by itself. 
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * No multiple inheritance in Java, so it cannot be an AffineModel2D
+ * by itself.
+ *
+ * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
  */
 final public class InterpolatedAffineModel2D<
 		A extends Model< A > & Affine2D< A >,
@@ -34,28 +34,28 @@ final public class InterpolatedAffineModel2D<
 	extends InvertibleInterpolatedModel< A, B, InterpolatedAffineModel2D< A, B > >
 	implements Affine2D< InterpolatedAffineModel2D< A, B > >, InvertibleBoundable
 {
-	private static final long serialVersionUID = 3986603413957889626L;
-	
+	private static final long serialVersionUID = -5646709386458263066L;
+
 	final protected AffineModel2D affine = new AffineModel2D();
-	final protected float[] afs = new float[ 6 ];
-	final protected float[] bfs = new float[ 6 ];
-	
-	public InterpolatedAffineModel2D( final A model, final B regularizer, final float lambda )
+	final protected double[] afs = new double[ 6 ];
+	final protected double[] bfs = new double[ 6 ];
+
+	public InterpolatedAffineModel2D( final A model, final B regularizer, final double lambda )
 	{
 		super( model, regularizer, lambda );
 		interpolate();
 	}
-	
+
 	protected void interpolate()
 	{
 		a.toArray( afs );
 		b.toArray( bfs );
 		for ( int i = 0; i < afs.length; ++i )
 			afs[ i ] = afs[ i ] * l1 + bfs[ i ] * lambda;
-		
+
 		affine.set( afs[ 0 ], afs[ 1 ], afs[ 2 ], afs[ 3 ], afs[ 4 ], afs[ 5 ] );
 	}
-	
+
 	@Override
 	public < P extends PointMatch > void fit( final Collection< P > matches ) throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
@@ -80,29 +80,29 @@ final public class InterpolatedAffineModel2D<
 	}
 
 	@Override
-	public float[] apply( final float[] location )
+	public double[] apply( final double[] location )
 	{
-		final float[] copy = location.clone();
+		final double[] copy = location.clone();
 		applyInPlace( copy );
 		return copy;
 	}
 
 	@Override
-	public void applyInPlace( final float[] location )
+	public void applyInPlace( final double[] location )
 	{
 		affine.applyInPlace( location );
 	}
 
 	@Override
-	public float[] applyInverse( final float[] point ) throws NoninvertibleModelException
+	public double[] applyInverse( final double[] point ) throws NoninvertibleModelException
 	{
-		final float[] copy = point.clone();
+		final double[] copy = point.clone();
 		applyInverseInPlace( copy );
 		return copy;
 	}
 
 	@Override
-	public void applyInverseInPlace( final float[] point ) throws NoninvertibleModelException
+	public void applyInverseInPlace( final double[] point ) throws NoninvertibleModelException
 	{
 		affine.applyInverseInPlace( point );
 	}
@@ -155,21 +155,9 @@ final public class InterpolatedAffineModel2D<
 	}
 
 	@Override
-	public void toArray( final float[] data )
-	{
-		affine.toArray( data );
-	}
-
-	@Override
 	public void toArray( final double[] data )
 	{
 		affine.toArray( data );
-	}
-
-	@Override
-	public void toMatrix( final float[][] data )
-	{
-		affine.toMatrix( data );
 	}
 
 	@Override
@@ -177,33 +165,33 @@ final public class InterpolatedAffineModel2D<
 	{
 		affine.toMatrix( data );
 	}
-	
+
 	/**
 	 * Initialize the model such that the respective affine transform is:
-	 * 
+	 *
 	 * <pre>
 	 * m00 m01 m02
 	 * m10 m11 m12
 	 * 0   0   1
 	 * </pre>
-	 * 
+	 *
 	 * @param m00
 	 * @param m10
-	 * 
+	 *
 	 * @param m01
 	 * @param m11
-	 * 
+	 *
 	 * @param m02
 	 * @param m12
 	 */
-	final public void set( final float m00, final float m10, final float m01, final float m11, final float m02, final float m12 )
+	final public void set( final double m00, final double m10, final double m01, final double m11, final double m02, final double m12 )
 	{
 		affine.set( m00, m10, m01, m11, m02, m12 );
 	}
-	
+
 	/**
 	 * Initialize the model with the parameters of an {@link AffineTransform}.
-	 * 
+	 *
 	 * @param a
 	 */
 	final public void set( final AffineTransform a )
@@ -212,13 +200,13 @@ final public class InterpolatedAffineModel2D<
 	}
 
 	@Override
-	public void estimateBounds( final float[] min, final float[] max )
+	public void estimateBounds( final double[] min, final double[] max )
 	{
 		affine.estimateBounds( min, max );
 	}
 
 	@Override
-	public void estimateInverseBounds( final float[] min, final float[] max ) throws NoninvertibleModelException
+	public void estimateInverseBounds( final double[] min, final double[] max ) throws NoninvertibleModelException
 	{
 		affine.estimateInverseBounds( min, max );
 	}

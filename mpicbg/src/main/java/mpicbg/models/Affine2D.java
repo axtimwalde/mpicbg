@@ -19,68 +19,48 @@ package mpicbg.models;
 import java.awt.geom.AffineTransform;
 
 /**
- * 
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.1a
+ * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
  */
 public interface Affine2D< T extends Affine2D< T > > extends InvertibleCoordinateTransform
 {
 	/**
 	 * Create an {@link AffineTransform} representing the current parameters
 	 * the model.
-	 * 
+	 *
 	 * @return {@link AffineTransform}
 	 */
 	public AffineTransform createAffine();
-	
+
 	/**
 	 * Create an {@link AffineTransform} representing the inverse of the
 	 * current parameters of the model.
-	 * 
+	 *
 	 * @return {@link AffineTransform}
 	 */
 	public AffineTransform createInverseAffine();
-	
+
 	public void preConcatenate( final T affine2d );
 	public void concatenate( final T affine2d );
-	
-	/**
-	 * Write the 6 parameters of the affine into a float array.  The order is
-	 * m00, m10, m01, m11, m02, m12
-	 * 
-	 * @return
-	 */
-	public void toArray( final float[] data );
-	
+
 	/**
 	 * Write the 6 parameters of the affine into a double array.  The order is
 	 * m00, m10, m01, m11, m02, m12
-	 * 
+	 *
 	 * @return
 	 */
 	public void toArray( final double[] data );
-	
-	/**
-	 * Write the 6 parameters of the affine into a 3x2 float array.  The order
-	 * is
-	 * [0][0] -> m00; [0][1] -> m01; [0][2] -> m02;
-	 * [1][0] -> m10; [1][1] -> m11; [1][2] -> m12;
-	 * 
-	 * @return
-	 */
-	public void toMatrix( final float[][] data );
-	
+
 	/**
 	 * Write the 6 parameters of the affine into a 3x2 double array.  The order
 	 * is
 	 * [0][0] -> m00; [0][1] -> m01; [0][2] -> m02;
 	 * [1][0] -> m10; [1][1] -> m11; [1][2] -> m12;
-	 * 
+	 *
 	 * @return
 	 */
 	public void toMatrix( final double[][] data );
-	
+
 	@Override
 	public T createInverse();
 }

@@ -16,12 +16,13 @@
  */
 package mpicbg.models;
 
+import java.io.Serializable;
+
 /**
- * 
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
  */
-public interface PointFactory< P extends Point >
+public interface PointFactory< P extends Point > extends Serializable
 {
-	P createPoint( final float[] l );
+	P createPoint( final double[] l );
 }

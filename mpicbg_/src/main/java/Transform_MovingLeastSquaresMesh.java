@@ -1,16 +1,27 @@
-import ij.gui.*;
+import ij.gui.GenericDialog;
+
+import java.awt.Color;
 
 import mpicbg.ij.InteractiveMapping;
 import mpicbg.ij.TransformMeshMapping;
-import mpicbg.models.*;
-
-import java.awt.Color;
+import mpicbg.models.AbstractModel;
+import mpicbg.models.AffineModel2D;
+import mpicbg.models.IllDefinedDataPointsException;
+import mpicbg.models.InvertibleCoordinateTransform;
+import mpicbg.models.MovingLeastSquaresMesh;
+import mpicbg.models.NoninvertibleModelException;
+import mpicbg.models.NotEnoughDataPointsException;
+import mpicbg.models.Point;
+import mpicbg.models.PointMatch;
+import mpicbg.models.RigidModel2D;
+import mpicbg.models.SimilarityModel2D;
+import mpicbg.models.TranslationModel2D;
 
 /**
  * Smooth image deformation using landmark based deformation by means
  * of Moving Least Squares as described by \citet{SchaeferAl06} inspired by the
  * implementation of Johannes Schindelin.
- * 
+ *
  * BibTeX:
  * <pre>
  * @article{SchaeferAl06,
@@ -27,7 +38,7 @@ import java.awt.Color;
  *   address   = {New York, NY, USA},
  * }
  * </pre>
- * 
+ *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.2b
  */
@@ -40,31 +51,31 @@ public class Transform_MovingLeastSquaresMesh extends InteractiveMapping
 		"ENTER - Apply the deformation." + NL +
 		"ESC - Return to the original image." + NL +
 		"U - Toggle mesh display.";
-	
+
 	/**
 	 * number of vertices in horizontal direction
 	 */
 	private static int numX = 32;
-	
+
 	/**
 	 * alpha [0 smooth, 1 less smooth ;)]
 	 */
 	private static float alpha = 1.0f;
-	
+
 	/**
 	 * local transformation model
 	 */
 	final static private String[] methods = new String[]{ "Translation", "Rigid", "Similarity", "Affine" };
 	static private int method = 1;
-	
+
 	protected MovingLeastSquaresMesh< ? extends AbstractModel< ? > > mesh;
-	
+
 	@Override
 	final protected void createMapping()
 	{
 		mapping = new TransformMeshMapping< MovingLeastSquaresMesh< ? > >( mesh );
 	}
-	
+
 	@Override
 	final protected void updateMapping() throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
@@ -72,36 +83,36 @@ public class Transform_MovingLeastSquaresMesh extends InteractiveMapping
 		mesh.updateAffines();
 		updateIllustration();
 	}
-	
+
 	@Override
-	final protected void addHandle( int x, int y )
+	final protected void addHandle( final int x, final int y )
 	{
-		float[] l = new float[]{ x, y };
+		final double[] l = new double[]{ x, y };
 		synchronized ( mesh )
 		{
-			InvertibleCoordinateTransform ict = ( InvertibleCoordinateTransform )mesh.findClosest( l ).getModel();
+			final InvertibleCoordinateTransform ict = ( InvertibleCoordinateTransform )mesh.findClosest( l ).getModel();
 			try
 			{
 				ict.applyInverseInPlace( l );
-				Point here = new Point( l );
-				Point there = new Point( l );
+				final Point here = new Point( l );
+				final Point there = new Point( l );
 				hooks.add( here );
 				here.apply( ict );
 				mesh.addMatchWeightedByDistance( new PointMatch( there, here, 10f ), alpha );
 			}
-			catch ( NoninvertibleModelException e ){ e.printStackTrace(); }
-		}	
+			catch ( final NoninvertibleModelException e ){ e.printStackTrace(); }
+		}
 	}
-	
+
 	@Override
-	final protected void updateHandles( int x, int y )
+	final protected void updateHandles( final int x, final int y )
 	{
-		float[] l = hooks.get( targetIndex ).getW();
-	
+		final double[] l = hooks.get( targetIndex ).getW();
+
 		l[ 0 ] = x;
 		l[ 1 ] = y;
 	}
-	
+
 	@Override
 	final public void init()
 	{
@@ -112,16 +123,16 @@ public class Transform_MovingLeastSquaresMesh extends InteractiveMapping
 		gd.addCheckbox( "_Interactive_preview", showPreview );
 		gd.addMessage( man );
 		gd.showDialog();
-		
+
 		if (gd.wasCanceled()) return;
-		
+
 		numX = ( int )gd.getNextNumber();
 		alpha = ( float )gd.getNextNumber();
-		
+
 		method = gd.getNextChoiceIndex();
-		
+
 		showPreview = gd.getNextBoolean();
-		
+
 		switch ( method )
 		{
 		case 0:
@@ -140,7 +151,7 @@ public class Transform_MovingLeastSquaresMesh extends InteractiveMapping
 			return;
 		}
     }
-	
+
 	@Override
 	final protected void updateIllustration()
 	{

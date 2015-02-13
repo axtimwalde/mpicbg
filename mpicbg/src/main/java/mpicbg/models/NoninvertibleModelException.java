@@ -1,12 +1,25 @@
+/**
+ * License: GPL
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License 2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
 package mpicbg.models;
-
-import java.lang.Exception;
 
 /**
  * Signalizes that a {@link AbstractModel} is not invertible.
- * 
+ *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.1b
  */
 public class NoninvertibleModelException extends Exception
 {
@@ -17,21 +30,21 @@ public class NoninvertibleModelException extends Exception
 	{
 		super( "Non invertible Model." );
 	}
-	
 
-	public NoninvertibleModelException( String message )
+
+	public NoninvertibleModelException( final String message )
 	{
 		super( message );
 	}
 
-	
-	public NoninvertibleModelException( Throwable cause )
+
+	public NoninvertibleModelException( final Throwable cause )
 	{
 		super( cause );
 	}
 
-	
-	public NoninvertibleModelException( String message, Throwable cause )
+
+	public NoninvertibleModelException( final String message, final Throwable cause )
 	{
 		super( message, cause );
 	}

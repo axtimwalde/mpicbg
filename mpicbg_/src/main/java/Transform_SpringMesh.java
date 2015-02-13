@@ -36,29 +36,29 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 {
 	// number of vertices in horizontal direction
 	private static int numX = 32;
-	
+
 	private static String rawFileName = "figure";
-	
+
 	ImagePlus imp;
 	ImageProcessor ip;
 	ImageProcessor ipOrig;
-	
-	protected TransformMeshMapping mapping; 
-	
+
+	protected TransformMeshMapping mapping;
+
 	final ArrayList< Point > hooks = new ArrayList< Point >();
 	PointRoi handles;
-	
+
 	protected SpringMesh mesh;
-	
+
 	int targetIndex = -1;
-	
+
 	boolean pleaseOptimize = false;
 	boolean pleaseIllustrate = false;
 	boolean showMesh = false;
 	boolean showSprings = false;
-	
+
 	final Vector< Roi > displayList = new Vector< Roi >();
-	
+
 	final class OptimizeThread extends Thread
 	{
 		@Override
@@ -70,7 +70,7 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 				{
 					if ( pleaseOptimize )
 					{
-						mesh.optimize( Float.MAX_VALUE, 10000, 1000 );
+						mesh.optimize( Double.MAX_VALUE, 10000, 1000 );
 						pleaseIllustrate = false;
 						apply();
 					}
@@ -81,7 +81,7 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 			}
 		}
 	}
-	
+
 	final class IllustrateThread extends Thread
 	{
 		@Override
@@ -111,66 +111,66 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 
 	private Thread opt;
 	private Thread ill;
-	
+
 	@Override
 	public void run( final String arg )
     {
 		hooks.clear();
-		
+
 		imp = IJ.getImage();
 		ip = imp.getProcessor();
 		ipOrig = ip.duplicate();
-		
+
 		final GenericDialog gd = new GenericDialog( "Elastic Moving Least Squares Transform" );
 		gd.addNumericField( "Vertices_per_row :", numX, 0 );
 		gd.showDialog();
-		
+
 		if (gd.wasCanceled()) return;
-		
+
 		numX = ( int )gd.getNextNumber();
-		
+
 		// intitialize the transform mesh
 		mesh = new SpringMesh( numX, imp.getWidth(), imp.getHeight(), 0.01f, Float.MAX_VALUE, 0.9f );
-		
+
 		// test passive vertices
 		final Random rnd = new Random( 0 );
 		for ( int i = 0; i < 5; ++i )
-			mesh.addPassiveVertex( new Vertex( new float[]{ rnd.nextInt( imp.getWidth() - 1 ), rnd.nextInt( imp.getHeight() - 1 ) } ) );
-		
+			mesh.addPassiveVertex( new Vertex( new double[]{ rnd.nextInt( imp.getWidth() - 1 ), rnd.nextInt( imp.getHeight() - 1 ) } ) );
+
 		mapping = new TransformMeshMapping( mesh );
-		
-		
+
+
 //		Point p = new Point( new float[]{ ip.getWidth() / 4, ip.getHeight() / 4 } );
 //		hooks.add( p );
 //		mesh.addVertex( new Vertex( p ), 10 );
-//			
+//
 //		p = new Point( new float[]{ 3 * ip.getWidth() / 4, ip.getHeight() / 2 } );
 //		hooks.add( p );
 //		mesh.addVertex( new Vertex( p ), 10 );
-//			
+//
 //		p = new Point( new float[]{ ip.getWidth() / 4, 3 * ip.getHeight() / 4 } );
 //		hooks.add( p );
 //		mesh.addVertex( new Vertex( p ), 10 );
-//		
-//		
+//
+//
 //		handles = new PointRoi(
 //				new int[]{ ip.getWidth() / 4, 3 * ip.getWidth() / 4, ip.getWidth() / 4 },
 //				new int[]{ ip.getHeight() / 4, ip.getHeight() / 2, 3 * ip.getHeight() / 4 }, hooks.size() );
 //		imp.setRoi( handles );
-		
+
 		Toolbar.getInstance().setTool( Toolbar.getInstance().addTool( "Add_and_drag_handles." ) );
-		
-		
+
+
 		opt = new OptimizeThread();
 		ill = new IllustrateThread();
 		opt.start();
 		ill.start();
-		
+
 		imp.getCanvas().addMouseListener( this );
 		imp.getCanvas().addMouseMotionListener( this );
 		imp.getCanvas().addKeyListener( this );
     }
-	
+
 	void illustrate()
 	{
 		Shape shape;
@@ -198,41 +198,41 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 			}
 		}
 	}
-	
+
 	public void apply()
 	{
 		//mapping.mapInterpolated( ipOrig, ip );
 		//imp.updateAndDraw();
 	}
-	
+
 	private void updateRoi()
 	{
 		final int[] x = new int[ hooks.size() ];
 		final int[] y = new int[ hooks.size() ];
-		
+
 		for ( int i = 0; i < hooks.size(); ++ i )
 		{
-			final float[] l = hooks.get( i ).getW();
+			final double[] l = hooks.get( i ).getW();
 			x[ i ] = ( int )l[ 0 ];
 			y[ i ] = ( int )l[ 1 ];
 		}
 		handles = new PointRoi( x, y, hooks.size() );
 		imp.setRoi( handles );
 	}
-	
+
 	@Override
 	public void keyPressed( final KeyEvent e)
 	{
 		if ( e.getKeyCode() == KeyEvent.VK_ESCAPE || e.getKeyCode() == KeyEvent.VK_ENTER )
 		{
 			opt.interrupt();
-			
+
 			showMesh = false;
 			showSprings = false;
 			ill.interrupt();
-			
+
 			pleaseIllustrate = false;
-			
+
 			if ( imp != null )
 			{
 				imp.getCanvas().removeMouseListener( this );
@@ -270,7 +270,7 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 					ill.interrupt();
 					imp.getCanvas().setDisplayList( null );
 				}
-			}			
+			}
 		}
 		else if (
 				e.getKeyCode() == KeyEvent.VK_G )
@@ -280,16 +280,16 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 			final String name = sd.getFileName();
 			rawFileName = name.replaceAll( "\\.svg$", "" );
 
-			if ( name == null || name == "" ) 
+			if ( name == null || name == "" )
 			{
 				IJ.error( "No filename selected." );
 				return;
 			}
-					
+
 			final String fileName = directory + name;
-			
+
 			final String g = mesh.illustrateMeshSVG();
-			
+
 			try
 			{
 				final InputStream is = getClass().getResourceAsStream( "template.svg" );
@@ -297,10 +297,10 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 				is.read( bytes );
 				String svg = new String( bytes );
 				svg = svg.replaceAll( "<!--g-->", g );
-				
+
 				IJ.log( svg );
-				
-				final PrintStream ps = new PrintStream( fileName ); 
+
+				final PrintStream ps = new PrintStream( fileName );
 				ps.print( svg );
 				ps.close();
 			}
@@ -318,7 +318,7 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 	public void keyReleased( final KeyEvent e ){}
 	@Override
 	public void keyTyped( final KeyEvent e ){}
-	
+
 	@Override
 	public void mousePressed( final MouseEvent e )
 	{
@@ -328,34 +328,34 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 			final ImageWindow win = WindowManager.getCurrentWindow();
 			final int xm = win.getCanvas().offScreenX( e.getX() );
 			final int ym = win.getCanvas().offScreenY( e.getY() );
-			
+
 			// find the closest handle to drag it
 			double target_d = Double.MAX_VALUE;
 			for ( int i = 0; i < hooks.size(); ++i )
 			{
-				final float[] l = hooks.get( i ).getW(); 
+				final double[] l = hooks.get( i ).getW();
 				final double dx = win.getCanvas().getMagnification() * ( l[ 0 ] - xm );
 				final double dy = win.getCanvas().getMagnification() * ( l[ 1 ] - ym );
 				final double d =  dx * dx + dy * dy;
-				
+
 				if ( d < 64.0 && d < target_d )
 				{
 					targetIndex = i;
 					target_d = d;
 				}
 			}
-			
+
 			// no handle next to the mouse so create a new one
 			if ( targetIndex == -1 )
 			{
-				final float[] w = new float[]{ xm, ym };
-				final float[] l = mesh.findClosestTargetVertex( w ).getL(); 
-				
+				final double[] w = new double[]{ xm, ym };
+				final double[] l = mesh.findClosestTargetVertex( w ).getL();
+
 				synchronized ( mesh )
 				{
 					final Vertex p = new Vertex( l, w );
 					hooks.add( p );
-					
+
 					mesh.addVertex( p, 1 );
 					//mesh.addVertexWeightedByDistance( new Vertex( p ), 10, 1.0f );
 				}
@@ -367,12 +367,12 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 	@Override
 	public void mouseExited( final MouseEvent e ) {}
 	@Override
-	public void mouseClicked( final MouseEvent e ) {}	
+	public void mouseClicked( final MouseEvent e ) {}
 	@Override
 	public void mouseEntered( final MouseEvent e ) {}
 	@Override
 	public void mouseReleased( final MouseEvent e ){}
-	
+
 	@Override
 	public void mouseDragged( final MouseEvent e )
 	{
@@ -381,14 +381,14 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 			final ImageWindow win = WindowManager.getCurrentWindow();
 			final int xm = win.getCanvas().offScreenX( e.getX() );
 			final int ym = win.getCanvas().offScreenY( e.getY() );
-			
-			final float[] l = hooks.get( targetIndex ).getW();
-			
+
+			final double[] l = hooks.get( targetIndex ).getW();
+
 			l[ 0 ] = xm;
 			l[ 1 ] = ym;
-			
+
 			updateRoi();
-			
+
 			if ( showMesh || showSprings )
 				synchronized ( ill )
 				{
@@ -402,11 +402,11 @@ public class Transform_SpringMesh implements PlugIn, MouseListener,  MouseMotion
 			}
 		}
 	}
-	
+
 	@Override
 	public void mouseMoved( final MouseEvent e ){}
-	
-	
+
+
 	public static String modifiers( final int flags )
 	{
 		String s = " [ ";

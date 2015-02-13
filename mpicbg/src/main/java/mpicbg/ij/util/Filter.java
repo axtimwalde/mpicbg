@@ -6,7 +6,7 @@ import ij.process.ImageProcessor;
 import mpicbg.util.Util;
 
 /**
- * 
+ *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.2b
  */
@@ -14,7 +14,7 @@ public class Filter
 {
 	/**
 	 * Normalize data numerically such that the sum of all fields is 1.0
-	 * 
+	 *
 	 * @param data
 	 */
 	final static public void normalize( final float[] data )
@@ -22,16 +22,16 @@ public class Filter
 		float sum = 0;
 		for ( final float d : data )
 			sum += d;
-		
+
 		for ( int i = 0; i < data.length; ++i )
 			data[ i ] /= sum;
 	}
-	
+
 	/**
      * Create a non-normalized 1d-Gaussian kernel of appropriate size.
      *
      * @param sigma Standard deviation (&sigma;) of the Gaussian kernel
-     * 
+     *
      * @return Gaussian kernel of appropriate size
      */
     final static public float[] createGaussianKernel( final float sigma )
@@ -61,7 +61,7 @@ public class Filter
 
 		return kernel;
 	}
-    
+
     /**
      * Create a normalized 1d-Gaussian kernel of appropriate size.
      * Normalization is performed numerically such that the sum of all fields
@@ -70,7 +70,7 @@ public class Filter
      * &sigma;/&radic;2&pi;
      *
      * @param sigma Standard deviation (&sigma;) of the Gaussian kernel
-     * 
+     *
      * @return Gaussian kernel of appropriate size
      */
     final static public float[] createNormalizedGaussianKernel( final float sigma )
@@ -79,18 +79,18 @@ public class Filter
 		normalize( kernel );
 		return kernel;
 	}
-    
-    
 
-    
+
+
+
     /**
 	 * Create a non-normalized 2d-Gaussian impulse with appropriate size whose
 	 * center is slightly shifted away from the middle.
-	 * 
+	 *
 	 * @param sigma Standard deviation (&sigma;) of the Gaussian kernel
      * @param offsetX horizontal center shift [0.0,0.5]
      * @param offsetY vertical center shift [0.0,0.5]
-     * 
+     *
      * @return
      */
     final static public FloatProcessor createShiftedGaussianKernel(
@@ -108,7 +108,7 @@ public class Filter
 		{
 			final int size = Math.max( 3, ( int ) ( 2 * Math.round( 3 * sigma ) + 1 ) );
 			final float twoSquareSigma = 2 * sigma * sigma;
-			
+
 			kernel = new FloatProcessor( size, size );
 			for ( int x = size - 1; x >= 0; --x )
 			{
@@ -123,7 +123,7 @@ public class Filter
 		}
 		return kernel;
 	}
-    
+
     /**
      * Create a non-normalized 2d-Gaussian impulse with appropriate size whose
 	 * center is slightly shifted away from the middle.  It turned out to be
@@ -132,7 +132,7 @@ public class Filter
      * &sigma;<sup>2</sup>/2&pi;)
      *
      * @param sigma Standard deviation (&sigma;) of the Gaussian kernel
-     * 
+     *
      * @return Gaussian kernel of appropriate size
      */
     final static public FloatProcessor createNormalizedShiftedGaussianKernel(
@@ -148,11 +148,11 @@ public class Filter
 	final public static FloatProcessor[] createGradients( final FloatProcessor array )
 	{
 		final int width = array.getWidth();
-		final int height = array.getHeight();		
+		final int height = array.getHeight();
 		final FloatProcessor[] gradients = new FloatProcessor[ 2 ];
 		gradients[ 0 ] = new FloatProcessor( width, height );
 		gradients[ 1 ] = new FloatProcessor( width, height );
-		
+
 		final float[] data = ( float[] )array.getPixels();
 		final float[] rData = ( float[] )gradients[ 0 ].getPixels();
 		final float[] phiData = ( float[] )gradients[ 1 ].getPixels();
@@ -173,22 +173,22 @@ public class Filter
 
 				/* r */
 				rData[ ro[ 1 ] + x ] = ( float ) Math.sqrt( Math.pow( der_x, 2 ) + Math.pow( der_y, 2 ) );
-				
+
 				/* phi */
 				phiData[ ro[ 1 ] + x ] = ( float ) Math.atan2( der_y, der_x );
 			}
 		}
 		return gradients;
 	}
-    
+
     /**
 	 * Create a convolved image with a horizontal and a vertical kernel
 	 * simple straightforward, not optimized---replace this with a trusted better version soon
-	 * 
+	 *
 	 * @param input the input image
 	 * @param h horizontal kernel
 	 * @param v vertical kernel
-	 * 
+	 *
 	 * @return convolved image
 	 */
 	final static public FloatProcessor createConvolveSeparable(
@@ -200,16 +200,16 @@ public class Filter
 		convolveSeparable( output, h, v );
 		return output;
 	}
-	
-	
+
+
 	/**
 	 * Convolve an image with a horizontal and a vertical kernel
 	 * simple straightforward, not optimized---replace this with a trusted better version soon
-	 * 
+	 *
 	 * @param input the input image
 	 * @param h horizontal kernel
 	 * @param v vertical kernel
-	 * 
+	 *
 	 * @return convolved image
 	 */
 	final static public void convolveSeparable(
@@ -219,18 +219,18 @@ public class Filter
 	{
 		final int width = input.getWidth();
 		final int height = input.getHeight();
-		
+
 		final FloatProcessor temp = new FloatProcessor( width, height );
-		
+
 		final float[] inputData = ( float[] )input.getPixels();
 		final float[] tempData = ( float[] )temp.getPixels();
-		
+
 		final int hl = h.length / 2;
 		final int vl = v.length / 2;
-		
+
 		int xl = width - h.length + 1;
 		int yl = height - v.length + 1;
-		
+
 		// create lookup tables for coordinates outside the image range
 		final int[] xb = new int[ h.length + hl - 1 ];
 		final int[] xa = new int[ h.length + hl - 1 ];
@@ -239,7 +239,7 @@ public class Filter
 			xb[ i ] = Util.pingPong( i - hl, width );
 			xa[ i ] = Util.pingPong( i + xl, width );
 		}
-		
+
 		final int[] yb = new int[ v.length + vl - 1 ];
 		final int[] ya = new int[ v.length + vl - 1 ];
 		for ( int i = 0; i < yb.length; ++i )
@@ -247,10 +247,10 @@ public class Filter
 			yb[ i ] = width * Util.pingPong( i - vl, height );
 			ya[ i ] = width * Util.pingPong( i + yl, height );
 		}
-		
+
 		xl += hl;
 		yl += vl;
-		
+
 		// horizontal convolution per row
 		final int rl = height * width;
 		for ( int r = 0; r < rl; r += width )
@@ -311,22 +311,22 @@ public class Filter
 			}
 		}
 	}
-	
-	
+
+
 	/**
 	 * Smooth with a Gaussian kernel that represents downsampling at a given
 	 * scale factor and sourceSigma.
 	 */
 	final static public void smoothForScale(
 			final FloatProcessor source,
-			final float scale,
+			final double scale,
 			final float sourceSigma,
 			final float targetSigma )
 	{
 		assert scale <= 1.0f : "Downsampling requires a scale factor < 1.0";
-		
-		final float s = targetSigma / scale;
-		final float v = s * s - sourceSigma * sourceSigma;
+
+		final double s = targetSigma / scale;
+		final double v = s * s - sourceSigma * sourceSigma;
 		if ( v <= 0 )
 			return;
 		final float sigma = ( float )Math.sqrt( v );
@@ -334,53 +334,53 @@ public class Filter
 //		convolveSeparable( source, kernel, kernel );
 		new GaussianBlur().blurFloat( source, sigma, sigma, 0.01 );
 	}
-	
-	
+
+
 	/**
 	 * Create a downsampled {@link FloatProcessor}.
-	 * 
+	 *
 	 * @param source the source image
 	 * @param scale scaling factor
 	 * @param sourceSigma the Gaussian at which the source was sampled (guess 0.5 if you do not know)
 	 * @param targetSigma the Gaussian at which the target will be sampled
-	 * 
+	 *
 	 * @return a new {@link FloatProcessor}
 	 */
 	final static public FloatProcessor createDownsampled(
 			final FloatProcessor source,
-			final float scale,
+			final double scale,
 			final float sourceSigma,
 			final float targetSigma )
 	{
 		assert scale <= 1.0f : "Downsampling requires a scale factor < 1.0";
-		
+
 		final int ow = source.getWidth();
 		final int oh = source.getHeight();
-		final int w = Math.round( ow * scale );
-		final int h = Math.round( oh * scale );
-		
+		final int w = ( int )Math.round( ow * scale );
+		final int h = ( int )Math.round( oh * scale );
+
 		final FloatProcessor temp = ( FloatProcessor )source.duplicate();
 		temp.setMinAndMax( source.getMin(), source.getMax() );
-		
+
 		smoothForScale( temp, scale, sourceSigma, targetSigma );
 		if ( scale == 1.0f ) return temp;
-		
+
 		final float[] tempPixels = ( float[] )temp.getPixels();
-		
+
 		final FloatProcessor target = new FloatProcessor( w, h );
 		target.setMinAndMax( source.getMin(), source.getMax() );
 		final float[] targetPixels = ( float[] )target.getPixels();
-		
+
 		/* LUT for scaled pixel locations */
 		final int ow1 = ow - 1;
 		final int oh1 = oh - 1;
 		final int[] lutx = new int[ w ];
 		for ( int x = 0; x < w; ++x )
-			lutx[ x ] = Math.min( ow1, Math.max( 0, Math.round( x / scale ) ) );
+			lutx[ x ] = Math.min( ow1, Math.max( 0, ( int )Math.round( x / scale ) ) );
 		final int[] luty = new int[ h ];
 		for ( int y = 0; y < h; ++y )
-			luty[ y ] = Math.min( oh1, Math.max( 0, Math.round( y / scale ) ) );
-		
+			luty[ y ] = Math.min( oh1, Math.max( 0, ( int )Math.round( y / scale ) ) );
+
 		for ( int y = 0; y < h; ++y )
 		{
 			final int p = y * w;
@@ -388,61 +388,61 @@ public class Filter
 			for ( int x = 0; x < w; ++x )
 				targetPixels[ p + x ] = tempPixels[ q + lutx[ x ] ];
 		}
-		
+
 		return target;
 	}
-	
+
 	/**
 	 * Smooth with a Gaussian kernel that represents downsampling at a given
 	 * scale factor and sourceSigma.
 	 */
 	final static public void smoothForScale(
 		final ImageProcessor source,
-		final float scale,
+		final double scale,
 		final float sourceSigma,
 		final float targetSigma )
 	{
-		final float s = targetSigma / scale;
-		final float v = s * s - sourceSigma * sourceSigma;
+		final double s = targetSigma / scale;
+		final double v = s * s - sourceSigma * sourceSigma;
 		if ( v <= 0 )
 			return;
-		final float sigma = ( float )Math.sqrt( v );
+		final double sigma = Math.sqrt( v );
 		new GaussianBlur().blurGaussian( source, sigma, sigma, 0.01 );
 	}
 
 
 	/**
 	 * Create a downsampled ImageProcessor.
-	 * 
+	 *
 	 * @param source the source image
 	 * @param scale scaling factor
 	 * @param sourceSigma the Gaussian at which the source was sampled (guess 0.5 if you do not know)
 	 * @param targetSigma the Gaussian at which the target will be sampled
-	 * 
+	 *
 	 * @return a new {@link FloatProcessor}
 	 */
 	final static public ImageProcessor createDownsampled(
 			final ImageProcessor source,
-			final float scale,
+			final double scale,
 			final float sourceSigma,
 			final float targetSigma )
 	{
 		final int ow = source.getWidth();
 		final int oh = source.getHeight();
-		final int w = Math.round( ow * scale );
-		final int h = Math.round( oh * scale );
-		
+		final int w = ( int )Math.round( ow * scale );
+		final int h = ( int )Math.round( oh * scale );
+
 		final ImageProcessor temp = source.duplicate();
 		temp.setMinAndMax( source.getMin(), source.getMax() );
-			
+
 		smoothForScale( temp, scale, sourceSigma, targetSigma );
 		if ( scale >= 1.0f ) return temp;
-		
+
 		final ImageProcessor target = temp.resize( w, h );
 		target.setMinAndMax( source.getMin(), source.getMax() );
 		return target;
 	}
-	
+
 	/**
 	 * Scale an image with good quality in both up and down direction
 	 */

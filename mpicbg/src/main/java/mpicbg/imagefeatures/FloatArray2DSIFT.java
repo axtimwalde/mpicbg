@@ -40,8 +40,6 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 {
 	static public class Param implements Serializable
 	{
-		private static final long serialVersionUID = -5989002253597993595L;
-
 		/**
 		 * Feature descriptor size
 		 *    How many samples per row and column
@@ -238,13 +236,13 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 	 * @param orientation orientation [-&pi; ... &pi;]
 	 */
 	private float[] createDescriptor(
-			final float[] c,
+			final double[] c,
 			final int o,
-			final float octave_sigma,
-			final float orientation )
+			final double octave_sigma,
+			final double orientation )
 	{
 		final FloatArray2DScaleOctave octave = octaves[ o ];
-		final FloatArray2D[] gradients = octave.getL1( Math.round( c[ 2 ] ) );
+		final FloatArray2D[] gradients = octave.getL1( ( int )Math.round( c[ 2 ] ) );
 		final FloatArray2D[] region = new FloatArray2D[ 2 ];
 
 		region[ 0 ] = new FloatArray2D(
@@ -253,8 +251,8 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		region[ 1 ] = new FloatArray2D(
 				fdWidth,
 				fdWidth );
-		final float cos_o = ( float )Math.cos( orientation );
-		final float sin_o = ( float )Math.sin( orientation );
+		final double cos_o = Math.cos( orientation );
+		final double sin_o = Math.sin( orientation );
 
 		// TODO this is for test
 		//---------------------------------------------------------------------
@@ -264,14 +262,14 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		//! sample the region arround the keypoint location
 		for ( int y = fdWidth - 1; y >= 0; --y )
 		{
-			final float ys =
-				( ( float )y - 2.0f * ( float )p.fdSize + 0.5f ) * octave_sigma; //!< scale y around 0,0
+			final double ys =
+				( y - 2.0 * p.fdSize + 0.5 ) * octave_sigma; //!< scale y around 0,0
 			for ( int x = fdWidth - 1; x >= 0; --x )
 			{
-				final float xs =
-					( ( float )x - 2.0f * ( float )p.fdSize + 0.5f ) * octave_sigma; //!< scale x around 0,0
-				final float yr = cos_o * ys + sin_o * xs; //!< rotate y around 0,0
-				final float xr = cos_o * xs - sin_o * ys; //!< rotate x around 0,0
+				final double xs =
+					( x - 2.0 * p.fdSize + 0.5 ) * octave_sigma; //!< scale x around 0,0
+				final double yr = cos_o * ys + sin_o * xs; //!< rotate y around 0,0
+				final double xr = cos_o * xs - sin_o * ys; //!< rotate x around 0,0
 
 				// flip_range at borders
 				// TODO for now, the gradients orientations do not flip outside
@@ -296,7 +294,7 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 				region[ 0 ].data[ region_p ] = gradients[ 0 ].data[ gradient_p ] * descriptorMask[ y ][ x ];
 
 				// rotate the gradients orientation it with respect to the features orientation
-				region[ 1 ].data[ region_p ] = gradients[ 1 ].data[ gradient_p ] - orientation;
+				region[ 1 ].data[ region_p ] = ( float )( gradients[ 1 ].data[ gradient_p ] - orientation );
 
 				// TODO this is for test
 				//---------------------------------------------------------------------
@@ -320,16 +318,16 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 					final int ysrp = 4 * p.fdSize * ysr;
 					for ( int xsr = 3; xsr >= 0; --xsr )
 					{
-						final float bin_location = ( region[ 1 ].data[ yp + xp + ysrp + xsr ] + ( float )Math.PI ) / ( float )fdBinWidth;
+						final double bin_location = ( region[ 1 ].data[ yp + xp + ysrp + xsr ] + Math.PI ) / fdBinWidth;
 
 						int bin_b = ( int )( bin_location );
 						int bin_t = bin_b + 1;
-						final float d = bin_location - ( float )bin_b;
+						final double d = bin_location - bin_b;
 
 						bin_b = ( bin_b + 2 * p.fdBins ) % p.fdBins;
 						bin_t = ( bin_t + 2 * p.fdBins ) % p.fdBins;
 
-						final float t = region[ 0 ].data[ yp + xp + ysrp + xsr ];
+						final double t = region[ 0 ].data[ yp + xp + ysrp + xsr ];
 
 						hist[ y ][ x ][ bin_b ] += t * ( 1 - d );
 						hist[ y ][ x ][ bin_t ] += t * d;
@@ -375,31 +373,31 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 	 * @param features finally contains all processed candidates
 	 */
 	final protected void processCandidate(
-			final float[] c,
+			final double[] c,
 			final int o,
 			final List< Feature > features )
 	{
 		final int ORIENTATION_BINS = 36;
-		final float ORIENTATION_BIN_SIZE = 2.0f * ( float )Math.PI / ( float )ORIENTATION_BINS;
+		final double ORIENTATION_BIN_SIZE = 2.0 * Math.PI / ORIENTATION_BINS;
 		final float[] histogram_bins = new float[ ORIENTATION_BINS ];
 
 		final int scale = 1 << o;
 
 		final FloatArray2DScaleOctave octave = octaves[ o ];
 
-		final float octave_sigma = octave.SIGMA[ 0 ] * ( float )Math.pow( 2.0f, c[ 2 ] / ( float )octave.STEPS );
+		final double octave_sigma = octave.SIGMA[ 0 ] * Math.pow( 2.0, c[ 2 ] / octave.STEPS );
 
 		// create a circular gaussian window with sigma 1.5 times that of the feature
 		final FloatArray2D gaussianMask =
 			Filter.createGaussianKernelOffset(
-					octave_sigma * 1.5f,
-					c[ 0 ] - ( float )Math.floor( c[ 0 ] ),
-					c[ 1 ] - ( float )Math.floor( c[ 1 ] ),
+					octave_sigma * 1.5,
+					c[ 0 ] - Math.floor( c[ 0 ] ),
+					c[ 1 ] - Math.floor( c[ 1 ] ),
 					false );
 		//FloatArrayToImagePlus( gaussianMask, "gaussianMask", 0, 0 ).show();
 
 		// get the gradients in a region arround the keypoints location
-		final FloatArray2D[] src = octave.getL1( Math.round( c[ 2 ] ) );
+		final FloatArray2D[] src = octave.getL1( ( int )Math.round( c[ 2 ] ) );
 		final FloatArray2D[] gradientROI = new FloatArray2D[ 2 ];
 		gradientROI[ 0 ] = new FloatArray2D( gaussianMask.width, gaussianMask.width );
 		gradientROI[ 1 ] = new FloatArray2D( gaussianMask.width, gaussianMask.width );
@@ -450,19 +448,19 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		 * parabolic extremum of the taylor series through env[1], derivatives
 		 * via central difference and laplace
 		 */
-		float e0 = histogram_bins[ ( max_i + ORIENTATION_BINS - 1 ) % ORIENTATION_BINS ];
-		float e1 = histogram_bins[ max_i ];
-		float e2 = histogram_bins[ ( max_i + 1 ) % ORIENTATION_BINS ];
-		float offset = ( e0 - e2 ) / 2.0f / ( e0 - 2.0f * e1 + e2 );
-		float orientation = ( ( float )max_i + offset ) * ORIENTATION_BIN_SIZE - ( float )Math.PI;
+		double e0 = histogram_bins[ ( max_i + ORIENTATION_BINS - 1 ) % ORIENTATION_BINS ];
+		double e1 = histogram_bins[ max_i ];
+		double e2 = histogram_bins[ ( max_i + 1 ) % ORIENTATION_BINS ];
+		double offset = ( e0 - e2 ) / 2.0 / ( e0 - 2.0 * e1 + e2 );
+		double orientation = ( max_i + offset ) * ORIENTATION_BIN_SIZE - Math.PI;
 
 		// assign descriptor and add the Feature instance to the collection
 		features.add(
 				new Feature(
 						octave_sigma * scale,
 						orientation,
-						new float[]{ c[ 0 ] * scale, c[ 1 ] * scale },
-						//new float[]{ ( c[ 0 ] + 0.5f ) * scale - 0.5f, ( c[ 1 ] + 0.5f ) * scale - 0.5f },
+						new double[]{ c[ 0 ] * scale, c[ 1 ] * scale },
+						//new double[]{ ( c[ 0 ] + 0.5f ) * scale - 0.5f, ( c[ 1 ] + 0.5f ) * scale - 0.5f },
 						createDescriptor( c, o, octave_sigma, orientation ) ) );
 
 		/**
@@ -489,13 +487,13 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 				if ( e0 < e1 && e2 < e1 )
 				{
 					offset = ( e0 - e2 ) / 2.0f / ( e0 - 2.0f * e1 + e2 );
-					orientation = ( ( float )i + 0.5f + offset ) * ORIENTATION_BIN_SIZE - ( float )Math.PI;
+					orientation = ( i + 0.5 + offset ) * ORIENTATION_BIN_SIZE - Math.PI;
 
 					features.add(
 							new Feature(
 									octave_sigma * scale,
 									orientation,
-									new float[]{ c[ 0 ] * scale, c[ 1 ] * scale },
+									new double[]{ c[ 0 ] * scale, c[ 1 ] * scale },
 									createDescriptor( c, o, octave_sigma, orientation ) ) );
 				}
 			}
@@ -517,8 +515,8 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		final FloatArray2DScaleOctave octave = octaves[ o ];
 		octave.build();
 		dog.run( octave );
-		final Vector< float[] > candidates = dog.getCandidates();
-		for ( final float[] c : candidates )
+		final Vector< double[] > candidates = dog.getCandidates();
+		for ( final double[] c : candidates )
 		{
 			this.processCandidate( c, o, features );
 		}
@@ -583,12 +581,12 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		for ( final Feature f1 : fs1 )
 		{
 			Feature best = null;
-			float best_d = Float.MAX_VALUE;
-			float second_best_d = Float.MAX_VALUE;
+			double best_d = Double.MAX_VALUE;
+			double second_best_d = Double.MAX_VALUE;
 
 			for ( final Feature f2 : fs2 )
 			{
-				final float d = f1.descriptorDistance( f2 );
+				final double d = f1.descriptorDistance( f2 );
 				if ( d < best_d )
 				{
 					second_best_d = best_d;
@@ -598,13 +596,13 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 				else if ( d < second_best_d )
 					second_best_d = d;
 			}
-			if ( best != null && second_best_d < Float.MAX_VALUE && best_d / second_best_d < rod )
+			if ( best != null && second_best_d < Double.MAX_VALUE && best_d / second_best_d < rod )
 				matches.addElement(
 						new PointMatch(
 								new Point(
-										new float[] { f1.location[ 0 ], f1.location[ 1 ] } ),
+										new double[] { f1.location[ 0 ], f1.location[ 1 ] } ),
 								new Point(
-										new float[] { best.location[ 0 ], best.location[ 1 ] } ),
+										new double[] { best.location[ 0 ], best.location[ 1 ] } ),
 								( f1.scale + best.scale ) / 2.0f ) );
 		}
 
@@ -613,11 +611,11 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		{
 			boolean amb = false;
 			final PointMatch m = matches.get( i );
-			final float[] m_p2 = m.getP2().getL();
+			final double[] m_p2 = m.getP2().getL();
 			for ( int j = i + 1; j < matches.size(); )
 			{
 				final PointMatch n = matches.get( j );
-				final float[] n_p2 = n.getP2().getL();
+				final double[] n_p2 = n.getP2().getL();
 				if ( m_p2[ 0 ] == n_p2[ 0 ] && m_p2[ 1 ] == n_p2[ 1 ] )
 				{
 					amb = true;
@@ -650,13 +648,13 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 	public static Vector< PointMatch > createMatches(
 			final List< Feature > fs1,
 			final List< Feature > fs2,
-			final float max_sd,
+			final double max_sd,
 			final AbstractModel< ? > model,
-			final float max_id,
-			final float rod )
+			final double max_id,
+			final double rod )
 	{
 		final Vector< PointMatch > matches = new Vector< PointMatch >();
-		final float min_sd = 1.0f / max_sd;
+		final double min_sd = 1.0 / max_sd;
 
 		final int size = fs2.size();
 		final int size_1 = size - 1;
@@ -664,13 +662,13 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		for ( final Feature f1 : fs1 )
 		{
 			Feature best = null;
-			float best_d = Float.MAX_VALUE;
-			float second_best_d = Float.MAX_VALUE;
+			double best_d = Double.MAX_VALUE;
+			double second_best_d = Double.MAX_VALUE;
 
 			int first = 0;
 			int last = size_1;
 			int s = size / 2 + size % 2;
-			if ( max_sd < Float.MAX_VALUE )
+			if ( max_sd < Double.MAX_VALUE )
 			{
 				while ( s > 1 )
 				{
@@ -690,7 +688,7 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 			for ( int i = first; i <= last; ++i )
 			{
 				final Feature f2 = fs2.get( i );
-				final float d = f1.descriptorDistance( f2 );
+				final double d = f1.descriptorDistance( f2 );
 				if ( d < best_d )
 				{
 					second_best_d = best_d;
@@ -700,21 +698,21 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 				else if ( d < second_best_d )
 					second_best_d = d;
 			}
-			if ( best != null && second_best_d < Float.MAX_VALUE && best_d / second_best_d < rod )
+			if ( best != null && second_best_d < Double.MAX_VALUE && best_d / second_best_d < rod )
 				// not weighted
 //				matches.addElement(
 //						new PointMatch(
 //								new Point(
-//										new float[] { f1.location[ 0 ], f1.location[ 1 ] } ),
+//										new double[] { f1.location[ 0 ], f1.location[ 1 ] } ),
 //								new Point(
-//										new float[] { best.location[ 0 ], best.location[ 1 ] } ) ) );
+//										new double[] { best.location[ 0 ], best.location[ 1 ] } ) ) );
 				// weighted with the features scale
 				matches.addElement(
 						new PointMatch(
 								new Point(
-										new float[] { f1.location[ 0 ], f1.location[ 1 ] } ),
+										new double[] { f1.location[ 0 ], f1.location[ 1 ] } ),
 								new Point(
-										new float[] { best.location[ 0 ], best.location[ 1 ] } ),
+										new double[] { best.location[ 0 ], best.location[ 1 ] } ),
 								( f1.scale + best.scale ) / 2.0f ) );
 		}
 		// now remove ambiguous matches
@@ -722,11 +720,11 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		{
 			boolean amb = false;
 			final PointMatch m = matches.get( i );
-			final float[] m_p2 = m.getP2().getL();
+			final double[] m_p2 = m.getP2().getL();
 			for ( int j = i + 1; j < matches.size(); )
 			{
 				final PointMatch n = matches.get( j );
-				final float[] n_p2 = n.getP2().getL();
+				final double[] n_p2 = n.getP2().getL();
 				if ( m_p2[ 0 ] == n_p2[ 0 ] && m_p2[ 1 ] == n_p2[ 1 ] )
 				{
 					amb = true;
@@ -756,15 +754,15 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 	 *
 	 * @param rs
 	 */
-	public static float[] featureSizeHistogram(
+	public static double[] featureSizeHistogram(
 			final Vector< Feature > features,
-			final float min,
-			final float max,
+			final double min,
+			final double max,
 			final int bins )
 	{
 		System.out.print( "estimating feature size histogram ..." );
 		final int num_features = features.size();
-		final float h[] = new float[ bins ];
+		final double h[] = new double[ bins ];
 		final int hb[] = new int[ bins ];
 
 		for ( final Feature f : features )
@@ -774,7 +772,7 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		}
 		for ( int i = 0; i < bins; ++i )
 		{
-			h[ i ] = ( float )hb[ i ] / ( float )num_features;
+			h[ i ] = ( double )hb[ i ] / ( double )num_features;
 		}
 		System.out.println( " done" );
 		return h;

@@ -32,7 +32,7 @@ import mpicbg.models.TranslationModel3D;
 public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, MouseWheelListener, MouseListener, MouseMotionListener
 {
 	final static private String NL = System.getProperty( "line.separator" );
-	
+
 	final private class GUI
 	{
 		final private ImageWindow window;
@@ -42,22 +42,22 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 		final private int scrollBarVisible;
 		final private int scrollBarMin;
 		final private int scrollBarMax;
-		
+
 		final private ImageJ ij;
-		
+
 		/* backup */
 		private KeyListener[] windowKeyListeners;
 		private KeyListener[] canvasKeyListeners;
 		private KeyListener[] ijKeyListeners;
-		
+
 		private MouseListener[] canvasMouseListeners;
 		private MouseMotionListener[] canvasMouseMotionListeners;
-		
+
 		private MouseWheelListener[] windowMouseWheelListeners;
-		
+
 		private AdjustmentListener[] scrollBarAdjustmentListeners;
-		
-		
+
+
 		GUI( final ImagePlus imp )
 		{
 			window = imp.getWindow();
@@ -67,10 +67,10 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 			scrollBarVisible = scrollBar.getVisibleAmount();
 			scrollBarMin = scrollBar.getMinimum();
 			scrollBarMax = scrollBar.getMaximum();
-			
+
 			ij = IJ.getInstance();
 		}
-		
+
 		/**
 		 * Add new event handlers.
 		 */
@@ -78,20 +78,20 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 		{
 			canvas.addKeyListener( Stack_Rotate.this );
 			window.addKeyListener( Stack_Rotate.this );
-			
+
 			canvas.addMouseMotionListener( Stack_Rotate.this );
-			
+
 			canvas.addMouseListener( Stack_Rotate.this );
-			
+
 			ij.addKeyListener( Stack_Rotate.this );
-			
+
 			window.addMouseWheelListener( Stack_Rotate.this );
-			
+
 			scrollBar.addAdjustmentListener( Stack_Rotate.this );
 			updateScrollBar();
 
 		}
-		
+
 		/**
 		 * Backup old event handlers for restore.
 		 */
@@ -104,9 +104,9 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 			canvasMouseMotionListeners = canvas.getMouseMotionListeners();
 			windowMouseWheelListeners = window.getMouseWheelListeners();
 			scrollBarAdjustmentListeners = scrollBar.getAdjustmentListeners();
-			clearGui();	
+			clearGui();
 		}
-		
+
 		/**
 		 * Restore the previously active Event handlers.
 		 */
@@ -129,7 +129,7 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 				scrollBar.addAdjustmentListener( l );
 			scrollBar.setValues( scrollBarValue, scrollBarVisible, scrollBarMin, scrollBarMax );
 		}
-		
+
 		/**
 		 * Remove both ours and the backed up event handlers.
 		 */
@@ -148,8 +148,8 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 			for ( final MouseWheelListener l : windowMouseWheelListeners )
 				window.removeMouseWheelListener( l );
 			for ( final AdjustmentListener l : scrollBarAdjustmentListeners )
-				scrollBar.removeAdjustmentListener( l );	
-			
+				scrollBar.removeAdjustmentListener( l );
+
 			canvas.removeKeyListener( Stack_Rotate.this );
 			window.removeKeyListener( Stack_Rotate.this );
 			ij.removeKeyListener( Stack_Rotate.this );
@@ -159,36 +159,36 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 			scrollBar.removeAdjustmentListener( Stack_Rotate.this );
 		}
 	}
-	
+
 	private ImagePlus imp;
 	private ImageProcessor ip;
 	private ImageStack stack;
 	private GUI gui;
-	
+
 	final private InvertibleCoordinateTransformList< InvertibleCoordinateTransform > ictl = new InvertibleCoordinateTransformList< InvertibleCoordinateTransform >();
 	final private AffineModel3D rotation = new AffineModel3D();
 	final private AffineModel3D mouseRotation = new AffineModel3D();
 	final static private float step = ( float )Math.PI / 180;
 	final private TranslationModel3D sliceShift = new TranslationModel3D();
 	final private AffineModel3D reducedAffine = new AffineModel3D();
-	final private InverseTransformMapping< AffineModel3D > mapping = new InverseTransformMapping< AffineModel3D >( reducedAffine ); 
-	
+	final private InverseTransformMapping< AffineModel3D > mapping = new InverseTransformMapping< AffineModel3D >( reducedAffine );
+
 	/*
 	 * the original z scaling relative to x,y
 	 * (ImageJ supports only isotropic resolution in x.y or at least I do not
-	 * understand how it does it for non-isotropic resolution.) 
+	 * understand how it does it for non-isotropic resolution.)
 	 */
 	private float zScale;
-	
+
 	/* the current rotation axis, indexed x->0, y->1, z->2 */
 	private int axis = 0;
-	
+
 	/* the current slice index (rotated z) in isotropic x,y,z space */
 	private float currentSlice = 0;
-	
+
 	/* coordinates where mouse dragging started and the drag distance */
 	private int oX, oY, dX, dY;
-	
+
 	public class MappingThread extends Thread
 	{
 		final protected ImageStack source;
@@ -196,7 +196,7 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 		final protected ImageProcessor temp;
 		protected boolean interpolate;
 		private boolean pleaseRepaint;
-		
+
 		public MappingThread(
 				final ImageStack source,
 				final ImageProcessor target,
@@ -209,7 +209,7 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 			this.interpolate = interpolate;
 			this.setName( "MappingThread" );
 		}
-		
+
 		@Override
 		public void run()
 		{
@@ -228,7 +228,7 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 						mapping.mapInterpolated( source, temp );
 					else
 						mapping.map( source, temp );
-					
+
 					final Object targetPixels = target.getPixels();
 					target.setPixels( temp.getPixels() );
 					temp.setPixels( targetPixels );
@@ -248,7 +248,7 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 				}
 			}
 		}
-		
+
 		public void repaint()
 		{
 			synchronized ( this )
@@ -257,15 +257,15 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 				notify();
 			}
 		}
-		
+
 		public void toggleInterpolation()
 		{
 			interpolate = !interpolate;
-		}		 
+		}
 	}
 
 	private MappingThread painter;
-	
+
 	@Override
 	public void run( final String arg )
     {
@@ -275,9 +275,9 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 			IJ.error( "This is not a stack." );
 			return;
 		}
-		
+
 		ictl.clear();
-		
+
 		try
 		{
 			gui = new GUI( imp );
@@ -289,19 +289,19 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 			for ( final StackTraceElement stackTraceElement : stackTraceElements )
 				IJ.log( stackTraceElement.toString() );
 		}
-		
+
 		final Calibration c = imp.getCalibration();
 		zScale = ( float )( c.pixelDepth / c.pixelWidth );
-		
+
 		stack = imp.getStack();
-		
+
 		currentSlice = ( imp.getCurrentSlice() - 1 ) * zScale;
 		final int w = stack.getWidth();
 		final int h = stack.getHeight();
 		final int d = stack.getSize();
-		
+
 		ip = stack.getProcessor( ( int )( currentSlice / zScale + 1.5f ) ).duplicate();
-		
+
 		/* un-scale */
 		final AffineModel3D unScale = new AffineModel3D();
 		unScale.set(
@@ -331,35 +331,35 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 		ictl.add( rotation );
 		ictl.add( centerUnShift );
 		ictl.add( sliceShift );
-		
+
 		reduceAffineTransformList( ictl, reducedAffine );
 
 		imp.setProcessor( imp.getTitle(), ip );
-		
+
 		gui.backupGui();
 		gui.takeOverGui();
-		
+
 		painter = new MappingThread( stack, ip, true );
-		
+
 		painter.start();
     }
-	
+
 	final private void updateScrollBar()
 	{
-		final float[] min = new float[]{ 0, 0, 0 };
-		final float[] max = new float[]{ stack.getWidth() - 1, stack.getHeight() - 1, stack.getSize() - 1 };
+		final double[] min = new double[]{ 0, 0, 0 };
+		final double[] max = new double[]{ stack.getWidth() - 1, stack.getHeight() - 1, stack.getSize() - 1 };
 		reducedAffine.estimateBounds( min, max );
 		min[ 2 ] += currentSlice;
 		max[ 2 ] += currentSlice;
-		gui.scrollBar.setValues( Math.round( currentSlice ), 1, Math.round( min[ 2 ] ), Math.round( max[ 2 ] ) );
+		gui.scrollBar.setValues( Math.round( currentSlice ), 1, ( int )Math.round( min[ 2 ] ), ( int )Math.round( max[ 2 ] ) );
 	}
-	
+
 	final private void update()
 	{
 		reduceAffineTransformList( ictl, reducedAffine );
 		painter.repaint();
 	}
-	
+
 	final private void apply()
 	{
 		new Thread(
@@ -374,10 +374,10 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 						a.preConcatenate( ( TranslationModel3D )ictl.get( 1 ) );
 						a.preConcatenate( ( AffineModel3D )ictl.get( 2 ) );
 						a.preConcatenate( ( TranslationModel3D )ictl.get( 3 ) );
-						
+
 						/* bounding volume */
-						final float[] min = new float[]{ 0, 0, 0 };
-						final float[] max = new float[]{ stack.getWidth(), stack.getHeight(), stack.getSize() };
+						final double[] min = new double[]{ 0, 0, 0 };
+						final double[] max = new double[]{ stack.getWidth(), stack.getHeight(), stack.getSize() };
 						a.estimateBounds( min, max );
 						final int w = ( int )Math.ceil( max[ 0 ] - min[ 0 ] );
 						final int h = ( int )Math.ceil( max[ 1 ] - min[ 1 ] );
@@ -385,18 +385,18 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 						final TranslationModel3D minShift = new TranslationModel3D();
 						minShift.set( -min[ 0 ], -min[ 1 ], -min[ 2 ] );
 						a.preConcatenate( minShift );
-						
+
 						/* TODO calculate optimal slice thickness, for now uses the previous x,y spacing isotropicly */
 						final TranslationModel3D sliceOffset = new TranslationModel3D();
 						sliceOffset.set( 0, 0, -1 );
 						final InverseTransformMapping< AffineModel3D> aMapping = new InverseTransformMapping< AffineModel3D >( a );
-						
+
 						final ImageProcessor source = stack.getProcessor( 1 );
-						
+
 						final ImageStack result = new ImageStack(
 								( int )Math.ceil( w ),
 								( int )Math.ceil( h ) );
-						
+
 						for ( int i = 0; i <= d; ++i )
 						{
 							final ImageProcessor ipSlice = source.createProcessor( w, h );
@@ -417,21 +417,21 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 					}
 				} ).start();
 	}
-	
-	private void rotate( final int a, final float d )
+
+	private void rotate( final int a, final double d )
 	{
 		rotation.rotate( a, d * step );
 	}
-	
-	final private void shift( final float d )
+
+	final private void shift( final double d )
 	{
 		currentSlice += d;
 		sliceShift.set( 0, 0, -currentSlice );
 	}
-	
+
 	/**
 	 * Fragile typeless reduction of ictls of which is assumed that they contain only affine transformations
-	 * 
+	 *
 	 * @param ictl
 	 * @param affine
 	 */
@@ -447,14 +447,14 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 		}
 		affine.set( a );
 	}
-	
+
 	@Override
 	public void keyPressed( final KeyEvent e )
 	{
 		if ( e.getKeyCode() == KeyEvent.VK_ESCAPE || e.getKeyCode() == KeyEvent.VK_ENTER )
 		{
 			painter.interrupt();
-			
+
 			if ( imp != null )
 			{
 				if ( e.getKeyCode() == KeyEvent.VK_ESCAPE )
@@ -493,7 +493,7 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 		}
 		else
 		{
-			final float v = keyModfiedSpeed( e.getModifiersEx() );
+			final double v = keyModfiedSpeed( e.getModifiersEx() );
 			if ( e.getKeyCode() == KeyEvent.VK_LEFT )
 			{
 				rotate( axis, -v );
@@ -529,10 +529,10 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 			}
 			else if ( e.getKeyCode() == KeyEvent.VK_T )
 			{
-				GenericDialog gd = new GenericDialog( "Define Rotation Matrix" );
-				
-				final float[] m = rotation.getMatrix( null );
-				
+				final GenericDialog gd = new GenericDialog( "Define Rotation Matrix" );
+
+				final double[] m = rotation.getMatrix( null );
+
 				gd.addNumericField( "m00", m[ 0 ], 5 );
 				gd.addNumericField( "m01", m[ 1 ], 5 );
 				gd.addNumericField( "m02", m[ 2 ], 5 );
@@ -542,23 +542,23 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 				gd.addNumericField( "m20", m[ 8 ], 5 );
 				gd.addNumericField( "m21", m[ 9 ], 5 );
 				gd.addNumericField( "m22", m[ 10 ], 5 );
-				
+
 				gd.showDialog();
-				
+
 				if ( !gd.wasCanceled() )
 				{
-					m[ 0 ] = (float)gd.getNextNumber();
-					m[ 1 ] = (float)gd.getNextNumber();
-					m[ 2 ] = (float)gd.getNextNumber();
-					m[ 4 ] = (float)gd.getNextNumber();
-					m[ 5 ] = (float)gd.getNextNumber();
-					m[ 6 ] = (float)gd.getNextNumber();
-					m[ 8 ] = (float)gd.getNextNumber();
-					m[ 9 ] = (float)gd.getNextNumber();
-					m[ 10 ] = (float)gd.getNextNumber();
-					
+					m[ 0 ] = gd.getNextNumber();
+					m[ 1 ] = gd.getNextNumber();
+					m[ 2 ] = gd.getNextNumber();
+					m[ 4 ] = gd.getNextNumber();
+					m[ 5 ] = gd.getNextNumber();
+					m[ 6 ] = gd.getNextNumber();
+					m[ 8 ] = gd.getNextNumber();
+					m[ 9 ] = gd.getNextNumber();
+					m[ 10 ] = gd.getNextNumber();
+
 					rotation.set( m[ 0 ], m[ 1 ], m[ 2 ], 0, m[ 4 ], m[ 5 ], m[ 6 ], 0, m[ 8 ], m[ 9 ], m[ 10 ], 0 );
-					
+
 					// we need to compute the reducedaffine first, otherwise the scrollbars are off ...
 					reduceAffineTransformList( ictl, reducedAffine );
 					updateScrollBar();
@@ -618,7 +618,7 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 	}
 	@Override
 	public void keyTyped( final KeyEvent e ){}
-	
+
 	public static String modifiers( final int flags )
 	{
 		String s = " [ ";
@@ -653,7 +653,7 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 		final int s = e.getWheelRotation();
 		shift( v * s );
 		gui.scrollBar.setValue( Math.round( currentSlice ) );
-		update();		
+		update();
 	}
 
 	@Override

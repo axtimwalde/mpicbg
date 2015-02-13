@@ -1,3 +1,19 @@
+/**
+ * License: GPL
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License 2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
 package mpicbg.models;
 
 import ij.IJ;
@@ -16,6 +32,12 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ *
+ *
+ * @author Albert Cardona
+ * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ */
 public class TileUtil
 {
 
@@ -97,10 +119,10 @@ public class TileUtil
 
 	static public final void optimizeConcurrently(
 			final ErrorStatistic observer,
-			final float maxAllowedError,
+			final double maxAllowedError,
 			final int maxIterations,
 			final int maxPlateauwidth,
-			final float damp,
+			final double damp,
 			final TileConfiguration tc,
 			final Set< Tile< ? > > tiles,
 			final Set< Tile< ? > > fixedTiles,

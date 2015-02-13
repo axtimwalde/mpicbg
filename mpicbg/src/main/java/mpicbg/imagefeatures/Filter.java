@@ -3,7 +3,7 @@ package mpicbg.imagefeatures;
 import mpicbg.util.Util;
 
 /**
- * 
+ *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.2b
  */
@@ -14,7 +14,55 @@ public class Filter
      *
      * @param sigma Standard deviation of the Gaussian kernel
      * @param normalize Normalize integral of the Gaussian kernel to 1 or not...
-     * 
+     *
+     * @return float[] Gaussian kernel of appropriate size
+     */
+    final static public double[] createGaussianKernel(
+    		final double sigma,
+    		final boolean normalize )
+	{
+		double[] kernel;
+
+		if ( sigma <= 0 )
+		{
+			kernel = new double[ 3 ];
+			kernel[ 1 ] = 1;
+		}
+		else
+		{
+			final int size = Math.max( 3, ( int ) ( 2 * ( int )( 3 * sigma + 0.5 ) + 1 ) );
+
+			final double two_sq_sigma = 2 * sigma * sigma;
+			kernel = new double[ size ];
+
+			for ( int x = size / 2; x >= 0; --x )
+			{
+				final double val = Math.exp( -( x * x ) / two_sq_sigma );
+
+				kernel[ size / 2 - x ] = val;
+				kernel[ size / 2 + x ] = val;
+			}
+		}
+
+		if ( normalize )
+		{
+			double sum = 0;
+			for ( final double value : kernel )
+				sum += value;
+
+			for ( int i = 0; i < kernel.length; i++ )
+				kernel[ i ] /= sum;
+		}
+
+		return kernel;
+	}
+
+	/**
+     * Create a 1d-Gaussian kernel of appropriate size.
+     *
+     * @param sigma Standard deviation of the Gaussian kernel
+     * @param normalize Normalize integral of the Gaussian kernel to 1 or not...
+     *
      * @return float[] Gaussian kernel of appropriate size
      */
     final static public float[] createGaussianKernel(
@@ -47,7 +95,7 @@ public class Filter
 		if ( normalize )
 		{
 			float sum = 0;
-			for ( float value : kernel )
+			for ( final float value : kernel )
 				sum += value;
 
 			for ( int i = 0; i < kernel.length; i++ )
@@ -60,7 +108,7 @@ public class Filter
     /**
 	 * Create a normalized 2d gaussian impulse with appropriate size with its
 	 * center slightly moved away from the middle.
-	 * 
+	 *
 	 */
 	final static public FloatArray2D createGaussianKernelOffset(
 			final float sigma,
@@ -94,7 +142,53 @@ public class Filter
 		if ( normalize )
 		{
 			float sum = 0;
-			for ( float value : kernel.data )
+			for ( final float value : kernel.data )
+				sum += value;
+
+			for ( int i = 0; i < kernel.data.length; i++ )
+				kernel.data[ i ] /= sum;
+		}
+		return kernel;
+	}
+
+	/**
+	 * Create a normalized 2d gaussian impulse with appropriate size with its
+	 * center slightly moved away from the middle.
+	 *
+	 */
+	final static public FloatArray2D createGaussianKernelOffset(
+			final double sigma,
+			final double offset_x,
+			final double offset_y,
+			final boolean normalize )
+	{
+		final FloatArray2D kernel;
+		if ( sigma == 0 )
+		{
+			kernel = new FloatArray2D( 3, 3 );
+			kernel.data[ 4 ] = 1;
+		}
+		else
+		{
+			final int size = Math.max( 3, ( int ) ( 2 * Math.round( 3 * sigma ) + 1 ) );
+			final double two_sq_sigma = 2 * sigma * sigma;
+			// float normalization_factor = 1.0/(float)M_PI/two_sq_sigma;
+			kernel = new FloatArray2D( size, size );
+			for ( int x = size - 1; x >= 0; --x )
+			{
+				final double fx = x - size / 2;
+				for ( int y = size - 1; y >= 0; --y )
+				{
+					final double fy = y - size / 2;
+					final double val = Math.exp( -( Math.pow( fx - offset_x, 2 ) + Math.pow( fy - offset_y, 2 ) ) / two_sq_sigma );
+					kernel.set( ( float )val, x, y );
+				}
+			}
+		}
+		if ( normalize )
+		{
+			double sum = 0;
+			for ( final float value : kernel.data )
 				sum += value;
 
 			for ( int i = 0; i < kernel.data.length; i++ )
@@ -131,10 +225,10 @@ public class Filter
 		}
 		return gradients;
 	}
-    
+
     /**
 	 * In place enhance all values of a FloatArray to fill the given range.
-	 * 
+	 *
 	 * @param src
 	 *            source
 	 * @param scale
@@ -144,7 +238,7 @@ public class Filter
     {
     	float min = src.data[ 0 ];
     	float max = min;
-    	for ( float f : src.data )
+    	for ( final float f : src.data )
     	{
     		if ( f < min ) min = f;
     		else if ( f > max ) max = f;
@@ -153,15 +247,15 @@ public class Filter
     	for ( int i = 0; i < src.data.length; ++i )
     		src.data[ i ] = s * ( src.data[ i ] - min );
     }
-    
+
     /**
 	 * Convolve an image with a horizontal and a vertical kernel
 	 * simple straightforward, not optimized---replace this with a trusted better version soon
-	 * 
+	 *
 	 * @param input the input image
 	 * @param h horizontal kernel
 	 * @param v vertical kernel
-	 * 
+	 *
 	 * @return convolved image
 	 */
 	final static public FloatArray2D convolveSeparable(
@@ -169,15 +263,15 @@ public class Filter
 			final float[] h,
 			final float[] v )
 	{
-		FloatArray2D output = new FloatArray2D( input.width, input.height );
-		FloatArray2D temp = new FloatArray2D( input.width, input.height );
+		final FloatArray2D output = new FloatArray2D( input.width, input.height );
+		final FloatArray2D temp = new FloatArray2D( input.width, input.height );
 
 		final int hl = h.length / 2;
 		final int vl = v.length / 2;
-		
+
 		int xl = input.width - h.length + 1;
 		int yl = input.height - v.length + 1;
-		
+
 		// create lookup tables for coordinates outside the image range
 		final int[] xb = new int[ h.length + hl - 1 ];
 		final int[] xa = new int[ h.length + hl - 1 ];
@@ -186,7 +280,7 @@ public class Filter
 			xb[ i ] = Util.pingPong( i - hl, input.width );
 			xa[ i ] = Util.pingPong( i + xl, input.width );
 		}
-		
+
 		final int[] yb = new int[ v.length + vl - 1 ];
 		final int[] ya = new int[ v.length + vl - 1 ];
 		for ( int i = 0; i < yb.length; ++i )
@@ -194,10 +288,10 @@ public class Filter
 			yb[ i ] = input.width * Util.pingPong( i - vl, input.height );
 			ya[ i ] = input.width * Util.pingPong( i + yl, input.height );
 		}
-		
+
 		xl += hl;
 		yl += vl;
-		
+
 		// horizontal convolution per row
 		final int rl = input.height * input.width;
 		for ( int r = 0; r < rl; r += input.width )

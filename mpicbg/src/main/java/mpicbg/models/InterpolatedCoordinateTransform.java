@@ -21,59 +21,61 @@ package mpicbg.models;
  * Linearly interpolates between two independent
  * {@link CoordinateTransform CoordinateTransforms}.
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
  */
 public class InterpolatedCoordinateTransform< A extends CoordinateTransform, B extends CoordinateTransform > implements CoordinateTransform
 {
+	private static final long serialVersionUID = 8356592128041276188L;
+
 	final protected A a;
 	final protected B b;
-	protected float lambda;
-	
-	public InterpolatedCoordinateTransform( final A a, final B b, final float lambda )
+	protected double lambda;
+
+	public InterpolatedCoordinateTransform( final A a, final B b, final double lambda )
 	{
 		this.a = a;
 		this.b = b;
 		this.lambda = lambda;
 	}
-	
+
 	public A getA()
 	{
 		return a;
 	}
-	
+
 	public B getB()
 	{
 		return b;
 	}
-	
+
 	public double getLambda()
 	{
 		return lambda;
 	}
-	
+
 	public void setLambda( final float lambda )
 	{
 		this.lambda = lambda;
 	}
-	
+
 
 	@Override
-	public float[] apply( final float[] location )
+	public double[] apply( final double[] location )
 	{
-		final float[] copy = location.clone();
+		final double[] copy = location.clone();
 		applyInPlace( copy );
 		return copy;
 	}
 
 	@Override
-	public void applyInPlace( final float[] location )
+	public void applyInPlace( final double[] location )
 	{
-		final float[] copy = b.apply( location );
+		final double[] copy = b.apply( location );
 		a.applyInPlace( location );
-		
+
 		for ( int d = 0; d < location.length; ++d )
 		{
-			final float dd = copy[ d ] - location[ d ];
+			final double dd = copy[ d ] - location[ d ];
 			location[ d ] += lambda * dd;
 		}
 	}

@@ -1,5 +1,23 @@
+/**
+ * License: GPL
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License 2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
 package mpicbg.models;
 
+
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -8,12 +26,13 @@ import java.util.Set;
 /**
  *
  * @param <M> the {@linkplain AbstractModel transformation model} of the tile.
- * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.1b
+ *
+ * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
  */
-public class Tile< M extends Model< M > >
+public class Tile< M extends Model< M > > implements Serializable
 {
+	private static final long serialVersionUID = 3715791741771321832L;
+
 	/**
 	 * The transformation {@link AbstractModel} of the {@link Tile}.  All local
 	 * {@link Point Points} in the {@link Tile} share (and thus determine)
@@ -21,7 +40,7 @@ public class Tile< M extends Model< M > >
 	 */
 	final protected M model;
 	final public M getModel() { return model; }
-	
+
 	/**
 	 * A set of point correspondences with {@link PointMatch#getP1() p1} being
 	 * a local point in this {@link Tile} and {@link PointMatch#getP2() p2}
@@ -32,58 +51,58 @@ public class Tile< M extends Model< M > >
 	 */
 	final protected Set< PointMatch > matches = new HashSet< PointMatch >();
 	final public Set< PointMatch > getMatches(){ return matches; }
-	
+
 	/**
 	 * Add more {@link PointMatch PointMatches}.
-	 *  
+	 *
 	 * @param more the {@link PointMatch PointMatches} to be added
-	 * 
+	 *
 	 * @return true if this set changed as a result of the call
 	 */
 	final public boolean addMatches( final Collection< PointMatch > more )
 	{
 		return matches.addAll( more );
 	}
-	
+
 	/**
 	 * Add one {@link PointMatch}.
-	 *  
+	 *
 	 * @param match the {@link PointMatch} to be added
-	 * 
+	 *
 	 * @return true if this set did not already contain the specified element
 	 */
 	final public boolean addMatch( final PointMatch match )
 	{
 		return matches.add( match );
 	}
-	
+
 	/**
 	 * Remove a {@link PointMatch}.
-	 * 
+	 *
 	 * @param match the {@link PointMatch} to be removed
-	 * 
+	 *
 	 * @return true if this set contained the specified element
 	 */
 	final public boolean removeMatch( final PointMatch match )
 	{
 		return matches.remove( match );
 	}
-	
+
 	/**
 	 * A set of {@link Tile Tiles} that share point correpondences with this
 	 * {@link Tile}.
-	 * 
+	 *
 	 * Note that point correspondences do not know about the tiles they belong
 	 * to.
 	 */
 	final protected Set< Tile< ? > > connectedTiles = new HashSet< Tile< ? > >();
 	final public Set< Tile< ? > > getConnectedTiles() { return connectedTiles; }
-	
-	
+
+
 	/**
 	 * Add a {@link Tile} to the set of connected tiles.  Checks if this
 	 * {@link Tile} is present already.
-	 * 
+	 *
 	 * @param t the new {@link Tile}.
 	 * @return Success of the operation.
 	 */
@@ -91,11 +110,11 @@ public class Tile< M extends Model< M > >
 	{
 		return connectedTiles.add( t );
 	}
-	
-	
+
+
 	/**
 	 * Remove a {@link Tile} from the set of connected {@link Tile}s.
-	 * 
+	 *
 	 * @param t the {@link Tile} to be removed.
 	 * @return Success of the operation.
 	 */
@@ -125,17 +144,17 @@ public class Tile< M extends Model< M > >
 		else
 			return false;
 	}
-	
-	
+
+
 	/**
 	 * Try to find the tile which is connected by a particular
 	 * {@link PointMatch}.
-	 * 
+	 *
 	 * Note that this method searches only the known connected tiles to limit
 	 * the cost of that anyway expensive search.
-	 * 
+	 *
 	 * @param match
-	 * 
+	 *
 	 * @return connectedTile or null
 	 */
 	public Tile< ? > findConnectedTile( final PointMatch match )
@@ -150,37 +169,37 @@ public class Tile< M extends Model< M > >
 		}
 		return null;
 	}
-	
-	
-	
-	
+
+
+
+
 	/**
 	 * The transfer error of this {@link Tile Tile's} {@link AbstractModel} as
 	 * estimated from weighted square point correspondence displacement.
 	 */
 	protected double cost;
 	final public double getCost() { return cost; }
-	
-	
+
+
 	/**
 	 * The average {@link PointMatch} displacement.
 	 */
 	private double distance;
 	final public double getDistance() { return distance; }
-	
+
 	/**
 	 * Constructor
-	 * 
+	 *
 	 * @param model the transformation {@link AbstractModel} of the {@link Tile}.
 	 */
 	public Tile( final M model )
 	{
 		this.model = model;
 	}
-	
+
 	/**
 	 * Apply the current {@link AbstractModel} to all local point coordinates.
-	 * 
+	 *
 	 * <em>This method does not recalculate the cost of the tile.</em>
 	 */
 	final public void apply()
@@ -188,18 +207,18 @@ public class Tile< M extends Model< M > >
 		for ( final PointMatch match : matches )
 			match.apply( model );
 	}
-	
+
 	/**
 	 * Apply the current {@link AbstractModel} to all local point coordinates.
-	 * 
+	 *
 	 * <em>This method does not recalculate the cost of the tile.</em>
 	 */
-	final public void apply( final float amount )
+	final public void apply( final double amount )
 	{
 		for ( final PointMatch match : matches )
 			match.apply( model, amount );
 	}
-	
+
 	/**
 	 * Update {@link #cost} and {@link #distance}.
 	 */
@@ -207,7 +226,7 @@ public class Tile< M extends Model< M > >
 	{
 		double d = 0.0;
 		double c = 0.0;
-		
+
 		final int numMatches = matches.size();
 		if ( numMatches > 0 )
 		{
@@ -222,11 +241,11 @@ public class Tile< M extends Model< M > >
 			d /= numMatches;
 			c /= sumWeight;
 		}
-		distance = ( float )d;
-		cost = ( float )c;
+		distance = d;
+		cost = c;
 		model.setCost( c );
 	}
-	
+
 	/**
 	 * Apply the current {@link AbstractModel} to all local point coordinates.
 	 * Update {@link #cost} and {@link #distance}.
@@ -236,7 +255,7 @@ public class Tile< M extends Model< M > >
 	{
 		double d = 0.0;
 		double c = 0.0;
-		
+
 		final int numMatches = matches.size();
 		if ( numMatches > 0 )
 		{
@@ -252,21 +271,21 @@ public class Tile< M extends Model< M > >
 			d /= numMatches;
 			c /= sumWeight;
 		}
-		distance = ( float )d;
-		cost = ( float )c;
+		distance = d;
+		cost = c;
 		model.setCost( c );
 	}
-	
+
 	/**
 	 * Apply the current {@link AbstractModel} to all local point coordinates by weight.
 	 * Update {@link #cost} and {@link #distance}.
 	 *
 	 */
-	final public void update( final float amount )
+	final public void update( final double amount )
 	{
 		double d = 0.0;
 		double c = 0.0;
-		
+
 		final int numMatches = matches.size();
 		if ( numMatches > 0 )
 		{
@@ -282,38 +301,11 @@ public class Tile< M extends Model< M > >
 			d /= numMatches;
 			c /= sumWeight;
 		}
-		distance = ( float )d;
-		cost = ( float )c;
+		distance = d;
+		cost = c;
 		model.setCost( c );
 	}
-	
-//	/**
-//	 * Randomly dice new model until the cost is smaller than the old one
-//	 * 
-//	 * @param maxNumTries maximal number of tries before returning false (which means "no better model found")
-//	 * @param amount strength of shaking
-//	 * @return true if a better model was found
-//	 */
-//	final public boolean diceBetterModel( final int maxNumTries, final float amount )
-//	{
-//		// store old model
-//		final M oldModel = model.clone();
-//		
-//		for ( int t = 0; t < maxNumTries; ++t )
-//		{
-//			model.shake( amount );
-//			update();
-//			if ( model.betterThan( oldModel ) )
-//			{
-//				return true;
-//			}
-//			else model.set( oldModel );
-//		}
-//		// no better model found, so roll back
-//		update();
-//		return false;
-//	}
-	
+
 	/**
 	 * Update the transformation {@link AbstractModel}.  That is, fit it to the
 	 * current set of {@link PointMatch PointMatches}.
@@ -322,11 +314,11 @@ public class Tile< M extends Model< M > >
 	{
 		model.fit( matches );
 	}
-	
+
 	/**
 	 * Find all {@link Tile}s that represent one connectivity graph by
 	 * recursively tracing the {@link #connectedTiles }.
-	 * 
+	 *
 	 * @param graph
 	 * @return the number of connected tiles in the graph
 	 */
@@ -339,10 +331,10 @@ public class Tile< M extends Model< M > >
 				t.traceConnectedGraph( graph );
 		}
 	}
-	
+
 	/**
 	 * Connect two tiles by a set of point correspondences
-	 * 
+	 *
 	 * @param o
 	 * @param m
 	 */
@@ -352,14 +344,14 @@ public class Tile< M extends Model< M > >
 	{
 		this.addMatches( m );
 		o.addMatches( PointMatch.flip( m ) );
-		
+
 		this.addConnectedTile( o );
 		o.addConnectedTile( this );
 	}
-	
+
 	/**
 	 * Identify the set of connected graphs that contains all given tiles.
-	 * 
+	 *
 	 * @param tiles
 	 * @return
 	 */
@@ -371,7 +363,7 @@ public class Tile< M extends Model< M > >
 A:		for ( final Tile< ? > tile : tiles )
 		{
 			for ( final Set< Tile< ? > > knownGraph : graphs )
-				if ( knownGraph.contains( tile ) ) continue A; 
+				if ( knownGraph.contains( tile ) ) continue A;
 			final Set< Tile< ? > > current_graph = new HashSet< Tile< ? > >();
 			tile.traceConnectedGraph( current_graph );
 			numInspectedTiles += current_graph.size();

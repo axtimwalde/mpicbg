@@ -21,25 +21,24 @@ package mpicbg.models;
  * {@link CoordinateTransform} and related interfaces, but well---this is Java
  * where multiple inheritance is considered evil...
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.1a
+ * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
  */
 public class Transforms
 {
 	private Transforms(){}
-	
+
 	/**
 	 * Check if a {@link CoordinateTransform} is the identity transform with
 	 * respect to a set of {@link Point Points} and a given tolerance.
-	 * 
+	 *
 	 * @param t
 	 * @param points
 	 * @param tolerance
 	 * @return
 	 */
-	static public boolean isIdentity( final CoordinateTransform t, final Iterable< Point > points, final float tolerance )
+	static public boolean isIdentity( final CoordinateTransform t, final Iterable< Point > points, final double tolerance )
 	{
-		final float t2 = tolerance * tolerance;
+		final double t2 = tolerance * tolerance;
 		for ( final Point p : points )
 		{
 			p.apply( t );

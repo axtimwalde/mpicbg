@@ -36,7 +36,7 @@ import mpicbg.models.TranslationModel2D;
 /**
  * Use two sets of {@link PointRoi landmarks} selected in two images to map
  * one image to the other.
- * 
+ *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.2b
  */
@@ -44,31 +44,31 @@ public class Transform_Roi implements PlugIn
 {
 	final static private DecimalFormat decimalFormat = new DecimalFormat();
 	final static private DecimalFormatSymbols decimalFormatSymbols = new DecimalFormatSymbols();
-	
+
 	final static private String[] methods = new String[]{ "Least Squares", "Moving Least Squares (non-linear)" };
 	static private int methodIndex = 0;
-	
+
 	static float alpha = 1.0f;
 	static int meshResolution = 32;
-	
+
 	final static private String[] modelClasses = new String[]{ "Translation", "Rigid", "Similarity", "Affine", "Perspective" };
 	static private int modelClassIndex = 1;
-	
+
 	static private boolean interpolate = true;
 	static private boolean showMatrix = false;
-	
+
 	protected ImagePlus source;
 	protected ImagePlus template;
-	
+
 	public Transform_Roi()
 	{
 		decimalFormatSymbols.setGroupingSeparator( ',' );
 		decimalFormatSymbols.setDecimalSeparator( '.' );
 		decimalFormat.setDecimalFormatSymbols( decimalFormatSymbols );
 		decimalFormat.setMaximumFractionDigits( 3 );
-		decimalFormat.setMinimumFractionDigits( 3 );		
+		decimalFormat.setMinimumFractionDigits( 3 );
 	}
-	
+
 	final static protected void transform(
 			final CoordinateTransform transform,
 			final ImageProcessor source,
@@ -78,13 +78,13 @@ public class Transform_Roi implements PlugIn
 		{
 			for ( int x = 0; x < target.getWidth(); ++x )
 			{
-				final float[] t = new float[]{ x, y };
+				final double[] t = new double[]{ x, y };
 				transform.applyInPlace( t );
 				target.putPixel( x, y, source.getPixel( ( int )t[ 0 ], ( int )t[ 1 ] ) );
 			}
-		}	
+		}
 	}
-	
+
 	final static protected void transformInterpolated(
 			final CoordinateTransform transform,
 			final ImageProcessor source,
@@ -94,36 +94,36 @@ public class Transform_Roi implements PlugIn
 		{
 			for ( int x = 0; x < target.getWidth(); ++x )
 			{
-				final float[] t = new float[]{ x, y };
+				final double[] t = new double[]{ x, y };
 				transform.applyInPlace( t );
 				target.putPixel( x, y, source.getPixelInterpolated( t[ 0 ], t[ 1 ] ) );
 			}
-		}	
+		}
 	}
-	
+
 	@Override
 	final public void run( final String args )
 	{
 		final ArrayList< PointMatch > matches = new ArrayList< PointMatch >();
-		
+
 		if ( !setup() ) return;
-		
+
 		final ImagePlus target = template.createImagePlus();
-		
+
 		final ImageProcessor ipSource = source.getProcessor();
 		final ImageProcessor ipTarget = source.getProcessor().createProcessor( template.getWidth(), template.getHeight() );
-		
+
 		/* Collect the PointRois from both images and make PointMatches of them. */
 		final List< Point > sourcePoints = Util.pointRoiToPoints( ( PointRoi )source.getRoi() );
 		final List< Point > templatePoints = Util.pointRoiToPoints( ( PointRoi )template.getRoi() );
-		
+
 		final int numMatches = Math.min( sourcePoints.size(), templatePoints.size() );
-		
+
 		for ( int i = 0; i < numMatches; ++i )
 			matches.add( new PointMatch( sourcePoints.get( i ), templatePoints.get( i ) ) );
-		
+
 		final Mapping< ? > mapping;
-		
+
 		if ( methodIndex == 0 )
 		{
 			/* TODO Implement other models for choice */
@@ -159,7 +159,7 @@ public class Transform_Roi implements PlugIn
 			default:
 				return;
 			}
-			
+
 			try
 			{
 				model.fit( matches );
@@ -215,7 +215,7 @@ public class Transform_Roi implements PlugIn
 			}
 			catch ( final Exception e ) { return; }
 			t.setAlpha( alpha );
-			
+
 			try
 			{
 				t.setMatches( matches );
@@ -234,7 +234,7 @@ public class Transform_Roi implements PlugIn
 			if ( showMatrix )
 				IJ.log( "Cannot show matrix for non-linear transformation" );
 		}
-		
+
 		if ( interpolate )
 		{
 			ipSource.setInterpolationMethod( ImageProcessor.BILINEAR );
@@ -242,22 +242,22 @@ public class Transform_Roi implements PlugIn
 		}
 		else
 			mapping.map( ipSource, ipTarget );
-		
+
 		target.setProcessor( "Transformed" + source.getTitle(), ipTarget );
 		target.show();
 	}
-	
+
 	final protected boolean setup()
 	{
 		if ( IJ.versionLessThan( "1.40c" ) ) return false;
-		
+
 		final int[] ids = WindowManager.getIDList();
 		if ( ids == null || ids.length < 2 )
 		{
 			IJ.showMessage( "You should have at least two images open." );
 			return false;
 		}
-		
+
 		final ArrayList< String > titlesList = new ArrayList< String >();
 		final ArrayList< Integer > idsList = new ArrayList< Integer >();
 		String currentTitle = null;
@@ -271,9 +271,9 @@ public class Transform_Roi implements PlugIn
 				idsList.add( ids[ i ] );
 				if ( imp == WindowManager.getCurrentImage() )
 					currentTitle = imp.getTitle();
-			}	
+			}
 		}
-		
+
 		if ( titlesList.size() < 2 )
 		{
 			IJ.showMessage( "You should have at least two images with selected landmark correspondences open." );
@@ -281,11 +281,11 @@ public class Transform_Roi implements PlugIn
 		}
 		final String[] titles = new String[ titlesList.size() ];
 		titlesList.toArray( titles );
-		
+
 		if ( currentTitle == null )
 			currentTitle = titles[ 0 ];
 		final GenericDialog gd = new GenericDialog( "Transform" );
-		
+
 		gd.addChoice( "source_image", titles, currentTitle );
 		gd.addChoice( "template_image", titles, currentTitle.equals( titles[ 0 ] ) ? titles[ 1 ] : titles[ 0 ] );
 		gd.addChoice( "transformation_method", methods, methods[ methodIndex ] );
@@ -295,9 +295,9 @@ public class Transform_Roi implements PlugIn
 		gd.addCheckbox( "interpolate", interpolate );
 		gd.addCheckbox("show_matrix", false);
 		gd.showDialog();
-		
+
 		if ( gd.wasCanceled() ) return false;
-		
+
 		source = WindowManager.getImage( idsList.get( gd.getNextChoiceIndex() ) );
 		template = WindowManager.getImage( idsList.get( gd.getNextChoiceIndex() ) );
 		methodIndex = gd.getNextChoiceIndex();
@@ -306,7 +306,7 @@ public class Transform_Roi implements PlugIn
 		modelClassIndex = gd.getNextChoiceIndex();
 		interpolate = gd.getNextBoolean();
 		showMatrix = gd.getNextBoolean();
-		
-		return true;		
+
+		return true;
 	}
 }

@@ -18,7 +18,7 @@ package mpicbg.models;
 
 
 /**
- * Invertible specialization of {@link ConstantModel}. 
+ * Invertible specialization of {@link ConstantModel}.
  *
  * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
  */
@@ -26,22 +26,23 @@ public class InvertibleConstantModel<
 		A extends Model< A > & InvertibleCoordinateTransform,
 		M extends InvertibleConstantModel< A, M > > extends ConstantModel< A, M > implements InvertibleCoordinateTransform
 {
+	private static final long serialVersionUID = -8772404418680698608L;
 
 	public InvertibleConstantModel( final A model )
 	{
 		super( model );
 	}
-	
+
 	@Override
-	public float[] applyInverse( final float[] location ) throws NoninvertibleModelException
+	public double[] applyInverse( final double[] location ) throws NoninvertibleModelException
 	{
-		final float[] copy = location.clone();
+		final double[] copy = location.clone();
 		applyInverseInPlace( copy );
 		return copy;
 	}
 
 	@Override
-	public void applyInverseInPlace( final float[] location ) throws NoninvertibleModelException
+	public void applyInverseInPlace( final double[] location ) throws NoninvertibleModelException
 	{
 		model.applyInPlace( location );
 	}

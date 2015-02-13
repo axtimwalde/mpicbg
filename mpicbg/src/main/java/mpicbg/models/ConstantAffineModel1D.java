@@ -19,9 +19,9 @@ package mpicbg.models;
 
 /**
  * 1D affine specialization of {@link ConstantModel}.
- * 
+ *
  * No multiple inheritance in Java, so it cannot be an AffineModel1D
- * by itself. 
+ * by itself.
  *
  * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
  */
@@ -29,13 +29,13 @@ final public class ConstantAffineModel1D< A extends Model< A > & Affine1D< A > &
 	extends InvertibleConstantModel< A, ConstantAffineModel1D< A > >
 	implements Affine1D< ConstantAffineModel1D< A > >, InvertibleBoundable
 {
-	private static final long serialVersionUID = 8730549843635027047L;
+	private static final long serialVersionUID = -3540327692126579857L;
 
 	public ConstantAffineModel1D( final A model )
 	{
 		super( model );
 	}
-	
+
 	@Override
 	public ConstantAffineModel1D< A > createInverse()
 	{
@@ -47,7 +47,7 @@ final public class ConstantAffineModel1D< A extends Model< A > & Affine1D< A > &
 	public AffineModel1D createAffineModel1D()
 	{
 		final AffineModel1D copy = new AffineModel1D();
-		final float[] data = new float[ 2 ];
+		final double[] data = new double[ 2 ];
 		copy.set( data[ 0 ], data[ 1 ] );
 		return copy;
 	}
@@ -65,21 +65,9 @@ final public class ConstantAffineModel1D< A extends Model< A > & Affine1D< A > &
 	}
 
 	@Override
-	public void toArray( final float[] data )
-	{
-		model.toArray( data );
-	}
-
-	@Override
 	public void toArray( final double[] data )
 	{
 		model.toArray( data );
-	}
-
-	@Override
-	public void toMatrix( final float[][] data )
-	{
-		model.toMatrix( data );
 	}
 
 	@Override
@@ -87,15 +75,15 @@ final public class ConstantAffineModel1D< A extends Model< A > & Affine1D< A > &
 	{
 		model.toMatrix( data );
 	}
-	
+
 	@Override
-	public void estimateBounds( final float[] min, final float[] max )
+	public void estimateBounds( final double[] min, final double[] max )
 	{
 		model.estimateBounds( min, max );
 	}
 
 	@Override
-	public void estimateInverseBounds( final float[] min, final float[] max ) throws NoninvertibleModelException
+	public void estimateInverseBounds( final double[] min, final double[] max ) throws NoninvertibleModelException
 	{
 		model.estimateInverseBounds( min, max );
 	}

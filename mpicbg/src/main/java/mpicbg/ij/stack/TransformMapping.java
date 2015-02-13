@@ -30,7 +30,7 @@ public class TransformMapping< T extends CoordinateTransform > extends AbstractT
 			final ImageStack source,
 			final ImageProcessor target )
 	{
-		final float[] t = new float[ 3 ];
+		final double[] t = new double[ 3 ];
 		final int sw = source.getWidth() - 1;
 		final int sh = source.getHeight() - 1;
 		final int sd = source.getSize();
@@ -72,7 +72,7 @@ public class TransformMapping< T extends CoordinateTransform > extends AbstractT
 			final ImageStack source,
 			final ImageProcessor target )
 	{
-		final float[] t = new float[ 3 ];
+		final double[] t = new double[ 3 ];
 		final int sw = source.getWidth() - 1;
 		final int sh = source.getHeight() - 1;
 		final int sd = source.getSize();

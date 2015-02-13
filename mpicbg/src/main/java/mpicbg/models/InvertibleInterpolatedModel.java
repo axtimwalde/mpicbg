@@ -18,22 +18,22 @@ package mpicbg.models;
 
 
 /**
- * Invertible specialization of {@link InterpolatedModel}. 
+ * Invertible specialization of {@link InterpolatedModel}.
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
  */
 public class InvertibleInterpolatedModel<
 		A extends Model< A > & InvertibleCoordinateTransform,
 		B extends Model< B > & InvertibleCoordinateTransform,
 		M extends InvertibleInterpolatedModel< A, B, M > > extends InterpolatedModel< A, B, M > implements InvertibleCoordinateTransform
 {
-	private static final long serialVersionUID = -8474223426611769525L;
+	private static final long serialVersionUID = -1800786784345843623L;
 
-	public InvertibleInterpolatedModel( final A a, final B b, final float lambda )
+	public InvertibleInterpolatedModel( final A a, final B b, final double lambda )
 	{
 		super( a, b, lambda );
 	}
-	
+
 	@Override
 	public M copy()
 	{
@@ -44,22 +44,22 @@ public class InvertibleInterpolatedModel<
 	}
 
 	@Override
-	public float[] applyInverse( final float[] point ) throws NoninvertibleModelException
+	public double[] applyInverse( final double[] point ) throws NoninvertibleModelException
 	{
-		final float[] copy = point.clone();
+		final double[] copy = point.clone();
 		applyInverseInPlace( copy );
 		return copy;
 	}
 
 	@Override
-	public void applyInverseInPlace( final float[] point ) throws NoninvertibleModelException
+	public void applyInverseInPlace( final double[] point ) throws NoninvertibleModelException
 	{
-		final float[] copy = b.applyInverse( point );
+		final double[] copy = b.applyInverse( point );
 		a.applyInverseInPlace( point );
-		
+
 		for ( int d = 0; d < point.length; ++d )
 		{
-			final float dd = copy[ d ] - point[ d ];
+			final double dd = copy[ d ] - point[ d ];
 			point[ d ] += lambda * dd;
 		}
 	}

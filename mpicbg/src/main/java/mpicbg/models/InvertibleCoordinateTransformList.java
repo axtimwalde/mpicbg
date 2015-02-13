@@ -1,3 +1,19 @@
+/**
+ * License: GPL
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License 2
+ * as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ */
 package mpicbg.models;
 
 import java.util.ArrayList;
@@ -7,14 +23,15 @@ import java.util.ListIterator;
 import mpicbg.util.Util;
 
 /**
- * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
- * @version 0.5b
+ *
+ * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
  */
 public class InvertibleCoordinateTransformList< E extends InvertibleCoordinateTransform > implements InvertibleBoundable, TransformList< E >
 {
+	private static final long serialVersionUID = 2139051181642287413L;
+
 	final protected List< E > transforms = new ArrayList< E >();
-	
+
 	@Override
 	public void add( final E t ){ transforms.add( t ); }
 	@Override
@@ -32,83 +49,78 @@ public class InvertibleCoordinateTransformList< E extends InvertibleCoordinateTr
 		returnList.addAll( transforms );
 		return returnList;
 	}
-	
-	//@Override
+
 	@Override
-	final public float[] apply( final float[] location )
+	final public double[] apply( final double[] location )
 	{
-		final float[] a = location.clone();
+		final double[] a = location.clone();
 		applyInPlace( a );
 		return a;
 	}
 
-	//@Override
 	@Override
-	final public void applyInPlace( final float[] location )
+	final public void applyInPlace( final double[] location )
 	{
 		for ( final E t : transforms )
 			t.applyInPlace( location );
 	}
-	
-	//@Override
+
 	@Override
-	final public float[] applyInverse( final float[] location ) throws NoninvertibleModelException
+	final public double[] applyInverse( final double[] location ) throws NoninvertibleModelException
 	{
-		final float[] a = location.clone();
+		final double[] a = location.clone();
 		applyInverseInPlace( a );
 		return a;
 	}
 
-	//@Override
 	@Override
-	final public void applyInverseInPlace( final float[] location ) throws NoninvertibleModelException
+	final public void applyInverseInPlace( final double[] location ) throws NoninvertibleModelException
 	{
 		final ListIterator< E > i = transforms.listIterator( transforms.size() );
 		while ( i.hasPrevious() )
 			i.previous().applyInverseInPlace( location );
 	}
-	
+
 	/**
 	 * {@inheritDoc}
-	 * 
+	 *
 	 * Estimate the bounds approximately by iteration over a fixed grid of
 	 * exemplary locations.
-	 * 
+	 *
 	 * TODO Find a better solution.
 	 */
-	//@Override
 	@Override
-	public void estimateBounds( final float[] min, final float[] max )
+	public void estimateBounds( final double[] min, final double[] max )
 	{
 		assert min.length == max.length : "min and max have to have equal length.";
-		
+
 		final int g = 32;
-		
-		final float[] minBounds = new float[ min.length ];
-		final float[] maxBounds = new float[ min.length ];
-		final float[] s = new float[ min.length ];
+
+		final double[] minBounds = new double[ min.length ];
+		final double[] maxBounds = new double[ min.length ];
+		final double[] s = new double[ min.length ];
 		final int[] i = new int[ min.length ];
-		final float[] l = new float[ min.length ];
-		
+		final double[] l = new double[ min.length ];
+
 		for ( int k = 0; k < min.length; ++k )
 		{
-			minBounds[ k ] = Float.MAX_VALUE;
-			maxBounds[ k ] = -Float.MAX_VALUE;
+			minBounds[ k ] = Double.MAX_VALUE;
+			maxBounds[ k ] = -Double.MAX_VALUE;
 			s[ k ] = ( max[ k ] - min[ k ] ) / ( g - 1 );
 			l[ k ] = min[ k ];
 		}
-		
+
 		final long d = Util.pow( g, min.length );
-		
+
 		for ( long j = 0; j < d; ++j )
 		{
-			final float[] m = apply( l );
+			final double[] m = apply( l );
 			for ( int k = 0; k < min.length; ++k )
 			{
 				if ( m[ k ] < minBounds[ k ] ) minBounds[ k ] = m[ k ];
 				if ( m[ k ] > maxBounds[ k ] ) maxBounds[ k ] = m[ k ];
 			}
-			
+
 			for ( int k = 0; k < min.length; ++k )
 			{
 				++i[ k ];
@@ -122,55 +134,54 @@ public class InvertibleCoordinateTransformList< E extends InvertibleCoordinateTr
 				break;
 			}
 		}
-		
+
 		for ( int k = 0; k < min.length; ++k )
 		{
 			min[ k ] = minBounds[ k ];
 			max[ k ] = maxBounds[ k ];
 		}
 	}
-	
+
 	/**
 	 * {@inheritDoc}
-	 * 
+	 *
 	 * Estimate the bounds approximately by iteration over a fixed grid of
 	 * exemplary locations.
-	 * 
+	 *
 	 * TODO Find a better solution.
 	 */
-	//@Override
 	@Override
-	public void estimateInverseBounds( final float[] min, final float[] max ) throws NoninvertibleModelException
+	public void estimateInverseBounds( final double[] min, final double[] max ) throws NoninvertibleModelException
 	{
 		assert min.length == max.length : "min and max have to have equal length.";
-		
+
 		final int g = 32;
-		
-		final float[] minBounds = new float[ min.length ];
-		final float[] maxBounds = new float[ min.length ];
-		final float[] s = new float[ min.length ];
+
+		final double[] minBounds = new double[ min.length ];
+		final double[] maxBounds = new double[ min.length ];
+		final double[] s = new double[ min.length ];
 		final int[] i = new int[ min.length ];
-		final float[] l = new float[ min.length ];
-		
+		final double[] l = new double[ min.length ];
+
 		for ( int k = 0; k < min.length; ++k )
 		{
-			minBounds[ k ] = Float.MAX_VALUE;
-			maxBounds[ k ] = -Float.MAX_VALUE;
+			minBounds[ k ] = Double.MAX_VALUE;
+			maxBounds[ k ] = -Double.MAX_VALUE;
 			s[ k ] = ( max[ k ] - min[ k ] ) / ( g - 1 );
 			l[ k ] = min[ k ];
 		}
-		
+
 		final long d = Util.pow( g, min.length );
-		
+
 		for ( long j = 0; j < d; ++j )
 		{
-			final float[] m = applyInverse( l );
+			final double[] m = applyInverse( l );
 			for ( int k = 0; k < min.length; ++k )
 			{
 				if ( m[ k ] < minBounds[ k ] ) minBounds[ k ] = m[ k ];
 				if ( m[ k ] > maxBounds[ k ] ) maxBounds[ k ] = m[ k ];
 			}
-			
+
 			for ( int k = 0; k < min.length; ++k )
 			{
 				++i[ k ];
@@ -184,14 +195,14 @@ public class InvertibleCoordinateTransformList< E extends InvertibleCoordinateTr
 				break;
 			}
 		}
-		
+
 		for ( int k = 0; k < min.length; ++k )
 		{
 			min[ k ] = minBounds[ k ];
 			max[ k ] = maxBounds[ k ];
 		}
 	}
-	
+
 	@SuppressWarnings( "unchecked" )
 	@Override
 	public InvertibleCoordinateTransformList< E > createInverse()

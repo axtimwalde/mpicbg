@@ -3,19 +3,19 @@ package mpicbg.util;
 
 /**
  * Methods collection for general purpose that do not have a common context
- * 
+ *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.1b
  */
 final public class Util
 {
 	final static public float SQRT2 = ( float )Math.sqrt( 2 );
-	
+
 	private Util(){}
-	
+
 	/**
 	 * (Hopefully) fast floor log<sub>2</sub> of an unsigned(!) integer value.
-	 * 
+	 *
 	 * @param v unsigned integer
 	 * @return floor log<sub>2</sub>
 	 */
@@ -30,7 +30,7 @@ final public class Util
 	    while ( v > 1 );
 	    return c;
 	}
-	
+
 	/**
 	 * Return an unsigned integer that bounces in a ping pong manner in the range [0 ... mod - 1]
 	 *
@@ -46,10 +46,10 @@ final public class Util
 		if ( a >= mod ) a = mod - a % mod - 1;
 		return a;
 	}
-	
+
 	/**
 	 * Integer version of {@link Math#pow(double, double)}.
-	 * 
+	 *
 	 * @param a
 	 * @param b
 	 * @return
@@ -61,10 +61,10 @@ final public class Util
 			c *= a;
 		return c;
 	}
-	
+
 	/**
 	 * Float/Integer version of {@link Math#pow(double, double)}.
-	 * 
+	 *
 	 * @param a
 	 * @param b
 	 * @return
@@ -76,10 +76,10 @@ final public class Util
 			c *= a;
 		return c;
 	}
-	
+
 	/**
 	 * Double/Integer version of {@link Math#pow(double, double)}.
-	 * 
+	 *
 	 * @param a
 	 * @param b
 	 * @return
@@ -91,10 +91,10 @@ final public class Util
 			c *= a;
 		return c;
 	}
-	
+
 	/**
 	 * Writes min(a,b) into a
-	 * 
+	 *
 	 * @param a
 	 * @param b
 	 */
@@ -103,10 +103,10 @@ final public class Util
 		for ( int i = 0; i < a.length; ++i )
 			if ( b[ i ] < a[ i ] ) a[ i ] = b[ i ];
 	}
-	
+
 	/**
 	 * Writes max(a,b) into a
-	 * 
+	 *
 	 * @param a
 	 * @param b
 	 */
@@ -115,50 +115,74 @@ final public class Util
 		for ( int i = 0; i < a.length; ++i )
 			if ( b[ i ] > a[ i ] ) a[ i ] = b[ i ];
 	}
-	
+
+	/**
+	 * Writes min(a,b) into a
+	 *
+	 * @param a
+	 * @param b
+	 */
+	final static public void min( final double[] a, final double[] b )
+	{
+		for ( int i = 0; i < a.length; ++i )
+			if ( b[ i ] < a[ i ] ) a[ i ] = b[ i ];
+	}
+
+	/**
+	 * Writes max(a,b) into a
+	 *
+	 * @param a
+	 * @param b
+	 */
+	final static public void max( final double[] a, final double[] b )
+	{
+		for ( int i = 0; i < a.length; ++i )
+			if ( b[ i ] > a[ i ] ) a[ i ] = b[ i ];
+	}
+
 	/**
 	 * Round a
-	 * 
+	 *
 	 * @param a
 	 */
 	final static public int round( final float a )
 	{
 		return ( int )( a + Math.signum( a ) * 0.5f );
 	}
-	
+
 	/**
 	 * Round a
-	 * 
+	 *
 	 * @param a
 	 */
 	final static public int round( final double a )
 	{
 		return ( int )( a + Math.signum( a ) * 0.5 );
 	}
-	
+
 	/**
 	 * Round a positive a
-	 * 
+	 *
 	 * @param a
 	 */
 	final static public int roundPos( final float a )
 	{
 		return ( int )( a + 0.5f );
 	}
-	
+
 	/**
 	 * Round a positive a
-	 * 
+	 *
 	 * @param a
 	 */
 	final static public int roundPos( final double a )
 	{
 		return ( int )( a + 0.5 );
 	}
-	
+
 	/**
 	 * An equivalent to div for float
-	 * 
+	 *
 	 * @param a
 	 * @param b
 	 * @return a div b
@@ -171,11 +195,11 @@ final public class Util
 		else
 			return div + 1;
 	}
-	
-	
+
+
 	/**
 	 * An equivalent to % for float
-	 * 
+	 *
 	 * @param a
 	 * @param mod
 	 * @return 0 <= b < mod
@@ -188,15 +212,15 @@ final public class Util
 		else
 			return b + mod;
 	}
-	
-	
+
+
 	/**
 	 * For Java, the fastest way doing memset(x)
-	 * 
+	 *
 	 * Found at
-	 * 
+	 *
 	 * http://burks.brighton.ac.uk/burks/language/java/jprogfaq/faq_b.htm
-	 * 
+	 *
 	 * @param array
 	 * @param value
 	 */
@@ -208,14 +232,14 @@ final public class Util
 	    for ( int i = 1; i < len; i += i )
 	        System.arraycopy( array, 0, array, i, ( ( len - i ) < i ) ? ( len - i ) : i );
 	}
-	
+
 	/**
 	 * For Java, the fastest way doing memset(x)
-	 * 
+	 *
 	 * Found at
-	 * 
+	 *
 	 * http://burks.brighton.ac.uk/burks/language/java/jprogfaq/faq_b.htm
-	 * 
+	 *
 	 * @param array
 	 * @param value
 	 */
@@ -227,14 +251,14 @@ final public class Util
 	    for ( int i = 1; i < len; i += i )
 	        System.arraycopy( array, 0, array, i, ( ( len - i ) < i ) ? ( len - i ) : i );
 	}
-	
+
 	/**
 	 * For Java, the fastest way doing memset(x)
-	 * 
+	 *
 	 * Found at
-	 * 
+	 *
 	 * http://burks.brighton.ac.uk/burks/language/java/jprogfaq/faq_b.htm
-	 * 
+	 *
 	 * @param array
 	 * @param value
 	 */
@@ -246,14 +270,14 @@ final public class Util
 	    for ( int i = 1; i < len; i += i )
 	        System.arraycopy( array, 0, array, i, ( ( len - i ) < i ) ? ( len - i ) : i );
 	}
-	
+
 	/**
 	 * For Java, the fastest way doing memset(x)
-	 * 
+	 *
 	 * Found at
-	 * 
+	 *
 	 * http://burks.brighton.ac.uk/burks/language/java/jprogfaq/faq_b.htm
-	 * 
+	 *
 	 * @param array
 	 * @param value
 	 */
@@ -265,14 +289,14 @@ final public class Util
 	    for ( int i = 1; i < len; i += i )
 	        System.arraycopy( array, 0, array, i, ( ( len - i ) < i ) ? ( len - i ) : i );
 	}
-	
+
 	/**
 	 * For Java, the fastest way doing memset(x)
-	 * 
+	 *
 	 * Found at
-	 * 
+	 *
 	 * http://burks.brighton.ac.uk/burks/language/java/jprogfaq/faq_b.htm
-	 * 
+	 *
 	 * @param array
 	 * @param value
 	 */
@@ -284,14 +308,14 @@ final public class Util
 	    for ( int i = 1; i < len; i += i )
 	        System.arraycopy( array, 0, array, i, ( ( len - i ) < i ) ? ( len - i ) : i );
 	}
-	
+
 	/**
 	 * For Java, the fastest way doing memset(x)
-	 * 
+	 *
 	 * Found at
-	 * 
+	 *
 	 * http://burks.brighton.ac.uk/burks/language/java/jprogfaq/faq_b.htm
-	 * 
+	 *
 	 * @param array
 	 * @param value
 	 */
@@ -303,14 +327,14 @@ final public class Util
 	    for ( int i = 1; i < len; i += i )
 	        System.arraycopy( array, 0, array, i, ( ( len - i ) < i ) ? ( len - i ) : i );
 	}
-	
+
 	/**
 	 * For Java, the fastest way doing memset(x)
-	 * 
+	 *
 	 * Found at
-	 * 
+	 *
 	 * http://burks.brighton.ac.uk/burks/language/java/jprogfaq/faq_b.htm
-	 * 
+	 *
 	 * @param array
 	 * @param value
 	 */
@@ -322,14 +346,14 @@ final public class Util
 	    for ( int i = 1; i < len; i += i )
 	        System.arraycopy( array, 0, array, i, ( ( len - i ) < i ) ? ( len - i ) : i );
 	}
-	
+
 	/**
 	 * For Java, the fastest way doing memset(x)
-	 * 
+	 *
 	 * Found at
-	 * 
+	 *
 	 * http://burks.brighton.ac.uk/burks/language/java/jprogfaq/faq_b.htm
-	 * 
+	 *
 	 * @param array
 	 * @param value
 	 */
@@ -340,5 +364,5 @@ final public class Util
 	    array[ 0 ] = value;
 	    for ( int i = 1; i < len; i += i )
 	        System.arraycopy( array, 0, array, i, ( ( len - i ) < i ) ? ( len - i ) : i );
-	}	
+	}
 }

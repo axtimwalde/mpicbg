@@ -37,30 +37,30 @@ import mpicbg.models.TranslationModel2D;
 /**
  * Methods for establishing block-based correspondences for given sets of
  * source {@link Point Points}.
- * 
+ *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.1b
  */
 public class BlockMatching
 {
-	/* 
+	/*
 	 * &sigma; of the Gaussian kernel required to make an image sampled at
 	 * &sigma; = 1.6 (as suggested by Lowe, 2004)
 	 */
 	final static private float minSigma = 1.6f;
 //	final static private float minDiffSigma = ( float )Math.sqrt( minSigma * minSigma - 0.5f );
-	
+
 	private BlockMatching(){}
-	
+
 	/**
 	 * Estimate the mean intensity of a block.
-	 * 
+	 *
 	 * <dl>
 	 * <dt>Note:</dt>
 	 * <dd>Make sure that the block is fully contained in the image, this will
 	 * not be checked by the method for efficiency reasons.</dd>
 	 * </dl>
-	 * 
+	 *
 	 * @param fp
 	 * @param tx
 	 * @param ty
@@ -77,7 +77,7 @@ public class BlockMatching
 	{
 		final int width = fp.getWidth();
 		final float[] pixels = ( float[] )fp.getPixels();
-		
+
 		double sum = 0;
 		for ( int y = ty + blockHeight - 1; y >= ty; --y )
 		{
@@ -87,11 +87,11 @@ public class BlockMatching
 		}
 		return ( float )( sum / blockWidth / blockHeight );
 	}
-	
-	
+
+
 	/**
 	 * Set all pixels in source with a mask value < 0.95f to NaN
-	 * 
+	 *
 	 * @param source
 	 * @param mask
 	 */
@@ -107,14 +107,14 @@ public class BlockMatching
 				sourcePixels[ i ] = Float.NaN;
 		}
 	}
-	
+
 	final static private void mapAndMask(
 			final ImageProcessor source,
 			final ImageProcessor mask,
 			final ImageProcessor target,
 			final CoordinateTransform transform )
 	{
-		final float[] t = new float[ 2 ];
+		final double[] t = new double[ 2 ];
 		final int sw = source.getWidth() - 1;
 		final int sh = source.getHeight() - 1;
 		final int tw = target.getWidth();
@@ -136,16 +136,16 @@ public class BlockMatching
 			}
 		}
 	}
-	
+
 	/**
 	 * Estimate the intensity variance of a block.
-	 * 
+	 *
 	 * <dl>
 	 * <dt>Note:</dt>
 	 * <dd>Make sure that the block is fully contained in the image, this will
 	 * not be checked by the method for efficiency reasons.</dd>
 	 * </dl>
-	 * 
+	 *
 	 * @param fp
 	 * @param tx
 	 * @param ty
@@ -163,7 +163,7 @@ public class BlockMatching
 	{
 		final int width = fp.getWidth();
 		final float[] pixels = ( float[] )fp.getPixels();
-		
+
 		double sum = 0;
 		for ( int y = ty + blockHeight - 1; y >= ty; --y )
 		{
@@ -176,13 +176,13 @@ public class BlockMatching
 		}
 		return ( float )( sum / ( blockWidth * blockHeight - 1 ) );
 	}
-	
+
 	/**
      * Estimate {@linkplain PointMatch point correspondences} for a
      * {@link Collection} of {@link Point Points} among two images that are
      * approximately related by an {@link InvertibleCoordinateTransform} using
      * the square difference of pixel intensities as a similarity measure.
-     *  
+     *
      * @param source
      * @param target
      * @param transform transfers source into target approximately
@@ -206,10 +206,10 @@ public class BlockMatching
 	{
 		Util.normalizeContrast( source );
 		Util.normalizeContrast( target );
-		
+
 		final FloatProcessor mappedTarget = new FloatProcessor( source.getWidth() + 2 * searchRadiusX, source.getHeight() + 2 * searchRadiusY );
 		Util.fillWithNaN( mappedTarget );
-		
+
 		final TranslationModel2D tTarget = new TranslationModel2D();
 		tTarget.set( -searchRadiusX, -searchRadiusY );
 		final CoordinateTransformList< CoordinateTransform > lTarget = new CoordinateTransformList< CoordinateTransform >();
@@ -217,16 +217,16 @@ public class BlockMatching
 		lTarget.add( transform );
 		final InverseMapping< ? > targetMapping = new TransformMapping< CoordinateTransform >( lTarget );
 		targetMapping.mapInverseInterpolated( target, mappedTarget );
-		
+
 //		mappedTarget.setMinAndMax( 0, 1 );
 //		new ImagePlus( "Mapped Target", mappedTarget ).show();
-		
+
 		int k = 0;
 		for ( final Point p : sourcePoints )
 		{
-			final float[] s = p.getL();
-			final int px = Math.round( s[ 0 ] );
-			final int py = Math.round( s[ 1 ] );
+			final double[] s = p.getL();
+			final int px = ( int )Math.round( s[ 0 ] );
+			final int py = ( int )Math.round( s[ 1 ] );
 			if (
 					px - blockRadiusX >= 0 &&
 					px + blockRadiusX < source.getWidth() &&
@@ -234,8 +234,8 @@ public class BlockMatching
 					py + blockRadiusY < source.getHeight() )
 			{
 				IJ.showProgress( k++, sourcePoints.size() );
-				float tx = 0;
-				float ty = 0;
+				double tx = 0;
+				double ty = 0;
 				float dMin = Float.MAX_VALUE;
 				for ( int ity = -searchRadiusY; ity <= searchRadiusY; ++ity )
 					for ( int itx = -searchRadiusX; itx <= searchRadiusX; ++itx )
@@ -271,15 +271,15 @@ public class BlockMatching
 							}
 						}
 					}
-				final float[] t = new float[]{ tx + s[ 0 ], ty + s[ 1 ] };
+				final double[] t = new double[]{ tx + s[ 0 ], ty + s[ 1 ] };
 				System.out.println( k + " : " + tx + ", " + ty );
 				transform.applyInPlace( t );
 				sourceMatches.add( new PointMatch( p, new Point( t ) ) );
 			}
 		}
 	}
-    
-    
+
+
     static protected void matchByMaximalPMCC(
     		final FloatProcessor source,
     		final FloatProcessor target,
@@ -305,10 +305,10 @@ public class BlockMatching
 		/* </visualisation> */
 
 		final AtomicInteger k = new AtomicInteger( 0 );
-		
+
 		final ExecutorService exec = Executors.newFixedThreadPool( Runtime.getRuntime().availableProcessors() );
 		final ArrayList< Future< PointMatch > > tasks = new ArrayList< Future< PointMatch > >();
-		
+
 		for ( final PointMatch pm : query )
 		{
 			tasks.add( exec.submit( new Callable< PointMatch >()
@@ -317,12 +317,12 @@ public class BlockMatching
 				public PointMatch call()
 				{
 					IJ.showProgress( k.getAndIncrement(), query.size() );
-					
+
 					final Point p = pm.getP1();
 
-					final float[] s = p.getL();
-					final int px = Math.round( s[ 0 ] );
-					final int py = Math.round( s[ 1 ] );
+					final double[] s = p.getL();
+					final int px = ( int )Math.round( s[ 0 ] );
+					final int py = ( int )Math.round( s[ 1 ] );
 					final int ptx = px - blockRadiusX;
 					final int pty = py - blockRadiusY;
 					if ( ptx >= 0 && ptx + blockWidth < source.getWidth() && pty >= 0 && pty + blockHeight < source.getHeight() )
@@ -334,8 +334,8 @@ public class BlockMatching
 						if ( sourceBlockStd == 0 )
 							return null;
 
-						float tx = 0;
-						float ty = 0;
+						double tx = 0;
+						double ty = 0;
 						float rMax = -Float.MAX_VALUE;
 
 						final FloatProcessor rMap = new FloatProcessor( 2 * searchRadiusX + 1, 2 * searchRadiusY + 1 );
@@ -377,7 +377,7 @@ public class BlockMatching
 
 							}
 						}
-						
+
 						/* <visualisation> */
 //						synchronized ( rMapStack )
 //						{
@@ -389,7 +389,7 @@ public class BlockMatching
 						/* search and process maxima */
 						float bestR = -2.0f;
 						float secondBestR = -2.0f;
-						float dx = 0, dy = 0, dxx = 0, dyy = 0, dxy = 0;
+						double dx = 0, dy = 0, dxx = 0, dyy = 0, dxy = 0;
 						for ( int y = 2 * searchRadiusY - 1; y > 0; --y )
 							for ( int x = 2 * searchRadiusX - 1; x > 0; --x )
 							{
@@ -463,8 +463,8 @@ public class BlockMatching
 //						IJ.log( "rod test passed" );
 
 						/* is it well localized in both x and y? */
-						final float det = dxx * dyy - dxy * dxy;
-						final float trace = dxx + dyy;
+						final double det = dxx * dyy - dxy * dxy;
+						final double trace = dxx + dyy;
 						if ( det <= 0 || trace * trace / det > maxCurvatureRatio )
 							return null;
 
@@ -472,20 +472,20 @@ public class BlockMatching
 
 						/* localize by Taylor expansion */
 						/* invert Hessian */
-						final float ixx = dyy / det;
-						final float ixy = -dxy / det;
-						final float iyy = dxx / det;
+						final double ixx = dyy / det;
+						final double ixy = -dxy / det;
+						final double iyy = dxx / det;
 
 						/* calculate offset */
-						final float ox = -ixx * dx - ixy * dy;
-						final float oy = -ixy * dx - iyy * dy;
+						final double ox = -ixx * dx - ixy * dy;
+						final double oy = -ixy * dx - iyy * dy;
 
 						if ( ox >= 1 || oy >= 1 || ox <= -1 || oy <= -1 )
 							return null;
 
 //						IJ.log( "localized" );
 
-						final float[] t = new float[] { tx + s[ 0 ] + ox, ty + s[ 1 ] + oy };
+						final double[] t = new double[] { tx + s[ 0 ] + ox, ty + s[ 1 ] + oy };
 						return new PointMatch( p, new Point( t ) );
 					}
 					else
@@ -493,7 +493,7 @@ public class BlockMatching
 				}
 			} ) );
 		}
-		
+
 		for ( final Future< PointMatch > fu : tasks )
 		{
 			try
@@ -508,19 +508,19 @@ public class BlockMatching
 				throw e;
 			}
 		}
-		
+
 		tasks.clear();
 		exec.shutdown();
-		
+
 		/* <visualisation> */
 //		if ( results.size() > 0 ) new ImagePlus( "r", rMapStack ).show();
 //		if ( rMapStack.getSize() > 0 ) new ImagePlus( "r", rMapStack ).show();
 		/* </visualisation> */
 	}
-				
-				
-    
-    
+
+
+
+
     /**
 	 * Estimate {@linkplain PointMatch point correspondences} for a
 	 * {@link Collection} of {@link Point Points} among two images that are
@@ -528,7 +528,7 @@ public class BlockMatching
 	 * the Pearson product-moment correlation coefficient (PMCC) <i>r</i> of
 	 * pixel intensities as similarity measure. Only correspondence candidates
 	 * with <i>r</i> >= a given threshold are accepted.
-	 * 
+	 *
 	 * @param source
 	 * @param target
 	 * @param sourceMask
@@ -557,7 +557,7 @@ public class BlockMatching
 			FloatProcessor target,
 			FloatProcessor sourceMask,
 			final FloatProcessor targetMask,
-			final float scale,
+			final double scale,
 			final CoordinateTransform transform,
 			final int blockRadiusX,
 			final int blockRadiusY,
@@ -574,41 +574,41 @@ public class BlockMatching
     	final int scaledBlockRadiusY = ( int )Math.ceil( scale * blockRadiusY );
     	final int scaledSearchRadiusX = ( int )Math.ceil( scale * searchRadiusX ) + 1; // +1 for 3x3 maximum test
     	final int scaledSearchRadiusY = ( int )Math.ceil( scale * searchRadiusY ) + 1; // +1 for 3x3 maximum test
-    	
+
     	/* Scale source */
     	source = Filter.createDownsampled( source, scale, 0.5f, minSigma );
     	Util.normalizeContrast( source );
-    	
+
     	/* Scaled source mask */
     	if ( sourceMask != null )
     		mask( source, Filter.createDownsampled( sourceMask, scale, 0.5f, 0.5f ) );
-    	
+
     	/* Free memory */
     	sourceMask = null;
-    	
+
     	/* Smooth target with respect to the desired scale */
     	target = ( FloatProcessor )target.duplicate();
-    	
+
     	Filter.smoothForScale( target, scale, 0.5f, minSigma );
     	Util.normalizeContrast( target );
-    	
+
     	final FloatProcessor mappedScaledTarget = new FloatProcessor( source.getWidth() + 2 * scaledSearchRadiusX, source.getHeight() + 2 * scaledSearchRadiusY );
 		Util.fillWithNaN( mappedScaledTarget );
-		
+
 		/* Shift relative to the scaled search radius */
 		final TranslationModel2D tTarget = new TranslationModel2D();
 		tTarget.set( -scaledSearchRadiusX / scale, -scaledSearchRadiusY / scale );
-		
+
 		/* Scale */
 		final SimilarityModel2D sTarget = new SimilarityModel2D();
 		sTarget.set( 1.0f / scale, 0, 0, 0 );
-		
+
 		/* Combined transformation */
 		final CoordinateTransformList< CoordinateTransform > lTarget = new CoordinateTransformList< CoordinateTransform >();
 		lTarget.add( sTarget );
 		lTarget.add( tTarget );
 		lTarget.add( transform );
-		
+
 		if ( targetMask == null )
 		{
 			final InverseMapping< ? > targetMapping = new TransformMapping< CoordinateTransform >( lTarget );
@@ -618,35 +618,35 @@ public class BlockMatching
 		{
 			final FloatProcessor smoothedTargetMask = ( FloatProcessor )targetMask.duplicate();
 	    	Filter.smoothForScale( smoothedTargetMask, scale, 0.5f, 0.5f );
-	    	
+
 	    	mapAndMask( target, smoothedTargetMask, mappedScaledTarget, lTarget );
 		}
-		
+
 		target = null;
-		
+
 		/* <visualization> */
 //		source.setMinAndMax( 0, 1 );
 //		mappedScaledTarget.setMinAndMax( 0, 1 );
 //		new ImagePlus( "Scaled Source", source ).show();
-//		new ImagePlus( "Mapped Target", mappedScaledTarget ).show();		
+//		new ImagePlus( "Mapped Target", mappedScaledTarget ).show();
 		/* </visualization> */
-		
+
 		final Map< Point, Point > scaledSourcePoints = new HashMap< Point, Point>();
 		final ArrayList< PointMatch > scaledSourceMatches = new ArrayList< PointMatch >();
-		
+
 		for ( final Point p : sourcePoints )
 		{
-			final float[] l = p.getL().clone();
+			final double[] l = p.getL().clone();
 			l[ 0 ] *= scale;
 			l[ 1 ] *= scale;
 			scaledSourcePoints.put( new Point( l ), p );
 		}
-		
+
 		/* initialize source points and the expected place to search for them temporarily */
 		final Collection< PointMatch > query = new ArrayList< PointMatch >();
 		for ( final Point p : scaledSourcePoints.keySet() )
 			query.add( new PointMatch( p, p.clone()) );
-		
+
 		matchByMaximalPMCC(
 				source,
 				mappedScaledTarget,
@@ -659,26 +659,26 @@ public class BlockMatching
 				maxCurvature,
 				query,
 				scaledSourceMatches );
-		
+
 		for ( final PointMatch p : scaledSourceMatches )
 		{
-			final float[] l1 = p.getP1().getL().clone();
-			final float[] l2 = p.getP2().getL().clone();
+			final double[] l1 = p.getP1().getL().clone();
+			final double[] l2 = p.getP2().getL().clone();
 			l1[ 0 ] /= scale;
 			l1[ 1 ] /= scale;
 			l2[ 0 ] /= scale;
 			l2[ 1 ] /= scale;
-			
-			final float tx = l2[ 0 ] - l1[ 0 ];
-			final float ty = l2[ 1 ] - l1[ 1 ];
-			
+
+			final double tx = l2[ 0 ] - l1[ 0 ];
+			final double ty = l2[ 1 ] - l1[ 1 ];
+
 			observer.add( Math.sqrt( tx * tx + ty * ty ) );
-			
+
 			transform.applyInPlace( l2 );
 			sourceMatches.add( new PointMatch( scaledSourcePoints.get( p.getP1() ), new Point( l2 ) ) );
 		}
 	}
-    
+
     /**
      * Estimate {@linkplain PointMatch point correspondences} for a
      * {@link Collection} of {@link Point Points} among two images that are
@@ -686,7 +686,7 @@ public class BlockMatching
      * the Pearson product-moment correlation coefficient (PMCC) <i>r</i> of
      * pixel intensities as similarity measure.  Only correspondence candidates
      * with <i>r</i> >= a given threshold are accepted.
-     *  
+     *
      * @param scaledSource
      * @param target
      * @param scale [0,1]
@@ -732,7 +732,7 @@ public class BlockMatching
     			sourceMatches,
     			observer );
 	}
-    
+
     public static void findMatches(
     		final FloatProcessor source,
     		final FloatProcessor target,
@@ -751,13 +751,13 @@ public class BlockMatching
 	{
 		CoordinateTransform ict = initialModel;
 		final Collection< Point > sourcePoints = new ArrayList< Point >();
-		
+
 		final ErrorStatistic observer = new ErrorStatistic( 1 );
-		
+
 		for ( int n = Math.max( 4, Math.min( ( int )meshResolution, ( int )Math.ceil( source.getWidth() / maxEpsilon / 4 ) ) ); n <= meshResolution; n *= 2 )
 		{
 			n = Math.min( meshResolution, n );
-			
+
 			final MovingLeastSquaresTransform mlst = new MovingLeastSquaresTransform();
 			try
 			{
@@ -768,21 +768,21 @@ public class BlockMatching
 				IJ.error( "Invalid local model selected." );
 				return;
 			}
-			
+
 			//if ( sourceMatches )
-			
+
 			final int searchRadius = observer.n() < mlst.getModel().getMinNumMatches()
 					? ( int )Math.ceil( maxEpsilon )
 					: ( int )Math.ceil( observer.max );
-			final float scale = Math.min(  maxScale, 16.0f / searchRadius );
+			final double scale = Math.min(  maxScale, 16.0 / searchRadius );
 			final int blockRadius = ( int )Math.ceil( 32 / scale );
 //			final int blockRadius = Math.max( 16, 3 * p.imp1.getWidth() / n );
 //			final int searchRadius = ( int )( sourceMatches.size() >= mlst.getModel().getMinNumMatches() ? Math.min( p.maxEpsilon + 0.5f, blockRadius / 3 ) : p.maxEpsilon );
-			
+
 			/* block match forward */
 			sourcePoints.clear();
 			sourceMatches.clear();
-			
+
 			final TransformMesh mesh = new TransformMesh( n, source.getWidth(), source.getHeight() );
 			PointMatch.sourcePoints( mesh.getVA().keySet(), sourcePoints );
 			observer.clear();
@@ -804,14 +804,14 @@ public class BlockMatching
 					sourcePoints,
 					sourceMatches,
 					observer );
-			
+
 			IJ.log( "Blockmatching at n = " + n );
 			IJ.log( " average offset : " + observer.mean );
 			IJ.log( " minimal offset : " + observer.min );
 			IJ.log( " maximal offset : " + observer.max );
-			
+
 			if  ( sourceMatches.size() >= mlst.getModel().getMinNumMatches() )
-			{	
+			{
 				mlst.setAlpha( alpha );
 				try
 				{
@@ -823,22 +823,22 @@ public class BlockMatching
 		}
 		// TODO refine the search results by rematching at higher resolution with lower search radius
 	}
-    
-    
+
+
 	/**
 	 * Create a Shape that illustrates a {@link Collection} of
-	 * {@link PointMatch PointMatches}. 
-	 * 
+	 * {@link PointMatch PointMatches}.
+	 *
 	 * @return the illustration
 	 */
 	static public Shape illustrateMatches( final Collection< PointMatch > matches)
 	{
 		final GeneralPath path = new GeneralPath();
-		
+
 		for ( final PointMatch m : matches )
 		{
-			final float[] w1 = m.getP1().getW();
-			final float[] w2 = m.getP2().getW();
+			final double[] w1 = m.getP1().getW();
+			final double[] w2 = m.getP2().getW();
 			path.moveTo( w1[ 0 ] - 1, w1[ 1 ] - 1 );
 			path.lineTo( w1[ 0 ] - 1, w1[ 1 ] + 1 );
 			path.lineTo( w1[ 0 ] + 1, w1[ 1 ] + 1 );
@@ -847,7 +847,7 @@ public class BlockMatching
 			path.moveTo( w1[ 0 ], w1[ 1 ] );
 			path.lineTo( w2[ 0 ], w2[ 1 ] );
 		}
-		
+
 		return path;
 	}
 }

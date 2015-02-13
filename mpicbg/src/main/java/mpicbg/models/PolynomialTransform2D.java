@@ -31,6 +31,8 @@ import mpicbg.ij.TransformMeshMapping;
  */
 public class PolynomialTransform2D implements CoordinateTransform
 {
+	private static final long serialVersionUID = 1101543117241957329L;
+
 	/**
 	 * order of the polynomial transform
 	 */
@@ -142,46 +144,24 @@ public class PolynomialTransform2D implements CoordinateTransform
 	}
 
 	@Override
-	public float[] apply( final float[] location )
+	public double[] apply( final double[] location )
 	{
-		final float[] copy = location.clone();
+		final double[] copy = location.clone();
 		applyInPlace( copy );
 		return copy;
 	}
 
 	@Override
-	public void applyInPlace( final float[] location )
+	public void applyInPlace( final double[] location )
 	{
-//		final double x = location[ 0 ];
-//		final double y = location[ 1 ];
-//		final double u =
-//				a[ 0 ] +
-//				a[ 1 ] * x +
-//				a[ 2 ] * y +
-//				a[ 3 ] * x * x +
-//				a[ 4 ] * x * y +
-//				a[ 5 ] * y * y;
-//
-//		final double v =
-//				a[ 6 ] +
-//				a[ 7 ] * x +
-//				a[ 8 ] * y +
-//				a[ 9 ] * x * x +
-//				a[ 10 ] * x * y +
-//				a[ 11 ] * y * y;
-//
-//		location[ 0 ] = ( float )u;
-//		location[ 1 ] = ( float )v;
 		populateTerms( location[ 0 ], location[ 1 ] );
-		double u = a[ 0 ];
+		location[ 0 ] = a[ 0 ];
 		for ( int i = 0; i < polTerms.length;)
-			u += polTerms[ i ] * a[ ++i ];
+			location[ 0 ] += polTerms[ i ] * a[ ++i ];
 		final int numPolTerms = polTerms.length + 1;
-		double v = a[ numPolTerms ];
+		location[ 1 ] = a[ numPolTerms ];
 		for ( int i = 0; i < polTerms.length;)
-			v += polTerms[ i ] * a[ ++i + numPolTerms ];
-		location[ 0 ] = ( float )u;
-		location[ 1 ] = ( float )v;
+			location[ 1 ] += polTerms[ i ] * a[ ++i + numPolTerms ];
 	}
 
 	final static public void main( final String... args )
@@ -204,8 +184,8 @@ public class PolynomialTransform2D implements CoordinateTransform
 				-3.3675352e-07, -8.9721973e-07, -5.4985399e-06 );
 
 		final CoordinateTransformMesh boundsMesh = new CoordinateTransformMesh( t, 64, imp.getWidth(), imp.getHeight() );
-		final float[] min = new float[2];
-		final float[] max = new float[2];
+		final double[] min = new double[2];
+		final double[] max = new double[2];
 		boundsMesh.bounds( min, max );
 		System.out.println( Arrays.toString( min ) );
 		final TranslationModel2D shift = new TranslationModel2D();
@@ -224,7 +204,5 @@ public class PolynomialTransform2D implements CoordinateTransform
 
 		t.set( new double[ 66 * 2 ] );
 		t.printTerms();
-
 	}
-
 }
