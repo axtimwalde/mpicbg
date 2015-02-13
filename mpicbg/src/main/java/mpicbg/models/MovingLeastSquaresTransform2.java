@@ -56,9 +56,9 @@ public class MovingLeastSquaresTransform2 extends AbstractMovingLeastSquaresTran
 {
 	private static final long serialVersionUID = -8809482252029606075L;
 
-	protected double[][] p;
-	protected double[][] q;
-	protected double[] w;
+	protected float[][] p;
+	protected float[][] q;
+	protected float[] w;
 
 	/**
 	 * Set the control points.  {@link PointMatch PointMatches} are not stored
@@ -76,9 +76,9 @@ public class MovingLeastSquaresTransform2 extends AbstractMovingLeastSquaresTran
 		 */
 		final int n = ( matches.size() > 0 ) ? matches.iterator().next().getP1().getL().length : 0;
 
-		p = new double[ n ][ matches.size() ];
-		q = new double[ n ][ matches.size() ];
-		w = new double[ matches.size() ];
+		p = new float[ n ][ matches.size() ];
+		q = new float[ n ][ matches.size() ];
+		w = new float[ matches.size() ];
 
 		int i = 0;
 		for ( final PointMatch match : matches )
@@ -88,10 +88,10 @@ public class MovingLeastSquaresTransform2 extends AbstractMovingLeastSquaresTran
 
 			for ( int d = 0; d < n; ++d )
 			{
-				p[ d ][ i ] = pp[ d ];
-				q[ d ][ i ] = qq[ d ];
+				p[ d ][ i ] = ( float )pp[ d ];
+				q[ d ][ i ] = ( float )qq[ d ];
 			}
-			w[ i ] = match.getWeight();
+			w[ i ] = ( float )match.getWeight();
 			++i;
 		}
 		if ( n > 0 )
@@ -115,9 +115,9 @@ public class MovingLeastSquaresTransform2 extends AbstractMovingLeastSquaresTran
 	 * @param w weights
 	 */
 	final public void setMatches(
-			final double[][] p,
-			final double[][] q,
-			final double[] w )
+			final float[][] p,
+			final float[][] q,
+			final float[] w )
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
 		this.p = p;
@@ -130,7 +130,7 @@ public class MovingLeastSquaresTransform2 extends AbstractMovingLeastSquaresTran
 	@Override
 	public void applyInPlace( final double[] location )
 	{
-		final double[] ww = new double[ w.length ];
+		final float[] ww = new float[ w.length ];
 		for ( int i = 0; i < w.length; ++i )
 		{
 			double s = 0;
@@ -145,7 +145,7 @@ public class MovingLeastSquaresTransform2 extends AbstractMovingLeastSquaresTran
 					location[ d ] = q[ d ][ i ];
 				return;
 			}
-			ww[ i ] = w[ i ] * weigh( s );
+			ww[ i ] = ( float )( w[ i ] * weigh( s ) );
 		}
 
 		try
