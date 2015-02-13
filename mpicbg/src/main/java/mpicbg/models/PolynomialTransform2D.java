@@ -35,7 +35,7 @@ public class PolynomialTransform2D implements CoordinateTransform
 	 * order of the polynomial transform
 	 */
 	protected int order = 0;
-	
+
 	/**
 	 * holds two coefficients for each polynomial coefficient, including 1
 	 * initialized at 0 order, i.e. translation, the order follows that
@@ -56,11 +56,11 @@ public class PolynomialTransform2D implements CoordinateTransform
 	 * excluding 1 because we want to avoid repeated multiplication with 1
 	 */
 	protected double[] polTerms = new double[ 0 ];
-	
+
 	/**
 	 * Calculate the maximum order of a polynom whose number of polyynomial
 	 * terms is smaller or equal a given number.
-	 * 
+	 *
 	 * @param numPolTerms
 	 * @return
 	 */
@@ -68,11 +68,11 @@ public class PolynomialTransform2D implements CoordinateTransform
 	{
 		return ( int )Math.nextUp( ( Math.sqrt( 2 * numPolTerms + 0.25 ) - 1.5 ) );
 	}
-	
+
 	/**
 	 * Calculate the number of polynomial terms for a 2d polynomial transform
 	 * of given order.
-	 * 
+	 *
 	 * @param order
 	 * @return
 	 */
@@ -81,19 +81,64 @@ public class PolynomialTransform2D implements CoordinateTransform
 		return ( int )Math.round( ( order + 2 ) * ( order + 1 ) * 0.5 );
 	}
 
+	/**
+	 * Set the coefficients.  The number of coefficients implicitly specifies
+	 * the order of the {@link PolynomialTransform2D} which is set to the
+	 * highest order that is fully specified by the provided coefficients.
+	 * The coefficients are interpreted in the order specified at
+	 *
+	 * http://bishopw.loni.ucla.edu/AIR5/2Dnonlinear.html#polylist
+	 *
+	 * , first for x', then for y'.  It is thus not possible to omit higher
+	 * order coefficients assuming that they would become 0.  The passed vararg
+	 * array is used directly without copy which enables direct access to the
+	 * coefficients from calling code.  Use this option wisely.
+	 *
+	 * @param a coefficients
+	 */
 	public void set( final double... a ){
 		order = orderOf( a.length / 2 );
 		final int numPolTerms = numPolTerms( order );
-		this.a =  new double[ numPolTerms * 2 ];
-		System.arraycopy( a, 0, this.a, 0, this.a.length );
+
+		this.a = a;
+		/* this would certainly be safer but means that we do not have access to the coefficients later */
+//		this.a =  new double[ numPolTerms * 2 ];
+//		System.arraycopy( a, 0, this.a, 0, this.a.length );
+
 		polTerms = new double[ numPolTerms - 1 ];
 	}
 
-	protected void populateCoefficients( final double x, final double y )
+	protected void populateTerms( final double x, final double y )
 	{
-		for (int o = 1; o <= order; ++o) {
-			
+		if ( order == 0 ) return;
+		polTerms[ 0 ] = x;
+		polTerms[ 1 ] = y;
+		for ( int o = 2, i = 2; o <= order; ++o, i += o )
+		{
+			for ( int p = 0; p < o; ++p)
+			{
+				polTerms[ i + p ] = polTerms[ i + p - o ] * x;
+			}
+			polTerms[ i + o ] = polTerms[ i - 1 ] * y;
 		}
+	}
+
+	protected void printTerms()
+	{
+		final String[] polTermString = new String[ polTerms.length ];
+		if ( order == 0 )
+			System.out.println( "No polynomial terms." );
+		polTermString[ 0 ] = "x";
+		polTermString[ 1 ] = "y";
+		for ( int o = 2, i = 2; o <= order; ++o, i += o )
+		{
+			for ( int p = 0; p < o; ++p)
+			{
+				polTermString[ i + p ] = polTermString[ i + p - o ] + "x";
+			}
+			polTermString[ i + o ] = polTermString[ i - 1 ] + "y";
+		}
+		System.out.println( Arrays.toString( polTermString ) );
 	}
 
 	@Override
@@ -107,24 +152,34 @@ public class PolynomialTransform2D implements CoordinateTransform
 	@Override
 	public void applyInPlace( final float[] location )
 	{
-		final double x = location[ 0 ];
-		final double y = location[ 1 ];
-		final double u =
-				a[ 0 ] +
-				a[ 1 ] * x +
-				a[ 2 ] * y +
-				a[ 3 ] * x * x +
-				a[ 4 ] * x * y +
-				a[ 5 ] * y * y;
-
-		final double v =
-				a[ 6 ] +
-				a[ 7 ] * x +
-				a[ 8 ] * y +
-				a[ 9 ] * x * x +
-				a[ 10 ] * x * y +
-				a[ 11 ] * y * y;
-
+//		final double x = location[ 0 ];
+//		final double y = location[ 1 ];
+//		final double u =
+//				a[ 0 ] +
+//				a[ 1 ] * x +
+//				a[ 2 ] * y +
+//				a[ 3 ] * x * x +
+//				a[ 4 ] * x * y +
+//				a[ 5 ] * y * y;
+//
+//		final double v =
+//				a[ 6 ] +
+//				a[ 7 ] * x +
+//				a[ 8 ] * y +
+//				a[ 9 ] * x * x +
+//				a[ 10 ] * x * y +
+//				a[ 11 ] * y * y;
+//
+//		location[ 0 ] = ( float )u;
+//		location[ 1 ] = ( float )v;
+		populateTerms( location[ 0 ], location[ 1 ] );
+		double u = a[ 0 ];
+		for ( int i = 0; i < polTerms.length;)
+			u += polTerms[ i ] * a[ ++i ];
+		final int numPolTerms = polTerms.length + 1;
+		double v = a[ numPolTerms ];
+		for ( int i = 0; i < polTerms.length;)
+			v += polTerms[ i ] * a[ ++i + numPolTerms ];
 		location[ 0 ] = ( float )u;
 		location[ 1 ] = ( float )v;
 	}
@@ -132,7 +187,7 @@ public class PolynomialTransform2D implements CoordinateTransform
 	final static public void main( final String... args )
 	{
 		new ImageJ();
-		
+
 		for ( int numPolTerms = 0; numPolTerms < 100; ++numPolTerms )
 		{
 			System.out.println( numPolTerms + " " + orderOf( numPolTerms ) + " " + numPolTerms( orderOf( numPolTerms ) ) );
@@ -166,6 +221,10 @@ public class PolynomialTransform2D implements CoordinateTransform
 		imp.getProcessor().setInterpolationMethod( ImageProcessor.BILINEAR );
 		mapping.mapInterpolated( imp.getProcessor(), target );
 		new ImagePlus( imp.getTitle() + " warped", target ).show();
+
+		t.set( new double[ 66 * 2 ] );
+		t.printTerms();
+
 	}
 
 }
