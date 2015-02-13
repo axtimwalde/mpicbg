@@ -29,8 +29,8 @@ public class CoordinateTransformMesh extends TransformMesh
 	public CoordinateTransformMesh(
 			final CoordinateTransform t,
 			final int numX,
-			final float width,
-			final float height )
+			final double width,
+			final double height )
 	{
 		super( numX, numY( numX, width, height ), width, height );
 
