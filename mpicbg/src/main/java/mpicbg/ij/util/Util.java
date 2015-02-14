@@ -172,7 +172,7 @@ public class Util
      * @param ys
      * @return
      */
-    final static public int colorVector( final float xs, final float ys )
+    final static public int colorVector( final double xs, final double ys )
 	{
 		final double a = Math.sqrt( xs * xs + ys * ys );
 		if ( a == 0.0 ) return 0;
