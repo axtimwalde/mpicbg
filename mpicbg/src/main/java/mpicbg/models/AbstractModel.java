@@ -128,7 +128,7 @@ public abstract class AbstractModel< M extends AbstractModel< M > > implements M
 			if ( m.getDistance() < epsilon ) inliers.add( m );
 		}
 
-		final double ir = inliers.size() / candidates.size();
+		final double ir = ( double )inliers.size() / ( double )candidates.size();
 		setCost( Math.max( 0.0, Math.min( 1.0, 1.0 - ir ) ) );
 
 		return ( inliers.size() >= minNumInliers && ir > minInlierRatio );
