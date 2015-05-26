@@ -151,7 +151,7 @@ public class Point implements Serializable
 	 */
 	final static public double squareDistance( final Point p1, final Point p2 )
 	{
-		assert p1.l.length == p2.l.length : "Both points have to have the same number of dimensions.";
+		assert p1.w.length == p2.w.length : "Both points have to have the same number of dimensions.";
 
 		double sum = 0.0;
 		for ( int i = 0; i < p1.w.length; ++i )
@@ -173,7 +173,7 @@ public class Point implements Serializable
 	 */
 	final static public double distance( final Point p1, final Point p2 )
 	{
-		assert p1.l.length == p2.l.length:
+		assert p1.w.length == p2.w.length:
 			"Both points have to have the same number of dimensions.";
 
 		return Math.sqrt( squareDistance( p1, p2 ) );
