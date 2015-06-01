@@ -567,6 +567,6 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		data[ 0 ][ 2 ] = m02;
 		data[ 1 ][ 0 ] = m10;
 		data[ 1 ][ 1 ] = m11;
-		data[ 1 ][ 1 ] = m12;
+		data[ 1 ][ 2 ] = m12;
 	}
 }
