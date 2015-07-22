@@ -21,7 +21,7 @@
 		<dependency>
 			<groupId>mpicbg</groupId>
 			<artifactId>mpicbg</artifactId>
-			<version>1.0.2-SNAPSHOT</version>
+			<version>${project.parent.version}</version>
 		</dependency>
 
 		<!-- ImageJ dependencies -->
@@ -36,23 +36,5 @@
 			<artifactId>jama</artifactId>
 		</dependency>
 	</dependencies>
-
-	<build>
-		<plugins>
-			<plugin>
-				<artifactId>maven-enforcer-plugin</artifactId>
-				<configuration>
-					<rules>
-						<requireReleaseDeps>
-							<failWhenParentIsSnapshot>false</failWhenParentIsSnapshot>
-							<excludes>
-								<exclude>mpicbg:mpicbg</exclude>
-							</excludes>
-						</requireReleaseDeps>
-					</rules>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 
 </project>
