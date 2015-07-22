@@ -37,22 +37,4 @@
 		</dependency>
 	</dependencies>
 
-	<build>
-		<plugins>
-			<plugin>
-				<artifactId>maven-enforcer-plugin</artifactId>
-				<configuration>
-					<rules>
-						<requireReleaseDeps>
-							<failWhenParentIsSnapshot>false</failWhenParentIsSnapshot>
-							<excludes>
-								<exclude>mpicbg:mpicbg</exclude>
-							</excludes>
-						</requireReleaseDeps>
-					</rules>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
-
 </project>
