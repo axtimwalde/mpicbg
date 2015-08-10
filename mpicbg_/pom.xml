@@ -8,7 +8,7 @@
 	<parent>
 		<groupId>mpicbg</groupId>
 		<artifactId>pom-mpicbg</artifactId>
-		<version>1.0.2-SNAPSHOT</version>
+		<version>1.0.2</version>
 	</parent>
 
 	<artifactId>mpicbg_</artifactId>
@@ -21,7 +21,7 @@
 		<dependency>
 			<groupId>mpicbg</groupId>
 			<artifactId>mpicbg</artifactId>
-			<version>1.0.2-SNAPSHOT</version>
+			<version>1.0.2</version>
 		</dependency>
 
 		<!-- ImageJ dependencies -->
