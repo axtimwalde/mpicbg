@@ -46,6 +46,202 @@ public class SimilarityModel3D extends AbstractAffineModel3D< SimilarityModel3D 
 	
 	public boolean canDoNumDimension( final int numDimensions ) { return numDimensions == 3; }
 
+	final public void fit( 
+			float[][] p,
+			float[][] q,
+			float[] w )
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException
+	{
+		final int numMatches = p[ 0 ].length; 
+		if ( numMatches < MIN_NUM_MATCHES )
+			throw new NotEnoughDataPointsException( p[ 0 ].length + " data points are not enough to estimate a 3d similarity model, at least " + MIN_NUM_MATCHES + " data points required." );
+
+		double pcx, pcy, pcz, qcx, qcy, qcz;
+		pcx = pcy = pcz = qcx = qcy = qcz = 0;
+
+		double ws = 0.0; // sum of weights
+		
+		for ( int i = 0; i < numMatches; i++ )
+		{
+			
+			final double weight = w[ i ];
+			
+			ws += weight;
+			pcx += weight * p[ 0 ][ i ];
+			pcy += weight * p[ 1 ][ i ];
+			pcz += weight * p[ 2 ][ i ];
+			qcx += weight * q[ 0 ][ i ];
+			qcy += weight * q[ 1 ][ i ];
+			qcz += weight * q[ 2 ][ i ];
+		}
+		
+		pcx /= ws;
+		pcy /= ws;
+		pcz /= ws;
+		qcx /= ws;
+		qcy /= ws;
+		qcz /= ws;
+
+		double r1 = 0, r2 = 0;
+		for ( int i = 0; i < numMatches; i++ )
+		{
+			double x1 = p[ 0 ][ i ] - pcx;
+			double y1 = p[ 1 ][ i ] - pcy;
+			double z1 = p[ 2 ][ i ] - pcz;
+			double x2 = q[ 0 ][ i ] - qcx;
+			double y2 = q[ 1 ][ i ] - qcy;
+			double z2 = q[ 2 ][ i ] - qcz;
+			r1 += x1 * x1 + y1 * y1 + z1 * z1;
+			r2 += x2 * x2 + y2 * y2 + z2 * z2;
+		}
+		final double s = Math.sqrt(r2 / r1);
+		
+		// calculate N
+		double Sxx, Sxy, Sxz, Syx, Syy, Syz, Szx, Szy, Szz;
+		Sxx = Sxy = Sxz = Syx = Syy = Syz = Szx = Szy = Szz = 0;
+		for ( int i = 0; i < numMatches; i++ )
+		{
+			final double x1 = (p[ 0 ][ i ] - pcx) * s;
+			final double y1 = (p[ 1 ][ i ] - pcy) * s;
+			final double z1 = (p[ 2 ][ i ] - pcz) * s;
+			final double x2 =  q[ 0 ][ i ] - qcx;
+			final double y2 =  q[ 1 ][ i ] - qcy;
+			final double z2 =  q[ 2 ][ i ] - qcz;
+			Sxx += x1 * x2;
+			Sxy += x1 * y2;
+			Sxz += x1 * z2;
+			Syx += y1 * x2;
+			Syy += y1 * y2;
+			Syz += y1 * z2;
+			Szx += z1 * x2;
+			Szy += z1 * y2;
+			Szz += z1 * z2;
+		}
+		
+		computeN( N, Sxx, Sxz, Sxy, Syx, Syy, Syz, Szx, Szy, Szz );
+
+		// calculate eigenvector with maximal eigenvalue
+		final EigenvalueDecomposition evd = new EigenvalueDecomposition( new Matrix( N ) );
+		
+		final double[] eigenvalues = evd.getRealEigenvalues();
+		final Matrix eigenVectors = evd.getV();
+
+		int index = 0;
+		for (int i = 1; i < 4; i++)
+			if (eigenvalues[i] > eigenvalues[index])
+				index = i;
+
+		final double q0 = eigenVectors.get( 0, index ); 
+		final double qx = eigenVectors.get( 1, index );
+		final double qy = eigenVectors.get( 2, index );
+		final double qz = eigenVectors.get( 3, index );
+
+		// compute result
+		rotationTranslationPart( 
+				s, q0, qx, qy, qz, 
+				pcx, pcy, pcz, qcx, qcy, qcz);
+		
+		invert();
+	}
+	
+	final public void fit( 
+			double[][] p,
+			double[][] q,
+			double[] w )
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException
+	{
+		final int numMatches = p[ 0 ].length; 
+		if ( numMatches < MIN_NUM_MATCHES )
+			throw new NotEnoughDataPointsException( p[ 0 ].length + " data points are not enough to estimate a 3d similarity model, at least " + MIN_NUM_MATCHES + " data points required." );
+
+		double pcx, pcy, pcz, qcx, qcy, qcz;
+		pcx = pcy = pcz = qcx = qcy = qcz = 0;
+
+		double ws = 0.0; // sum of weights
+		
+		for ( int i = 0; i < numMatches; i++ )
+		{
+			
+			final double weight = w[ i ];
+			
+			ws += weight;
+			pcx += weight * p[ 0 ][ i ];
+			pcy += weight * p[ 1 ][ i ];
+			pcz += weight * p[ 2 ][ i ];
+			qcx += weight * q[ 0 ][ i ];
+			qcy += weight * q[ 1 ][ i ];
+			qcz += weight * q[ 2 ][ i ];
+		}
+		
+		pcx /= ws;
+		pcy /= ws;
+		pcz /= ws;
+		qcx /= ws;
+		qcy /= ws;
+		qcz /= ws;
+
+		double r1 = 0, r2 = 0;
+		for ( int i = 0; i < numMatches; i++ )
+		{
+			double x1 = p[ 0 ][ i ] - pcx;
+			double y1 = p[ 1 ][ i ] - pcy;
+			double z1 = p[ 2 ][ i ] - pcz;
+			double x2 = q[ 0 ][ i ] - qcx;
+			double y2 = q[ 1 ][ i ] - qcy;
+			double z2 = q[ 2 ][ i ] - qcz;
+			r1 += x1 * x1 + y1 * y1 + z1 * z1;
+			r2 += x2 * x2 + y2 * y2 + z2 * z2;
+		}
+		final double s = Math.sqrt(r2 / r1);
+		
+		// calculate N
+		double Sxx, Sxy, Sxz, Syx, Syy, Syz, Szx, Szy, Szz;
+		Sxx = Sxy = Sxz = Syx = Syy = Syz = Szx = Szy = Szz = 0;
+		for ( int i = 0; i < numMatches; i++ )
+		{
+			final double x1 = (p[ 0 ][ i ] - pcx) * s;
+			final double y1 = (p[ 1 ][ i ] - pcy) * s;
+			final double z1 = (p[ 2 ][ i ] - pcz) * s;
+			final double x2 =  q[ 0 ][ i ] - qcx;
+			final double y2 =  q[ 1 ][ i ] - qcy;
+			final double z2 =  q[ 2 ][ i ] - qcz;
+			Sxx += x1 * x2;
+			Sxy += x1 * y2;
+			Sxz += x1 * z2;
+			Syx += y1 * x2;
+			Syy += y1 * y2;
+			Syz += y1 * z2;
+			Szx += z1 * x2;
+			Szy += z1 * y2;
+			Szz += z1 * z2;
+		}
+		
+		computeN( N, Sxx, Sxz, Sxy, Syx, Syy, Syz, Szx, Szy, Szz );
+
+		// calculate eigenvector with maximal eigenvalue
+		final EigenvalueDecomposition evd = new EigenvalueDecomposition( new Matrix( N ) );
+		
+		final double[] eigenvalues = evd.getRealEigenvalues();
+		final Matrix eigenVectors = evd.getV();
+
+		int index = 0;
+		for (int i = 1; i < 4; i++)
+			if (eigenvalues[i] > eigenvalues[index])
+				index = i;
+
+		final double q0 = eigenVectors.get( 0, index ); 
+		final double qx = eigenVectors.get( 1, index );
+		final double qy = eigenVectors.get( 2, index );
+		final double qz = eigenVectors.get( 3, index );
+
+		// compute result
+		rotationTranslationPart( 
+				s, q0, qx, qy, qz, 
+				pcx, pcy, pcz, qcx, qcy, qcz);
+		
+		invert();
+	}
+	
 	@Override
 	final public <P extends PointMatch> void fit( final Collection< P > matches )
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException
@@ -122,38 +318,9 @@ public class SimilarityModel3D extends AbstractAffineModel3D< SimilarityModel3D 
 			Szz += z1 * z2;
 		}
 
-		N[0][0] = Sxx + Syy + Szz;
-		N[0][1] = Syz - Szy;
-		N[0][2] = Szx - Sxz;
-		N[0][3] = Sxy - Syx;
-		N[1][0] = Syz - Szy;
-		N[1][1] = Sxx - Syy - Szz;
-		N[1][2] = Sxy + Syx;
-		N[1][3] = Szx + Sxz;
-		N[2][0] = Szx - Sxz;
-		N[2][1] = Sxy + Syx;
-		N[2][2] = -Sxx + Syy - Szz;
-		N[2][3] = Syz + Szy;
-		N[3][0] = Sxy - Syx;
-		N[3][1] = Szx + Sxz;
-		N[3][2] = Syz + Szy;
-		N[3][3] = -Sxx - Syy + Szz;
+		computeN( N, Sxx, Sxz, Sxy, Syx, Syy, Syz, Szx, Szy, Szz );
 
 		// calculate eigenvector with maximal eigenvalue
-		/*
-		final JacobiFloat jacobi = new JacobiFloat(N);
-		final float[][] eigenvectors = jacobi.getEigenVectors();
-		final float[] eigenvalues = jacobi.getEigenValues();
-		int index = 0;
-		for (int i = 1; i < 4; i++)
-			if (eigenvalues[i] > eigenvalues[index])
-				index = i;
-
-		final float [] q = eigenvectors[index];
-		final float q0 = q[0], qx = q[1], qy = q[2], qz = q[3];
-		*/
-		// calculate eigenvector with maximal eigenvalue
-
 		final EigenvalueDecomposition evd = new EigenvalueDecomposition( new Matrix( N ) );
 		
 		final double[] eigenvalues = evd.getRealEigenvalues();
@@ -170,7 +337,16 @@ public class SimilarityModel3D extends AbstractAffineModel3D< SimilarityModel3D 
 		final double qz = eigenVectors.get( 3, index );
 
 		// compute result
-
+		rotationTranslationPart( 
+				s, q0, qx, qy, qz, 
+				pcx, pcy, pcz, qcx, qcy, qcz);
+		
+		invert();
+	}
+	
+	private void rotationTranslationPart( double s, double q0, double qx, double qy, double qz, 
+			double pcx, double pcy, double pcz, double qcx, double qcy, double qcz )
+	{
 		// rotational part
 		m00 = s * (q0 * q0 + qx * qx - qy * qy - qz * qz);
 		m01 = s * 2 * (qx * qy - q0 * qz);
@@ -191,7 +367,26 @@ public class SimilarityModel3D extends AbstractAffineModel3D< SimilarityModel3D 
 		m13 = qcy - resy;
 		m23 = qcz - resz;
 		
-		invert();
+	}
+	
+	private static void computeN( double[][] N, double Sxx, double Sxz, double Sxy, double Syx, double Syy, double Syz, double Szx, double Szy, double Szz )
+	{
+		N[0][0] = Sxx + Syy + Szz;
+		N[0][1] = Syz - Szy;
+		N[0][2] = Szx - Sxz;
+		N[0][3] = Sxy - Syx;
+		N[1][0] = Syz - Szy;
+		N[1][1] = Sxx - Syy - Szz;
+		N[1][2] = Sxy + Syx;
+		N[1][3] = Szx + Sxz;
+		N[2][0] = Szx - Sxz;
+		N[2][1] = Sxy + Syx;
+		N[2][2] = -Sxx + Syy - Szz;
+		N[2][3] = Syz + Szy;
+		N[3][0] = Sxy - Syx;
+		N[3][1] = Szx + Sxz;
+		N[3][2] = Syz + Szy;
+		N[3][3] = -Sxx - Syy + Szz;
 	}
 	
 	@Override
