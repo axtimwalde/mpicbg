@@ -115,7 +115,7 @@ public class RemoveOutliers extends BlockStatistics
 							s += t;
 							n += 1;
 						}
-						if ( x < w - 1 )
+						if ( x < w )
 						{
 							final float tr = fp.getf( x + 1, y - 1 );
 							if ( !Float.isNaN( tr ) )
@@ -135,7 +135,7 @@ public class RemoveOutliers extends BlockStatistics
 							n += 1;
 						}
 					}
-					if ( x < w - 1 )
+					if ( x < w )
 					{
 						final float r = fp.getf( x + 1, y );
 						if ( !Float.isNaN( r ) )
@@ -145,7 +145,7 @@ public class RemoveOutliers extends BlockStatistics
 						}
 					}
 					
-					if ( y < h - 1 )
+					if ( y < h )
 					{
 						if ( x > 0 )
 						{
@@ -162,7 +162,7 @@ public class RemoveOutliers extends BlockStatistics
 							s += b;
 							n += 1;
 						}
-						if ( x < w - 1 )
+						if ( x < w )
 						{
 							final float br = fp.getf( x + 1, y + 1 );
 							if ( !Float.isNaN( br ) )
