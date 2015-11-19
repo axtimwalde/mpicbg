@@ -1,6 +1,6 @@
 import mpicbg.models.MovingLeastSquaresTransform;
-import javax.vecmath.Point3f;
-import javax.vecmath.Color3f;
+import org.scijava.vecmath.Point3f;
+import org.scijava.vecmath.Color3f;
 import ij3d.Image3DUniverse;
 import customnode.CustomPointMesh;
 import customnode.CustomLineMesh;
