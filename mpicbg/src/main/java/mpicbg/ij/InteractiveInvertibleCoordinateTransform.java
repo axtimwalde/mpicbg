@@ -75,6 +75,9 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Model<
 	abstract protected void setHandles();
 	abstract protected void updateHandles( int x, int y );
 	
+	// Convenience method to return something after ENTER is pressed.
+	abstract protected void onReturn();
+
 	@Override
 	public void run( final String arg )
     {
@@ -202,6 +205,7 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Model<
 							}
 						} );
 				thread.start();
+				this.onReturn();
 			}
 		}
 		else if (
