@@ -1,8 +1,10 @@
 import ij.gui.PointRoi;
+import ij.IJ;
 import mpicbg.ij.InteractiveInvertibleCoordinateTransform;
 import mpicbg.models.AffineModel2D;
 import mpicbg.models.Point;
 import mpicbg.models.PointMatch;
+import java.util.Arrays;
 
 public class Transform_Affine extends InteractiveInvertibleCoordinateTransform< AffineModel2D >
 {
@@ -60,5 +62,11 @@ public class Transform_Affine extends InteractiveInvertibleCoordinateTransform< 
 
 		fq[ 0 ] = x;
 		fq[ 1 ] = y;
+	}
+
+	final protected void onReturn() {
+		final double[] flatmatrix = new double[6];
+		myModel().toArray( flatmatrix );
+		IJ.log("Matrix: " + Arrays.toString(flatmatrix));
 	}
 }
