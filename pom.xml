@@ -12,7 +12,7 @@
 	</parent>
 
 	<properties>
-		<mpicbg.version>1.1.0</mpicbg.version>
+		<mpicbg.version>1.1.1-SNAPSHOT</mpicbg.version>
 	</properties>
 
 	<groupId>mpicbg</groupId>
@@ -23,7 +23,10 @@
 	<name>Aggregator project for Stephan Saalfeld's mpicbg library and plugin collection</name>
 	<description></description>
 
-	<!-- <modules> <module>mpicbg</module> <module>mpicbg_</module> </modules> -->
+	<modules>
+		<module>mpicbg</module>
+		<module>mpicbg_</module>
+	</modules>
 
 	<scm>
 		<connection>scm:git:git://github.com/axtimwalde/mpicbg</connection>
