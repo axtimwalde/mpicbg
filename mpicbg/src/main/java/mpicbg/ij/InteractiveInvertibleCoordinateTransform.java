@@ -1,5 +1,15 @@
 package mpicbg.ij;
 
+import java.awt.Event;
+import java.awt.TextField;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
+import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import ij.CompositeImage;
 import ij.IJ;
 import ij.ImageListener;
@@ -12,17 +22,6 @@ import ij.gui.Roi;
 import ij.gui.Toolbar;
 import ij.plugin.PlugIn;
 import ij.process.ImageProcessor;
-
-import java.awt.Event;
-import java.awt.TextField;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import mpicbg.models.IllDefinedDataPointsException;
 import mpicbg.models.InvertibleCoordinateTransform;
 import mpicbg.models.Model;
@@ -31,11 +30,11 @@ import mpicbg.models.Point;
 import mpicbg.models.PointMatch;
 
 /**
- * 
+ *
  * An interactive parent class for point based image deformation.
  *
  * @param <M> the transformation model to be used
- * 
+ *
  * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
  * @version 0.2b
  */
@@ -47,36 +46,35 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Model<
 		final public ImageProcessor target;
 		final public AtomicBoolean pleaseRepaint = new AtomicBoolean( false );
 		public MappingThread painter = null;
-		
+
 		Tuple( final ImageProcessor source, final ImageProcessor target )
 		{
 			this.source = source;
 			this.target = target;
 		}
 	}
-	
+
 	final static protected void useRoi( final float[] x, final float[] y )
 	{
-		
+
 	}
-	
+
 	protected InverseTransformMapping< M > mapping;
 	protected ImagePlus imp;
 	final protected ArrayList< Tuple > tuples = new ArrayList< Tuple >();
-	
+
 	protected Point[] p;
 	protected Point[] q;
 	final protected ArrayList< PointMatch > m = new ArrayList< PointMatch >();
 	protected PointRoi handles;
-	
+
 	protected int targetIndex = -1;
-	
+
 	abstract protected M myModel();
 	abstract protected void setHandles();
 	abstract protected void updateHandles( int x, int y );
-	
-	// Convenience method to return something after ENTER is pressed.
-	abstract protected void onReturn();
+
+	protected void onReturn() {}
 
 	@Override
 	public void run( final String arg )
@@ -84,7 +82,7 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Model<
 		// cleanup
 		m.clear();
 		tuples.clear();
-		
+
 		imp = IJ.getImage();
 		if ( imp.isComposite() && ( ( CompositeImage )imp ).getMode() == CompositeImage.COMPOSITE )
 		{
@@ -105,8 +103,8 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Model<
 			final ImageProcessor source = target.duplicate();
 			source.setInterpolationMethod( ImageProcessor.BILINEAR );
 			tuples.add( new Tuple( source, target ) );
-		}		
-		
+		}
+
 		mapping = new InverseTransformMapping< M >( myModel() );
 		for ( final Tuple tuple : tuples )
 		{
@@ -120,16 +118,16 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Model<
 					imp.getStackIndex( imp.getChannel(), imp.getSlice(), imp.getFrame() ) );
 			tuple.painter.start();
 		}
-		
+
 		setHandles();
-		
+
 		Toolbar.getInstance().setTool( Toolbar.getInstance().addTool( "Drag_the_handles." ) );
-		
+
 		imp.getCanvas().addMouseListener( this );
 		imp.getCanvas().addMouseMotionListener( this );
 		imp.getCanvas().addKeyListener( this );
     }
-	
+
 	@Override
 	public void imageClosed( final ImagePlus imp2 )
 	{
@@ -141,7 +139,7 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Model<
 	public void imageOpened( final ImagePlus imp2 ){}
 	@Override
 	public void imageUpdated( final ImagePlus imp2 ){}
-	
+
 	@Override
 	public void keyPressed( final KeyEvent e)
 	{
@@ -157,7 +155,7 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Model<
 				imp.getCanvas().setDisplayList( null );
 				imp.setRoi( ( Roi )null );
 			}
-			
+
 			/* reset pixels */
 			final int z = imp.getSlice();
 			final int t = imp.getFrame();
@@ -217,7 +215,7 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Model<
 	public void keyReleased( final KeyEvent e ){}
 	@Override
 	public void keyTyped( final KeyEvent e ){}
-	
+
 	@Override
 	public void mousePressed( final MouseEvent e )
 	{
@@ -227,7 +225,7 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Model<
 			final ImageWindow win = WindowManager.getCurrentWindow();
 			final int x = win.getCanvas().offScreenX( e.getX() );
 			final int y = win.getCanvas().offScreenY( e.getY() );
-			
+
 			double target_d = Double.MAX_VALUE;
 			for ( int i = 0; i < q.length; ++i )
 			{
@@ -248,10 +246,10 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Model<
 	@Override
 	public void mouseExited( final MouseEvent e ) {}
 	@Override
-	public void mouseClicked( final MouseEvent e ) {}	
+	public void mouseClicked( final MouseEvent e ) {}
 	@Override
 	public void mouseEntered( final MouseEvent e ) {}
-	
+
 	@Override
 	public void mouseDragged( final MouseEvent e )
 	{
@@ -260,9 +258,9 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Model<
 			final ImageWindow win = WindowManager.getCurrentWindow();
 			final int x = win.getCanvas().offScreenX( e.getX() );
 			final int y = win.getCanvas().offScreenY( e.getY() );
-			
+
 			updateHandles( x, y );
-					
+
 			try
 			{
 				myModel().fit( m );
@@ -279,11 +277,11 @@ public abstract class InteractiveInvertibleCoordinateTransform< M extends Model<
 			catch ( final IllDefinedDataPointsException ex ) { ex.printStackTrace(); }
 		}
 	}
-	
+
 	@Override
 	public void mouseMoved( final MouseEvent e ){}
-	
-	
+
+
 	public static String modifiers( final int flags )
 	{
 		String s = " [ ";

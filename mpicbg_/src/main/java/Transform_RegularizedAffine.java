@@ -1,3 +1,6 @@
+import java.util.Arrays;
+
+import ij.IJ;
 import ij.gui.PointRoi;
 import mpicbg.ij.InteractiveInvertibleCoordinateTransform;
 import mpicbg.models.AffineModel2D;
@@ -60,5 +63,13 @@ public class Transform_RegularizedAffine extends InteractiveInvertibleCoordinate
 
 		fq[ 0 ] = x;
 		fq[ 1 ] = y;
+	}
+
+	@Override
+	final protected void onReturn()
+	{
+		final double[] flatmatrix = new double[ 6 ];
+		myModel().toArray( flatmatrix );
+		IJ.log( "Matrix: " + Arrays.toString( flatmatrix ) );
 	}
 }

@@ -1,10 +1,11 @@
-import ij.gui.PointRoi;
+import java.util.Arrays;
+
 import ij.IJ;
+import ij.gui.PointRoi;
 import mpicbg.ij.InteractiveInvertibleCoordinateTransform;
 import mpicbg.models.Point;
 import mpicbg.models.PointMatch;
 import mpicbg.models.RigidModel2D;
-import java.util.Arrays;
 
 public class Transform_Rigid extends InteractiveInvertibleCoordinateTransform< RigidModel2D >
 {
@@ -57,10 +58,12 @@ public class Transform_Rigid extends InteractiveInvertibleCoordinateTransform< R
 		fq[ 0 ] = x;
 		fq[ 1 ] = y;
 	}
-	
-	final protected void onReturn() {
-		final double[] flatmatrix = new double[6];
+
+	@Override
+	final protected void onReturn()
+	{
+		final double[] flatmatrix = new double[ 6 ];
 		myModel().toArray( flatmatrix );
-		IJ.log("Matrix: " + Arrays.toString(flatmatrix));
-	} 
+		IJ.log( "Matrix: " + Arrays.toString( flatmatrix ) );
+	}
 }

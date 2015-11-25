@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
 		http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
@@ -8,7 +7,7 @@
 	<parent>
 		<groupId>mpicbg</groupId>
 		<artifactId>pom-mpicbg</artifactId>
-		<version>1.0.3-SNAPSHOT</version>
+		<version>1.1.0</version>
 	</parent>
 
 	<artifactId>mpicbg_</artifactId>
@@ -16,12 +15,13 @@
 	<name>plugins/mpicbg_.jar</name>
 	<description></description>
 
+	<!-- <properties> <enforcer.skip>true</enforcer.skip> </properties> -->
+
 	<dependencies>
 		<!-- Project dependencies -->
 		<dependency>
 			<groupId>mpicbg</groupId>
 			<artifactId>mpicbg</artifactId>
-			<version>1.0.3-SNAPSHOT</version>
 		</dependency>
 
 		<!-- ImageJ dependencies -->
@@ -36,23 +36,5 @@
 			<artifactId>jama</artifactId>
 		</dependency>
 	</dependencies>
-
-	<build>
-		<plugins>
-			<plugin>
-				<artifactId>maven-enforcer-plugin</artifactId>
-				<configuration>
-					<rules>
-						<requireReleaseDeps>
-							<failWhenParentIsSnapshot>false</failWhenParentIsSnapshot>
-							<excludes>
-								<exclude>mpicbg:mpicbg</exclude>
-							</excludes>
-						</requireReleaseDeps>
-					</rules>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
 
 </project>
