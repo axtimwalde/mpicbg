@@ -34,6 +34,14 @@
 		<tag>HEAD</tag>
 		<url>https://github.com/axtimwalde/mpicbg</url>
 	</scm>
+	<issueManagement>
+		<system>GitHub Issues</system>
+		<url>https://github.com/axtimwalde/mpicbg/issues</url>
+	</issueManagement>
+	<ciManagement>
+		<system>Jenkins</system>
+		<url>http://jenkins.imagej.net/job/MPICBG/</url>
+	</ciManagement>
 
 	<repositories>
 		<!-- NB: for project parent -->
