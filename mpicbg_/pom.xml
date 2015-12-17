@@ -16,7 +16,6 @@
 	<description></description>
 
 	<!-- <properties> <enforcer.skip>true</enforcer.skip> </properties> -->
-
 	<dependencies>
 		<!-- Project dependencies -->
 		<dependency>
@@ -36,5 +35,4 @@
 			<artifactId>jama</artifactId>
 		</dependency>
 	</dependencies>
-
 </project>
