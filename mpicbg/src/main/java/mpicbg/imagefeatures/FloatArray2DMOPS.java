@@ -330,10 +330,16 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 		//ImageArrayConverter.FloatArrayToImagePlus( gradientROI[ 0 ], "gaussianMaskedGradientROI", 0, 0 ).show();
 		//ImageArrayConverter.FloatArrayToImagePlus( gradientROI[ 1 ], "gaussianMaskedGradientROI", 0, 0 ).show();
 
+		final double TWOPI = 2 * Math.PI;
+
 		// build an orientation histogram of the region
 		for ( int i = 0; i < gradientROI[ 0 ].data.length; ++i )
 		{
-			final int bin = Math.max( 0, ( int )( ( gradientROI[ 1 ].data[ i ] + Math.PI ) / ORIENTATION_BIN_SIZE ) );
+			double angleFraction =  ( gradientROI[ 1 ].data[ i ] + Math.PI ) ;
+			if( angleFraction >= TWOPI )
+				angleFraction -= TWOPI;
+
+			final int bin = Math.max( 0, ( int )( angleFraction / ORIENTATION_BIN_SIZE ));
 			histogram_bins[ bin ] += gradientROI[ 0 ].data[ i ];
 		}
 
