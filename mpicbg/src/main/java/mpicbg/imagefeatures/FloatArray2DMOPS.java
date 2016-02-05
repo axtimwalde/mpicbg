@@ -279,6 +279,7 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 			final List< Feature > features )
 	{
 		final int ORIENTATION_BINS = 36;
+		final int ORIENTATION_BINS1 = ORIENTATION_BINS - 1;
 		final double ORIENTATION_BIN_SIZE = 2.0 * Math.PI / ORIENTATION_BINS;
 		final float[] histogram_bins = new float[ ORIENTATION_BINS ];
 
@@ -333,7 +334,7 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 		// build an orientation histogram of the region
 		for ( int i = 0; i < gradientROI[ 0 ].data.length; ++i )
 		{
-			final int bin = Math.max( 0, ( int )( ( gradientROI[ 1 ].data[ i ] + Math.PI ) / ORIENTATION_BIN_SIZE ) );
+			final int bin = Math.max( 0, Math.min( ORIENTATION_BINS1, ( int )( ( gradientROI[ 1 ].data[ i ] + Math.PI ) / ORIENTATION_BIN_SIZE ) ) );
 			histogram_bins[ bin ] += gradientROI[ 0 ].data[ i ];
 		}
 
