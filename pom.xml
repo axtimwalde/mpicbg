@@ -23,10 +23,7 @@
 		<developer>
 			<id>axtimwalde</id>
 			<name>Stephan Saalfeld</name>
-			<email>saalfelds@janelia.hhmi.org</email>
-			<url>http://www.janelia.org/lab/saalfeld-lab</url>
-			<organization>HHMI Janelia Research Campus</organization>
-			<organizationUrl>http://www.janelia.org/</organizationUrl>
+			<url>http://imagej.net/User:Saalfeld</url>
 			<roles>
 				<role>founder</role>
 				<role>lead</role>
@@ -36,13 +33,12 @@
 				<role>support</role>
 				<role>maintainer</role>
 			</roles>
-			<timezone>-5</timezone>
 		</developer>
 	</developers>
 	<contributors>
 		<contributor>
 			<name>Stephan Preibisch</name>
-			<url>http://imagej.net/User:Preibisch</url>
+			<url>http://imagej.net/User:StephanP</url>
 			<properties><id>StephanPreibisch</id></properties>
 		</contributor>
 		<contributor>
