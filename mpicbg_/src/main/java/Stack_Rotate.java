@@ -168,7 +168,7 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 	final private InvertibleCoordinateTransformList< InvertibleCoordinateTransform > ictl = new InvertibleCoordinateTransformList< InvertibleCoordinateTransform >();
 	final private AffineModel3D rotation = new AffineModel3D();
 	final private AffineModel3D mouseRotation = new AffineModel3D();
-	final static private float step = ( float )Math.PI / 180;
+	final static private double step = Math.PI / 180;
 	final private TranslationModel3D sliceShift = new TranslationModel3D();
 	final private AffineModel3D reducedAffine = new AffineModel3D();
 	final private InverseTransformMapping< AffineModel3D > mapping = new InverseTransformMapping< AffineModel3D >( reducedAffine );
@@ -178,13 +178,13 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 	 * (ImageJ supports only isotropic resolution in x.y or at least I do not
 	 * understand how it does it for non-isotropic resolution.)
 	 */
-	private float zScale;
+	private double zScale;
 
 	/* the current rotation axis, indexed x->0, y->1, z->2 */
 	private int axis = 0;
 
 	/* the current slice index (rotated z) in isotropic x,y,z space */
-	private float currentSlice = 0;
+	private double currentSlice = 0;
 
 	/* coordinates where mouse dragging started and the drag distance */
 	private int oX, oY, dX, dY;
@@ -291,7 +291,7 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 		}
 
 		final Calibration c = imp.getCalibration();
-		zScale = ( float )( c.pixelDepth / c.pixelWidth );
+		zScale = c.pixelDepth / c.pixelWidth;
 
 		stack = imp.getStack();
 
@@ -351,7 +351,7 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 		reducedAffine.estimateBounds( min, max );
 		min[ 2 ] += currentSlice;
 		max[ 2 ] += currentSlice;
-		gui.scrollBar.setValues( Math.round( currentSlice ), 1, ( int )Math.round( min[ 2 ] ), ( int )Math.round( max[ 2 ] ) );
+		gui.scrollBar.setValues( ( int )Math.round( currentSlice ), 1, ( int )Math.round( min[ 2 ] ), ( int )Math.round( max[ 2 ] ) );
 	}
 
 	final private void update()
@@ -509,13 +509,13 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 			else if ( e.getKeyCode() == KeyEvent.VK_COMMA )
 			{
 				shift( -v );
-				gui.scrollBar.setValue( Math.round( currentSlice ) );
+				gui.scrollBar.setValue( ( int )Math.round( currentSlice ) );
 				update();
 			}
 			else if ( e.getKeyCode() == KeyEvent.VK_PERIOD )
 			{
 				shift( v );
-				gui.scrollBar.setValue( Math.round( currentSlice ) );
+				gui.scrollBar.setValue( ( int )Math.round( currentSlice ) );
 				update();
 			}
 			else if ( e.getKeyCode() == KeyEvent.VK_I )
@@ -592,12 +592,12 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 		}
 	}
 
-	final private float keyModfiedSpeed( final int modifiers )
+	final private double keyModfiedSpeed( final int modifiers )
 	{
 		if ( ( modifiers & KeyEvent.SHIFT_DOWN_MASK ) != 0 )
 			return 10;
 		else if ( ( modifiers & KeyEvent.CTRL_DOWN_MASK ) != 0 )
-			return 0.1f;
+			return 0.1;
 		else
 			return 1;
 	}
@@ -649,17 +649,17 @@ public class Stack_Rotate implements PlugIn, KeyListener, AdjustmentListener, Mo
 	@Override
 	public void mouseWheelMoved( final MouseWheelEvent e )
 	{
-		final float v = keyModfiedSpeed( e.getModifiersEx() );
+		final double v = keyModfiedSpeed( e.getModifiersEx() );
 		final int s = e.getWheelRotation();
 		shift( v * s );
-		gui.scrollBar.setValue( Math.round( currentSlice ) );
+		gui.scrollBar.setValue( ( int )Math.round( currentSlice ) );
 		update();
 	}
 
 	@Override
 	public void mouseDragged( final MouseEvent e )
 	{
-		final float v = 10 * step * keyModfiedSpeed( e.getModifiersEx() );
+		final double v = 10 * step * keyModfiedSpeed( e.getModifiersEx() );
 		dX = oX - e.getX();
 		dY = oY - e.getY();
 		rotation.set( mouseRotation );

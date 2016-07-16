@@ -148,7 +148,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 		 */
 		public int maxNumFailures = 3;
 
-		public float sectionScale = -1;
+		public double sectionScale = -1;
 		public float minR = 0.8f;
 		public float maxCurvatureR = 3f;
 		public float rodR = 0.8f;
@@ -168,9 +168,9 @@ public class ElasticAlign implements PlugIn, KeyListener
 		public int maxPlateauwidthOptimize = 200;
 
 		public int resolutionSpringMesh = 16;
-		public float stiffnessSpringMesh = 0.1f;
-		public float dampSpringMesh = 0.9f;
-		public float maxStretchSpringMesh = 2000.0f;
+		public double stiffnessSpringMesh = 0.1;
+		public double dampSpringMesh = 0.9;
+		public double maxStretchSpringMesh = 2000.0;
 		public int maxIterationsSpringMesh = 1000;
 		public int maxPlateauwidthSpringMesh = 200;
 
@@ -227,7 +227,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 			if ( sectionScale < 0 )
 			{
 				final Calibration calib = imp.getCalibration();
-				sectionScale = ( float )( calib.pixelWidth / calib.pixelDepth );
+				sectionScale = calib.pixelWidth / calib.pixelDepth;
 			}
 			if ( blockRadius < 0 )
 			{
@@ -264,7 +264,7 @@ public class ElasticAlign implements PlugIn, KeyListener
 			if ( gdBlockMatching.wasCanceled() )
 				return false;
 
-			sectionScale = ( float )gdBlockMatching.getNextNumber();
+			sectionScale = gdBlockMatching.getNextNumber();
 			searchRadius = ( int )gdBlockMatching.getNextNumber();
 			blockRadius = ( int )gdBlockMatching.getNextNumber();
 			resolutionSpringMesh = ( int )gdBlockMatching.getNextNumber();
@@ -358,8 +358,8 @@ public class ElasticAlign implements PlugIn, KeyListener
 			maxIterationsOptimize = ( int )gdOptimize.getNextNumber();
 			maxPlateauwidthOptimize = ( int )gdOptimize.getNextNumber();
 
-			stiffnessSpringMesh = ( float )gdOptimize.getNextNumber();
-			maxStretchSpringMesh = ( float )gdOptimize.getNextNumber();
+			stiffnessSpringMesh = gdOptimize.getNextNumber();
+			maxStretchSpringMesh = gdOptimize.getNextNumber();
 			maxIterationsSpringMesh = ( int )gdOptimize.getNextNumber();
 			maxPlateauwidthSpringMesh = ( int )gdOptimize.getNextNumber();
 
@@ -723,7 +723,7 @@ J:				for ( int j = i + 1; j < range; )
 						ip2,
 						ip1Mask,
 						ip2Mask,
-						Math.min( 1.0f, ( float )p.sectionScale ),
+						Math.min( 1.0, p.sectionScale ),
 						( ( InvertibleCoordinateTransform )pair.c ).createInverse(),
 						blockRadius,
 						blockRadius,
@@ -777,7 +777,7 @@ J:				for ( int j = i + 1; j < range; )
 						ip1,
 						ip2Mask,
 						ip1Mask,
-						Math.min( 1.0f, ( float )p.sectionScale ),
+						Math.min( 1.0, p.sectionScale ),
 						pair.c,
 						blockRadius,
 						blockRadius,
@@ -824,7 +824,7 @@ J:				for ( int j = i + 1; j < range; )
 			//			imp2.updateAndDraw();
 			/* </visualisation> */
 
-			final float springConstant  = 1.0f / ( pair.b - pair.a );
+			final double springConstant  = 1.0 / ( pair.b - pair.a );
 			IJ.log( pair.a + " <> " + pair.b + " spring constant = " + springConstant );
 
 			for ( final PointMatch pm : pm12 )

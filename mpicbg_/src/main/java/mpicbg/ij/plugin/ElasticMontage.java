@@ -137,9 +137,9 @@ public class ElasticMontage implements PlugIn
 		public int maxPlateauwidthOptimize = 200;
 
 		public int resolutionSpringMesh = 16;
-		public float stiffnessSpringMesh = 0.1f;
-		public float dampSpringMesh = 0.9f;
-		public float maxStretchSpringMesh = 2000.0f;
+		public double stiffnessSpringMesh = 0.1;
+		public double dampSpringMesh = 0.9;
+		public double maxStretchSpringMesh = 2000.0;
 		public int maxIterationsSpringMesh = 1000;
 		public int maxPlateauwidthSpringMesh = 200;
 
@@ -282,8 +282,8 @@ public class ElasticMontage implements PlugIn
 			maxIterationsOptimize = ( int )gdOptimize.getNextNumber();
 			maxPlateauwidthOptimize = ( int )gdOptimize.getNextNumber();
 
-			stiffnessSpringMesh = ( float )gdOptimize.getNextNumber();
-			maxStretchSpringMesh = ( float )gdOptimize.getNextNumber();
+			stiffnessSpringMesh = gdOptimize.getNextNumber();
+			maxStretchSpringMesh = gdOptimize.getNextNumber();
 			maxIterationsSpringMesh = ( int )gdOptimize.getNextNumber();
 			maxPlateauwidthSpringMesh = ( int )gdOptimize.getNextNumber();
 
@@ -558,7 +558,7 @@ public class ElasticMontage implements PlugIn
 					ip2,
 					null,
 					null,
-					Math.min( 1.0f, ( float )p.maxImageSize / ip1.getWidth() ),
+					Math.min( 1.0, p.maxImageSize / ip1.getWidth() ),
 					( ( InvertibleCoordinateTransform )pair.c ).createInverse(),
 					blockRadius,
 					blockRadius,
@@ -597,7 +597,7 @@ public class ElasticMontage implements PlugIn
 					ip1,
 					null,
 					null,
-					Math.min( 1.0f, ( float )p.maxImageSize / ip1.getWidth() ),
+					Math.min( 1.0, p.maxImageSize / ip1.getWidth() ),
 					pair.c,
 					blockRadius,
 					blockRadius,

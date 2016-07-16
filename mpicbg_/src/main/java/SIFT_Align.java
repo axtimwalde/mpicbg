@@ -110,7 +110,7 @@ public class SIFT_Align implements PlugIn, KeyListener
 	/**
 	 * downscale a grey scale float image using gaussian blur
 	 */
-	final static private ImageProcessor downScale( final ImageProcessor ip, final float s )
+	final static private ImageProcessor downScale( final ImageProcessor ip, final double s )
 	{
 		final FloatArray2D g = new FloatArray2D( ip.getWidth(), ip.getHeight() );
 		ImageArrayConverter.imageProcessorToFloatArray2D( ip, g );
