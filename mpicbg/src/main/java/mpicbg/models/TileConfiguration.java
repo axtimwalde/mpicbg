@@ -506,7 +506,7 @@ A:				for ( final Tile< ? > t : tiles )
 					final ArrayList< PointMatch > pm = getConnectingPointMatches( targetTile, referenceTile );
 
 					// are there enough matches?
-					if ( pm.size() > targetTile.getModel().getMinNumMatches() )
+					if ( pm.size() >= targetTile.getModel().getMinNumMatches() )
 					{
 						// fit the model of the targetTile to the subset of matches
 						// mapping its local coordinates target.p.l into the world
