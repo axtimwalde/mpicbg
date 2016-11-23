@@ -16,8 +16,6 @@
  */
 package mpicbg.models;
 
-import ij.IJ;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -226,7 +224,7 @@ public class TileUtil
 				tc.updateErrors();
 				observer.add( tc.getError() );
 
-				IJ.log( i + ": " + observer.mean + " " + observer.max );
+				System.out.println( i + ": " + observer.mean + " " + observer.max );
 
 				if ( i > maxPlateauwidth )
 				{
