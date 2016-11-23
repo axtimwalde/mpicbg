@@ -37,6 +37,14 @@ final public class ConstantAffineModel1D< A extends Model< A > & Affine1D< A > &
 	}
 
 	@Override
+	public ConstantAffineModel1D< A > copy()
+	{
+		final ConstantAffineModel1D< A > copy = new ConstantAffineModel1D< A >( model.copy() );
+		copy.cost = cost;
+		return copy;
+	}
+
+	@Override
 	public ConstantAffineModel1D< A > createInverse()
 	{
 		final ConstantAffineModel1D< A > inverse = new ConstantAffineModel1D< A >( model.createInverse() );
