@@ -590,6 +590,54 @@ public class SimilarityModel3D extends AbstractAffineModel3D< SimilarityModel3D 
 		
 	}
 
+	/**
+	 * Initialize the model such that the respective affine transform is:
+	 *
+	 * <pre>
+	 * m00 m01 m02 m03
+	 * m10 m11 m12 m13
+	 * m20 m21 m22 m23
+	 * 0   0   0   1
+	 * </pre>
+	 *
+	 * @param m00
+	 * @param m01
+	 * @param m02
+	 * @param m03
+	 *
+	 * @param m10
+	 * @param m11
+	 * @param m12
+	 * @param m13
+	 *
+	 * @param m20
+	 * @param m21
+	 * @param m22
+	 * @param m23
+	 */
+	final public void set(
+			final double m00, final double m01, final double m02, final double m03,
+			final double m10, final double m11, final double m12, final double m13,
+			final double m20, final double m21, final double m22, final double m23 )
+	{
+		this.m00 = m00;
+		this.m01 = m01;
+		this.m02 = m02;
+		this.m03 = m03;
+
+		this.m10 = m10;
+		this.m11 = m11;
+		this.m12 = m12;
+		this.m13 = m13;
+
+		this.m20 = m20;
+		this.m21 = m21;
+		this.m22 = m22;
+		this.m23 = m23;
+
+		invert();
+	}
+	
 	@Override
 	public void toArray(double[] data) 
 	{
