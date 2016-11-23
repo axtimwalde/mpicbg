@@ -34,6 +34,15 @@ public class InvertibleConstantModel<
 	}
 
 	@Override
+	public M copy()
+	{
+		@SuppressWarnings( "unchecked" )
+		final M copy = ( M )new InvertibleConstantModel< A, M >( model.copy() );
+		copy.cost = cost;
+		return copy;
+	}
+
+	@Override
 	public double[] applyInverse( final double[] location ) throws NoninvertibleModelException
 	{
 		final double[] copy = location.clone();
