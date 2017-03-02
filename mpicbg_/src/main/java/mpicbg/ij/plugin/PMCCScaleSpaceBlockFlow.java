@@ -12,7 +12,9 @@ import ij.io.Opener;
 import ij.plugin.PlugIn;
 import ij.process.ColorProcessor;
 import ij.process.FloatProcessor;
+import ij.process.ImageProcessor;
 import ij.process.ShortProcessor;
+import mpicbg.ij.InverseTransformMapping;
 /**
  * License: GPL
  *
@@ -32,6 +34,7 @@ import ij.process.ShortProcessor;
  */
 import mpicbg.ij.integral.BlockPMCC;
 import mpicbg.ij.integral.IntegralImage;
+import mpicbg.models.InverseCoordinateTransformMap2D;
 import mpicbg.models.NotEnoughDataPointsException;
 import mpicbg.models.Point;
 import mpicbg.models.PointMatch;
@@ -288,6 +291,34 @@ public class PMCCScaleSpaceBlockFlow implements PlugIn
 		new ImagePlus( "inlierCounts", inlierCounts ).show();
 	}
 
+	final ImageProcessor map(
+			final ImageProcessor source,
+			final ShortProcessor shiftX,
+			final ShortProcessor shiftY )
+	{
+		final float[][] mapField = new float[ shiftX.getHeight() ][ shiftX.getWidth() * 2 ];
+		final short[] shiftXPixels = ( short[] )shiftX.getPixels();
+		final short[] shiftYPixels = ( short[] )shiftY.getPixels();
+		for ( int y = 0; y < shiftX.getHeight(); ++y )
+		{
+			final int offset = y * shiftX.getWidth();
+			for ( int x = 0; x < shiftX.getWidth(); ++x )
+			{
+				mapField[ y ][ 2 * x ] = shiftXPixels[ offset + x ] + x;
+				mapField[ y ][ 2 * x + 1 ] = shiftYPixels[ offset + x ] + y;
+			}
+		}
+
+
+		final InverseCoordinateTransformMap2D map = new InverseCoordinateTransformMap2D( mapField );
+		final InverseTransformMapping< InverseCoordinateTransformMap2D > mapping = new InverseTransformMapping< InverseCoordinateTransformMap2D >( map );
+		final ImageProcessor target = source.createProcessor( source.getWidth(), source.getHeight() );
+		source.setInterpolationMethod( ImageProcessor.BILINEAR );
+		mapping.mapInterpolated( source, target );
+
+		return target;
+	}
+
 
 
 	@Override
@@ -345,6 +376,19 @@ public class PMCCScaleSpaceBlockFlow implements PlugIn
 					seqOpticFlow,
 					1.1 );
 
+			final ImageStack mappedImages = new ImageStack( imp.getWidth(), imp.getHeight() );
+			for ( int s = 0; s < seqFlowVectors.size(); s += 2 )
+			{
+				final ImageProcessor target =
+						map(
+								ip2,
+								seqFlowVectors.getProcessor( s + 1 ).convertToShortProcessor(),
+								seqFlowVectors.getProcessor( s + 2 ).convertToShortProcessor() );
+				mappedImages.addSlice( target );
+			}
+			new ImagePlus( "", mappedImages ).show();
+
+
 			final ShortProcessor shiftX = new ShortProcessor( imp.getWidth(), imp.getHeight() );
 			final ShortProcessor shiftY = new ShortProcessor( imp.getWidth(), imp.getHeight() );
 			final ColorProcessor of = new ColorProcessor( imp.getWidth(), imp.getHeight() );
@@ -357,6 +401,8 @@ public class PMCCScaleSpaceBlockFlow implements PlugIn
 						shiftY,
 						of,
 						inlierCounts );
+
+				map( ip1, shiftX, shiftY );
 			}
 			catch ( NotEnoughDataPointsException e )
 			{
@@ -405,7 +451,7 @@ public class PMCCScaleSpaceBlockFlow implements PlugIn
 	public final static void main( final String... args )
 	{
 		new ImageJ();
-		final ImagePlus imp = new Opener().openImage( "/home/saalfeld/tmp/scheffer/flow/stack.0.025.tif" );
+		final ImagePlus imp = new Opener().openImage( "/home/saalfeld/tmp/scheffer/flow/stack.0.05.tif" );
 		imp.show();
 		new PMCCScaleSpaceBlockFlow().run("");
 	}
