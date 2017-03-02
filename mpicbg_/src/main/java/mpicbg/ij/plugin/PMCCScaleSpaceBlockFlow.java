@@ -312,7 +312,7 @@ public class PMCCScaleSpaceBlockFlow implements PlugIn
 		if ( showColors )
 		{
 			ColorProcessor ipColor = new ColorProcessor( maxDistance * 2 + 1, maxDistance * 2 + 1 );
-			PMCCBlockFlow.colorCircle( ipColor );
+			PMCCBlockFlow.colorCircle( ipColor, maxDistance );
 			ImagePlus impColor = new ImagePlus( "Color", ipColor );
 			impColor.show();
 		}

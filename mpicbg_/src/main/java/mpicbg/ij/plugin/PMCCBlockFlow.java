@@ -48,7 +48,7 @@ public class PMCCBlockFlow implements PlugIn
 	static protected int maxDistance = 7;
 	static protected boolean showColors = false;
 
-	final static protected void colorCircle( ColorProcessor ip )
+	final static protected void colorCircle( ColorProcessor ip, final int maxDistance )
 	{
 		final int r1 = Math.min( ip.getWidth(), ip.getHeight() ) / 2;
 
@@ -266,7 +266,7 @@ public class PMCCBlockFlow implements PlugIn
 		if ( showColors )
 		{
 			ColorProcessor ipColor = new ColorProcessor( maxDistance * 2 + 1, maxDistance * 2 + 1 );
-			colorCircle( ipColor );
+			colorCircle( ipColor, maxDistance );
 			ImagePlus impColor = new ImagePlus( "Color", ipColor );
 			impColor.show();
 		}
