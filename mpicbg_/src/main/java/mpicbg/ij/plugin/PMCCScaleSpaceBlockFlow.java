@@ -329,7 +329,7 @@ public class PMCCScaleSpaceBlockFlow implements PlugIn
 		final ImagePlus imp = WindowManager.getCurrentImage();
 		if ( imp == null )  { IJ.error( "There are no images open" ); return; }
 
-		GenericDialog gd = new GenericDialog( "Generate optic flow" );
+		final GenericDialog gd = new GenericDialog( "Generate optic flow" );
 		gd.addNumericField( "maximal_distance :", maxDistance, 0, 6, "px" );
 		gd.addCheckbox( "show_color_map", showColors );
 
@@ -342,17 +342,17 @@ public class PMCCScaleSpaceBlockFlow implements PlugIn
 
 		if ( showColors )
 		{
-			ColorProcessor ipColor = new ColorProcessor( maxDistance * 2 + 1, maxDistance * 2 + 1 );
+			final ColorProcessor ipColor = new ColorProcessor( maxDistance * 2 + 1, maxDistance * 2 + 1 );
 			PMCCBlockFlow.colorCircle( ipColor, maxDistance );
-			ImagePlus impColor = new ImagePlus( "Color", ipColor );
+			final ImagePlus impColor = new ImagePlus( "Color", ipColor );
 			impColor.show();
 		}
 
 
-		ImageStack seq = imp.getStack();
-		ImageStack seqR = new ImageStack( imp.getWidth(), imp.getHeight() );
-		ImageStack seqOpticFlow = new ImageStack( imp.getWidth(), imp.getHeight() );
-		ImageStack seqFlowVectors = new ImageStack( imp.getWidth(), imp.getHeight() );
+		final ImageStack seq = imp.getStack();
+		final ImageStack seqR = new ImageStack( imp.getWidth(), imp.getHeight() );
+		final ImageStack seqOpticFlow = new ImageStack( imp.getWidth(), imp.getHeight() );
+		final ImageStack seqFlowVectors = new ImageStack( imp.getWidth(), imp.getHeight() );
 
 		FloatProcessor ip1;
 		FloatProcessor ip2 = ( FloatProcessor )seq.getProcessor( 1 ).convertToFloat();
@@ -404,7 +404,7 @@ public class PMCCScaleSpaceBlockFlow implements PlugIn
 
 				map( ip1, shiftX, shiftY );
 			}
-			catch ( NotEnoughDataPointsException e )
+			catch ( final NotEnoughDataPointsException e )
 			{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
