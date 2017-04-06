@@ -89,8 +89,8 @@
 		<url>https://github.com/axtimwalde/mpicbg/issues</url>
 	</issueManagement>
 	<ciManagement>
-		<system>Jenkins</system>
-		<url>http://jenkins.imagej.net/job/MPICBG/</url>
+		<system>Travis CI</system>
+		<url>https://travis-ci.org/axtimwalde/mpicbg</url>
 	</ciManagement>
 
 	<properties>
