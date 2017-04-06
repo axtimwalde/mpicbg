@@ -12,10 +12,98 @@
 
 	<artifactId>mpicbg_</artifactId>
 
-	<name>plugins/mpicbg_.jar</name>
-	<description></description>
+	<name>MPICBG plugin for Fiji</name>
+	<description>MPICBG plugin for Fiji.</description>
+	<url>https://github.com/axtimwalde/mpicbg</url>
+	<inceptionYear>2008</inceptionYear>
+	<organization>
+		<name>Fiji</name>
+		<url>https://fiji.sc/</url>
+	</organization>
+	<licenses>
+		<license>
+			<name>GNU General Public License v2+</name>
+			<url>https://www.gnu.org/licenses/old-licenses/gpl-2.0.html</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
 
-	<!-- <properties> <enforcer.skip>true</enforcer.skip> </properties> -->
+	<developers>
+		<developer>
+			<id>axtimwalde</id>
+			<name>Stephan Saalfeld</name>
+			<url>https://imagej.net/User:Saalfeld</url>
+			<roles>
+				<role>founder</role>
+				<role>lead</role>
+				<role>developer</role>
+				<role>debugger</role>
+				<role>reviewer</role>
+				<role>support</role>
+				<role>maintainer</role>
+			</roles>
+		</developer>
+	</developers>
+	<contributors>
+		<contributor>
+			<name>Olivier Burri</name>
+			<url>https://imagej.net/User:Oburri</url>
+			<properties><id>lacan</id></properties>
+		</contributor>
+		<contributor>
+			<name>Jan Eglinger</name>
+			<url>https://imagej.net/User:Eglinger</url>
+			<properties><id>imagejan</id></properties>
+		</contributor>
+		<contributor>
+			<name>Mark Hiner</name>
+			<url>https://imagej.net/User:Hinerm</url>
+			<properties><id>hinerm</id></properties>
+		</contributor>
+		<contributor>
+			<name>Stephan Preibisch</name>
+			<url>https://imagej.net/User:StephanP</url>
+			<properties><id>StephanPreibisch</id></properties>
+		</contributor>
+		<contributor>
+			<name>Curtis Rueden</name>
+			<url>https://imagej.net/User:Rueden</url>
+			<properties><id>ctrueden</id></properties>
+		</contributor>
+		<contributor>
+			<name>Johannes Schindelin</name>
+			<url>https://imagej.net/User:Schindelin</url>
+			<properties><id>dscho</id></properties>
+		</contributor>
+	</contributors>
+
+	<mailingLists>
+		<mailingList>
+			<name>ImageJ Forum</name>
+			<archive>http://forum.imagej.net/</archive>
+		</mailingList>
+	</mailingLists>
+
+	<scm>
+		<connection>scm:git:git://github.com/axtimwalde/mpicbg</connection>
+		<developerConnection>scm:git:git@github.com:axtimwalde/mpicbg</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://github.com/axtimwalde/mpicbg</url>
+	</scm>
+	<issueManagement>
+		<system>GitHub Issues</system>
+		<url>https://github.com/axtimwalde/mpicbg/issues</url>
+	</issueManagement>
+	<ciManagement>
+		<system>Jenkins</system>
+		<url>http://jenkins.imagej.net/job/MPICBG/</url>
+	</ciManagement>
+
+	<properties>
+		<license.licenseName>gpl_v2</license.licenseName>
+		<license.copyrightOwners>Stephan Saalfeld et. al.</license.copyrightOwners>
+	</properties>
+
 	<dependencies>
 		<!-- Project dependencies -->
 		<dependency>

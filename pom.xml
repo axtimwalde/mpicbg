@@ -5,9 +5,9 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>sc.fiji</groupId>
-		<artifactId>pom-fiji</artifactId>
-		<version>18.1.0</version>
+		<groupId>org.scijava</groupId>
+		<artifactId>pom-scijava</artifactId>
+		<version>14.0.0</version>
 		<relativePath />
 	</parent>
 
@@ -17,13 +17,26 @@
 	<packaging>pom</packaging>
 
 	<name>Aggregator project for Stephan Saalfeld's mpicbg library and plugin collection</name>
-	<description></description>
+	<description>Aggregator project for Stephan Saalfeld's mpicbg library and plugin collection plugin for Fiji.</description>
+	<url>https://github.com/axtimwalde/mpicbg</url>
+	<inceptionYear>2008</inceptionYear>
+	<organization>
+		<name>Fiji</name>
+		<url>https://fiji.sc/</url>
+	</organization>
+	<licenses>
+		<license>
+			<name>GNU General Public License v2+</name>
+			<url>https://www.gnu.org/licenses/old-licenses/gpl-2.0.html</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
 
 	<developers>
 		<developer>
 			<id>axtimwalde</id>
 			<name>Stephan Saalfeld</name>
-			<url>http://imagej.net/User:Saalfeld</url>
+			<url>https://imagej.net/User:Saalfeld</url>
 			<roles>
 				<role>founder</role>
 				<role>lead</role>
@@ -37,74 +50,28 @@
 	</developers>
 	<contributors>
 		<contributor>
-			<name>Stephan Preibisch</name>
-			<url>http://imagej.net/User:StephanP</url>
-			<properties><id>StephanPreibisch</id></properties>
-		</contributor>
-		<contributor>
-			<name>Ignacio Arganda-Carreras</name>
-			<url>http://imagej.net/User:Iarganda</url>
-			<properties><id>iarganda</id></properties>
-		</contributor>
-		<contributor>
-			<name>John Bogovic</name>
-			<url>http://imagej.net/User:Bogovic</url>
-			<properties><id>bogovicj</id></properties>
-		</contributor>
-		<contributor>
-			<name>Olivier Burri</name>
-			<url>http://imagej.net/User:Oburri</url>
-			<properties><id>lacan</id></properties>
-		</contributor>
-		<contributor>
-			<name>Albert Cardona</name>
-			<url>http://imagej.net/User:Albertcardona</url>
-			<properties><id>acardona</id></properties>
-		</contributor>
-		<contributor>
-			<name>Jan Eglinger</name>
-			<url>http://imagej.net/User:Eglinger</url>
-			<properties><id>imagejan</id></properties>
-		</contributor>
-		<contributor>
 			<name>Mark Hiner</name>
-			<url>http://imagej.net/User:Hinerm</url>
+			<url>https://imagej.net/User:Hinerm</url>
 			<properties><id>hinerm</id></properties>
 		</contributor>
 		<contributor>
-			<name>Philipp Hanslovsky</name>
-			<properties><id>hanslovsky</id></properties>
-		</contributor>
-		<contributor>
-			<name>Larry Lindsey</name>
-			<url>http://imagej.net/User:Lindsey</url>
-			<properties><id>larrylindsey</id></properties>
-		</contributor>
-		<contributor>
-			<name>Mark Longair</name>
-			<url>http://imagej.net/User:Mark</url>
-			<properties><id>mhl</id></properties>
-		</contributor>
-		<contributor>
-			<name>Eric Perlman</name>
-			<properties><id>perlman</id></properties>
-		</contributor>
-		<contributor>
-			<name>Tobias Pietzsch</name>
-			<url>http://imagej.net/User:Pietzsch</url>
-			<properties><id>tpietzsch</id></properties>
-		</contributor>
-		<contributor>
 			<name>Curtis Rueden</name>
-			<url>http://imagej.net/User:Rueden</url>
+			<url>https://imagej.net/User:Rueden</url>
 			<properties><id>ctrueden</id></properties>
 		</contributor>
 		<contributor>
 			<name>Johannes Schindelin</name>
-			<url>http://imagej.net/User:Schindelin</url>
+			<url>https://imagej.net/User:Schindelin</url>
 			<properties><id>dscho</id></properties>
 		</contributor>
 	</contributors>
+
+	<mailingLists>
+		<mailingList>
+			<name>ImageJ Forum</name>
+			<archive>http://forum.imagej.net/</archive>
+		</mailingList>
+	</mailingLists>
 
 	<modules>
 		<module>mpicbg</module>
@@ -127,13 +94,15 @@
 	</ciManagement>
 
 	<properties>
+		<license.licenseName>gpl_v2</license.licenseName>
+		<license.copyrightOwners>Stephan Saalfeld et. al.</license.copyrightOwners>
 		<mpicbg.version>1.1.1</mpicbg.version>
 	</properties>
 
 	<repositories>
 		<repository>
 			<id>imagej.public</id>
-			<url>http://maven.imagej.net/content/groups/public</url>
+			<url>https://maven.imagej.net/content/groups/public</url>
 		</repository>
 	</repositories>
 
