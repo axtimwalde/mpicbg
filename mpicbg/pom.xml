@@ -10,11 +10,142 @@
 		<version>1.1.2-SNAPSHOT</version>
 	</parent>
 
-	<!-- <properties> <enforcer.skip>true</enforcer.skip> </properties> -->
 	<artifactId>mpicbg</artifactId>
 
-	<name>jars/mpicbg.jar</name>
-	<description></description>
+	<name>MPICBG Core Library</name>
+	<description>MPICBG Core Library.</description>
+	<url>https://github.com/axtimwalde/mpicbg</url>
+	<inceptionYear>2008</inceptionYear>
+	<organization>
+		<name>Fiji</name>
+		<url>https://fiji.sc/</url>
+	</organization>
+	<licenses>
+		<license>
+			<name>GNU General Public License v2+</name>
+			<url>https://www.gnu.org/licenses/old-licenses/gpl-2.0.html</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<id>axtimwalde</id>
+			<name>Stephan Saalfeld</name>
+			<url>https://imagej.net/User:Saalfeld</url>
+			<roles>
+				<role>founder</role>
+				<role>lead</role>
+				<role>developer</role>
+				<role>debugger</role>
+				<role>reviewer</role>
+				<role>support</role>
+				<role>maintainer</role>
+			</roles>
+		</developer>
+	</developers>
+	<contributors>
+		<contributor>
+			<name>Stephan Preibisch</name>
+			<url>https://imagej.net/User:StephanP</url>
+			<properties><id>StephanPreibisch</id></properties>
+		</contributor>
+		<contributor>
+			<name>Ignacio Arganda-Carreras</name>
+			<url>https://imagej.net/User:Iarganda</url>
+			<properties><id>iarganda</id></properties>
+		</contributor>
+		<contributor>
+			<name>John Bogovic</name>
+			<url>https://imagej.net/User:Bogovic</url>
+			<properties><id>bogovicj</id></properties>
+		</contributor>
+		<contributor>
+			<name>Olivier Burri</name>
+			<url>https://imagej.net/User:Oburri</url>
+			<properties><id>lacan</id></properties>
+		</contributor>
+		<contributor>
+			<name>Albert Cardona</name>
+			<url>https://imagej.net/User:Albertcardona</url>
+			<properties><id>acardona</id></properties>
+		</contributor>
+		<contributor>
+			<name>Jan Eglinger</name>
+			<url>https://imagej.net/User:Eglinger</url>
+			<properties><id>imagejan</id></properties>
+		</contributor>
+		<contributor>
+			<name>Philipp Hanslovsky</name>
+			<url>https://imagej.net/User:Hanslovsky</url>
+			<properties><id>hanslovsky</id></properties>
+		</contributor>
+		<contributor>
+			<name>Mark Hiner</name>
+			<url>https://imagej.net/User:Hinerm</url>
+			<properties><id>hinerm</id></properties>
+		</contributor>
+		<contributor>
+			<name>Larry Lindsey</name>
+			<url>https://imagej.net/User:Lindsey</url>
+			<properties><id>larrylindsey</id></properties>
+		</contributor>
+		<contributor>
+			<name>Mark Longair</name>
+			<url>https://imagej.net/User:Mark</url>
+			<properties><id>mhl</id></properties>
+		</contributor>
+		<contributor>
+			<name>Eric Perlman</name>
+			<properties><id>perlman</id></properties>
+		</contributor>
+		<contributor>
+			<name>Tobias Pietzsch</name>
+			<url>https://imagej.net/User:Pietzsch</url>
+			<properties><id>tpietzsch</id></properties>
+		</contributor>
+		<contributor>
+			<name>Igor Pisarev</name>
+			<properties><id>igorpisarev</id></properties>
+		</contributor>
+		<contributor>
+			<name>Curtis Rueden</name>
+			<url>https://imagej.net/User:Rueden</url>
+			<properties><id>ctrueden</id></properties>
+		</contributor>
+		<contributor>
+			<name>Johannes Schindelin</name>
+			<url>https://imagej.net/User:Schindelin</url>
+			<properties><id>dscho</id></properties>
+		</contributor>
+	</contributors>
+
+	<mailingLists>
+		<mailingList>
+			<name>ImageJ Forum</name>
+			<archive>http://forum.imagej.net/</archive>
+		</mailingList>
+	</mailingLists>
+
+	<scm>
+		<connection>scm:git:git://github.com/axtimwalde/mpicbg</connection>
+		<developerConnection>scm:git:git@github.com:axtimwalde/mpicbg</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://github.com/axtimwalde/mpicbg</url>
+	</scm>
+	<issueManagement>
+		<system>GitHub Issues</system>
+		<url>https://github.com/axtimwalde/mpicbg/issues</url>
+	</issueManagement>
+	<ciManagement>
+		<system>Travis CI</system>
+		<url>https://travis-ci.org/axtimwalde/mpicbg</url>
+	</ciManagement>
+
+	<properties>
+		<license.licenseName>gpl_v2</license.licenseName>
+		<license.copyrightOwners>Stephan Saalfeld et. al.</license.copyrightOwners>
+	</properties>
 
 	<dependencies>
 		<!-- ImageJ dependencies -->

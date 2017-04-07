@@ -1,0 +1,12 @@
+language: java
+jdk: oraclejdk8
+branches:
+  only: master
+install: true
+script: ".travis/build.sh"
+after_success: ".travis/notify.sh Travis-Success"
+after_failure: ".travis/notify.sh Travis-Failure"
+env:
+  global:
+  - secure: JArYaTnPw9bJbfoQ650a9ScQ14O/6KneUAu+jBARy9nvNLNOTO8dv70Z7BwKHolc7ItERIwLHVJkdr1/frklppFc3uJo1Xb/sjAavmL7ValGyJ/g+/+b/bNwRLHor/WIVSGVFjGg4lnZLPrU1qxUsgkqNOt7jyjROQh/0tnXlEM=
+  - secure: NesO0ghUMmT56w7yf3nqcUlsd7Myv0bRqV3L4dsFpP9Eu4J1sb1UgAfO+cr7DSUHSWCrbfwxQiAKCkuGWRezpFGcRVdkpzftDKXkI+odsUzNJt2UcHtP6EGQPxf/aLc2dTvtrmFXjCVlZg17FOxvEs5IIz4WO6zJjVFlmD0vLnc=
