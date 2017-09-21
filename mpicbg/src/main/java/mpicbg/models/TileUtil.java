@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -167,8 +168,8 @@ public class TileUtil
 
 			System.out.println("First apply took " + (t2 - t1) + " ms");
 
-			final LinkedList< Future< ? > > futures = new LinkedList< Future< ? > >();
-			final HashSet<Tile<?>> executingTiles = new HashSet<Tile<?>>(nThreads);
+			final LinkedHashMap<Tile<?>, Future<?>> executingTiles = new LinkedHashMap<Tile<?>, Future<?>>();
+			final LinkedList<Tile<?>> finishedTiles = new LinkedList<Tile<?>>();
 
 			while ( proceed )
 			{
@@ -186,42 +187,40 @@ public class TileUtil
 
 				while (!pending.isEmpty()) {
 					final Tile<?> tile = pending.removeFirst();
-					synchronized (executingTiles) {
-						if (intersects(tile.getConnectedTiles(), executingTiles)) {
-							pending.addLast(tile);
-							continue;
-						}
-						executingTiles.add(tile);
-					}
-					futures.add(exe.submit(new Runnable() {
-						@Override
-						public void run() {
-							try {
-								tile.fitModel();
-								tile.apply( damp );
-								synchronized (executingTiles) {
-									executingTiles.remove(tile);
+					if (intersects(tile.getConnectedTiles(), executingTiles.keySet())) {
+						pending.addLast(tile);
+					} else {
+						executingTiles.put(tile, exe.submit(new Runnable() {
+							@Override
+							public void run() {
+								try {
+									tile.fitModel();
+									tile.apply( damp );
+								} catch (final Exception e) {
+									throw new RuntimeException(e);
+								} finally {
+									synchronized (finishedTiles) {
+										finishedTiles.add(tile);
+									}
 								}
-							} catch (final Exception e) {
-								throw new RuntimeException(e);
 							}
+						}));
+					}
+
+					// Wait until a group of active tasks finishes (or all of them if there are no any pending tiles)
+					if (pending.isEmpty() || executingTiles.size() > nThreads * 4) {
+						final Iterator<Future<?>> futuresIterator = executingTiles.values().iterator();
+						for (int processed = 0; processed < (pending.isEmpty() ? executingTiles.size() : nThreads); ++processed) {
+							futuresIterator.next().get();
 						}
-					}));
-					if (futures.size() > nThreads * 4) {
-						for (int k=0; k<nThreads; ++k) {
-							futures.removeFirst().get();
+					}
+					// Process finished tasks which could have thrown an exception
+					synchronized (finishedTiles) {
+						while (!finishedTiles.isEmpty()) {
+							executingTiles.remove(finishedTiles.removeFirst()).get();
 						}
 					}
 				}
-
-				// Wait until all finish
-				for (final Future<?> fu : futures) {
-					fu.get();
-				}
-
-				executingTiles.clear();
-				futures.clear();
-
 
 				tc.updateErrors();
 				observer.add( tc.getError() );
