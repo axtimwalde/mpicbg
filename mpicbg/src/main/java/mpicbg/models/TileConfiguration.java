@@ -235,6 +235,28 @@ public class TileConfiguration implements Serializable
 			final int maxIterations,
 			final int maxPlateauwidth ) throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
+		optimizeSilently( observer, maxAllowedError, maxIterations, maxPlateauwidth, 1.0 );
+	}
+
+	/**
+	 * Minimize the displacement of all {@link PointMatch Correspondence pairs}
+	 * of all {@link Tile Tiles}
+	 *
+	 * @param maxAllowedError do not accept convergence if error is > max_error
+	 * @param maxIterations stop after that many iterations even if there was
+	 *   no minimum found
+	 * @param maxPlateauwidth convergence is reached if the average absolute
+	 *   slope in an interval of this size and half this size is smaller than
+	 *   0.0001 (in double accuracy).  This is assumed to prevent the algorithm
+	 *   from stopping at plateaus smaller than this value.
+	 */
+	public void optimizeSilently(
+			final ErrorStatistic observer,
+			final double maxAllowedError,
+			final int maxIterations,
+			final int maxPlateauwidth,
+			final double damp ) throws NotEnoughDataPointsException, IllDefinedDataPointsException
+	{
 		int i = 0;
 
 		boolean proceed = i < maxIterations;
@@ -251,7 +273,7 @@ public class TileConfiguration implements Serializable
 			{
 				if ( fixedTiles.contains( tile ) ) continue;
 				tile.fitModel();
-				tile.apply();
+				tile.apply( damp );
 			}
 			updateErrors();
 			observer.add( error );
