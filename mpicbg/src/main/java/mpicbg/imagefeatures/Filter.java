@@ -344,8 +344,8 @@ public class Filter
 				float vala = 0;
 				for ( int yk = 0; yk < v.length; ++yk )
 				{
-					valb += h[ yk ] * temp.data[ yb[ y + yk ] + x ];
-					vala += h[ yk ] * temp.data[ ya[ y + yk ] + x ];
+					valb += v[ yk ] * temp.data[ yb[ y + yk ] + x ];
+					vala += v[ yk ] * temp.data[ ya[ y + yk ] + x ];
 				}
 				output.data[ r + x ] = valb;
 				output.data[ r + rm + x ] = vala;
