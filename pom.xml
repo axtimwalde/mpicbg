@@ -98,6 +98,9 @@
 		<license.copyrightOwners>Stephan Saalfeld et. al.</license.copyrightOwners>
 		<mpicbg.version>1.1.1</mpicbg.version>
 
+		<!-- NB: Disable the strict Java 8 doclint. -->
+		<additionalparam>-Xdoclint:none</additionalparam>
+
 		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
 	</properties>
