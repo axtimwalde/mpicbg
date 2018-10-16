@@ -374,6 +374,12 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	}
 
 	@Override
+	final public void reset()
+	{
+		set( new AffineModel2D() );
+	}
+
+	@Override
 	public AffineModel2D copy()
 	{
 		final AffineModel2D m = new AffineModel2D();

@@ -266,6 +266,12 @@ public class RigidModel3D extends AbstractAffineModel3D< RigidModel3D > implemen
 	}
 
 	@Override
+	final public void reset()
+	{
+		set( new RigidModel3D() );
+	}
+
+	@Override
 	public RigidModel3D copy()
 	{
 		final RigidModel3D m = new RigidModel3D();

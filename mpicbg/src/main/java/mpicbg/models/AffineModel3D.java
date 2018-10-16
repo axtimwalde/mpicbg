@@ -547,6 +547,12 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 	}
 
 	@Override
+	final public void reset()
+	{
+		set( new AffineModel3D() );
+	}
+
+	@Override
 	public AffineModel3D copy()
 	{
 		final AffineModel3D m = new AffineModel3D();

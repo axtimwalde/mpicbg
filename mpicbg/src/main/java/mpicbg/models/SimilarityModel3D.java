@@ -410,6 +410,12 @@ public class SimilarityModel3D extends AbstractAffineModel3D< SimilarityModel3D 
 	}
 
 	@Override
+	final public void reset()
+	{
+		set( new SimilarityModel3D() );
+	}
+
+	@Override
 	public SimilarityModel3D copy()
 	{
 		SimilarityModel3D m = new SimilarityModel3D();

@@ -231,6 +231,12 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 	}
 
 	@Override
+	final public void reset()
+	{
+		set( new HomographyModel2D() );
+	}
+
+	@Override
 	public HomographyModel2D copy()
 	{
 		final HomographyModel2D m = new HomographyModel2D();
