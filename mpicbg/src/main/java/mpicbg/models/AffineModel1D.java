@@ -288,6 +288,14 @@ public class AffineModel1D extends AbstractAffineModel1D< AffineModel1D > implem
 		set( new AffineModel1D() );
 	}
 
+	final public void set( final TranslationModel1D m )
+	{
+		reset();
+		m01 = m.t;
+		cost = m.getCost();
+		invert();
+	}
+
 	@Override
 	public AffineModel1D copy()
 	{

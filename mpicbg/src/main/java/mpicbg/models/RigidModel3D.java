@@ -271,6 +271,17 @@ public class RigidModel3D extends AbstractAffineModel3D< RigidModel3D > implemen
 		set( new RigidModel3D() );
 	}
 
+	final public void set( final TranslationModel3D m )
+	{
+		reset();
+		final double[] translation = m.getTranslation();
+		m03 = translation[ 0 ];
+		m13 = translation[ 1 ];
+		m23 = translation[ 2 ];
+		cost = m.getCost();
+		invert();
+	}
+
 	@Override
 	public RigidModel3D copy()
 	{

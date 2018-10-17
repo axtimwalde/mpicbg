@@ -552,6 +552,55 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 		set( new AffineModel3D() );
 	}
 
+	final public void set( final TranslationModel3D m )
+	{
+		reset();
+		final double[] translation = m.getTranslation();
+		m03 = translation[ 0 ];
+		m13 = translation[ 1 ];
+		m23 = translation[ 2 ];
+		cost = m.getCost();
+		invert();
+	}
+
+	final public void set( final RigidModel3D m )
+	{
+		m00 = m.m00;
+		m10 = m.m10;
+		m20 = m.m20;
+		m01 = m.m01;
+		m11 = m.m11;
+		m21 = m.m21;
+		m02 = m.m02;
+		m12 = m.m12;
+		m22 = m.m22;
+		m03 = m.m03;
+		m13 = m.m13;
+		m23 = m.m23;
+
+		cost = m.getCost();
+		invert();
+	}
+
+	final public void set( final SimilarityModel3D m )
+	{
+		m00 = m.m00;
+		m10 = m.m10;
+		m20 = m.m20;
+		m01 = m.m01;
+		m11 = m.m11;
+		m21 = m.m21;
+		m02 = m.m02;
+		m12 = m.m12;
+		m22 = m.m22;
+		m03 = m.m03;
+		m13 = m.m13;
+		m23 = m.m23;
+
+		cost = m.getCost();
+		invert();
+	}
+
 	@Override
 	public AffineModel3D copy()
 	{

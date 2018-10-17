@@ -367,6 +367,15 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 		set( new RigidModel2D() );
 	}
 
+	final public void set( final TranslationModel2D m )
+	{
+		reset();
+		tx = m.tx;
+		ty = m.ty;
+		cost = m.getCost();
+		invert();
+	}
+
 	final private void invert()
 	{
 		itx = -sin * ty - cos * tx;

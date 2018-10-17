@@ -383,6 +383,25 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 		set( new SimilarityModel2D() );
 	}
 
+	final public void set( final TranslationModel2D m )
+	{
+		reset();
+		tx = m.tx;
+		ty = m.ty;
+		cost = m.getCost();
+		invert();
+	}
+
+	final public void set( final RigidModel2D m )
+	{
+		scos = m.cos;
+		ssin = m.sin;
+		tx = m.tx;
+		ty = m.ty;
+		cost = m.getCost();
+		invert();
+	}
+
 	final protected void invert()
 	{
 		final double det = scos * scos + ssin * ssin;
