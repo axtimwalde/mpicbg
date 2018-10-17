@@ -161,22 +161,6 @@ final public class InterpolatedAffineModel1D<
 		affine.toMatrix( data );
 	}
 
-	/**
-	 * Initialize the model such that the respective affine transform is:
-	 *
-	 * <pre>
-	 * m0 m1
-	 * 0   1
-	 * </pre>
-	 *
-	 * @param m0
-	 * @param m1
-	 */
-	final public void set( final float m0, final float m1 )
-	{
-		affine.set( m0, m1 );
-	}
-
 	@Override
 	public void estimateBounds( final double[] min, final double[] max )
 	{

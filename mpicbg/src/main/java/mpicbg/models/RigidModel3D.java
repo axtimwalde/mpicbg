@@ -453,7 +453,7 @@ public class RigidModel3D extends AbstractAffineModel3D< RigidModel3D > implemen
 	 * @param m22
 	 * @param m23
 	 */
-	final public void set(
+	final private void set(
 			final double m00, final double m01, final double m02, final double m03,
 			final double m10, final double m11, final double m12, final double m13,
 			final double m20, final double m21, final double m22, final double m23 )
