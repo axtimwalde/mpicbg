@@ -94,6 +94,7 @@ public abstract class InterpolatedModel< A extends Model< A >, B extends Model< 
 		a.reset();
 		b.reset();
 		cost = Double.MAX_VALUE;
+		interpolate();
 	}
 
 	@Override
