@@ -32,6 +32,8 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 
 	protected double tx = 0, ty = 0;
 
+	final public double[] getTranslation(){ return new double[] { tx, ty }; }
+
 	@Override
 	final public int getMinNumMatches(){ return MIN_NUM_MATCHES; }
 
