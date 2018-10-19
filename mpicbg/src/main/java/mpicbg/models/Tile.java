@@ -44,7 +44,6 @@ public class Tile< M extends Model< M > > implements Serializable
 	final public void setModel( final M model )
 	{
 		this.model = model;
-		update();
 	}
 
 	/**
