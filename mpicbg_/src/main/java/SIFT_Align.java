@@ -103,6 +103,8 @@ public class SIFT_Align implements PlugIn, KeyListener
 		public boolean interpolate = true;
 
 		public boolean showInfo = false;
+		
+		public boolean showMatrix = false;
 	}
 
 	final static Param p = new Param();
@@ -157,7 +159,8 @@ public class SIFT_Align implements PlugIn, KeyListener
 		gd.addMessage( "Output:" );
 		gd.addCheckbox( "interpolate", p.interpolate );
 		gd.addCheckbox( "show_info", p.showInfo );
-
+		gd.addCheckbox( "show_transformation_matrix", p.showMatrix );
+		
 		gd.showDialog();
 
 		if (gd.wasCanceled()) return;
@@ -177,6 +180,7 @@ public class SIFT_Align implements PlugIn, KeyListener
 
 		p.interpolate = gd.getNextBoolean();
 		p.showInfo = gd.getNextBoolean();
+		p.showMatrix = gd.getNextBoolean();
 
 		final ImageStack stack = imp.getStack();
 		final ImageStack stackAligned = new ImageStack( stack.getWidth(), stack.getHeight() );
@@ -341,6 +345,12 @@ public class SIFT_Align implements PlugIn, KeyListener
 				 *
 				 */
 				model.concatenate( currentModel );
+
+				if ( p.showMatrix )
+				{
+					IJ.log("Transformation Matrix: " + currentModel.createAffine() );
+				}
+			
 			}
 
 //			ImageProcessor alignedSlice = stack.getProcessor( i + 1 ).duplicate();
