@@ -563,10 +563,9 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 	final public void set( final TranslationModel3D m )
 	{
 		reset();
-		final double[] translation = m.getTranslation();
-		m03 = translation[ 0 ];
-		m13 = translation[ 1 ];
-		m23 = translation[ 2 ];
+		m03 = m.translation[ 0 ];
+		m13 = m.translation[ 1 ];
+		m23 = m.translation[ 2 ];
 		cost = m.getCost();
 		invert();
 	}

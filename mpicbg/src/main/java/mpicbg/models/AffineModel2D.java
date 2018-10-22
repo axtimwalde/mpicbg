@@ -392,28 +392,24 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 
 	final public void set( final RigidModel2D m )
 	{
-		final double[][] matrix = new double[ 3 ][ 2 ];
-		m.toMatrix( matrix );
-		m00 = matrix[ 0 ][ 0 ];
-		m01 = matrix[ 0 ][ 1 ];
-		m02 = matrix[ 0 ][ 2 ];
-		m10 = matrix[ 1 ][ 0 ];
-		m11 = matrix[ 1 ][ 1 ];
-		m12 = matrix[ 1 ][ 2 ];
+		m00 = m.cos;
+		m01 = -m.sin;
+		m02 = m.tx;
+		m10 = m.sin;
+		m11 = m.cos;
+		m12 = m.ty;
 		cost = m.getCost();
 		invert();
 	}
 
 	final public void set( final SimilarityModel2D m )
 	{
-		final double[][] matrix = new double[ 3 ][ 2 ];
-		m.toMatrix( matrix );
-		m00 = matrix[ 0 ][ 0 ];
-		m01 = matrix[ 0 ][ 1 ];
-		m02 = matrix[ 0 ][ 2 ];
-		m10 = matrix[ 1 ][ 0 ];
-		m11 = matrix[ 1 ][ 1 ];
-		m12 = matrix[ 1 ][ 2 ];
+		m00 = m.scos;
+		m01 = -m.ssin;
+		m02 = m.tx;
+		m10 = m.ssin;
+		m11 = m.scos;
+		m12 = m.ty;
 		cost = m.getCost();
 		invert();
 	}
