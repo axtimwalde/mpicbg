@@ -67,8 +67,7 @@ final public class InterpolatedAffineModel2D<
 	public void set( final InterpolatedAffineModel2D< A, B > m )
 	{
 		super.set( m );
-		if ( InterpolatedAffineModel2D.class.isInstance( m ) )
-			affine.set( ( ( InterpolatedAffineModel2D< A, B > ) m ).affine );
+		affine.set( m.affine );
 	}
 
 	@Override
