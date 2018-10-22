@@ -42,8 +42,7 @@ final public class InterpolatedAffineModel3D<
 		interpolate();
 	}
 
-	@Override
-	public void interpolate()
+	protected void interpolate()
 	{
 		a.toArray( afs );
 		b.toArray( bfs );

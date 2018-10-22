@@ -22,7 +22,7 @@ package mpicbg.models;
  *
  * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
  */
-public abstract class InvertibleInterpolatedModel<
+public class InvertibleInterpolatedModel<
 		A extends Model< A > & InvertibleCoordinateTransform,
 		B extends Model< B > & InvertibleCoordinateTransform,
 		M extends InvertibleInterpolatedModel< A, B, M > > extends InterpolatedModel< A, B, M > implements InvertibleCoordinateTransform
@@ -32,6 +32,15 @@ public abstract class InvertibleInterpolatedModel<
 	public InvertibleInterpolatedModel( final A a, final B b, final double lambda )
 	{
 		super( a, b, lambda );
+	}
+
+	@Override
+	public M copy()
+	{
+		@SuppressWarnings( "unchecked" )
+		final M copy = ( M )new InvertibleInterpolatedModel< A, B, M >( a.copy(), b.copy(), lambda );
+		copy.cost = cost;
+		return copy;
 	}
 
 	@Override
@@ -53,5 +62,14 @@ public abstract class InvertibleInterpolatedModel<
 			final double dd = copy[ d ] - point[ d ];
 			point[ d ] += lambda * dd;
 		}
+	}
+
+	@Override
+	public InvertibleCoordinateTransform createInverse()
+	{
+		@SuppressWarnings( "unchecked" )
+		final InvertibleInterpolatedModel< A, B, M > inverse = new InvertibleInterpolatedModel< A, B, M >( ( A )a.createInverse(), ( B )b.createInverse(), lambda );
+		inverse.cost = cost;
+		return inverse;
 	}
 }

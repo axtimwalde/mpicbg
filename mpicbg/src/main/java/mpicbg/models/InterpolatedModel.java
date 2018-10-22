@@ -25,7 +25,7 @@ import java.util.Collection;
  *
  * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
  */
-public abstract class InterpolatedModel< A extends Model< A >, B extends Model< B >, M extends InterpolatedModel< A, B, M > > extends AbstractModel< M >
+public class InterpolatedModel< A extends Model< A >, B extends Model< B >, M extends InterpolatedModel< A, B, M > > extends AbstractModel< M >
 {
 	private static final long serialVersionUID = 6174301903574154605L;
 
@@ -41,8 +41,6 @@ public abstract class InterpolatedModel< A extends Model< A >, B extends Model< 
 		this.lambda = lambda;
 		l1 = 1.0 - lambda;
 	}
-
-	public abstract void interpolate();
 
 	public A getA()
 	{
@@ -95,6 +93,15 @@ public abstract class InterpolatedModel< A extends Model< A >, B extends Model< 
 		b.reset();
 		cost = Double.MAX_VALUE;
 		interpolate();
+	}
+
+	@Override
+	public M copy()
+	{
+		@SuppressWarnings( "unchecked" )
+		final M copy = ( M )new InterpolatedModel< A, B, M >( a.copy(), b.copy(), lambda );
+		copy.cost = cost;
+		return copy;
 	}
 
 	@Override
