@@ -376,7 +376,9 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	@Override
 	final public void reset()
 	{
-		set( new AffineModel2D() );
+		m00 = 1.0; m10 = 0.0; m01 = 0.0; m11 = 1.0; m02 = 0.0; m12 = 0.0;
+		i00 = 1.0; i10 = 0.0; i01 = 0.0; i11 = 1.0; i02 = 0.0; i12 = 0.0;
+		cost = Double.MAX_VALUE;
 	}
 
 	final public void set( final TranslationModel2D m )

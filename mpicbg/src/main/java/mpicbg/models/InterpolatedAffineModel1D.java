@@ -74,7 +74,7 @@ final public class InterpolatedAffineModel1D<
 	public void reset()
 	{
 		super.reset();
-		interpolate();
+		affine.reset();
 	}
 
 	@Override

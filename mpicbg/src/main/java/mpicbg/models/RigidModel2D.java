@@ -364,7 +364,9 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 	@Override
 	final public void reset()
 	{
-		set( new RigidModel2D() );
+		cos = 1.0; sin = 0.0; tx = 0.0; ty = 0.0;
+		itx = 0.0; ity = 0.0;
+		cost = Double.MAX_VALUE;
 	}
 
 	final public void set( final TranslationModel2D m )

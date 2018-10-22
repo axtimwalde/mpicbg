@@ -16,7 +16,6 @@
  */
 package mpicbg.models;
 
-import java.util.Arrays;
 import java.util.Collection;
 
 /**
@@ -141,7 +140,7 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 	@Override
 	final public void reset()
 	{
-		Arrays.fill( translation, 0 );
+		translation[ 0 ] = translation[ 1 ] = translation[ 2 ] = 0;
 		cost = Double.MAX_VALUE;
 	}
 

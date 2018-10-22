@@ -285,7 +285,9 @@ public class AffineModel1D extends AbstractAffineModel1D< AffineModel1D > implem
 	@Override
 	final public void reset()
 	{
-		set( new AffineModel1D() );
+		m00 = 1.0; m01 = 0.0;
+		i00 = 1.0; i01 = 0.0;
+		cost = Double.MAX_VALUE;
 	}
 
 	final public void set( final TranslationModel1D m )
