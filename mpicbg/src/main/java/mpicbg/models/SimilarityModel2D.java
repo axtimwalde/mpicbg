@@ -532,6 +532,6 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 		data[ 0 ][ 2 ] = tx;
 		data[ 1 ][ 0 ] = ssin;
 		data[ 1 ][ 1 ] = scos;
-		data[ 1 ][ 1 ] = ty;
+		data[ 1 ][ 2 ] = ty;
 	}
 }

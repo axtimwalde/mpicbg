@@ -493,6 +493,6 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 		data[ 0 ][ 2 ] = tx;
 		data[ 1 ][ 0 ] = sin;
 		data[ 1 ][ 1 ] = cos;
-		data[ 1 ][ 1 ] = ty;
+		data[ 1 ][ 2 ] = ty;
 	}
 }
