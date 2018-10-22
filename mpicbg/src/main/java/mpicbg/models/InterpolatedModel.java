@@ -92,7 +92,6 @@ public class InterpolatedModel< A extends Model< A >, B extends Model< B >, M ex
 		a.reset();
 		b.reset();
 		cost = Double.MAX_VALUE;
-		interpolate();
 	}
 
 	@Override
