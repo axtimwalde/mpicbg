@@ -231,6 +231,20 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 	}
 
 	@Override
+	final public void reset()
+	{
+		m00 = 1; m01 = 0; m02 = 0;
+		m10 = 0; m11 = 1; m12 = 0;
+		m20 = 0; m21 = 0; m22 = 1;
+
+		i00 = 1; i01 = 0; i02 = 0;
+		i10 = 0; i11 = 1; i12 = 0;
+		i20 = 0; i21 = 0; i22 = 1;
+
+		cost = Double.MAX_VALUE;
+	}
+
+	@Override
 	public HomographyModel2D copy()
 	{
 		final HomographyModel2D m = new HomographyModel2D();

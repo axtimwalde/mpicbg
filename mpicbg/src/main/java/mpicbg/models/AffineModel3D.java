@@ -547,6 +547,68 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 	}
 
 	@Override
+	final public void reset()
+	{
+		m00 = 1.0; m01 = 0.0; m02 = 0.0; m03 = 0.0;
+		m10 = 0.0; m11 = 1.0; m12 = 0.0; m13 = 0.0;
+		m20 = 0.0; m21 = 0.0; m22 = 1.0; m23 = 0.0;
+
+		i00 = 1.0; i01 = 0.0; i02 = 0.0; i03 = 0.0;
+		i10 = 0.0; i11 = 1.0; i12 = 0.0; i13 = 0.0;
+		i20 = 0.0; i21 = 0.0; i22 = 1.0; i23 = 0.0;
+
+		cost = Double.MAX_VALUE;
+	}
+
+	final public void set( final TranslationModel3D m )
+	{
+		reset();
+		m03 = m.translation[ 0 ];
+		m13 = m.translation[ 1 ];
+		m23 = m.translation[ 2 ];
+		cost = m.getCost();
+		invert();
+	}
+
+	final public void set( final RigidModel3D m )
+	{
+		m00 = m.m00;
+		m10 = m.m10;
+		m20 = m.m20;
+		m01 = m.m01;
+		m11 = m.m11;
+		m21 = m.m21;
+		m02 = m.m02;
+		m12 = m.m12;
+		m22 = m.m22;
+		m03 = m.m03;
+		m13 = m.m13;
+		m23 = m.m23;
+
+		cost = m.getCost();
+		invert();
+	}
+
+	final public void set( final SimilarityModel3D m )
+	{
+		m00 = m.m00;
+		m10 = m.m10;
+		m20 = m.m20;
+		m01 = m.m01;
+		m11 = m.m11;
+		m21 = m.m21;
+		m02 = m.m02;
+		m12 = m.m12;
+		m22 = m.m22;
+		m03 = m.m03;
+		m13 = m.m13;
+		m23 = m.m23;
+
+		cost = m.getCost();
+		invert();
+	}
+
+	@Override
 	public AffineModel3D copy()
 	{
 		final AffineModel3D m = new AffineModel3D();

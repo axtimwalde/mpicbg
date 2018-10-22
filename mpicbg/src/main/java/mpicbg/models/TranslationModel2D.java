@@ -32,6 +32,8 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 
 	protected double tx = 0, ty = 0;
 
+	final public double[] getTranslation(){ return new double[] { tx, ty }; }
+
 	@Override
 	final public int getMinNumMatches(){ return MIN_NUM_MATCHES; }
 
@@ -228,6 +230,13 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 		tx = m.tx;
 		ty = m.ty;
 		cost = m.getCost();
+	}
+
+	@Override
+	final public void reset()
+	{
+		tx = ty = 0;
+		cost = Double.MAX_VALUE;
 	}
 
 	@Override

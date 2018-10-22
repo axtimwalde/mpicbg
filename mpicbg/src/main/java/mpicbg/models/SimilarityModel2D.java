@@ -377,6 +377,33 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 		cost = m.cost;
 	}
 
+	@Override
+	final public void reset()
+	{
+		scos = 1.0; ssin = 0.0; tx = 0.0; ty = 0.0;
+		iscos = 1.0; issin = 0.0; itx = 0.0; ity = 0.0;
+		cost = Double.MAX_VALUE;
+	}
+
+	final public void set( final TranslationModel2D m )
+	{
+		reset();
+		tx = m.tx;
+		ty = m.ty;
+		cost = m.getCost();
+		invert();
+	}
+
+	final public void set( final RigidModel2D m )
+	{
+		scos = m.cos;
+		ssin = m.sin;
+		tx = m.tx;
+		ty = m.ty;
+		cost = m.getCost();
+		invert();
+	}
+
 	final protected void invert()
 	{
 		final double det = scos * scos + ssin * ssin;

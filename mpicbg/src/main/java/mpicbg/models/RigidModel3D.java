@@ -266,6 +266,30 @@ public class RigidModel3D extends AbstractAffineModel3D< RigidModel3D > implemen
 	}
 
 	@Override
+	final public void reset()
+	{
+		m00 = 1.0; m01 = 0.0; m02 = 0.0; m03 = 0.0;
+		m10 = 0.0; m11 = 1.0; m12 = 0.0; m13 = 0.0;
+		m20 = 0.0; m21 = 0.0; m22 = 1.0; m23 = 0.0;
+
+		i00 = 1.0; i01 = 0.0; i02 = 0.0; i03 = 0.0;
+		i10 = 0.0; i11 = 1.0; i12 = 0.0; i13 = 0.0;
+		i20 = 0.0; i21 = 0.0; i22 = 1.0; i23 = 0.0;
+
+		cost = Double.MAX_VALUE;
+	}
+
+	final public void set( final TranslationModel3D m )
+	{
+		reset();
+		m03 = m.translation[ 0 ];
+		m13 = m.translation[ 1 ];
+		m23 = m.translation[ 2 ];
+		cost = m.getCost();
+		invert();
+	}
+
+	@Override
 	public RigidModel3D copy()
 	{
 		final RigidModel3D m = new RigidModel3D();
@@ -436,7 +460,7 @@ public class RigidModel3D extends AbstractAffineModel3D< RigidModel3D > implemen
 	 * @param m22
 	 * @param m23
 	 */
-	final public void set(
+	final private void set(
 			final double m00, final double m01, final double m02, final double m03,
 			final double m10, final double m11, final double m12, final double m13,
 			final double m20, final double m21, final double m22, final double m23 )

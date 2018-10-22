@@ -87,6 +87,14 @@ public class InterpolatedModel< A extends Model< A >, B extends Model< B >, M ex
 	}
 
 	@Override
+	public void reset()
+	{
+		a.reset();
+		b.reset();
+		cost = Double.MAX_VALUE;
+	}
+
+	@Override
 	public M copy()
 	{
 		@SuppressWarnings( "unchecked" )

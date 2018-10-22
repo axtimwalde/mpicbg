@@ -401,6 +401,11 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 	 */
 	public void set( final M m );
 
+	/**
+	 * Reset the model to its default state.
+	 */
+	public void reset();
+
 
 	/**
 	 * Clone the model.

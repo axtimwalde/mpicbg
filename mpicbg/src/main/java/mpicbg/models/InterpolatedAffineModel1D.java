@@ -66,8 +66,14 @@ final public class InterpolatedAffineModel1D<
 	public void set( final InterpolatedAffineModel1D< A, B > m )
 	{
 		super.set( m );
-		if ( InterpolatedAffineModel1D.class.isInstance( m ) )
-			affine.set( ( ( InterpolatedAffineModel1D< A, B > ) m ).affine );
+		affine.set( m.affine );
+	}
+
+	@Override
+	public void reset()
+	{
+		super.reset();
+		affine.reset();
 	}
 
 	@Override
@@ -151,22 +157,6 @@ final public class InterpolatedAffineModel1D<
 	public void toMatrix( final double[][] data )
 	{
 		affine.toMatrix( data );
-	}
-
-	/**
-	 * Initialize the model such that the respective affine transform is:
-	 *
-	 * <pre>
-	 * m0 m1
-	 * 0   1
-	 * </pre>
-	 *
-	 * @param m0
-	 * @param m1
-	 */
-	final public void set( final float m0, final float m1 )
-	{
-		affine.set( m0, m1 );
 	}
 
 	@Override
