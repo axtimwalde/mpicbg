@@ -38,8 +38,13 @@ public class Tile< M extends Model< M > > implements Serializable
 	 * {@link Point Points} in the {@link Tile} share (and thus determine)
 	 * this common {@link AbstractModel}.
 	 */
-	final protected M model;
+	protected M model;
 	final public M getModel() { return model; }
+
+	final public void setModel( final M model )
+	{
+		this.model = model;
+	}
 
 	/**
 	 * A set of point correspondences with {@link PointMatch#getP1() p1} being
