@@ -31,7 +31,7 @@ import java.util.Set;
  *
  * @param <M> local model
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class ElasticMovingLeastSquaresMesh< M extends AbstractModel< M > > extends MovingLeastSquaresMesh< M >
 {
@@ -241,7 +241,7 @@ public class ElasticMovingLeastSquaresMesh< M extends AbstractModel< M > > exten
 	/**
 	 * Minimize the displacement of all PointMatches of all tiles.
 	 *
-	 * @param maxError do not accept convergence if error is > max_error
+	 * @param maxError do not accept convergence if error is &gt; max_error
 	 * @param maxIterations stop after that many iterations even if there was
 	 *   no minimum found
 	 * @param maxPlateauwidth convergence is reached if the average slope in
@@ -284,7 +284,7 @@ public class ElasticMovingLeastSquaresMesh< M extends AbstractModel< M > > exten
 	/**
 	 * Minimize the displacement of all PointMatches of all tiles.
 	 *
-	 * @param maxError do not accept convergence if error is > max_error
+	 * @param maxError do not accept convergence if error is &gt; max_error
 	 * @param maxIterations stop after that many iterations even if there was
 	 *   no minimum found
 	 * @param maxPlateauwidth convergence is reached if the average slope in

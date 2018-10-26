@@ -34,7 +34,7 @@ import java.awt.AWTEvent;
 /**
  * Abstract base class for variance and STD filters.
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.1a
  */
 abstract public class AbstractBlockFilter implements ExtendedPlugInFilter, DialogListener

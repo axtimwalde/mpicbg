@@ -23,7 +23,7 @@ import ij.process.ImageProcessor;
 /**
  * Apply a piece of CLAHE to the different kinds of {@link ImageProcessor ImageProcessors}.
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.3b
  */
 abstract class Apply< T extends ImageProcessor >

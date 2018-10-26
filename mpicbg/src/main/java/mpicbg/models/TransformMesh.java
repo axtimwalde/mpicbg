@@ -27,10 +27,12 @@ import mpicbg.util.Util;
 
 /**
  * Triangular transformation mesh.
- *
+ * <p>
  * See an example to find out how the mesh is constructed:
- *
- * numX = 4; numY = 3:
+ * </p>
+ * <p>
+ * {@code numX = 4; numY = 3:}
+ * </p>
  * <pre>
  * *---*---*---*
  * |\ / \ / \ /|
@@ -42,7 +44,7 @@ import mpicbg.util.Util;
  * |/ \ / \ / \|
  * *---*---*---*
  * </pre>
- *
+ * <p>
  * Each vertex is given as a {@link PointMatch} with
  * {@link PointMatch#getP1() p1} being the original point and
  * {@link PointMatch#getP2() p2} being the transferred point.  Keep in mind
@@ -51,14 +53,15 @@ import mpicbg.util.Util;
  * {@link Point#getL() p1.l} = {@link Point#getW() p1.w} =
  * {@link Point#getL() p2.l} while {@link Point#getW() p1.w} is the transferred
  * location of the vertex.
- *
+ * </p>
+ * <p>
  * Three adjacent vertices span a triangle.  All pixels inside a triangle will
  * be transferred by a {@link AffineModel2D 2d affine transform} that is
  * defined by the three vertices.  Given the abovementioned definition of a
  * vertex as PointMatch, this {@link AffineModel2D 2d affine transform} is a
- * forward transform (p1.l->p2.w).
- *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * forward transform {@code (p1.l->p2.w)}.
+ * </p>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class TransformMesh implements InvertibleCoordinateTransform
 {

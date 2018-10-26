@@ -25,8 +25,8 @@ import Jama.Matrix;
 /**
  *
  * @author Johannes Schindelin
- * @author Stephan Preibisch <preibisch@mpi-cbg.de>
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Preibisch &lt;preibisch@mpi-cbg.de&gt;
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class RigidModel3D extends AbstractAffineModel3D< RigidModel3D > implements InvertibleBoundable
 {

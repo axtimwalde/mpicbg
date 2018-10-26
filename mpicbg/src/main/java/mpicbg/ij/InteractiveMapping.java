@@ -29,9 +29,7 @@ import mpicbg.models.PointMatch;
 /**
  * An interactive parent class for point based image deformation.
  *
- * @param <M> the transformation model to be used
- *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.2b
  */
 public abstract class InteractiveMapping implements PlugIn, MouseListener, MouseMotionListener, KeyListener, ImageListener

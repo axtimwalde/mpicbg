@@ -33,7 +33,7 @@ import mpicbg.util.Util;
  * Columbia.  That is, for commercial applications the permission of the author
  * is required.
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.1b
  */
 public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2DSIFT.Param >
@@ -41,7 +41,7 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 	static public class Param implements Serializable
 	{
 		/**
-		 * Feature descriptor size
+		 * Feature descriptor size.
 		 *    How many samples per row and column
 		 */
 		public int fdSize = 4;
@@ -55,7 +55,7 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 		/**
 		 * Size limits for scale octaves in px:
 		 *
-		 * minOctaveSize < octave < maxOctaveSize
+		 * {@code minOctaveSize < octave < maxOctaveSize}
 		 */
 		public int maxOctaveSize = 1024;
 		public int minOctaveSize = 64;
@@ -152,9 +152,6 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 
 	/**
 	 * Constructor
-	 *
-	 * @param feature_descriptor_size
-	 * @param feature_descriptor_size
 	 */
 	public FloatArray2DSIFT( final Param p )
 	{
@@ -233,7 +230,7 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 	 * features location, the regions size is defined by
 	 * ( FEATURE_DESCRIPTOR_SIZE * 4 )^2 ( 4x4 subregions )
 	 *
-	 * @param c candidate 0=>x, 1=>y, 2=>scale index
+	 * @param c candidate {@code 0=>x, 1=>y, 2=>scale index}
 	 * @param o octave index
 	 * @param octave_sigma sigma of the corresponding gaussian kernel with
 	 *   respect to the scale octave
@@ -372,7 +369,7 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 	 *
 	 * estimate the feature descriptor for each of those candidates
 	 *
-	 * @param c candidate 0=>x, 1=>y, 2=>scale index
+	 * @param c candidate {@code 0=>x, 1=>y, 2=>scale index}
 	 * @param o octave index
 	 * @param features finally contains all processed candidates
 	 */
@@ -753,8 +750,6 @@ public class FloatArray2DSIFT extends FloatArray2DFeatureTransform< FloatArray2D
 
 	/**
 	 * get a histogram of feature sizes
-	 *
-	 * @param rs
 	 */
 	public static double[] featureSizeHistogram(
 			final Vector< Feature > features,

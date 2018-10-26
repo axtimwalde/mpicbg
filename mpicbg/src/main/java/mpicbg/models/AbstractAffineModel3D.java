@@ -22,7 +22,7 @@ import mpicbg.util.Util;
  *
  * @param <M>
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public abstract class AbstractAffineModel3D < M extends AbstractAffineModel3D< M > > extends AbstractModel< M > implements InvertibleBoundable, Affine3D< M >
 {

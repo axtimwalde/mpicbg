@@ -13,7 +13,7 @@ import mpicbg.models.InverseCoordinateTransform;
  * usually a {@link CoordinateTransform} or an
  * {@link InverseCoordinateTransform}.
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.1b
  */
 public interface Mapping< T >

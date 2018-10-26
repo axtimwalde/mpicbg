@@ -28,7 +28,7 @@ import ij.process.ImageProcessor;
  * into individual {@link ImageProcessor ImageProcessors} first and execute the
  * calculation on each of them individually.
  * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  */
 public class BlockStatistics
 {
@@ -299,8 +299,7 @@ public class BlockStatistics
 	 * Set all pixels in <code>ip</code> to their block STD for a block with
 	 * given radius.
 	 * 
-	 * @param blockRadiusX
-	 * @param blockRadiusY
+	 * @param blockRadius
 	 */
 	final public void std( final int blockRadius )
 	{

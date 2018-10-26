@@ -7,7 +7,7 @@ import ij.process.ImageProcessor;
  * Describes a mapping from {@linkplain ImageProcessor source} into
  * {@linkplain ImageProcessor target}.
  * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.1b
  */
 public interface Mapping< T extends InverseCoordinateTransform >

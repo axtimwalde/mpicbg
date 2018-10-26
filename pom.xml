@@ -95,9 +95,6 @@
 		<license.licenseName>gpl_v2</license.licenseName>
 		<license.copyrightOwners>Stephan Saalfeld et. al.</license.copyrightOwners>
 
-		<!-- NB: Disable the strict Java 8 doclint. -->
-		<additionalparam>-Xdoclint:none</additionalparam>
-
 		<!-- NB: Deploy releases to the ImageJ Maven repository. -->
 		<releaseProfiles>deploy-to-imagej</releaseProfiles>
 		<tagNameFormat>mpicbg-@{project.version}</tagNameFormat>

@@ -67,7 +67,7 @@ import mpicbg.models.TranslationModel2D;
  * }
  * </pre>
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.4b
  */
 public class SIFT_Align implements PlugIn, KeyListener

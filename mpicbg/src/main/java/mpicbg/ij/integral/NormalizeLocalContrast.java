@@ -21,7 +21,7 @@ import ij.process.FloatProcessor;
 /**
  * Normalize contrast based on per-pixel mean and STD.
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  */
 public class NormalizeLocalContrast extends BlockStatistics
 {
@@ -36,8 +36,8 @@ public class NormalizeLocalContrast extends BlockStatistics
 	
 	/**
 	 * 
-	 * @param ip
-	 * @param v
+	 * @param blockRadiusX
+	 * @param blockRadiusY
 	 */
 	protected void runCenter(
 			final int blockRadiusX,
@@ -79,8 +79,9 @@ public class NormalizeLocalContrast extends BlockStatistics
 	
 	/**
 	 * 
-	 * @param ip
-	 * @param v
+	 * @param blockRadiusX
+	 * @param blockRadiusY
+	 * @param meanFactor
 	 */
 	protected void runStretch(
 			final int blockRadiusX,
@@ -127,8 +128,9 @@ public class NormalizeLocalContrast extends BlockStatistics
 	
 	/**
 	 * 
-	 * @param ip
-	 * @param v
+	 * @param blockRadiusX
+	 * @param blockRadiusY
+	 * @param meanFactor
 	 */
 	protected void runCenterStretch(
 			final int blockRadiusX,
@@ -177,8 +179,11 @@ public class NormalizeLocalContrast extends BlockStatistics
 	
 	/**
 	 * 
-	 * @param ip
-	 * @param v
+	 * @param blockRadiusX
+	 * @param blockRadiusY
+	 * @param meanFactor
+	 * @param center
+	 * @param stretch
 	 */
 	public void run(
 			final int blockRadiusX,

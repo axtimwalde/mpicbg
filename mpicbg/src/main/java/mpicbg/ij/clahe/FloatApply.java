@@ -22,7 +22,7 @@ import ij.process.FloatProcessor;
 /**
  * Apply a piece of CLAHE to a {@link FloatProcessor}.
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.3b
  */
 final class FloatApply extends Apply< FloatProcessor >

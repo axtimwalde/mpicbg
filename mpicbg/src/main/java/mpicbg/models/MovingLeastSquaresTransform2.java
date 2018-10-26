@@ -50,7 +50,7 @@ import java.util.Collection;
  * }
  * </pre>
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class MovingLeastSquaresTransform2 extends AbstractMovingLeastSquaresTransform
 {
@@ -104,11 +104,11 @@ public class MovingLeastSquaresTransform2 extends AbstractMovingLeastSquaresTran
 	 * <p>Set the control points passing them as arrays that are used by
 	 * reference.  The leading index is dimension which usually results in a
 	 * reduced object count.   E.g. four 2d points are:</p>
-	 * <pre>
+	 * <pre><code>
 	 * double[][]{
 	 *   {x<sub>1</sub>, x<sub>2</sub>, x<sub>3</sub>, x<sub>4</sub>},
 	 *   {y<sub>1</sub>, y<sub>2</sub>, y<sub>3</sub>, y<sub>4</sub>} }
-	 * </pre>
+	 * </code></pre>
 	 *
 	 * @param p source points
 	 * @param q target points

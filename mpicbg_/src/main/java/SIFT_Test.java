@@ -50,7 +50,7 @@ import java.awt.Polygon;
  * }
  * </pre>
  * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.2b
  */
 public class SIFT_Test implements PlugIn

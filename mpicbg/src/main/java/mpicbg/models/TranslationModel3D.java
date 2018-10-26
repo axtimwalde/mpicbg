@@ -20,7 +20,7 @@ import java.util.Collection;
 
 /**
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3D > implements InvertibleBoundable
 {

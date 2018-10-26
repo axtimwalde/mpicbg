@@ -56,12 +56,12 @@ import java.util.List;
  * }
  * </pre>
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public interface Model< M extends Model< M > > extends CoordinateTransform
 {
 	/**
-	 * @returns the minimal number of {@link PointMatch PointMatches} required
+	 * @return the minimal number of {@link PointMatch PointMatches} required
 	 *   to solve the model.
 	 */
 	public int getMinNumMatches();
@@ -73,8 +73,9 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 	 * "Less than" operater to make {@link Model Models} comparable.
 	 *
 	 * @param m
-	 * @return false for {@link #cost} < 0.0, otherwise true if
-	 *   {@link #cost this.cost} is smaller than {@link #cost m.cost}
+	 * @return false for {@link #getCost() cost} &lt; 0.0, otherwise true if
+	 *   {@link #getCost() this.getCost()} is smaller than
+	 *   {@link #getCost() m.getCost()}
 	 */
 	public boolean betterThan( final M m );
 
@@ -90,20 +91,19 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 	 *
 	 * <p><em>n</em>-dimensional points are passed as an <em>n</em>-dimensional
 	 * array of floats, e.g. four 2d points as:</p>
-	 * <pre>
+	 * <pre><code>
 	 * float[][]{
 	 *   {x<sub>1</sub>, x<sub>2</sub>, x<sub>3</sub>, x<sub>4</sub>},
 	 *   {y<sub>1</sub>, y<sub>2</sub>, y<sub>3</sub>, y<sub>4</sub>} }
-	 * </pre>
+	 * </code></pre>
 	 *
 	 * @param p source points
 	 * @param q target points
 	 * @param w weights
 	 *
-	 * @throws
-	 *   {@link NotEnoughDataPointsException} if not enough data points
+	 * @throws NotEnoughDataPointsException if not enough data points
 	 *   were available
-	 *   {@link IllDefinedDataPointsException} if the set of data points is
+	 * @throws IllDefinedDataPointsException if the set of data points is
 	 *   inappropriate to solve the Model
 	 */
 	public void fit(
@@ -123,20 +123,19 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 	 *
 	 * <p><em>n</em>-dimensional points are passed as an <em>n</em>-dimensional
 	 * array of doubles, e.g. four 2d points as:</p>
-	 * <pre>
+	 * <pre><code>
 	 * double[][]{
 	 *   {x<sub>1</sub>, x<sub>2</sub>, x<sub>3</sub>, x<sub>4</sub>},
 	 *   {y<sub>1</sub>, y<sub>2</sub>, y<sub>3</sub>, y<sub>4</sub>} }
-	 * </pre>
+	 * </code></pre>
 	 *
 	 * @param p source points
 	 * @param q target points
 	 * @param w weights
 	 *
-	 * @throws
-	 *   {@link NotEnoughDataPointsException} if not enough data points
+	 * @throws NotEnoughDataPointsException if not enough data points
 	 *   were available
-	 *   {@link IllDefinedDataPointsException} if the set of data points is
+	 * @throws IllDefinedDataPointsException if the set of data points is
 	 *   inappropriate to solve the Model
 	 */
 	public void fit(
@@ -147,17 +146,16 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 	/**
 	 * Fit the {@link Model} to a set of data points minimizing the global
 	 * transfer error.  This is assumed to be implemented as a weighted least
-	 * squares minimization.  Use
-	 * {@link #ransac(Class, List, Collection, int, double, double) ransac}
-	 * and/ or {@link #filter(Class, Collection, Collection)} to remove
-	 * outliers from your data points
-	 *
+	 * squares minimization.  Use {@link #ransac ransac}
+	 * and/ or {@link #filter} to remove outliers from your data points.
+	 * <p>
 	 * The estimated model transfers match.p1.local to match.p2.world.
+	 * </p>
 	 *
 	 * @param matches set of point correpondences
-	 * @throws {@link NotEnoughDataPointsException} if matches does not contain
+	 * @throws NotEnoughDataPointsException if matches does not contain
 	 *   enough data points
-	 *   {@link IllDefinedDataPointsException} if the set of data points is
+	 * @throws IllDefinedDataPointsException if the set of data points is
 	 *   inappropriate to solve the Model
 	 */
 	public < P extends PointMatch >void fit( final Collection< P > matches )
@@ -169,15 +167,17 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 	 * Test the {@link Model} for a set of {@link PointMatch} candidates.
 	 * Return true if the number of inliers / number of candidates is larger
 	 * than or equal to min_inlier_ratio, otherwise false.
-	 *
+	 * <p>
 	 * Clears inliers and fills it with the fitting subset of candidates.
-	 *
-	 * Sets {@link #getCost() cost} = 1.0 - |inliers| / |candidates|.
+	 * </p>
+	 * <p>
+	 * Sets {@code cost = 1.0 - |inliers| / |candidates|}.
+	 * </p>
 	 *
 	 * @param candidates set of point correspondence candidates
 	 * @param inliers set of point correspondences that fit the model
 	 * @param epsilon maximal allowed transfer error
-	 * @param minInlierRatio minimal ratio |inliers| / |candidates| (0.0 => 0%, 1.0 => 100%)
+	 * @param minInlierRatio minimal ratio {@code |inliers| / |candidates| (0.0 => 0%, 1.0 => 100%)}
 	 * @param minNumInliers minimally required absolute number of inliers
 	 */
 	public < P extends PointMatch >boolean test(
@@ -200,17 +200,19 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 	/**
 	 * Estimate the {@link Model} and filter potential outliers by robust
 	 * iterative regression.
-	 *
+	 * <p>
 	 * This method performs well on data sets with low amount of outliers.  If
 	 * you have many outliers, you can filter those with a `tolerant' RANSAC
-	 * first as done in {@link #filterRansac() filterRansac}.
-	 *
+	 * first as done in {@link #filterRansac}.
+	 * </p>
+	 * <p>
 	 * Sets {@link #getCost() cost} to the average point transfer error.
+	 * </p>
 	 *
 	 * @param candidates Candidate data points eventually inluding some outliers
 	 * @param inliers Remaining after the robust regression filter
 	 * @param maxTrust reject candidates with a cost larger than
-	 *   maxTrust * median cost
+	 *   {@code maxTrust * median cost}
 	 * @param minNumInliers minimally required absolute number of inliers
 	 *
 	 * @return true if {@link Model} could be estimated and inliers is not
@@ -224,7 +226,7 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 		throws NotEnoughDataPointsException;
 
 	/**
-	 * Call {@link #filter(Collection, Collection, float, int)} with minNumInliers = {@link Model#getMinNumMatches()}.
+	 * Call {@link #filter(Collection, Collection, double, int)} with minNumInliers = {@link Model#getMinNumMatches()}.
 	 */
 	public < P extends PointMatch >boolean filter(
 			final Collection< P > candidates,
@@ -233,7 +235,7 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 		throws NotEnoughDataPointsException;
 
 	/**
-	 * Call {@link #filter(Collection, Collection, float)} with maxTrust = 4 and minNumInliers = {@link Model#getMinNumMatches()}.
+	 * Call {@link #filter(Collection, Collection, double)} with maxTrust = 4 and minNumInliers = {@link Model#getMinNumMatches()}.
 	 */
 	public < P extends PointMatch >boolean filter(
 			final Collection< P > candidates,
@@ -247,7 +249,6 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 	 * {@link #ransac(List, Collection, int, double, double, int) RANSAC}
 	 * \citet[{FischlerB81}.
 	 *
-	 * @param modelClass class of the model to be estimated
 	 * @param candidates candidate data points inluding (many) outliers
 	 * @param inliers remaining candidates after RANSAC
 	 * @param iterations number of iterations
@@ -282,12 +283,10 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 
 	/**
 	 * Estimate a {@link Model} from a set with many outliers by first
-	 * filtering the worst outliers with
-	 * {@link #ransac(Class, List, Collection, int, double, double) RANSAC}
+	 * filtering the worst outliers with {@link #ransac RANSAC}
 	 * \citet[{FischlerB81} and filter potential outliers by robust iterative
 	 * regression.
 	 *
-	 * @param modelClass class of the model to be estimated
 	 * @param candidates candidate data points inluding (many) outliers
 	 * @param inliers remaining candidates after RANSAC
 	 * @param iterations number of iterations
@@ -312,7 +311,7 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 		throws NotEnoughDataPointsException;
 
 	/**
-	 * Call {@link #filterRansac(List, Collection, int, float, float, int, float)}
+	 * Call {@link #filterRansac(List, Collection, int, double, double, int, double)}
 	 * with maxTrust = 4.
 	 */
 	public < P extends PointMatch >boolean filterRansac(
@@ -325,7 +324,7 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 		throws NotEnoughDataPointsException;
 
 	/**
-	 * Call {@link #filterRansac(List, Collection, int, float, float, int, float)}
+	 * Call {@link #filterRansac(List, Collection, int, double, double, int, double)}
 	 * with minNumInliers = {@link #getMinNumMatches()}.
 	 */
 	public < P extends PointMatch >boolean filterRansac(
@@ -338,7 +337,7 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 		throws NotEnoughDataPointsException;
 
 	/**
-	 * Call {@link #filterRansac(List, Collection, int, float, float, float)}
+	 * Call {@link #filterRansac(List, Collection, int, double, double, double)}
 	 * with maxTrust = 4.
 	 */
 	public < P extends PointMatch >boolean filterRansac(
@@ -381,8 +380,9 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 	/**
 	 * Estimate the best model in terms of the Iterative Closest Point
 	 * Algorithm \cite{Zhang94} for matching two point clouds into each other.
-	 *
+	 * <pre>{@code
 	 * p -> q
+	 * }</pre>
 	 *
 	 * @param p source
 	 * @param q target

@@ -15,7 +15,7 @@ import mpicbg.imagefeatures.ImageArrayConverter;
 
 /**
  * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.4b
  */
 public class SIFT extends FeatureTransform< FloatArray2DSIFT >
@@ -59,8 +59,6 @@ public class SIFT extends FeatureTransform< FloatArray2DSIFT >
 	 * 
 	 * @param ip
 	 * @param features the list to be filled
-	 * 
-	 * @return number of detected features
 	 */
 	@Override
 	final public void extractFeatures( final ImageProcessor ip, final Collection< Feature > features )

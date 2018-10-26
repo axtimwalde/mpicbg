@@ -1,18 +1,21 @@
 package mpicbg.imagefeatures;
 
 /**
- * single octave of a discrete {@link FloatArray2DScaleSpace}
- * 
+ * single octave of a discrete {@code FloatArray2DScaleSpace}
+ * <p>
  * This class is optimized for the Difference Of Gaussian detector used in
  * David Lowe's SIFT-algorithm \citep{Loew04}.
- * 
+ * </p>
+ * <p>
  * The scale space itself consists of an arbitrary number of octaves.  This
- * number is implicitly defined by the minimal image size {@link #MIN_SIZE}.
+ * number is implicitly defined by the minimal image size.
  * Octaves contain overlapping scales of the scalespace.  Thus it is possible
  * to execute several operations that depend on adjacent scales within one
  * octave.
- *  
+ * </p>
+ * <p>
  * BibTeX:
+ * </p>
  * <pre>
  * &#64;article{Lowe04,
  *   author  = {David G. Lowe},
@@ -25,7 +28,7 @@ package mpicbg.imagefeatures;
  * }
  * </pre>
  * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.1b
  */
 public class FloatArray2DScaleOctave
@@ -109,7 +112,7 @@ public class FloatArray2DScaleOctave
 	 * @param i index will not be checked for efficiency reasons, so take care
 	 *   that it is within a valid range
 	 *
-	 * @returns reference to the gradients
+	 * @return reference to the gradients
 	 */
 	public FloatArray2D[] getL1( int i )
 	{
@@ -173,7 +176,7 @@ public class FloatArray2DScaleOctave
 	 * faster initialisation with precomputed gaussian kernels
 	 * 
 	 * @param img image being the first gaussian instance of the scale octave 
-	 * @param initial_sigma inital gaussian sigma
+	 * @param sigma initial_sigma inital gaussian sigma
 	 * 
 	 */
 	public FloatArray2DScaleOctave(
@@ -276,13 +279,16 @@ public class FloatArray2DScaleOctave
 
 
 	/**
-	 * downsample {@link src} by simply using every second pixel into
-	 * {@link dst}
-	 * 
-	 * For efficiency reasons, the dimensions of {@link dst} are not checked,
+	 * Downsample {@code src} by simply using every second pixel into
+	 * {@code dst}.
+	 * <p>
+	 * For efficiency reasons, the dimensions of {@code dst} are not checked,
 	 * that is, you have to take care, that
+	 * </p>
+	 * <pre>{@code
 	 * dst.width == src.width / 2 + src.width % 2 &&
 	 * dst.height == src.height / 2 + src.height % 2 .
+	 * }</pre>
 	 * 
 	 * @param src the source image
 	 * @param dst destination image
@@ -304,12 +310,15 @@ public class FloatArray2DScaleOctave
 	}
 	
 	/**
-	 * upsample {@link src} by linearly interpolating into {@link dst}
-	 * 
-	 * For efficiency reasons, the dimensions of {@link dst} are not checked,
+	 * Upsample {@code src} by linearly interpolating into {@code dst}.
+	 * <p>
+	 * For efficiency reasons, the dimensions of {@code dst} are not checked,
 	 * that is, you have to take care, that
+	 * </p>
+	 * <pre>{@code
 	 * src.width == dst.width / 2 + dst.width % 2 &&
 	 * src.height == dst.height / 2 + dst.height % 2 .
+	 * }</pre>
 	 * 
 	 * @param src the source image
 	 * @param dst destination image

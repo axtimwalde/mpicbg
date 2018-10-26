@@ -20,7 +20,7 @@ package mpicbg.util;
  * Calculate the PMMC of a stream of double pairs by tracking the
  * required sums.  Uses {@link RealSum} for optimal precision.
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class RealStreamPMCC
 {

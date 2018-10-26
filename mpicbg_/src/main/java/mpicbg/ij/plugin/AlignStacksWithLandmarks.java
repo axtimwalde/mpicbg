@@ -34,7 +34,7 @@ import mpicbg.models.PointMatch;
 /**
  * 
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.1a
  */
 public class AlignStacksWithLandmarks implements PlugIn

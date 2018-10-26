@@ -24,7 +24,7 @@ import java.io.Serializable;
  * {@link #l Local coordinates} are thought to be immutable, application
  * of a model changes the {@link #w world coordinates} of the point.
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class Point implements Serializable
 {
@@ -91,7 +91,7 @@ public class Point implements Serializable
 	 * {@link #w world coordinates}.
 	 *
 	 * @param t
-	 * @param amount 0.0 -> no application, 1.0 -> full application
+	 * @param amount 0.0 -&gt; no application, 1.0 -&gt; full application
 	 */
 	final public void apply( final CoordinateTransform t, final double amount )
 	{
@@ -101,12 +101,12 @@ public class Point implements Serializable
 	}
 
 	/**
-	 * Apply the inverse of a {@link InvertibleModel} to the {@link Point}.
+	 * Apply the inverse of an {@link InvertibleCoordinateTransform} to the {@link Point}.
 	 *
 	 * Transfers the {@link #l local coordinates} to new
 	 * {@link #w world coordinates}.
 	 *
-	 * @param model
+	 * @param t
 	 */
 	final public void applyInverse( final InverseCoordinateTransform t ) throws NoninvertibleModelException
 	{

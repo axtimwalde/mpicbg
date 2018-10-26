@@ -9,7 +9,7 @@ import mpicbg.models.NoninvertibleModelException;
  * {@linkplain ImageProcessor source} into {@linkplain ImageProcessor target}
  * which is a {@link Mapping}.
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.1b
  */
 public class InverseTransformMapping< T extends InverseCoordinateTransform > implements Mapping< T >

@@ -21,7 +21,7 @@ package mpicbg.models;
  * {@link CoordinateTransform} and related interfaces, but well---this is Java
  * where multiple inheritance is considered evil...
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class Transforms
 {

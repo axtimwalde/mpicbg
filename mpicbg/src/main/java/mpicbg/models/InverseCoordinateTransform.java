@@ -20,7 +20,7 @@ import java.io.Serializable;
 
 /**
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public interface InverseCoordinateTransform extends Serializable
 {

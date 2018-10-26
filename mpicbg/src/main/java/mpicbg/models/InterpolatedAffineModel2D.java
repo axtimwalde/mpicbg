@@ -26,7 +26,7 @@ import java.util.Collection;
  * No multiple inheritance in Java, so it cannot be an AffineModel2D
  * by itself.
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 final public class InterpolatedAffineModel2D<
 		A extends Model< A > & Affine2D< A >,

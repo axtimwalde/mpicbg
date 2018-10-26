@@ -20,7 +20,7 @@ import java.util.Collection;
 
 /**
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class AffineModel1D extends AbstractAffineModel1D< AffineModel1D > implements InvertibleBoundable
 {

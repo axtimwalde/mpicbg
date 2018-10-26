@@ -24,7 +24,7 @@ import java.io.IOException;
  * An {@link InverseCoordinateTransform} that is saved as a LUT on integer
  * coordinates.
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class InverseCoordinateTransformMap2D implements InverseCoordinateTransform
 {

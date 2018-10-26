@@ -15,7 +15,7 @@ import mpicbg.imagefeatures.ImageArrayConverter;
 
 /**
  * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.1b
  */
 public class MOPS extends FeatureTransform< FloatArray2DMOPS >
@@ -52,12 +52,10 @@ public class MOPS extends FeatureTransform< FloatArray2DMOPS >
 	}
 
 	/**
-	 * Extract MOPS features from an ImageProcessor
+	 * Extract MOPS features from an {@link ImageProcessor}
 	 * 
 	 * @param ip
 	 * @param features the list to be filled
-	 * 
-	 * @return number of detected features
 	 */
 	@Override
 	final public void extractFeatures( final ImageProcessor ip, final Collection< Feature > features )

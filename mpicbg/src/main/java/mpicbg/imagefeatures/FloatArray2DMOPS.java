@@ -59,7 +59,7 @@ import mpicbg.util.Util;
  * }
  * </pre>
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2DMOPS.Param >
 {
@@ -111,9 +111,6 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 
 	/**
 	 * Constructor
-	 *
-	 * @param feature_descriptor_size
-	 * @param feature_descriptor_size
 	 */
 	public FloatArray2DMOPS(
 			final Param p )
@@ -192,7 +189,7 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 	 * features location, the regions size is defined by
 	 * FEATURE_DESCRIPTOR_WIDTH^2
 	 *
-	 * @param c candidate 0=>x, 1=>y, 2=>scale index
+	 * @param c candidate {@code 0=>x, 1=>y, 2=>scale index}
 	 * @param o octave index
 	 * @param octave_sigma sigma of the corresponding gaussian kernel with
 	 *   respect to the scale octave
@@ -269,7 +266,7 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 	 *
 	 * estimate the feature descriptor for each of those candidates
 	 *
-	 * @param c candidate 0=>x, 1=>y, 2=>scale index
+	 * @param c candidate {@code 0=>x, 1=>y, 2=>scale index}
 	 * @param o octave index
 	 * @param features finally contains all processed candidates
 	 */
@@ -761,8 +758,6 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 
 	/**
 	 * get a histogram of feature sizes
-	 *
-	 * @param rs
 	 */
 	public static double[] featureSizeHistogram(
 			final List< Feature > features,

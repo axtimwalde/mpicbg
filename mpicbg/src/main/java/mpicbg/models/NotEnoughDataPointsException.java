@@ -21,7 +21,7 @@ package mpicbg.models;
  * Signalizes that there were not enough data points available to estimate the
  * {@link AbstractModel}.
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  */
 public class NotEnoughDataPointsException extends Exception
 {

@@ -22,7 +22,7 @@ import java.util.Collection;
 /**
  * 2d-translation {@link AbstractModel} to be applied to points in 2d-space.
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2D >
 {

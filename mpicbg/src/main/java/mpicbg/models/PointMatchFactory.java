@@ -21,7 +21,7 @@ import java.io.Serializable;
 /**
  *
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public interface PointMatchFactory< M extends PointMatch > extends Serializable
 {

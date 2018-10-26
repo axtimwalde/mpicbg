@@ -23,7 +23,7 @@ import ij.process.FloatProcessor;
  * blocks of pixels in two single channel images accelerated by
  * {@link IntegralImage integral images}.
  * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  */
 final public class BlockPMCC
 {
@@ -289,9 +289,8 @@ final public class BlockPMCC
 	/**
 	 * Set the offset and re-calculate sumsXY respectively.
 	 * 
-	 * @param fp
-	 * @param sum
-	 * @param sumOfSquares
+	 * @param offsetX
+	 * @param offsetY
 	 */
 	final public void setOffset( final int offsetX, final int offsetY )
 	{

@@ -35,7 +35,7 @@ import mpicbg.models.PointMatch;
  *
  * @param <M> the transformation model to be used
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.2b
  */
 public abstract class InteractiveInvertibleCoordinateTransform< M extends Model< M > & InvertibleCoordinateTransform > implements PlugIn, MouseListener, MouseMotionListener, KeyListener, ImageListener

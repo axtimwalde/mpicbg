@@ -6,7 +6,7 @@ import ij.process.*;
 
 /**
  * 
- * @author Stephan Preibisch and Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Preibisch and Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 1.4b
  */
 final public class ImageArrayConverter

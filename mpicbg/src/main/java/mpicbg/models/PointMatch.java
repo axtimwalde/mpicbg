@@ -26,7 +26,7 @@ import java.util.Collection;
  *
  * The link is directed, such that each link touches only {@link #p1}.
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class PointMatch implements Serializable
 {
@@ -160,7 +160,7 @@ public class PointMatch implements Serializable
 	 * @param p1 Point 1
 	 * @param p2 Point 2
 	 * @param weights Array of weights
-	 * @param strength how much should {@link #apply(Model, double)}
+	 * @param strength how much should {@link #apply(CoordinateTransform, double)}
 	 *   affect {@link #p1}
 	 */
 	public PointMatch(
@@ -233,8 +233,8 @@ public class PointMatch implements Serializable
 	 * @param p1 Point 1
 	 * @param p2 Point 2
 	 * @param weight Weight
-	 *  @param strength how much should {@link #apply(Model, double)}
-	 *   affect {@link #p1}
+	 * @param strength how much should
+	 *   {@link #apply(CoordinateTransform, double)} affect {@link #p1}
 	 */
 	public PointMatch(
 			final Point p1,
@@ -258,7 +258,6 @@ public class PointMatch implements Serializable
 	 *
 	 * @param p1 Point 1
 	 * @param p2 Point 2
-	 * @param weights Weight
 	 */
 	public PointMatch(
 			final Point p1,

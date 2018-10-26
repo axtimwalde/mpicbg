@@ -41,7 +41,7 @@ import mpicbg.util.Matrix3x3;
  * }
  * </pre>
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org> and Johannes Schindelin
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt; and Johannes Schindelin
  *
  */
 public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implements InvertibleBoundable

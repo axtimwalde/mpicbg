@@ -28,15 +28,16 @@ import mpicbg.models.NoninvertibleModelException;
  * m10 m11 m12
  * m20 m21 m22
  * </pre>
- *
+ * <p>
  * The class provides most of the methods as static variants for matrices
- * passed as double[].  They are always meant to be in a row after row sequence:
- *
+ * passed as {@code double[]}. They are always meant to be in a row after row
+ * sequence:
+ * </p>
  * <pre>
  * m00, m01, m02, m10, m11, m12, m20, m21, m22
  * </pre>
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 final public class Matrix3x3 implements Serializable
 {

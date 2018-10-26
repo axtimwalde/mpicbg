@@ -21,7 +21,7 @@ package mpicbg.models;
  * Linearly interpolates between two independent
  * {@link CoordinateTransform CoordinateTransforms}.
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class InterpolatedCoordinateTransform< A extends CoordinateTransform, B extends CoordinateTransform > implements CoordinateTransform
 {

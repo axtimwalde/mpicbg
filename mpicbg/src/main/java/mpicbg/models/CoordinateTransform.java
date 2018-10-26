@@ -20,7 +20,7 @@ import java.io.Serializable;
 
 /**
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public interface CoordinateTransform extends Serializable
 {
@@ -37,7 +37,6 @@ public interface CoordinateTransform extends Serializable
 	 * Apply the {@link CoordinateTransform} to a location.
 	 *
 	 * @param location
-	 * @return transformed location
 	 */
 	public void applyInPlace( double[] location );
 }

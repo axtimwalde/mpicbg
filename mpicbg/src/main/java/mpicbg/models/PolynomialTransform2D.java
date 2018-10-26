@@ -27,7 +27,7 @@ import mpicbg.ij.TransformMeshMapping;
 /**
  *
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class PolynomialTransform2D implements CoordinateTransform
 {

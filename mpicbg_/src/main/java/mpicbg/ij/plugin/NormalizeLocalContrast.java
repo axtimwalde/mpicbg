@@ -31,7 +31,7 @@ import java.awt.AWTEvent;
 /**
  * Normalize contrast based on per-pixel mean and STD. 
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  */
 public class NormalizeLocalContrast extends AbstractBlockFilter
 {

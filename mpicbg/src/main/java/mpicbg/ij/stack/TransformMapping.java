@@ -15,7 +15,7 @@ import mpicbg.models.CoordinateTransform;
  *
  * Bilinear interpolation is supported.
  *
- * @author Stephan Saalfeld <saalfeld@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfeld@janelia.hhmi.org&gt;
  */
 public class TransformMapping< T extends CoordinateTransform > extends AbstractTransformMapping< T >
 {

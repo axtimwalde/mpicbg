@@ -20,7 +20,7 @@ package mpicbg.models;
  *
  * @param <M>
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public abstract class AbstractAffineModel1D< M extends AbstractAffineModel1D< M > > extends AbstractModel< M > implements InvertibleBoundable, Affine1D< M >
 {

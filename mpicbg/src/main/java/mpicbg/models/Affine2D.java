@@ -20,7 +20,7 @@ import java.awt.geom.AffineTransform;
 
 /**
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public interface Affine2D< T extends Affine2D< T > > extends InvertibleCoordinateTransform
 {
@@ -46,18 +46,16 @@ public interface Affine2D< T extends Affine2D< T > > extends InvertibleCoordinat
 	/**
 	 * Write the 6 parameters of the affine into a double array.  The order is
 	 * m00, m10, m01, m11, m02, m12
-	 *
-	 * @return
 	 */
 	public void toArray( final double[] data );
 
 	/**
 	 * Write the 6 parameters of the affine into a 3x2 double array.  The order
 	 * is
+	 * <pre>{@code
 	 * [0][0] -> m00; [0][1] -> m01; [0][2] -> m02;
 	 * [1][0] -> m10; [1][1] -> m11; [1][2] -> m12;
-	 *
-	 * @return
+	 * }</pre>
 	 */
 	public void toMatrix( final double[][] data );
 

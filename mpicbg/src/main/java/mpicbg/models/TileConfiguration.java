@@ -37,7 +37,7 @@ import mpicbg.util.RealSum;
  * Add all tiles that build a common interconnectivity graph to one
  * configuration, fix at least one of the tiles and optimize the configuration.
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class TileConfiguration implements Serializable
 {
@@ -221,7 +221,7 @@ public class TileConfiguration implements Serializable
 	 * Minimize the displacement of all {@link PointMatch Correspondence pairs}
 	 * of all {@link Tile Tiles}
 	 *
-	 * @param maxAllowedError do not accept convergence if error is > max_error
+	 * @param maxAllowedError do not accept convergence if error is &gt; max_error
 	 * @param maxIterations stop after that many iterations even if there was
 	 *   no minimum found
 	 * @param maxPlateauwidth convergence is reached if the average absolute
@@ -242,7 +242,7 @@ public class TileConfiguration implements Serializable
 	 * Minimize the displacement of all {@link PointMatch Correspondence pairs}
 	 * of all {@link Tile Tiles}
 	 *
-	 * @param maxAllowedError do not accept convergence if error is > max_error
+	 * @param maxAllowedError do not accept convergence if error is &gt; max_error
 	 * @param maxIterations stop after that many iterations even if there was
 	 *   no minimum found
 	 * @param maxPlateauwidth convergence is reached if the average absolute
@@ -470,7 +470,7 @@ A:				for ( final Tile< ? > t : tiles )
 	 *
 	 * @return - a list of {@link Tile}s that could not be pre-aligned
 	 * @throws NotEnoughDataPointsException
-	 * @throws {@link IllDefinedDataPointsException}
+	 * @throws IllDefinedDataPointsException
 	 */
 	public List< Tile< ? > > preAlign() throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{

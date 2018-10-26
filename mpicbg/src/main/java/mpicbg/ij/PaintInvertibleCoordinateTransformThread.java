@@ -7,7 +7,7 @@ import ij.process.ImageProcessor;
 
 /**
  * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.1b
  */
 public class PaintInvertibleCoordinateTransformThread extends Thread

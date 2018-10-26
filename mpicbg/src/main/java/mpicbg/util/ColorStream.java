@@ -22,7 +22,7 @@ package mpicbg.util;
  * Generate a stream of `random' saturated RGB colors with all colors being
  * maximally distinct from each other.  
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  */
 public class ColorStream
 {

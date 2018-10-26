@@ -30,7 +30,7 @@ import java.awt.AWTEvent;
 /**
  * Apply a mean filter.
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.1a
  */
 public class Mean implements ExtendedPlugInFilter, DialogListener

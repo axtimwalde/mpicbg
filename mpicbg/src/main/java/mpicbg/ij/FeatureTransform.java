@@ -14,7 +14,7 @@ import mpicbg.models.Point;
 import mpicbg.models.PointMatch;
 
 /**
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.4b
  */
 abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< ? > >
@@ -36,8 +36,6 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 	 *
 	 * @param ip
 	 * @param features collects all features
-	 *
-	 * @return number of detected features
 	 */
 	public void extractFeatures( final ImageProcessor ip, final Collection< Feature > features )
 	{

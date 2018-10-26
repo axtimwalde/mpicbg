@@ -23,7 +23,7 @@ import java.util.Collection;
  * We use this to let models influence each other combining them in an
  * {@link InterpolatedModel}.
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class ConstantModel< A extends Model< A >, M extends ConstantModel< A, M > > extends AbstractModel< M >
 {

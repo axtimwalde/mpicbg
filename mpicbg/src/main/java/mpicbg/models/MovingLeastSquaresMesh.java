@@ -26,7 +26,7 @@ import java.util.Set;
  *
  * BibTeX:
  * <pre>
- * @article{SchaeferAl06,
+ * &#64;article{SchaeferAl06,
  *   author    = {Scott Schaefer and Travis McPhail and Joe Warren},
  *   title     = {Image deformation using moving least squares},
  *   journal   = {ACM Transactions on Graphics},
@@ -41,7 +41,7 @@ import java.util.Set;
  * }
  * </pre>
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class MovingLeastSquaresMesh< M extends AbstractModel< M > > extends TransformMesh
 {

@@ -27,10 +27,10 @@ import ij.gui.Roi;
 import ij.process.ByteProcessor;
 
 /**
- * &lsquot;Contrast Limited Adaptive Histogram Equalization&rsquot; as
+ * "Contrast Limited Adaptive Histogram Equalization" as
  * described in
  * 
- * <br />BibTeX:
+ * <p>BibTeX:</p>
  * <pre>
  * &#64;article{zuiderveld94,
  *   author    = {Zuiderveld, Karel},
@@ -44,7 +44,7 @@ import ij.process.ByteProcessor;
  * }
  * </pre>
  * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.3b
  */
 public class PlugIn implements ij.plugin.PlugIn

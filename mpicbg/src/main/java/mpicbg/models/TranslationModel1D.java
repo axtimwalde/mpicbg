@@ -21,7 +21,7 @@ import java.util.Collection;
 /**
  * 1d-translation {@link AbstractModel} to be applied to points in 1d-space.
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class TranslationModel1D extends AbstractAffineModel1D< TranslationModel1D >
 {

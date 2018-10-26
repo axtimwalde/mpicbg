@@ -35,7 +35,7 @@ import java.awt.event.MouseMotionListener;
 /**
  * 
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  */
 abstract public class AbstractInteractiveBlockFilter implements KeyListener, MouseListener, MouseMotionListener, PlugIn
 {

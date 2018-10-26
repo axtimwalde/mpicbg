@@ -38,7 +38,7 @@ import mpicbg.models.TranslationModel2D;
  * Methods for establishing block-based correspondences for given sets of
  * source {@link Point Points}.
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.1b
  */
 public class BlockMatching
@@ -527,7 +527,7 @@ public class BlockMatching
 	 * approximately related by an {@link InvertibleCoordinateTransform} using
 	 * the Pearson product-moment correlation coefficient (PMCC) <i>r</i> of
 	 * pixel intensities as similarity measure. Only correspondence candidates
-	 * with <i>r</i> >= a given threshold are accepted.
+	 * with <i>r</i> &gt;= a given threshold are accepted.
 	 *
 	 * @param source
 	 * @param target
@@ -685,19 +685,21 @@ public class BlockMatching
      * approximately related by an {@link InvertibleCoordinateTransform} using
      * the Pearson product-moment correlation coefficient (PMCC) <i>r</i> of
      * pixel intensities as similarity measure.  Only correspondence candidates
-     * with <i>r</i> >= a given threshold are accepted.
+     * with <i>r</i> &gt;= a given threshold are accepted.
      *
-     * @param scaledSource
+     * @param source
      * @param target
+		 * @param sourceMask
+		 * @param targetMask
      * @param scale [0,1]
      * @param transform transfers source into target approximately
-     * @param scaledBlockRadiusX horizontal radius of a block
-     * @param scaledBlockRadiusY vertical radius of a block
-     * @param scaledSearchRadiusX horizontal search radius
-     * @param scaledSearchRadiusY vertical search radius
-     * @param minR minimal accepted Cross-Correlation coefficient
+     * @param blockRadiusX horizontal radius of a block
+     * @param blockRadiusY vertical radius of a block
+     * @param searchRadiusX horizontal search radius
+     * @param searchRadiusY vertical search radius
      * @param sourcePoints
      * @param sourceMatches
+		 * @param observer
      */
     static public void matchByMaximalPMCC(
 			final FloatProcessor source,

@@ -18,7 +18,7 @@ package mpicbg.models;
 
 /**
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public interface Affine3D< T extends Affine3D< T > > extends InvertibleCoordinateTransform
 {
@@ -28,19 +28,17 @@ public interface Affine3D< T extends Affine3D< T > > extends InvertibleCoordinat
 	/**
 	 * Write the 12 parameters of the affine into a double array.  The order is
 	 * m00, m10, m20, m01, m11, m21, m02, m12, m22, m03, m13, m23
-	 *
-	 * @return
 	 */
 	public void toArray( final double[] data );
 
 	/**
 	 * Write the 12 parameters of the affine into a 4x3 double array.  The order
 	 * is
+	 * <pre>{@code
 	 * [0][0] -> m00; [0][1] -> m01; [0][2] -> m02; [0][3] -> m03
 	 * [1][0] -> m10; [1][1] -> m11; [1][2] -> m12; [1][3] -> m13
 	 * [2][0] -> m20; [2][1] -> m21; [2][2] -> m22; [2][3] -> m23
-	 *
-	 * @return
+	 * }</pre>
 	 */
 	public void toMatrix( final double[][] data );
 

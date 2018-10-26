@@ -22,7 +22,7 @@ import java.awt.geom.AffineTransform;
  *
  * @param <M>
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public abstract class AbstractAffineModel2D< M extends AbstractAffineModel2D< M > > extends AbstractModel< M > implements InvertibleBoundable, InvertibleCoordinateTransform, Affine2D< M >
 {

@@ -22,7 +22,7 @@ import java.util.Collection;
 /**
  * nd-identity {@link AbstractModel}.
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class IdentityModel extends AbstractModel< IdentityModel > implements
 		Affine1D< IdentityModel >, Affine2D< IdentityModel >, Affine3D< IdentityModel >, InvertibleBoundable

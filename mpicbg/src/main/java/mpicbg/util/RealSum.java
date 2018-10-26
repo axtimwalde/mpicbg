@@ -26,7 +26,7 @@ package mpicbg.util;
  * be generated from intermediate sums that result from equal number of
  * summands.
  * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  */
 public class RealSum
 {

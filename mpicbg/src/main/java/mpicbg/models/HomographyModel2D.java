@@ -49,7 +49,7 @@ import Jama.SingularValueDecomposition;
  * Homogeneous Linear Least Squares
  * Problems, Two View Geometry
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class HomographyModel2D extends AbstractModel< HomographyModel2D > implements InvertibleBoundable
 {

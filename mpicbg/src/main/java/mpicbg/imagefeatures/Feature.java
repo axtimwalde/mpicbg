@@ -30,7 +30,7 @@ import mpicbg.models.PointMatch;
  *   descriptors by a {@link InverseCoordinateTransform}.  Think about by
  *   hwich means to compare then!
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class Feature implements Comparable< Feature >, Serializable
 {

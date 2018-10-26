@@ -50,7 +50,7 @@ import mpicbg.ij.util.Util;
  * are used to uni-directionally connect two
  * {@linkplain SpringMesh SpringMeshes}.
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class SpringMesh extends TransformMesh
 {
@@ -298,7 +298,7 @@ public class SpringMesh extends TransformMesh
 	 * of the actual mesh by a spring with the given weight.
 	 *
 	 * @param vertex
-	 * @param weights
+	 * @param weight
 	 */
 	public void addVertex( final Vertex vertex, final double weight )
 	{
@@ -371,7 +371,7 @@ public class SpringMesh extends TransformMesh
 	/**
 	 * Calculate motion vectors for all vertices.
 	 *
-	 * @param observer
+	 * @param dt
 	 */
 	protected void updateDirection( final double dt )
 	{
@@ -390,7 +390,7 @@ public class SpringMesh extends TransformMesh
 
 	/**
 	 * Move all vertices for a given &Delta;t
-	 * @param t
+	 * @param dt
 	 */
 	protected void update( final double dt )
 	{
@@ -473,7 +473,7 @@ public class SpringMesh extends TransformMesh
 	/**
 	 * Optimize the mesh.
 	 *
-	 * @param maxError do not accept convergence if error is > max_error
+	 * @param maxError do not accept convergence if error is &gt; max_error
 	 * @param maxIterations stop after that many iterations even if there was
 	 *   no minimum found
 	 * @param maxPlateauwidth convergence is reached if the average slope in
@@ -626,7 +626,7 @@ public class SpringMesh extends TransformMesh
 	/**
 	 * Optimize a {@link Collection} of connected {@link SpringMesh SpringMeshes}.
 	 *
-	 * @param maxError do not accept convergence if error is > max_error
+	 * @param maxError do not accept convergence if error is &gt; max_error
 	 * @param maxIterations stop after that many iterations even if there was
 	 *   no minimum found
 	 * @param maxPlateauwidth convergence is reached if the average slope in
@@ -646,7 +646,7 @@ public class SpringMesh extends TransformMesh
 	/**
 	 * Optimize a {@link Collection} of connected {@link SpringMesh SpringMeshes}.
 	 *
-	 * @param maxError do not accept convergence if error is > max_error
+	 * @param maxError do not accept convergence if error is &gt; max_error
 	 * @param maxIterations stop after that many iterations even if there was
 	 *   no minimum found
 	 * @param maxPlateauwidth convergence is reached if the average slope in
@@ -667,7 +667,7 @@ public class SpringMesh extends TransformMesh
 	/**
 	 * Optimize a {@link Collection} of connected {@link SpringMesh SpringMeshes}.
 	 *
-	 * @param maxError do not accept convergence if error is > max_error
+	 * @param maxError do not accept convergence if error is &gt; max_error
 	 * @param maxIterations stop after that many iterations even if there was
 	 *   no minimum found
 	 * @param maxPlateauwidth convergence is reached if the average slope in
@@ -859,7 +859,7 @@ public class SpringMesh extends TransformMesh
 	 *
 	 * @deprecated Remains for reproducing legacy results
 	 *
-	 * @param maxError do not accept convergence if error is > max_error
+	 * @param maxError do not accept convergence if error is &gt; max_error
 	 * @param maxIterations stop after that many iterations even if there was
 	 *   no minimum found
 	 * @param maxPlateauwidth convergence is reached if the average slope in
@@ -882,7 +882,7 @@ public class SpringMesh extends TransformMesh
 	 *
 	 * @deprecated Remains for reproducing legacy results
 
-	 * @param maxError do not accept convergence if error is > max_error
+	 * @param maxError do not accept convergence if error is &gt; max_error
 	 * @param maxIterations stop after that many iterations even if there was
 	 *   no minimum found
 	 * @param maxPlateauwidth convergence is reached if the average slope in
@@ -994,7 +994,7 @@ public class SpringMesh extends TransformMesh
 
 
 	/**
-	 * Create a Shape that illustrates the {@Spring Springs}.
+	 * Create a Shape that illustrates the {@link Spring}s.
 	 *
 	 * @return illustration
 	 */
@@ -1017,9 +1017,7 @@ public class SpringMesh extends TransformMesh
 
 
 	/**
-	 * Paint all {@Spring Springs} into a {@link ColorProcessor}.
-	 *
-	 * @return illustration
+	 * Paint all {@link Spring}s into a {@link ColorProcessor}.
 	 */
 	public void illustrateSprings( final ColorProcessor ip, final double scale, final double maxStretch )
 	{
@@ -1050,9 +1048,7 @@ public class SpringMesh extends TransformMesh
 
 
 	/**
-	 * Paint all {@Spring Springs} into a {@link ColorProcessor}.
-	 *
-	 * @return illustration
+	 * Paint all {@link Spring Springs} into a {@link ColorProcessor}.
 	 */
 	public void illustrateSprings( final ColorProcessor ip, final double scale, final double maxStretch, final double offsetX, final double offsetY )
 	{

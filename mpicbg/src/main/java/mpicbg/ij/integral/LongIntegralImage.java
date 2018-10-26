@@ -22,16 +22,16 @@ import mpicbg.util.Util;
 /**
  * <p>Summed area table using 64bit signed integer precision.  This table can
  * be used safely for 16bit unsigned integer precision images with a maximal
- * size of >2<sup>31</sup>&nbsp;px which is ImageJ's size limit due to usage
- * of a single basic type array for pixel storage.  For the squares of 16bit
- * unsigned integer precision images, the size limit is two pixels less
+ * size of {@code >2<sup>31</sup>&nbsp;px} which is ImageJ's size limit due to
+ * usage of a single basic type array for pixel storage.  For the squares of
+ * 16bit unsigned integer precision images, the size limit is two pixels less
  * (2<sup>31</sup>-2&nbsp;px) which should not impose a practical limitation.
  * These limits are calculated for the extreme case that all pixels have the
  * maximum possible value.</p>
  * 
  * <p>Boolean or byte integer precision images and their squares are safe.</p> 
  * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  */
 final public class LongIntegralImage implements IntegralImage
 {

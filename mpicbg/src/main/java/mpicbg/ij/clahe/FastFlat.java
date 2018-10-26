@@ -25,10 +25,10 @@ import ij.process.ImageProcessor;
 import java.util.ArrayList;
 
 /**
- * &lsquot;Contrast Limited Adaptive Histogram Equalization&rsquot; as
+ * "Contrast Limited Adaptive Histogram Equalization" as
  * described in
  * 
- * <br />BibTeX:
+ * <p>BibTeX:</p>
  * <pre>
  * &#64;article{zuiderveld94,
  *   author    = {Zuiderveld, Karel},
@@ -45,7 +45,7 @@ import java.util.ArrayList;
  * This version calculates the CDF for adjacent blocks and interpolates
  * the respective CDF for each pixel location in between.
  * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.3b
  */
 public class FastFlat extends Flat

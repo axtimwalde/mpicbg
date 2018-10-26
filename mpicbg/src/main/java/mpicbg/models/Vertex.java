@@ -24,14 +24,12 @@ import java.util.Set;
  * An n-dimensional {@link Vertex} being connected to other
  * {@link Vertex Vertices} by {@link Spring Springs}
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class Vertex extends Point
 {
 	/**
-	 * A set of {@link Spring Springs} with {@link Spring#getV1() v1} being
-	 * this {@link Vertex} and {@link Spring#getV2() v2} being the
-	 * {@link Vertex} at the other side of the {@link Spring}.
+	 * A set of {@link Spring Springs}.
 	 */
 	final protected HashMap< Vertex, Spring > springs = new HashMap< Vertex, Spring >();
 	public Collection< Spring > getSprings(){ return springs.values(); }
@@ -185,7 +183,7 @@ public class Vertex extends Point
 	 * points by the {@link Vertex} class.  It feels that there is a better
 	 * solution for this problem...
 	 *
-	 * @param location
+	 * @param point
 	 */
 	public Vertex( final Point point )
 	{

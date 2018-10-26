@@ -23,7 +23,7 @@ import java.io.IOException;
 /**
  * A {@link CoordinateTransform} that is saved as a LUT on integer coordinates.
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class CoordinateTransformMap2D implements CoordinateTransform
 {

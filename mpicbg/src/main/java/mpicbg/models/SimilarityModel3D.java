@@ -20,7 +20,7 @@ import mpicbg.util.Matrix3x3;
  * 
  * @author John Bogovic
  * @author Johannes Schindelin (quaternion logic and implementation) 
- * @aurthor Stephan Preibisch
+ * @author Stephan Preibisch
  * @version 0.1b
  * 
  */

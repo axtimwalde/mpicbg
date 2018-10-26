@@ -27,7 +27,7 @@ import java.util.Set;
  *
  * @param <M> the {@linkplain AbstractModel transformation model} of the tile.
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class Tile< M extends Model< M > > implements Serializable
 {
@@ -322,10 +322,9 @@ public class Tile< M extends Model< M > > implements Serializable
 
 	/**
 	 * Find all {@link Tile}s that represent one connectivity graph by
-	 * recursively tracing the {@link #connectedTiles }.
+	 * recursively tracing the {@link #connectedTiles}.
 	 *
 	 * @param graph
-	 * @return the number of connected tiles in the graph
 	 */
 	final protected void traceConnectedGraph( final Set< Tile< ? > > graph )
 	{

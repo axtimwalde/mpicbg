@@ -104,7 +104,6 @@ public class Util
 	 * Normalize the dynamic range of a {@link FloatProcessor} to the interval [0,1].
 	 *
 	 * @param fp
-	 * @param scale
 	 */
     final static public void normalizeContrast( final FloatProcessor fp )
     {

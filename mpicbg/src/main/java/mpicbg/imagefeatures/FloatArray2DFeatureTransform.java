@@ -21,7 +21,7 @@
  * Columbia.  That is, for commercial applications the permission of the author
  * is required.
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.4b
  */
 package mpicbg.imagefeatures;

@@ -23,7 +23,7 @@ import java.util.Random;
  * A simple spring model.  Instances represent the actual spring only, not the
  * {@link Point Points} it may interconnect.
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class Spring implements Serializable
 {
@@ -264,8 +264,8 @@ public class Spring implements Serializable
 	 * Create a {@link Spring} between two {@link Point Points} with an
 	 * Array of weights.  The Array of weights will be copied.
 	 *
-	 * @param v1 Point 1
-	 * @param v2 Point 2
+	 * @param p1 Point 1
+	 * @param p2 Point 2
 	 * @param weights Array of weights
 	 * @param maxStretch stretch limit
 	 */

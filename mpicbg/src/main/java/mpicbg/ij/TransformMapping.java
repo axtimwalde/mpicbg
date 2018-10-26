@@ -7,7 +7,7 @@ import mpicbg.models.CoordinateTransform;
  * Use a {@link CoordinateTransform} to map {@linkplain ImageProcessor source}
  * into {@linkplain ImageProcessor target} which is an {@link InverseMapping}.
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.1b
  */
 public class TransformMapping< T extends CoordinateTransform > implements InverseMapping< T >

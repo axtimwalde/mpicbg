@@ -7,7 +7,7 @@ import mpicbg.util.Util;
 
 /**
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.2b
  */
 public class Filter
@@ -209,8 +209,6 @@ public class Filter
 	 * @param input the input image
 	 * @param h horizontal kernel
 	 * @param v vertical kernel
-	 *
-	 * @return convolved image
 	 */
 	final static public void convolveSeparable(
 			final FloatProcessor input,

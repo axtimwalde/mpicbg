@@ -21,7 +21,7 @@ import ij.process.ByteProcessor;
 /**
  * Apply a piece of CLAHE to a {@link ByteProcessor}.
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.3b
  */
 final class ByteApply extends Apply< ByteProcessor >

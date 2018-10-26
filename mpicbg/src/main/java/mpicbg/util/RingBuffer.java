@@ -6,7 +6,7 @@ import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
 /**
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.1b
  */
 public class RingBuffer< T > extends AbstractList< T >
@@ -139,9 +139,10 @@ public class RingBuffer< T > extends AbstractList< T >
 	
 	/**
 	 * {@inheritDoc}
-	 * 
-	 * Doesn not check for index < 0 for efficiency resons, so be sure not to
-	 * pass negative indices.
+	 * <p>
+	 * Does not check for {@code index < 0} for efficiency reasons, so be sure
+	 * not to pass negative indices.
+	 * </p>
 	 */
 	@Override
 	public T get( final int index ) throws IndexOutOfBoundsException
@@ -163,9 +164,10 @@ public class RingBuffer< T > extends AbstractList< T >
 	
 	/**
 	 * {@inheritDoc}
-	 * 
-	 * Doesn not check for index < 0 for efficiency resons, so be sure not to
-	 * pass negative indices.
+	 * <p>
+	 * Does not check for {@code index < 0} for efficiency reasons, so be sure
+	 * not to pass negative indices.
+	 * </p>
 	 */
 	@Override
 	public void add( final int index, final T element ) throws IndexOutOfBoundsException
@@ -191,9 +193,10 @@ public class RingBuffer< T > extends AbstractList< T >
 	
 	/**
 	 * {@inheritDoc}
-	 * 
-	 * Doesn not check for index < 0 for efficiency resons, so be sure not to
-	 * pass negative indices.
+	 * <p>
+	 * Does not check for {@code index < 0} for efficiency reasons, so be sure
+	 * not to pass negative indices.
+	 * </p>
 	 */
 	@Override
 	public T remove( final int index ) throws IndexOutOfBoundsException

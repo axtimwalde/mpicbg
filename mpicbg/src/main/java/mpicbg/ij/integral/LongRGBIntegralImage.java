@@ -22,7 +22,7 @@ import mpicbg.util.Util;
 /**
  * 
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  */
 final public class LongRGBIntegralImage implements IntegralImage
 {

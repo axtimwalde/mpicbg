@@ -37,7 +37,7 @@ import mpicbg.models.TranslationModel2D;
  * Use two sets of {@link PointRoi landmarks} selected in two images to map
  * one image to the other.
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.2b
  */
 public class Transform_Roi implements PlugIn

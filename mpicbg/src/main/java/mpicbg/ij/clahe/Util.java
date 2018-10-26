@@ -17,10 +17,10 @@
 package mpicbg.ij.clahe;
 
 /**
- * &lsquot;Contrast Limited Adaptive Histogram Equalization&rsquot; as
+ * "Contrast Limited Adaptive Histogram Equalization" as
  * described in
  * 
- * <br />BibTeX:
+ * <p>BibTeX:</p>
  * <pre>
  * &#64;article{zuiderveld94,
  *   author    = {Zuiderveld, Karel},
@@ -34,7 +34,7 @@ package mpicbg.ij.clahe;
  * }
  * </pre>
  * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.3b
  */
 public class Util

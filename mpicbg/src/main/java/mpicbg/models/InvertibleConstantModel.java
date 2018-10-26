@@ -20,7 +20,7 @@ package mpicbg.models;
 /**
  * Invertible specialization of {@link ConstantModel}.
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class InvertibleConstantModel<
 		A extends Model< A > & InvertibleCoordinateTransform,

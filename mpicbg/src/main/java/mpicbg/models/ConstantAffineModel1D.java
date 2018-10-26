@@ -23,7 +23,7 @@ package mpicbg.models;
  * No multiple inheritance in Java, so it cannot be an AffineModel1D
  * by itself.
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 final public class ConstantAffineModel1D< A extends Model< A > & Affine1D< A > & InvertibleBoundable >
 	extends InvertibleConstantModel< A, ConstantAffineModel1D< A > >

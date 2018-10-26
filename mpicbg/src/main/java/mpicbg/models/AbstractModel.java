@@ -26,15 +26,18 @@ import java.util.Random;
 /**
  * Abstract class for arbitrary transformation models to be applied
  * to {@link Point Points} in n-dimensional space.
- *
- * Model: R^n --> R^n
- *
+ * <p>
+ * Model: {@code R^n --> R^n}
+ * </p>
+ * <p>
  * Provides methods for generic optimization and model extraction algorithms.
  * Currently, the Random Sample Consensus \cite{FischlerB81}, a robust
  * regression method and the Iterative Closest Point Algorithm \cite{Zhang94}
  * are implemented.
- *
+ * </p>
+ * <p>
  * BibTeX:
+ * </p>
  * <pre>
  * &#64;article{FischlerB81,
  *	 author    = {Martin A. Fischler and Robert C. Bolles},
@@ -61,7 +64,7 @@ import java.util.Random;
  * }
  * </pre>
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public abstract class AbstractModel< M extends AbstractModel< M > > implements Model< M >, Serializable
 {
@@ -87,7 +90,7 @@ public abstract class AbstractModel< M extends AbstractModel< M > > implements M
 	 * "Less than" operater to make {@link AbstractModel Models} comparable.
 	 *
 	 * @param m
-	 * @return false for {@link #cost} < 0.0, otherwise true if
+	 * @return false for {@link #cost} &lt; 0.0, otherwise true if
 	 *   {@link #cost this.cost} is smaller than {@link #cost m.cost}
 	 */
 	@Override
@@ -109,7 +112,7 @@ public abstract class AbstractModel< M extends AbstractModel< M > > implements M
 	 * @param candidates set of point correspondence candidates
 	 * @param inliers set of point correspondences that fit the model
 	 * @param epsilon maximal allowed transfer error
-	 * @param minInlierRatio minimal ratio |inliers| / |candidates| (0.0 => 0%, 1.0 => 100%)
+	 * @param minInlierRatio minimal ratio {@code |inliers| / |candidates| (0.0 => 0%, 1.0 => 100%)}
 	 * @param minNumInliers minimally required absolute number of inliers
 	 */
 	@Override
@@ -151,12 +154,14 @@ public abstract class AbstractModel< M extends AbstractModel< M > > implements M
 	/**
 	 * Estimate the {@link AbstractModel} and filter potential outliers by robust
 	 * iterative regression.
-	 *
+	 * <p>
 	 * This method performs well on data sets with low amount of outliers.  If
 	 * you have many outliers, you can filter those with a `tolerant' RANSAC
-	 * first as done in {@link #filterRansac() filterRansac}.
-	 *
+	 * first as done in {@link #filterRansac}.
+	 * </p>
+	 * <p>
 	 * Sets {@link #getCost() cost} to the average point transfer error.
+	 * </p>
 	 *
 	 * @param candidates Candidate data points eventually inluding some outliers
 	 * @param inliers Remaining after the robust regression filter
@@ -259,7 +264,6 @@ public abstract class AbstractModel< M extends AbstractModel< M > > implements M
 	 * {@link #ransac(List, Collection, int, double, double, int) RANSAC}
 	 * \citet[{FischlerB81}.
 	 *
-	 * @param modelClass class of the model to be estimated
 	 * @param candidates candidate data points inluding (many) outliers
 	 * @param inliers remaining candidates after RANSAC
 	 * @param iterations number of iterations
@@ -366,8 +370,7 @@ A:		while ( i < iterations )
 
 	/**
 	 * Estimate a {@link AbstractModel} from a set with many outliers by first
-	 * filtering the worst outliers with
-	 * {@link #ransac(Class, List, Collection, int, double, double) RANSAC}
+	 * filtering the worst outliers with {@link #ransac RANSAC}
 	 * \citet[{FischlerB81} and filter potential outliers by robust iterative
 	 * regression.
 	 *
@@ -465,8 +468,9 @@ A:		while ( i < iterations )
 	/**
 	 * Estimate the best model in terms of the Iterative Closest Point
 	 * Algorithm \cite{Zhang94} for matching two point clouds into each other.
-	 *
+	 * {@code
 	 * p -> q
+	 * }
 	 *
 	 * @param p source
 	 * @param q target

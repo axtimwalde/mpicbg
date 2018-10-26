@@ -22,7 +22,7 @@ import java.util.Collection;
  * 3D affine specialization of {@link InterpolatedModel}.  Implements
  * interpolation directly by linear matrix interpolation.
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 final public class InterpolatedAffineModel3D<
 		A extends Model< A > & Affine3D< A >,

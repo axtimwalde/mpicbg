@@ -25,7 +25,7 @@ import ij.process.ImageProcessor;
 /**
  * Diffuse
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.1a
  */
 public class DiffusionMask implements PlugIn
@@ -33,7 +33,8 @@ public class DiffusionMask implements PlugIn
 	/**
 	 * 
 	 * @param ip
-	 * @param v
+	 * @param mask
+	 * @param n
 	 */
 	public static void run(
 			final ImageProcessor ip,

@@ -27,7 +27,7 @@ import java.awt.Rectangle;
 /**
  * 
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  */
 final public class InteractiveScale extends AbstractInteractiveBlockFilter
 {

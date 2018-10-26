@@ -4,7 +4,7 @@ package mpicbg.util;
 /**
  * Methods collection for general purpose that do not have a common context
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.1b
  */
 final public class Util
@@ -32,10 +32,11 @@ final public class Util
 	}
 
 	/**
-	 * Return an unsigned integer that bounces in a ping pong manner in the range [0 ... mod - 1]
+	 * Return an unsigned integer that bounces in a ping pong manner in the range
+	 * {@code [0 ... mod - 1]}.
 	 *
 	 * @param a the value to be flipped
-	 * @param range the size of the range
+	 * @param mod the size of the range
 	 * @return a flipped in range like a ping pong ball
 	 */
 	final static public int pingPong( int a, final int mod )
@@ -202,7 +203,7 @@ final public class Util
 	 *
 	 * @param a
 	 * @param mod
-	 * @return 0 <= b < mod
+	 * @return {@code 0 <= b < mod}
 	 */
 	final static public float mod( final float a, final float mod )
 	{

@@ -17,7 +17,7 @@ import mpicbg.util.Util;
  * {@linkplain ImageProcessor source} into {@linkplain ImageProcessor target}
  * which is an {@link InvertibleMapping}.
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.1b
  */
 public class TransformMeshMapping< T extends TransformMesh > extends InvertibleTransformMapping< T >
@@ -186,10 +186,6 @@ public class TransformMeshMapping< T extends TransformMesh > extends InvertibleT
 
 	/**
 	 * Checks if a location is inside a given triangle.
-	 *
-	 * @param pm
-	 * @param t
-	 * @return
 	 */
 	final static protected boolean isInTriangle(
 			final double ax,

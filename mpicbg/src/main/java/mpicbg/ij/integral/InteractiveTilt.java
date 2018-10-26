@@ -27,7 +27,7 @@ import java.awt.event.MouseEvent;
  * Fake the tilt-lens effect as used for 'Smallgantics' pictures
  * by applying gradually increasing smooth from a 'focal line'.
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  */
 public class InteractiveTilt extends AbstractInteractiveBlockFilter
 {	

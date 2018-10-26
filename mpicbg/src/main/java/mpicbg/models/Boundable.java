@@ -20,7 +20,7 @@ package mpicbg.models;
  * A {@link CoordinateTransform} that, for a given source interval in
  * <i>n</i>-space, can estimate the target interval in <i>n</i>-space.
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public interface Boundable extends CoordinateTransform
 {

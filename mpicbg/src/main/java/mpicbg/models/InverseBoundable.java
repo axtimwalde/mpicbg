@@ -20,7 +20,7 @@ package mpicbg.models;
  * An {@link InverseCoordinateTransform} that, for a given source interval in
  * <i>n</i>-space, can estimate the target interval in <i>n</i>-space.
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public interface InverseBoundable extends InverseCoordinateTransform
 {

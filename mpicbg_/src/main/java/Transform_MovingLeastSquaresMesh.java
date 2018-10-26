@@ -24,7 +24,7 @@ import mpicbg.models.TranslationModel2D;
  *
  * BibTeX:
  * <pre>
- * @article{SchaeferAl06,
+ * &#64;article{SchaeferAl06,
  *   author    = {Scott Schaefer and Travis McPhail and Joe Warren},
  *   title     = {Image deformation using moving least squares},
  *   journal   = {ACM Transactions on Graphics},
@@ -39,7 +39,7 @@ import mpicbg.models.TranslationModel2D;
  * }
  * </pre>
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.2b
  */
 public class Transform_MovingLeastSquaresMesh extends InteractiveMapping

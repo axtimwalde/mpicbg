@@ -24,17 +24,18 @@ import ij.*;
 import ij.process.*;
 
 /**
- * <h1>Transfer an image sequence into an optic flow field<h1>
- * 
- * <p>Flow fields are calculated for each pair <em>(t,t+1)</em> of the sequence
+ * Transfer an image sequence into an optic flow field.
+ * <p>
+ * Flow fields are calculated for each pair <em>(t,t+1)</em> of the sequence
  * independently.  The motion vector for each pixel in image t is estimated by
  * searching the most similar looking pixel in image <em>t+1</em>.  The
  * similarity measure is the sum of square differences of all pixels in a local
  * vicinity.  The local vicinity is defined by a block and is calculated using
  * an {@link IntegralImage}.  Both the size of the block and the search radius
- * are parameters of the method.</p>
+ * are parameters of the method.
+ * </p>
  * 
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  * @version 0.1a
  */ 
 public class MSEBlockFlow implements PlugIn

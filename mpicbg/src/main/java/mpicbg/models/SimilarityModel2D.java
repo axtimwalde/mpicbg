@@ -40,7 +40,7 @@ import java.util.Collection;
  * }
  * </pre>
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D >
 {

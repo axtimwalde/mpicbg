@@ -23,7 +23,7 @@ import java.util.Collection;
  * class for regularizing higher order models by lower order models in the
  * context of global optimization.
  *
- * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
+ * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class InterpolatedModel< A extends Model< A >, B extends Model< B >, M extends InterpolatedModel< A, B, M > > extends AbstractModel< M >
 {

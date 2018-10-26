@@ -19,7 +19,7 @@ package mpicbg.models;
 /**
  * Signalizes that a {@link AbstractModel} is not invertible.
  *
- * @author Stephan Saalfeld <saalfeld@mpi-cbg.de>
+ * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  */
 public class NoninvertibleModelException extends Exception
 {
