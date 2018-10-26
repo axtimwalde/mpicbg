@@ -7,11 +7,6 @@
 		<artifactId>pom-mpicbg</artifactId>
 		<version>1.2.1-SNAPSHOT</version>
 	</parent>
-	
-	<properties>
-		<license.licenseName>gpl_v2</license.licenseName>
-		<license.copyrightOwners>Stephan Saalfeld et. al.</license.copyrightOwners>
-	</properties>
 
 	<artifactId>mpicbg</artifactId>
 
@@ -144,6 +139,11 @@
 		<system>Travis CI</system>
 		<url>https://travis-ci.org/axtimwalde/mpicbg</url>
 	</ciManagement>
+
+	<properties>
+		<license.licenseName>gpl_v2</license.licenseName>
+		<license.copyrightOwners>Stephan Saalfeld et. al.</license.copyrightOwners>
+	</properties>
 
 	<dependencies>
 		<!-- ImageJ dependencies -->
