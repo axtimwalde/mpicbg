@@ -9,6 +9,7 @@ import mpicbg.models.IllDefinedDataPointsException;
 import mpicbg.models.NotEnoughDataPointsException;
 import mpicbg.models.PointMatch;
 import mpicbg.util.Matrix3x3;
+import mpicbg.util.Util;
 
 /**
  * 3d-rigid transformation models to be applied to points in 3d-space.
@@ -30,6 +31,8 @@ public class SimilarityModel3D extends AbstractAffineModel3D< SimilarityModel3D 
 
 	static final protected int MIN_NUM_MATCHES = 3;
 	
+	static final protected double EPSILON = 1e-4;
+
 	protected double
 		m00 = 1.0, m01 = 0.0, m02 = 0.0, m03 = 0.0, 
 		m10 = 0.0, m11 = 1.0, m12 = 0.0, m13 = 0.0, 
@@ -510,7 +513,7 @@ public class SimilarityModel3D extends AbstractAffineModel3D< SimilarityModel3D 
 	protected void invert()
 	{
 		final double det = Matrix3x3.det( m00, m01, m02, m10, m11, m12, m20, m21, m22 );
-		if ( det == 0 )
+		if ( Util.isApproxEqual( det, 0, EPSILON ) )
 		{
 			isInvertible = false;
 			return;

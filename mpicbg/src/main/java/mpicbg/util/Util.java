@@ -365,4 +365,40 @@ final public class Util
 	    for ( int i = 1; i < len; i += i )
 	        System.arraycopy( array, 0, array, i, ( ( len - i ) < i ) ? ( len - i ) : i );
 	}
+
+	/**
+	 * Checks if two real values are approximately equal.
+	 *
+	 * @param a
+	 * @param b
+	 * @param threshold
+	 * @return
+	 */
+	final public static boolean isApproxEqual( final float a, final float b, final float threshold )
+	{
+		if ( a == b )
+			return true;
+		else if ( a + threshold > b && a - threshold < b )
+			return true;
+		else
+			return false;
+	}
+
+	/**
+	 * Checks if two real values are approximately equal.
+	 *
+	 * @param a
+	 * @param b
+	 * @param threshold
+	 * @return
+	 */
+	final public static boolean isApproxEqual( final double a, final double b, final double threshold )
+	{
+		if ( a == b )
+			return true;
+		else if ( a + threshold > b && a - threshold < b )
+			return true;
+		else
+			return false;
+	}
 }

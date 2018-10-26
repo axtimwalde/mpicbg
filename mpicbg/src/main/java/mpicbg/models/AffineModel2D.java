@@ -19,6 +19,8 @@ package mpicbg.models;
 import java.awt.geom.AffineTransform;
 import java.util.Collection;
 
+import mpicbg.util.Util;
+
 /**
  * 2d-affine transformation models to be applied to points in 2d-space.
  * This model includes the closed form weighted least squares solution as
@@ -47,6 +49,8 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	private static final long serialVersionUID = 2323673888015396528L;
 
 	static final protected int MIN_NUM_MATCHES = 3;
+
+	static final protected double EPSILON = 1e-4;
 
 	protected double m00 = 1.0, m10 = 0.0, m01 = 0.0, m11 = 1.0, m02 = 0.0, m12 = 0.0;
 	protected double i00 = 1.0, i10 = 0.0, i01 = 0.0, i11 = 1.0, i02 = 0.0, i12 = 0.0;
@@ -183,7 +187,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 
 		final double det = a00 * a11 - a01 * a01;
 
-		if ( det == 0 )
+		if ( Util.isApproxEqual( det, 0, EPSILON ) )
 			throw new IllDefinedDataPointsException();
 
 		m00 = ( a11 * b00 - a01 * b10 ) / det;
@@ -273,7 +277,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 
 		final double det = a00 * a11 - a01 * a01;
 
-		if ( det == 0 )
+		if ( Util.isApproxEqual( det, 0, EPSILON ) )
 			throw new IllDefinedDataPointsException();
 
 		m00 = ( a11 * b00 - a01 * b10 ) / det;
@@ -343,7 +347,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 
 		final double det = a00 * a11 - a01 * a01;
 
-		if ( det == 0 )
+		if ( Util.isApproxEqual( det, 0, EPSILON ) )
 			throw new IllDefinedDataPointsException();
 
 		m00 = ( a11 * b00 - a01 * b10 ) / det;
@@ -436,7 +440,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	final protected void invert()
 	{
 		final double det = m00 * m11 - m01 * m10;
-		if ( det == 0 )
+		if ( Util.isApproxEqual( det, 0, EPSILON ) )
 		{
 			isInvertible = false;
 			return;

@@ -21,6 +21,7 @@ import java.util.Collection;
 import mpicbg.util.Matrix3x3;
 import Jama.EigenvalueDecomposition;
 import Jama.Matrix;
+import mpicbg.util.Util;
 
 /**
  *
@@ -33,6 +34,8 @@ public class RigidModel3D extends AbstractAffineModel3D< RigidModel3D > implemen
 	private static final long serialVersionUID = 4703083104338949996L;
 
 	static final protected int MIN_NUM_MATCHES = 3;
+
+	static final protected double EPSILON = 1e-4;
 
 	protected double
 	m00 = 1.0, m01 = 0.0, m02 = 0.0, m03 = 0.0,
@@ -316,7 +319,7 @@ public class RigidModel3D extends AbstractAffineModel3D< RigidModel3D > implemen
 	protected void invert()
 	{
 		final double det = Matrix3x3.det( m00, m01, m02, m10, m11, m12, m20, m21, m22 );
-		if ( det == 0 )
+		if ( Util.isApproxEqual( det, 0, EPSILON ) )
 		{
 			isInvertible = false;
 			return;

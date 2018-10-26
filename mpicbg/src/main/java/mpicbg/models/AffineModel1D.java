@@ -18,6 +18,8 @@ package mpicbg.models;
 
 import java.util.Collection;
 
+import mpicbg.util.Util;
+
 /**
  *
  * @author Stephan Saalfeld <saalfelds@janelia.hhmi.org>
@@ -27,6 +29,8 @@ public class AffineModel1D extends AbstractAffineModel1D< AffineModel1D > implem
 	private static final long serialVersionUID = -6691788501310913119L;
 
 	static final protected int MIN_NUM_MATCHES = 2;
+
+	static final protected double EPSILON = 1e-4;
 
 	protected double
 		m00 = 1.0, m01 = 0.0;
@@ -143,7 +147,7 @@ public class AffineModel1D extends AbstractAffineModel1D< AffineModel1D > implem
 			b += wwpx * qx;
 		}
 
-		if ( a == 0 )
+		if ( Util.isApproxEqual( a, 0, EPSILON ) )
 			throw new IllDefinedDataPointsException();
 
 		m00 = b / a;
@@ -207,7 +211,7 @@ public class AffineModel1D extends AbstractAffineModel1D< AffineModel1D > implem
 			b += wwpx * qx;
 		}
 
-		if ( a == 0 )
+		if ( Util.isApproxEqual( a, 0, EPSILON ) )
 			throw new IllDefinedDataPointsException();
 
 		m00 = b / a;
@@ -262,7 +266,7 @@ public class AffineModel1D extends AbstractAffineModel1D< AffineModel1D > implem
 			b += wwpx * qx;
 		}
 
-		if ( a == 0 )
+		if ( Util.isApproxEqual( a, 0, EPSILON ) )
 			throw new IllDefinedDataPointsException();
 
 		m00 = b / a;
@@ -308,7 +312,7 @@ public class AffineModel1D extends AbstractAffineModel1D< AffineModel1D > implem
 
 	protected void invert()
 	{
-		if ( m00 == 0 )
+		if ( Util.isApproxEqual( m00, 0, EPSILON ) )
 		{
 			isInvertible = false;
 			return;
