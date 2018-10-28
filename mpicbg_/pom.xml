@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>mpicbg</groupId>
 		<artifactId>pom-mpicbg</artifactId>
-		<version>1.2.1-SNAPSHOT</version>
+		<version>1.3.0</version>
 	</parent>
 
 	<artifactId>mpicbg_</artifactId>
@@ -85,7 +85,7 @@
 	<scm>
 		<connection>scm:git:git://github.com/axtimwalde/mpicbg</connection>
 		<developerConnection>scm:git:git@github.com:axtimwalde/mpicbg</developerConnection>
-		<tag>HEAD</tag>
+		<tag>mpicbg-1.3.0</tag>
 		<url>https://github.com/axtimwalde/mpicbg</url>
 	</scm>
 	<issueManagement>
