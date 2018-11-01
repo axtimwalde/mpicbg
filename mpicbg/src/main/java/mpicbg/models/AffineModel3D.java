@@ -19,6 +19,7 @@ package mpicbg.models;
 import java.util.Collection;
 
 import mpicbg.util.Matrix3x3;
+import mpicbg.util.Util;
 
 /**
  * 3d-affine transformation models to be applied to points in 3d-space.
@@ -149,6 +150,20 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 			final double[] w )
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
+		fit( p, q, w, 0 );
+	}
+
+	/**
+	 * Closed form weighted least squares solution as described by
+	 * \citet{SchaeferAl06}.
+	 */
+	final public void fit(
+			final double[][] p,
+			final double[][] q,
+			final double[] w,
+			final double epsilon )
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException
+	{
 		assert
 		p.length >= 3 &&
 		q.length >= 3 : "3d affine transformations can be applied to 3d points only.";
@@ -162,7 +177,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 		final int l = p[ 0 ].length;
 
 		if ( l < MIN_NUM_MATCHES )
-			throw new NotEnoughDataPointsException( l + " data points are not enough to estimate a 2d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
+			throw new NotEnoughDataPointsException( l + " data points are not enough to estimate a 3d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
 
 		double pcx = 0, pcy = 0, pcz = 0;
 		double qcx = 0, qcy = 0, qcz = 0;
@@ -244,7 +259,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 			a12 * a12 * a00 -
 			a22 * a01 * a01;
 
-		if ( det == 0 )
+		if ( Util.isApproxEqual( det, 0, epsilon ) )
 			throw new IllDefinedDataPointsException();
 
 		final double idet = 1.0 / det;
@@ -286,6 +301,20 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 			final float[] w )
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
+		fit( p, q, w, 0 );
+	}
+
+	/**
+	 * Closed form weighted least squares solution as described by
+	 * \citet{SchaeferAl06}.
+	 */
+	final public void fit(
+			final float[][] p,
+			final float[][] q,
+			final float[] w,
+			final float epsilon )
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException
+	{
 		assert
 		p.length >= 3 &&
 		q.length >= 3 : "3d affine transformations can be applied to 3d points only.";
@@ -299,7 +328,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 		final int l = p[ 0 ].length;
 
 		if ( l < MIN_NUM_MATCHES )
-			throw new NotEnoughDataPointsException( l + " data points are not enough to estimate a 2d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
+			throw new NotEnoughDataPointsException( l + " data points are not enough to estimate a 3d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
 
 		double pcx = 0, pcy = 0, pcz = 0;
 		double qcx = 0, qcy = 0, qcz = 0;
@@ -381,7 +410,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 			a12 * a12 * a00 -
 			a22 * a01 * a01;
 
-		if ( det == 0 )
+		if ( Util.isApproxEqual( det, 0, epsilon ) )
 			throw new IllDefinedDataPointsException();
 
 		final double idet = 1.0 / det;
@@ -420,8 +449,18 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 	final public < P extends PointMatch >void fit( final Collection< P > matches )
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
+		fit( matches, 0 );
+	}
+
+	/**
+	 * Closed form weighted least squares solution as described by
+	 * \citet{SchaeferAl06}.
+	 */
+	final public < P extends PointMatch >void fit( final Collection< P > matches, final double epsilon )
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException
+	{
 		if ( matches.size() < MIN_NUM_MATCHES )
-			throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
+			throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 3d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
 
 		double pcx = 0, pcy = 0, pcz = 0;
 		double qcx = 0, qcy = 0, qcz = 0;
@@ -494,7 +533,7 @@ public class AffineModel3D extends AbstractAffineModel3D< AffineModel3D > implem
 			a12 * a12 * a00 -
 			a22 * a01 * a01;
 
-		if ( det == 0 )
+		if ( Util.isApproxEqual( det, 0, epsilon ) )
 			throw new IllDefinedDataPointsException();
 
 		final double idet = 1.0 / det;
