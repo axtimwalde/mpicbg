@@ -71,13 +71,6 @@ final public class InterpolatedAffineModel2D<
 	}
 
 	@Override
-	public void reset()
-	{
-		super.reset();
-		affine.reset();
-	}
-
-	@Override
 	public InterpolatedAffineModel2D< A, B > copy()
 	{
 		final InterpolatedAffineModel2D< A, B > copy = new InterpolatedAffineModel2D< A, B >( a.copy(), b.copy(), lambda );

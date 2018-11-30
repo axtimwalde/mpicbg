@@ -202,13 +202,6 @@ public class TranslationModel1D extends AbstractAffineModel1D< TranslationModel1
 	}
 
 	@Override
-	final public void reset()
-	{
-		t = 0;
-		cost = Double.MAX_VALUE;
-	}
-
-	@Override
 	final public void preConcatenate( final TranslationModel1D m )
 	{
 		t += m.t;

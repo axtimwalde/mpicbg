@@ -373,7 +373,6 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 		cost = m.getCost();
 	}
 
-	@Override
 	final public void reset()
 	{
 		m00 = 1.0; m10 = 0.0; m01 = 0.0; m11 = 1.0; m02 = 0.0; m12 = 0.0;

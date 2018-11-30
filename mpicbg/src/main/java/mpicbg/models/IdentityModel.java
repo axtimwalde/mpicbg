@@ -85,12 +85,6 @@ public class IdentityModel extends AbstractModel< IdentityModel > implements
 	}
 
 	@Override
-	final public void reset()
-	{
-		cost = Double.MAX_VALUE;
-	}
-
-	@Override
 	final public void preConcatenate( final IdentityModel m ) {}
 
 	@Override

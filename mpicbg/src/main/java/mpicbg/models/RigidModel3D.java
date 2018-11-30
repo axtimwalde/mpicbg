@@ -265,7 +265,6 @@ public class RigidModel3D extends AbstractAffineModel3D< RigidModel3D > implemen
 		invert();
 	}
 
-	@Override
 	final public void reset()
 	{
 		m00 = 1.0; m01 = 0.0; m02 = 0.0; m03 = 0.0;

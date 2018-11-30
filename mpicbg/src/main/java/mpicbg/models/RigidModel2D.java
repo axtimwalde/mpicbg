@@ -361,7 +361,6 @@ public class RigidModel2D extends AbstractAffineModel2D< RigidModel2D >
 		cost = m.cost;
 	}
 
-	@Override
 	final public void reset()
 	{
 		cos = 1.0; sin = 0.0; tx = 0.0; ty = 0.0;
