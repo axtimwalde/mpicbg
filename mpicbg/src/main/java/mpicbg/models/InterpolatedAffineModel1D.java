@@ -70,13 +70,6 @@ final public class InterpolatedAffineModel1D<
 	}
 
 	@Override
-	public void reset()
-	{
-		super.reset();
-		affine.reset();
-	}
-
-	@Override
 	public InterpolatedAffineModel1D< A, B > copy()
 	{
 		final InterpolatedAffineModel1D< A, B > copy = new InterpolatedAffineModel1D< A, B >( a.copy(), b.copy(), lambda );
@@ -157,6 +150,23 @@ final public class InterpolatedAffineModel1D<
 	public void toMatrix( final double[][] data )
 	{
 		affine.toMatrix( data );
+	}
+
+	/**
+	 * Initialize the model such that the respective affine transform is:
+	 *
+	 * <pre>
+	 * m0 m1
+	 * 0   1
+	 * </pre>
+	 *
+	 * @param m0
+	 * @param m1
+	 */
+	@Deprecated
+	final public void set( final float m0, final float m1 )
+	{
+		affine.set( m0, m1 );
 	}
 
 	@Override

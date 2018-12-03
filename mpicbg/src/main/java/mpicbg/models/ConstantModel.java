@@ -54,9 +54,6 @@ public class ConstantModel< A extends Model< A >, M extends ConstantModel< A, M 
 	public void set( final M m ) {}
 
 	@Override
-	final public void reset() {}
-
-	@Override
 	public M copy()
 	{
 		@SuppressWarnings( "unchecked" )

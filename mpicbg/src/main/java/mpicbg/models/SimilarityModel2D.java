@@ -377,7 +377,6 @@ public class SimilarityModel2D extends AbstractAffineModel2D< SimilarityModel2D 
 		cost = m.cost;
 	}
 
-	@Override
 	final public void reset()
 	{
 		scos = 1.0; ssin = 0.0; tx = 0.0; ty = 0.0;

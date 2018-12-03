@@ -138,13 +138,6 @@ public class TranslationModel3D extends AbstractAffineModel3D< TranslationModel3
 	}
 
 	@Override
-	final public void reset()
-	{
-		translation[ 0 ] = translation[ 1 ] = translation[ 2 ] = 0;
-		cost = Double.MAX_VALUE;
-	}
-
-	@Override
 	public TranslationModel3D copy()
 	{
 		final TranslationModel3D m = new TranslationModel3D();
