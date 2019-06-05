@@ -746,7 +746,7 @@ public class BlockMatching
 
 		/* Shift relative to the scaled search radius */
 		final TranslationModel2D tTarget = new TranslationModel2D();
-		tTarget.set( -scaledSearchRadiusX / scale, -scaledSearchRadiusY / scale );
+		tTarget.set( -scaledSearchRadiusX, -scaledSearchRadiusY );
 
 		final InverseMapping< ? > targetMapping = new TransformMapping< CoordinateTransform >( tTarget );
 		targetMapping.mapInverseInterpolated( target_scaled, mappedScaledTarget );
