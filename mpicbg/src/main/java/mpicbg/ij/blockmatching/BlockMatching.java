@@ -719,7 +719,6 @@ public class BlockMatching
 	 * @param rod
 	 * @param sourcePoints
 	 * @param sourceMatches
-	 * @param observer
 	 */
     static public void matchByMaximalPMCCFromPreScaledImages(
 			FloatProcessor source_scaled,
@@ -733,8 +732,7 @@ public class BlockMatching
 			final float rod,
 			final float maxCurvature,
 			final Collection< ? extends Point > sourcePoints,
-			final Collection< PointMatch > sourceMatches,
-			final ErrorStatistic observer ) throws InterruptedException, ExecutionException
+			final Collection< PointMatch > sourceMatches ) throws InterruptedException, ExecutionException
 	{
 		final int scaledBlockRadiusX = ( int )Math.ceil( scale * blockRadiusX );
 		final int scaledBlockRadiusY = ( int )Math.ceil( scale * blockRadiusY );
@@ -790,11 +788,6 @@ public class BlockMatching
 			l1[ 1 ] /= scale;
 			l2[ 0 ] /= scale;
 			l2[ 1 ] /= scale;
-
-			final double tx = l2[ 0 ] - l1[ 0 ];
-			final double ty = l2[ 1 ] - l1[ 1 ];
-
-			observer.add( Math.sqrt( tx * tx + ty * ty ) );
 
 			sourceMatches.add( new PointMatch( scaledSourcePoints.get( p.getP1() ), new Point( l2 ) ) );
 		}
