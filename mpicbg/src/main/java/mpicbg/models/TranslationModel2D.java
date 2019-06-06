@@ -297,6 +297,6 @@ public class TranslationModel2D extends AbstractAffineModel2D< TranslationModel2
 		data[ 0 ][ 2 ] = tx;
 		data[ 1 ][ 0 ] = 0;
 		data[ 1 ][ 1 ] = 1;
-		data[ 1 ][ 1 ] = ty;
+		data[ 1 ][ 2 ] = ty;
 	}
 }
