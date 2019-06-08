@@ -679,6 +679,120 @@ public class BlockMatching
 		}
 	}
 
+	/**
+	 *
+	 * Estimate {@linkplain PointMatch point correspondences} for a
+	 * {@link Collection} of {@link Point Points} among two images that are
+	 * approximately related by an {@link InvertibleCoordinateTransform} using
+	 * the Pearson product-moment correlation coefficient (PMCC) <i>r</i> of
+	 * pixel intensities as similarity measure. Only correspondence candidates
+	 * with <i>r</i> &gt;= a given threshold are accepted.
+	 *
+	 * Similar to {@link #matchByMaximalPMCC(FloatProcessor, FloatProcessor, FloatProcessor, FloatProcessor, double, CoordinateTransform, int, int, int, int, float, float, float, Collection, Collection, ErrorStatistic)}
+	 * but:
+	 *  1. With its {@link FloatProcessor} images already scaled down to {@code scale}
+	 *     and already with their contrast normalized, and their masks applied if any.
+	 *     That is, images provided as arguments {@code source_scaled} and {@code target_scaled}
+	 *     are expected to have been pre-processed with {@link Filter#createDownsampled(FloatProcessor, double, float, float)}
+	 *     and with {@link Util#normalizeContrast(FloatProcessor)},
+	 *     and with {@link #mapAndMask(ImageProcessor, ImageProcessor, ImageProcessor, CoordinateTransform)} to set pixels outside the mask to {@link Float#NaN}.
+	 *  2. Without a {@code transform}, i.e., assumes images are almost registered already.
+	 *  
+	 * These modifications are a performance optimization, by preventing the Gaussian blurring
+	 * of images multiple times when e.g. comparing a section with its adjacent, its 2nd adjacent, etc.,
+	 * and also by preventing unnecessary repeats of image duplication, contrast normalization, and mask application.
+	 *
+	 * @param source_scaled
+	 * @param target_scaled
+	 * @param scale
+	 *            [0,1]
+	 * @param blockRadiusX
+	 *            horizontal radius of a block
+	 * @param blockRadiusY
+	 *            vertical radius of a block
+	 * @param searchRadiusX
+	 *            horizontal search radius
+	 * @param searchRadiusY
+	 *            vertical search radius
+	 * @param minR
+	 *            minimal accepted Cross-Correlation coefficient
+	 * @param rod
+	 * @param sourcePoints
+	 * @param sourceMatches
+	 */
+    static public void matchByMaximalPMCCFromPreScaledImages(
+			FloatProcessor source_scaled,
+			FloatProcessor target_scaled,
+			final double scale,
+			final int blockRadiusX,
+			final int blockRadiusY,
+			final int searchRadiusX,
+			final int searchRadiusY,
+			final float minR,
+			final float rod,
+			final float maxCurvature,
+			final Collection< ? extends Point > sourcePoints,
+			final Collection< PointMatch > sourceMatches ) throws InterruptedException, ExecutionException
+	{
+		final int scaledBlockRadiusX = ( int )Math.ceil( scale * blockRadiusX );
+		final int scaledBlockRadiusY = ( int )Math.ceil( scale * blockRadiusY );
+		final int scaledSearchRadiusX = ( int )Math.ceil( scale * searchRadiusX ) + 1; // +1 for 3x3 maximum test
+		final int scaledSearchRadiusY = ( int )Math.ceil( scale * searchRadiusY ) + 1; // +1 for 3x3 maximum test
+
+		// Create enlarged target, padded with NaN, to include the scaledSearchRadius / scale.
+		final FloatProcessor mappedScaledTarget = new FloatProcessor( source_scaled.getWidth()  + 2 * scaledSearchRadiusX,
+		                                                              source_scaled.getHeight() + 2 * scaledSearchRadiusY );
+		Util.fillWithNaN( mappedScaledTarget );
+
+		/* Shift relative to the scaled search radius */
+		final TranslationModel2D tTarget = new TranslationModel2D();
+		tTarget.set( -scaledSearchRadiusX, -scaledSearchRadiusY );
+
+		final InverseMapping< ? > targetMapping = new TransformMapping< CoordinateTransform >( tTarget );
+		targetMapping.mapInverseInterpolated( target_scaled, mappedScaledTarget );
+
+		final Map< Point, Point > scaledSourcePoints = new HashMap< Point, Point>();
+		final ArrayList< PointMatch > scaledSourceMatches = new ArrayList< PointMatch >();
+
+		for ( final Point p : sourcePoints )
+		{
+			final double[] l = p.getL().clone();
+			l[ 0 ] *= scale;
+			l[ 1 ] *= scale;
+			scaledSourcePoints.put( new Point( l ), p );
+		}
+
+		/* initialize source points and the expected place to search for them temporarily */
+		final Collection< PointMatch > query = new ArrayList< PointMatch >();
+		for ( final Point p : scaledSourcePoints.keySet() )
+			query.add( new PointMatch( p, p.clone()) );
+
+		matchByMaximalPMCC(
+				source_scaled,
+				mappedScaledTarget,
+				scaledBlockRadiusX,
+				scaledBlockRadiusY,
+				scaledSearchRadiusX,
+				scaledSearchRadiusY,
+				minR,
+				rod,
+				maxCurvature,
+				query,
+				scaledSourceMatches );
+
+		for ( final PointMatch p : scaledSourceMatches )
+		{
+			final double[] l1 = p.getP1().getL().clone();
+			final double[] l2 = p.getP2().getL().clone();
+			l1[ 0 ] /= scale;
+			l1[ 1 ] /= scale;
+			l2[ 0 ] /= scale;
+			l2[ 1 ] /= scale;
+
+			sourceMatches.add( new PointMatch( scaledSourcePoints.get( p.getP1() ), new Point( l2 ) ) );
+		}
+	}
+
     /**
      * Estimate {@linkplain PointMatch point correspondences} for a
      * {@link Collection} of {@link Point Points} among two images that are
