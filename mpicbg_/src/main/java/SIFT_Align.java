@@ -1,34 +1,23 @@
-import ij.IJ;
-import ij.ImagePlus;
-import ij.ImageStack;
-import ij.WindowManager;
+import ij.*;
 import ij.gui.GenericDialog;
+import ij.plugin.ChannelSplitter;
 import ij.plugin.PlugIn;
 import ij.process.FloatProcessor;
 import ij.process.ImageProcessor;
+import mpicbg.ij.InverseTransformMapping;
+import mpicbg.ij.Mapping;
+import mpicbg.ij.SIFT;
+import mpicbg.imagefeatures.*;
+import mpicbg.models.*;
 
-import java.awt.Color;
-import java.awt.TextField;
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
-import mpicbg.ij.InverseTransformMapping;
-import mpicbg.ij.Mapping;
-import mpicbg.ij.SIFT;
-import mpicbg.imagefeatures.Feature;
-import mpicbg.imagefeatures.Filter;
-import mpicbg.imagefeatures.FloatArray2D;
-import mpicbg.imagefeatures.FloatArray2DSIFT;
-import mpicbg.imagefeatures.ImageArrayConverter;
-import mpicbg.models.AbstractAffineModel2D;
-import mpicbg.models.AffineModel2D;
-import mpicbg.models.PointMatch;
-import mpicbg.models.RigidModel2D;
-import mpicbg.models.SimilarityModel2D;
-import mpicbg.models.TranslationModel2D;
+import net.imagej.ImageJ;
 
 /**
  * Align a stack consecutively using automatically extracted robust landmark
@@ -78,6 +67,10 @@ public class SIFT_Align implements PlugIn, KeyListener
 	static private class Param
 	{
 		final public FloatArray2DSIFT.Param sift = new FloatArray2DSIFT.Param();
+		/**
+		 * Closest/next closest neighbour distance ratio
+		 */
+		public int regChannel = 1;
 
 		/**
 		 * Closest/next closest neighbour distance ratio
@@ -136,10 +129,16 @@ public class SIFT_Align implements PlugIn, KeyListener
 
 		if ( IJ.versionLessThan( "1.41n" ) ) return;
 
-		final ImagePlus imp = WindowManager.getCurrentImage();
+		ImagePlus imp = WindowManager.getCurrentImage();
 		if ( imp == null )  { System.err.println( "There are no images open" ); return; }
 
+
+
+
 		final GenericDialog gd = new GenericDialog( "Align stack" );
+		gd.addMessage( "Intput:" );
+		gd.addNumericField( "Registration channel :", p.regChannel, 1);
+
 		gd.addMessage( "Scale Invariant Interest Point Detector:" );
 		gd.addNumericField( "initial_gaussian_blur :", p.sift.initialSigma, 2, 6, "px" );
 		gd.addNumericField( "steps_per_scale_octave :", p.sift.steps, 0 );
@@ -164,7 +163,7 @@ public class SIFT_Align implements PlugIn, KeyListener
 		gd.showDialog();
 
 		if (gd.wasCanceled()) return;
-
+		p.regChannel = ( int )gd.getNextNumber();
 		p.sift.initialSigma = ( float )gd.getNextNumber();
 		p.sift.steps = ( int )gd.getNextNumber();
 		p.sift.minOctaveSize = ( int )gd.getNextNumber();
@@ -181,6 +180,16 @@ public class SIFT_Align implements PlugIn, KeyListener
 		p.interpolate = gd.getNextBoolean();
 		p.showInfo = gd.getNextBoolean();
 		p.showMatrix = gd.getNextBoolean();
+
+		int[] dimensions = imp.getDimensions();
+		final ImagePlus ori_imp = imp.duplicate();
+
+		if (dimensions[2] > 1 ){
+
+			ImagePlus[] channels = ChannelSplitter.split(imp);
+			imp	= channels[p.regChannel-1];//channels index starts at 1 but array at 0
+
+		}
 
 		final ImageStack stack = imp.getStack();
 		final ImageStack stackAligned = new ImageStack( stack.getWidth(), stack.getHeight() );
@@ -410,4 +419,29 @@ public class SIFT_Align implements PlugIn, KeyListener
 
 	@Override
     public void keyTyped(final KeyEvent e) { }
+
+	/**
+	 * This main function serves for development purposes.
+	 * It allows you to run the plugin immediately out of
+	 * your integrated development environment (IDE).
+	 *
+	 * @param args whatever, it's ignored
+	 * @throws Exception
+	 */
+	public static void main(final String... args) throws Exception {
+
+		// set the plugins.dir property to make the plugin appear in the Plugins menu
+		Class<?> clazz = SIFT_Align.class;
+		String url = clazz.getResource("/" + clazz.getName().replace('.', '/') + ".class").toString();
+		String pluginsDir = url.substring("file:".length(), url.length() - clazz.getName().length() - ".class".length());
+		System.setProperty("plugins.dir", pluginsDir);
+
+		// create the ImageJ application context with all available services
+		final ImageJ ij = new ImageJ();
+		ij.ui().showUI();
+	}
+
+
 }
+
+
