@@ -114,7 +114,7 @@ public class Transform_Roi implements PlugIn
 		final ImageProcessor ipTarget = source.getProcessor().createProcessor( template.getWidth(), template.getHeight() );
 		ipTarget.setColor(Toolbar.getBackgroundColor());
 		ipTarget.fill();
-		ipTarget.setColor(Toolbar.getBackgroundColor());
+		ipTarget.setColor(Toolbar.getForegroundColor());
 
 		/* Collect the PointRois from both images and make PointMatches of them. */
 		final List< Point > sourcePoints = Util.pointRoiToPoints( ( PointRoi )source.getRoi() );
