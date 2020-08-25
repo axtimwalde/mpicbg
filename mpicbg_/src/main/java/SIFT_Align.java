@@ -19,6 +19,8 @@ import java.util.Vector;
 
 import net.imagej.ImageJ;
 
+import static ij.plugin.RGBStackMerge.mergeChannels;
+
 /**
  * Align a stack consecutively using automatically extracted robust landmark
  * correspondences.
@@ -96,7 +98,7 @@ public class SIFT_Align implements PlugIn, KeyListener
 		public boolean interpolate = true;
 
 		public boolean showInfo = false;
-		
+
 		public boolean showMatrix = false;
 	}
 
@@ -132,12 +134,12 @@ public class SIFT_Align implements PlugIn, KeyListener
 		ImagePlus imp = WindowManager.getCurrentImage();
 		if ( imp == null )  { System.err.println( "There are no images open" ); return; }
 
-
+		String img_title = imp.getTitle();
 
 
 		final GenericDialog gd = new GenericDialog( "Align stack" );
-		gd.addMessage( "Intput:" );
-		gd.addNumericField( "Registration channel :", p.regChannel, 1);
+		gd.addMessage( "Input:" );
+		gd.addNumericField( "Registration_channel (on composite) :", p.regChannel,0 );
 
 		gd.addMessage( "Scale Invariant Interest Point Detector:" );
 		gd.addNumericField( "initial_gaussian_blur :", p.sift.initialSigma, 2, 6, "px" );
@@ -159,7 +161,7 @@ public class SIFT_Align implements PlugIn, KeyListener
 		gd.addCheckbox( "interpolate", p.interpolate );
 		gd.addCheckbox( "show_info", p.showInfo );
 		gd.addCheckbox( "show_transformation_matrix", p.showMatrix );
-		
+
 		gd.showDialog();
 
 		if (gd.wasCanceled()) return;
@@ -181,19 +183,26 @@ public class SIFT_Align implements PlugIn, KeyListener
 		p.showInfo = gd.getNextBoolean();
 		p.showMatrix = gd.getNextBoolean();
 
-		int[] dimensions = imp.getDimensions();
-		final ImagePlus ori_imp = imp.duplicate();
-
-		if (dimensions[2] > 1 ){
-
-			ImagePlus[] channels = ChannelSplitter.split(imp);
-			imp	= channels[p.regChannel-1];//channels index starts at 1 but array at 0
-
+		// To handle multichannel images
+		//  use a Channel Splittetr
+		ImagePlus[] channels ;
+		// if imp is RGB , should not split
+		if (imp.getBitDepth() == 24 ) {
+			channels = new ImagePlus[1];
+			channels[0] = imp;
+		} else{
+			channels = ChannelSplitter.split(imp);
 		}
+		// and reassign imp to the Channel to be used for the registration
+		imp	= channels[p.regChannel-1];//channels index starts at 1 but array at 0
 
+		// will be used tor do the alignement
 		final ImageStack stack = imp.getStack();
-		final ImageStack stackAligned = new ImageStack( stack.getWidth(), stack.getHeight() );
-
+		// store the result in array too
+		final ImageStack[] stackAligned = new ImageStack[channels.length];
+		for ( int ch_i = 0 ; ch_i < channels.length ; ch_i++) {
+			stackAligned[ch_i] = new ImageStack(stack.getWidth(), stack.getHeight());
+		}
 		final float vis_scale = 256.0f / imp.getWidth();
 		ImageStack stackInfo = null;
 		ImagePlus impInfo = null;
@@ -203,11 +212,18 @@ public class SIFT_Align implements PlugIn, KeyListener
 					Math.round( vis_scale * stack.getWidth() ),
 					Math.round( vis_scale * stack.getHeight() ) );
 
-		final ImageProcessor firstSlice = stack.getProcessor( 1 );
-		stackAligned.addSlice( null, firstSlice.duplicate() );
-		stackAligned.getProcessor( 1 ).setMinAndMax( firstSlice.getMin(), firstSlice.getMax() );
-		final ImagePlus impAligned = new ImagePlus( "Aligned 1 of " + stack.getSize(), stackAligned );
-		impAligned.show();
+
+		for ( int ch_i = 0 ; ch_i < channels.length ; ch_i++) {
+			final ImageProcessor firstSlice = channels[ch_i].getStack().getProcessor( 1 );
+
+			stackAligned[ch_i].addSlice( null, firstSlice.duplicate() );
+			stackAligned[ch_i].getProcessor( 1 ).setMinAndMax( firstSlice.getMin(), firstSlice.getMax() );
+		}
+
+		final ImagePlus[] impAligned = new ImagePlus[channels.length];
+		for (int ch_i = 0 ; ch_i < channels.length ; ch_i++){
+			impAligned[ch_i] = new ImagePlus( "Aligned 1 of " + channels[ch_i].getStack().getSize(), stackAligned[ch_i]);
+		}
 
 		ImageProcessor ip1;
 		ImageProcessor ip2 = stack.getProcessor( 1 );
@@ -359,48 +375,64 @@ public class SIFT_Align implements PlugIn, KeyListener
 				{
 					IJ.log("Transformation Matrix: " + currentModel.createAffine() );
 				}
-			
+
 			}
 
-//			ImageProcessor alignedSlice = stack.getProcessor( i + 1 ).duplicate();
-			final ImageProcessor originalSlice = stack.getProcessor( i + 1 );
-			originalSlice.setInterpolationMethod( ImageProcessor.BILINEAR );
-			final ImageProcessor alignedSlice = originalSlice.createProcessor( stack.getWidth(), stack.getHeight() );
-			alignedSlice.setMinAndMax( originalSlice.getMin(), originalSlice.getMax() );
+			// for each channel apply the mapping and add to impAligned
+			for (int ch_i = 0 ; ch_i < channels.length ; ch_i++){
 
-			if ( p.interpolate )
-				mapping.mapInterpolated( originalSlice, alignedSlice );
-			else
-				mapping.map( originalSlice, alignedSlice );
+	//			ImageProcessor alignedSlice = stack.getProcessor( i + 1 ).duplicate();
+				final ImageProcessor originalSlice = channels[ch_i].getStack().getProcessor( i + 1 );
+				originalSlice.setInterpolationMethod( ImageProcessor.BILINEAR );
 
-			stackAligned.addSlice( null, alignedSlice );
-			if ( p.showInfo )
-			{
-				ImageProcessor tmp;
-				tmp = ip3.createProcessor( stackInfo.getWidth(), stackInfo.getHeight() );
-				tmp.insert( ip3, 0, 0 );
-				stackInfo.addSlice( null, tmp ); // fixing silly 1 pixel size missmatches
-				tmp = ip4.createProcessor( stackInfo.getWidth(), stackInfo.getHeight() );
-				tmp.insert( ip4, 0, 0 );
-				stackInfo.addSlice( null, tmp );
-				if ( i == 1 )
+				final ImageProcessor alignedSlice = originalSlice.createProcessor( channels[ch_i].getStack().getWidth(), channels[ch_i].getStack().getHeight() );
+				alignedSlice.setMinAndMax( originalSlice.getMin(), originalSlice.getMax() );
+
+				if ( p.interpolate )
+					mapping.mapInterpolated( originalSlice, alignedSlice );
+				else
+					mapping.map( originalSlice, alignedSlice );
+
+
+				stackAligned[ch_i].addSlice( null, alignedSlice );
+				if (( p.showInfo ) &&( ch_i == p.regChannel-1) ) // only for the channel used for the registration
 				{
-					impInfo = new ImagePlus( "Alignment info", stackInfo );
-					impInfo.show();
+					ImageProcessor tmp;
+					tmp = ip3.createProcessor( stackInfo.getWidth(), stackInfo.getHeight() );
+					tmp.insert( ip3, 0, 0 );
+					stackInfo.addSlice( null, tmp ); // fixing silly 1 pixel size missmatches
+					tmp = ip4.createProcessor( stackInfo.getWidth(), stackInfo.getHeight() );
+					tmp.insert( ip4, 0, 0 );
+					stackInfo.addSlice( null, tmp );
+					if ( i == 1 )
+					{
+						impInfo = new ImagePlus( "Alignment info", stackInfo );
+						impInfo.show();
+					}
+					impInfo.setStack( "Alignment info", stackInfo );
+					final int currentSlice = impInfo.getSlice();
+					impInfo.setSlice( stackInfo.getSize() );
+					impInfo.setSlice( currentSlice );
+					impInfo.updateAndDraw();
 				}
-				impInfo.setStack( "Alignment info", stackInfo );
-				final int currentSlice = impInfo.getSlice();
-				impInfo.setSlice( stackInfo.getSize() );
-				impInfo.setSlice( currentSlice );
-				impInfo.updateAndDraw();
+				impAligned[ch_i].setStack( "Aligned " + stackAligned[ch_i].getSize() + " of " + stack.getSize(), stackAligned[ch_i] );
+				final int currentSlice = impAligned[ch_i].getSlice();
+				impAligned[ch_i].setSlice( stack.getSize() );
+				impAligned[ch_i].setSlice( currentSlice );
+				impAligned[ch_i].updateAndDraw();
 			}
-			impAligned.setStack( "Aligned " + stackAligned.getSize() + " of " + stack.getSize(), stackAligned );
-			final int currentSlice = impAligned.getSlice();
-			impAligned.setSlice( stack.getSize() );
-			impAligned.setSlice( currentSlice );
-			impAligned.updateAndDraw();
+
 		}
 
+		// make the final
+		if (impAligned.length == 1 ){
+			impAligned[0].show();
+			impAligned[0].setTitle("Aligned_"+img_title);
+		} else {
+			ImagePlus theFinalAlignedimp = mergeChannels(impAligned, false);
+			theFinalAlignedimp.show();
+			theFinalAlignedimp.setTitle("Aligned_" + img_title);
+		}
 		IJ.log( "Done." );
 	}
 
