@@ -1,18 +1,18 @@
-import ij.IJ;
-import ij.ImagePlus;
-import ij.WindowManager;
-import ij.gui.GenericDialog;
-import ij.gui.PointRoi;
-import ij.gui.Roi;
-import ij.plugin.PlugIn;
-import ij.process.ImageProcessor;
-
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import ij.IJ;
+import ij.ImagePlus;
+import ij.WindowManager;
+import ij.gui.GenericDialog;
+import ij.gui.PointRoi;
+import ij.gui.Roi;
+import ij.gui.Toolbar;
+import ij.plugin.PlugIn;
+import ij.process.ImageProcessor;
 import mpicbg.ij.InverseTransformMapping;
 import mpicbg.ij.Mapping;
 import mpicbg.ij.TransformMeshMapping;
@@ -112,6 +112,9 @@ public class Transform_Roi implements PlugIn
 
 		final ImageProcessor ipSource = source.getProcessor();
 		final ImageProcessor ipTarget = source.getProcessor().createProcessor( template.getWidth(), template.getHeight() );
+		ipTarget.setColor(Toolbar.getBackgroundColor());
+		ipTarget.fill();
+		ipTarget.setColor(Toolbar.getBackgroundColor());
 
 		/* Collect the PointRois from both images and make PointMatches of them. */
 		final List< Point > sourcePoints = Util.pointRoiToPoints( ( PointRoi )source.getRoi() );
