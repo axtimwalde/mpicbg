@@ -65,24 +65,39 @@ public class SIFT extends FeatureTransform< FloatArray2DSIFT >
 	{
 		/* make sure that integer rounding does not result in an image of t.getMaxOctaveSize() + 1 */
 		final float maxSize = t.getMaxOctaveSize() - 1;
+
 		float scale = 1.0f;
 		FloatArray2D fa;
 		if ( maxSize < ip.getWidth() || maxSize < ip.getHeight() )
 		{
 			/* scale the image respectively */
 			scale = ( float )Math.min( maxSize / ip.getWidth(), maxSize / ip.getHeight() );
-			final FloatProcessor fp = ( FloatProcessor )ip.convertToFloat();
-			fp.setMinAndMax( ip.getMin(), ip.getMax() );
-			final FloatProcessor ipScaled = mpicbg.ij.util.Filter.createDownsampled( fp, scale, 0.5f, 0.5f );
-			fa = new FloatArray2D( ipScaled.getWidth(), ipScaled.getHeight() );
-			ImageArrayConverter.imageProcessorToFloatArray2DCropAndNormalize( ipScaled, fa );
+
+			// downsampling only works well with rather large scalings otherwise creates aliasing artifacts as
+			// the effective sigma for the gaussian convolution is too small to have an effect, resulting in a
+			// simple nearest-neighbor interpolation
+			if ( scale > 0.9 )
+			{
+				// take the image as-is
+				fa = new FloatArray2D( ip.getWidth(), ip.getHeight() );
+				ImageArrayConverter.imageProcessorToFloatArray2DCropAndNormalize( ip, fa );
+				scale = 1.0f;
+			}
+			else
+			{
+				final FloatProcessor fp = ( FloatProcessor )ip.convertToFloat();
+				fp.setMinAndMax( ip.getMin(), ip.getMax() );
+				final FloatProcessor ipScaled = mpicbg.ij.util.Filter.createDownsampled( fp, scale, 0.5f, 0.5f );
+				fa = new FloatArray2D( ipScaled.getWidth(), ipScaled.getHeight() );
+				ImageArrayConverter.imageProcessorToFloatArray2DCropAndNormalize( ipScaled, fa );
+			}
 		}
 		else
 		{
 			fa = new FloatArray2D( ip.getWidth(), ip.getHeight() );
 			ImageArrayConverter.imageProcessorToFloatArray2DCropAndNormalize( ip, fa );
 		}
-		
+
 		final float[] initialKernel;
 		
 		final float initialSigma = t.getInitialSigma();
