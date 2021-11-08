@@ -77,7 +77,7 @@
 	</modules>
 
 	<scm>
-		<connection>scm:git:git://github.com/axtimwalde/mpicbg</connection>
+		<connection>scm:git:https://github.com/axtimwalde/mpicbg</connection>
 		<developerConnection>scm:git:git@github.com:axtimwalde/mpicbg</developerConnection>
 		<tag>HEAD</tag>
 		<url>https://github.com/axtimwalde/mpicbg</url>
