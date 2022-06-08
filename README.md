@@ -2,4 +2,4 @@
 
 Fiji module for image transformation and related algorithms
 
-[![Build Status](https://app.travis-ci.com/axtimwalde/mpicbg.svg?branch=master)](https://app.travis-ci.com/axtimwalde/mpicbg)
+[![Build Status](https://app.github.com/axtimwalde/mpicbg/actions/workflows/build-main.yml/badge.svg)](https://github.com/axtimwalde/mpicbg/actions/workflows/build-main.yml)
