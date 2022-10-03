@@ -11,7 +11,7 @@
 
 	<groupId>mpicbg</groupId>
 	<artifactId>pom-mpicbg</artifactId>
-	<version>1.4.3-SNAPSHOT</version>
+	<version>1.5.0</version>
 	<packaging>pom</packaging>
 
 	<name>Aggregator project for Stephan Saalfeld's mpicbg library and plugin collection</name>
@@ -79,7 +79,7 @@
 	<scm>
 		<connection>scm:git:https://github.com/axtimwalde/mpicbg</connection>
 		<developerConnection>scm:git:git@github.com:axtimwalde/mpicbg</developerConnection>
-		<tag>HEAD</tag>
+		<tag>mpicbg-1.5.0</tag>
 		<url>https://github.com/axtimwalde/mpicbg</url>
 	</scm>
 	<issueManagement>
