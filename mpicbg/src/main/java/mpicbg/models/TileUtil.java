@@ -225,7 +225,7 @@ public class TileUtil
 				tc.updateErrors();
 				observer.add( tc.getError() );
 
-				IJ.log( i + ": " + observer.mean + " " + observer.max );
+				// IJ.log( i + ": " + observer.mean + " " + observer.max );
 
 				if ( i > maxPlateauwidth )
 				{
