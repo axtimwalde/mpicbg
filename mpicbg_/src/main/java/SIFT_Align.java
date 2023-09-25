@@ -195,7 +195,7 @@ public class SIFT_Align implements PlugIn, KeyListener
 					Math.round( vis_scale * stack.getHeight() ) );
 
 		final ImageProcessor firstSlice = stack.getProcessor( 1 );
-		stackAligned.addSlice( null, firstSlice.duplicate() );
+		stackAligned.addSlice( stack.getSliceLabel(1), firstSlice.duplicate() );
 		stackAligned.getProcessor( 1 ).setMinAndMax( firstSlice.getMin(), firstSlice.getMax() );
 		final ImagePlus impAligned = new ImagePlus( "Aligned 1 of " + stack.getSize(), stackAligned );
 		impAligned.show();
@@ -364,16 +364,17 @@ public class SIFT_Align implements PlugIn, KeyListener
 			else
 				mapping.map( originalSlice, alignedSlice );
 
-			stackAligned.addSlice( null, alignedSlice );
+			String sliceLabel = stack.getSliceLabel( i + 1 );
+			stackAligned.addSlice( sliceLabel, alignedSlice );
 			if ( p.showInfo )
 			{
 				ImageProcessor tmp;
 				tmp = ip3.createProcessor( stackInfo.getWidth(), stackInfo.getHeight() );
 				tmp.insert( ip3, 0, 0 );
-				stackInfo.addSlice( null, tmp ); // fixing silly 1 pixel size missmatches
+				stackInfo.addSlice( sliceLabel, tmp ); // fixing silly 1 pixel size missmatches
 				tmp = ip4.createProcessor( stackInfo.getWidth(), stackInfo.getHeight() );
 				tmp.insert( ip4, 0, 0 );
-				stackInfo.addSlice( null, tmp );
+				stackInfo.addSlice( sliceLabel, tmp );
 				if ( i == 1 )
 				{
 					impInfo = new ImagePlus( "Alignment info", stackInfo );
