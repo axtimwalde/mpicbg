@@ -26,6 +26,10 @@ public class ErrorStatistic
 	public double std = 0;		// standard-deviation
 	public double mean = 0;
 	private double median = 0;
+
+	private double squareDifferences = 0;
+	private double squares = 0;
+
 	public double getMedian()
 	{
 		Collections.sort( sortedValues );
@@ -45,21 +49,30 @@ public class ErrorStatistic
 	
 	final public void add( final double new_value )
 	{
-		if ( values.nextIndex() >= 1 ) slope.add( new_value - values.get( values.lastIndex() ) );
-		else slope.add( 0.0 );
-		mean = ( mean * values.nextIndex() + new_value );
-		values.add( new_value );
-		mean /= ( values.nextIndex() );
-		
-		var0 += new_value * new_value / ( double )( values.lastIndex() );
-		std0 = Math.sqrt( var0 );
-		
-		double tmp = new_value - mean;
-		var += tmp * tmp / ( double )( values.lastIndex() );
-		std = Math.sqrt( var );
-		
+		values.add(new_value);
 		sortedValues.add( new_value );
-		
+
+		if (values.lastIndex() == 0) {
+			slope.add(0.0);
+			mean = new_value;
+			var = 0.0;
+			var0 = 0.0;
+		} else {
+			slope.add(new_value - values.get(values.lastIndex()));
+
+			final double delta = new_value - mean;
+			mean += delta / values.nextIndex();
+
+			squareDifferences += delta * (new_value - mean);
+			var = squareDifferences / values.lastIndex();
+
+			squares += new_value * new_value;
+			var0 = squares / values.lastIndex();
+		}
+
+		std0 = Math.sqrt(var0);
+		std = Math.sqrt(var);
+
 		if ( new_value < min ) min = new_value;
 		if ( new_value > max ) max = new_value;
 	}
