@@ -35,9 +35,9 @@ final public class InterpolatedAffineModel1D<
 {
 	private static final long serialVersionUID = 2662227348414849267L;
 
-	final protected AffineModel1D affine = new AffineModel1D();
-	final protected double[] afs = new double[ 2 ];
-	final protected double[] bfs = new double[ 2 ];
+	private final AffineModel1D affine = new AffineModel1D();
+	private final double[] afs = new double[ 2 ];
+	private final double[] bfs = new double[ 2 ];
 
 	public InterpolatedAffineModel1D( final A model, final B regularizer, final double lambda )
 	{
