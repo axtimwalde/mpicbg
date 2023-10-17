@@ -109,9 +109,7 @@ final public class InterpolatedAffineModel2D<
 	@Override
 	public InterpolatedAffineModel2D< A, B > createInverse()
 	{
-		final InterpolatedAffineModel2D< A, B > inverse = new InterpolatedAffineModel2D< A, B >( a.createInverse(), b.createInverse(), lambda );
-		inverse.cost = cost;
-		return inverse;
+		throw creatingInverseNotSupportedException;
 	}
 
 	public AffineModel2D createAffineModel2D()

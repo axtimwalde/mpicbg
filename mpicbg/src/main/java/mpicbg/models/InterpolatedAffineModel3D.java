@@ -108,9 +108,7 @@ final public class InterpolatedAffineModel3D<
 	@Override
 	public InterpolatedAffineModel3D< A, B > createInverse()
 	{
-		final InterpolatedAffineModel3D< A, B > inverse = new InterpolatedAffineModel3D< A, B >( a.createInverse(), b.createInverse(), lambda );
-		inverse.cost = cost;
-		return inverse;
+		throw creatingInverseNotSupportedException;
 	}
 
 	public AffineModel3D createAffineModel3D()
