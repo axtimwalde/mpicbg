@@ -93,14 +93,6 @@ final public class InterpolatedAffineModel2D<
 	}
 
 	@Override
-	public double[] applyInverse( final double[] point ) throws NoninvertibleModelException
-	{
-		final double[] copy = point.clone();
-		applyInverseInPlace( copy );
-		return copy;
-	}
-
-	@Override
 	public void applyInverseInPlace( final double[] point ) throws NoninvertibleModelException
 	{
 		affine.applyInverseInPlace( point );
