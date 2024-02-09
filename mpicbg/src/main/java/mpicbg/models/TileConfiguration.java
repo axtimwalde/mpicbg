@@ -134,7 +134,7 @@ public class TileConfiguration implements Serializable
 	protected void apply(final ThreadPoolExecutor executor) {
 		final List<Tile<?>> allTiles = new ArrayList<>(tiles);
 		final int nTiles = allTiles.size();
-		final int nThreads = executor.getActiveCount();
+		final int nThreads = executor.getMaximumPoolSize();
 		final int tilesPerThread = nTiles / nThreads + (nTiles % nThreads == 0 ? 0 : 1);
 		final List<Future<Void>> applyTasks = new ArrayList<>(nThreads);
 
