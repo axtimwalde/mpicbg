@@ -215,20 +215,22 @@ public class TileUtil
 			final double damp
 	) throws NotEnoughDataPointsException, IllDefinedDataPointsException {
 		while (true) {
+			// the polled tile can only be null if the deque is empty, i.e., there is no more work
 			final Tile<?> tile = pendingTiles.pollFirst();
 			if (tile == null)
 				return null;
 
 			executingTiles.add(tile);
-			final boolean success = Collections.disjoint(tile.getConnectedTiles(), executingTiles);
+			final boolean canBeProcessed = Collections.disjoint(tile.getConnectedTiles(), executingTiles);
 
-			if (success) {
+			if (canBeProcessed) {
 				tile.fitModel();
 				tile.apply(damp);
+				executingTiles.remove(tile);
 			} else {
+				executingTiles.remove(tile);
 				pendingTiles.addLast(tile);
 			}
-			executingTiles.remove(tile);
 		}
 	}
 }
