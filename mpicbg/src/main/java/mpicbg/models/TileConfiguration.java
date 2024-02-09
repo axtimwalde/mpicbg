@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 
@@ -341,7 +340,7 @@ public class TileConfiguration implements Serializable
 			final double maxAllowedError,
 			final int maxIterations,
 			final int maxPlateauwidth,
-			final double damp ) throws NotEnoughDataPointsException, IllDefinedDataPointsException, InterruptedException, ExecutionException
+			final double damp ) throws InterruptedException, ExecutionException
 	{
 		TileUtil.optimizeConcurrently(observer, maxAllowedError, maxIterations, maxPlateauwidth, damp,
 				this, tiles, fixedTiles, Runtime.getRuntime().availableProcessors());

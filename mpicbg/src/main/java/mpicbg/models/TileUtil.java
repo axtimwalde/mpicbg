@@ -211,7 +211,7 @@ public class TileUtil
 					int d = maxPlateauwidth;
 					while (!proceed && d >= 1) {
 						try {
-							proceed |= Math.abs(observer.getWideSlope(d)) > 0.0001;
+							proceed = Math.abs(observer.getWideSlope(d)) > 0.0001;
 						} catch (final Exception e) {
 							e.printStackTrace();
 						}
