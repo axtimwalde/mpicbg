@@ -21,23 +21,24 @@ import ij.IJ;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  *
  *
  * @author Albert Cardona
  * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
+ * @author Michael Innerberger
  */
 public class TileUtil
 {
@@ -125,33 +126,22 @@ public class TileUtil
 			final int maxPlateauwidth,
 			final double damp,
 			final TileConfiguration tc,
-			final Set< Tile< ? > > tiles,
-			final Set< Tile< ? > > fixedTiles,
-			final int nThreads) throws InterruptedException, ExecutionException
-	{
-		final ThreadGroup tg = Thread.currentThread().getThreadGroup();
-		final ExecutorService exe = Executors.newFixedThreadPool(
-				nThreads,
-				new ThreadFactory() {
-					final AtomicInteger c = new AtomicInteger(0);
-					@Override
-					public Thread newThread(final Runnable r) {
-						final Thread t = new Thread(tg, r, "tile-fit-and-apply-" + c.incrementAndGet());
-						t.setPriority(Thread.NORM_PRIORITY);
-						return t;
-					}
-				});
+			final Set<Tile<?>> tiles,
+			final Set<Tile<?>> fixedTiles,
+			final int nThreads) {
+
+		final ExecutorService executor = Executors.newFixedThreadPool(nThreads);
 
 		try {
 
 			final long t0 = System.currentTimeMillis();
 
-			final ArrayList<Tile<?>> shuffledTiles = new ArrayList<Tile<?>>(tiles.size() - fixedTiles.size());
+			final List<Tile<?>> freeTiles = new ArrayList<>(tiles.size() - fixedTiles.size());
 			for (final Tile<?> t : tiles) {
 				if (fixedTiles.contains(t)) continue;
-				shuffledTiles.add(t);
+				freeTiles.add(t);
 			}
-			Collections.shuffle(shuffledTiles);
+			Collections.shuffle(freeTiles);
 
 
 			final long t1 = System.currentTimeMillis();
@@ -168,77 +158,41 @@ public class TileUtil
 
 			System.out.println("First apply took " + (t2 - t1) + " ms");
 
-			final LinkedHashMap<Tile<?>, Future<?>> executingTiles = new LinkedHashMap<Tile<?>, Future<?>>();
-			final LinkedList<Tile<?>> finishedTiles = new LinkedList<Tile<?>>();
+			final Set<Tile<?>> executingTiles = ConcurrentHashMap.newKeySet();
 
-			while ( proceed )
-			{
-				/*
-				for ( final Tile< ? > tile : tiles )
-				{
-					if ( fixedTiles.contains( tile ) ) continue;
-					tile.fitModel();
-					tile.apply();
+			while (proceed) {
+				Collections.shuffle(freeTiles);
+				final Deque<Tile<?>> pending = new ConcurrentLinkedDeque<>(freeTiles);
+				final List<Future<Void>> tasks = new ArrayList<>(nThreads);
+
+
+				for (int j = 0; j < nThreads; j++) {
+					tasks.add(executor.submit(() -> fitAndApplyWorker(pending, executingTiles, damp)));
 				}
-				*/
 
-				final LinkedList<Tile<?>> pending = new LinkedList<Tile<?>>(shuffledTiles);
-				Collections.shuffle(pending);
-
-				while (!pending.isEmpty()) {
-					final Tile<?> tile = pending.removeFirst();
-					if (intersects(tile.getConnectedTiles(), executingTiles.keySet())) {
-						pending.addLast(tile);
-					} else {
-						executingTiles.put(tile, exe.submit(new Runnable() {
-							@Override
-							public void run() {
-								try {
-									tile.fitModel();
-									tile.apply( damp );
-								} catch (final Exception e) {
-									throw new RuntimeException(e);
-								} finally {
-									synchronized (finishedTiles) {
-										finishedTiles.add(tile);
-									}
-								}
-							}
-						}));
-					}
-
-					// Wait until a group of active tasks finishes (or all of them if there are no any pending tiles)
-					if (pending.isEmpty() || executingTiles.size() > nThreads * 4) {
-						final Iterator<Future<?>> futuresIterator = executingTiles.values().iterator();
-						for (int processed = 0; processed < (pending.isEmpty() ? executingTiles.size() : nThreads); ++processed) {
-							futuresIterator.next().get();
-						}
-					}
-					// Process finished tasks which could have thrown an exception
-					synchronized (finishedTiles) {
-						while (!finishedTiles.isEmpty()) {
-							executingTiles.remove(finishedTiles.removeFirst()).get();
-						}
+				for (final Future<Void> task : tasks) {
+					try {
+						task.get();
+					} catch (final InterruptedException | ExecutionException e) {
+						throw new RuntimeException(e);
 					}
 				}
 
 				tc.updateErrors();
-				observer.add( tc.getError() );
+				observer.add(tc.getError());
 
-				// IJ.log( i + ": " + observer.mean + " " + observer.max );
+				IJ.log(i + ": " + observer.mean + " " + observer.max);
 
-				if ( i > maxPlateauwidth )
-				{
+				if (i > maxPlateauwidth) {
 					proceed = tc.getError() > maxAllowedError;
 
 					int d = maxPlateauwidth;
-					while ( !proceed && d >= 1 )
-					{
-						try
-						{
-							proceed |= Math.abs( observer.getWideSlope( d ) ) > 0.0001;
+					while (!proceed && d >= 1) {
+						try {
+							proceed |= Math.abs(observer.getWideSlope(d)) > 0.0001;
+						} catch (final Exception e) {
+							e.printStackTrace();
 						}
-						catch ( final Exception e ) { e.printStackTrace(); }
 						d /= 2;
 					}
 				}
@@ -251,23 +205,30 @@ public class TileUtil
 			System.out.println("Concurrent tile optimization loop took " + (t3 - t2) + " ms, total took " + (t3 - t0) + " ms");
 
 		} finally {
-			exe.shutdownNow();
+			executor.shutdownNow();
 		}
 	}
 
-	/** Whether {@param a} and {@param b} have any element in common. */
-	private static boolean intersects(final Set<Tile<?>> a, final Set<Tile<?>> b) {
-		final Set<Tile<?>> large, small;
-		if (a.size() > b.size()) {
-			large = a;
-			small = b;
-		} else {
-			large = b;
-			small = a;
+	private static Void fitAndApplyWorker(
+			final Deque<Tile<?>> pendingTiles,
+			final Set<Tile<?>> executingTiles,
+			final double damp
+	) throws NotEnoughDataPointsException, IllDefinedDataPointsException {
+		while (true) {
+			final Tile<?> tile = pendingTiles.pollFirst();
+			if (tile == null)
+				return null;
+
+			executingTiles.add(tile);
+			final boolean success = Collections.disjoint(tile.getConnectedTiles(), executingTiles);
+
+			if (success) {
+				tile.fitModel();
+				tile.apply(damp);
+			} else {
+				pendingTiles.addLast(tile);
+			}
+			executingTiles.remove(tile);
 		}
-		for (final Tile<?> t : small) {
-			if (large.contains(t)) return true;
-		}
-		return false;
 	}
 }
