@@ -167,7 +167,8 @@ public class TileUtil
 
 
 				for (int j = 0; j < nThreads; j++) {
-					tasks.add(executor.submit(() -> fitAndApplyWorker(pending, executingTiles, damp)));
+					final boolean cleanUp = (j == 0);
+					tasks.add(executor.submit(() -> fitAndApplyWorker(pending, executingTiles, damp, cleanUp)));
 				}
 
 				for (final Future<Void> task : tasks) {
@@ -212,9 +213,12 @@ public class TileUtil
 	private static Void fitAndApplyWorker(
 			final Deque<Tile<?>> pendingTiles,
 			final Set<Tile<?>> executingTiles,
-			final double damp
+			final double damp,
+			final boolean cleanUp
 	) throws NotEnoughDataPointsException, IllDefinedDataPointsException {
-		while (true) {
+
+		final int n = pendingTiles.size();
+		for (int i = 0; (i < n) || cleanUp; i++){
 			// the polled tile can only be null if the deque is empty, i.e., there is no more work
 			final Tile<?> tile = pendingTiles.pollFirst();
 			if (tile == null)
@@ -232,5 +236,6 @@ public class TileUtil
 				pendingTiles.addLast(tile);
 			}
 		}
+		return null;
 	}
 }
