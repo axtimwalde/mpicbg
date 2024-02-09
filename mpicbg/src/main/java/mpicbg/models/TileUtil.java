@@ -174,7 +174,7 @@ public class TileUtil
 					}
 				}
 
-				tc.updateErrors();
+				tc.updateErrors(executor);
 				observer.add(tc.getError());
 
 				IJ.log(i + ": " + observer.mean + " " + observer.max);
