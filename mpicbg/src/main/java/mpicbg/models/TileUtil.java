@@ -29,9 +29,9 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  *
@@ -130,10 +130,10 @@ public class TileUtil
 			final Set<Tile<?>> fixedTiles,
 			final int nThreads) {
 
-		final ExecutorService executor = Executors.newFixedThreadPool(nThreads);
+		// only ThreadPoolExecutors know how many threads are currently running
+		final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(nThreads);
 
 		try {
-
 			final long t0 = System.currentTimeMillis();
 
 			final List<Tile<?>> freeTiles = new ArrayList<>(tiles.size() - fixedTiles.size());
@@ -143,28 +143,23 @@ public class TileUtil
 			}
 			Collections.shuffle(freeTiles);
 
-
 			final long t1 = System.currentTimeMillis();
 			System.out.println("Shuffling took " + (t1 - t0) + " ms");
 
-			int i = 0;
-
-			boolean proceed = i < maxIterations;
-
 			/* initialize the configuration with the current model of each tile */
-			tc.apply();
+			tc.apply(executor);
 
 			final long t2 = System.currentTimeMillis();
-
 			System.out.println("First apply took " + (t2 - t1) + " ms");
 
+			int i = 0;
+			boolean proceed = i < maxIterations;
 			final Set<Tile<?>> executingTiles = ConcurrentHashMap.newKeySet();
 
 			while (proceed) {
 				Collections.shuffle(freeTiles);
 				final Deque<Tile<?>> pending = new ConcurrentLinkedDeque<>(freeTiles);
 				final List<Future<Void>> tasks = new ArrayList<>(nThreads);
-
 
 				for (int j = 0; j < nThreads; j++) {
 					final boolean cleanUp = (j == 0);
