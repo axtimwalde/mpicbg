@@ -119,7 +119,7 @@ public class TileUtil
 		};
 	}
 
-	static public final void optimizeConcurrently(
+	static public void optimizeConcurrently(
 			final ErrorStatistic observer,
 			final double maxAllowedError,
 			final int maxIterations,
@@ -129,6 +129,30 @@ public class TileUtil
 			final Set<Tile<?>> tiles,
 			final Set<Tile<?>> fixedTiles,
 			final int nThreads) {
+
+		optimizeConcurrently(observer,
+							 maxAllowedError,
+							 maxIterations,
+							 maxPlateauwidth,
+							 damp,
+							 tc,
+							 tiles,
+							 fixedTiles,
+							 nThreads,
+							 false);
+	}
+
+	static public void optimizeConcurrently(
+			final ErrorStatistic observer,
+			final double maxAllowedError,
+			final int maxIterations,
+			final int maxPlateauwidth,
+			final double damp,
+			final TileConfiguration tc,
+			final Set<Tile<?>> tiles,
+			final Set<Tile<?>> fixedTiles,
+			final int nThreads,
+			final boolean verbose) {
 
 		// only ThreadPoolExecutors know how many threads are currently running
 		final ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(nThreads);
@@ -177,7 +201,9 @@ public class TileUtil
 				tc.updateErrors(executor);
 				observer.add(tc.getError());
 
-				IJ.log(i + ": " + observer.mean + " " + observer.max);
+				if (verbose) {
+					IJ.log(i + ": " + tc.getError() + " " + observer.max);
+				}
 
 				if (i > maxPlateauwidth) {
 					proceed = tc.getError() > maxAllowedError;
