@@ -19,6 +19,8 @@ package mpicbg.models;
 import java.awt.geom.AffineTransform;
 import java.util.Collection;
 
+import mpicbg.util.Util;
+
 /**
  * 2d-affine transformation models to be applied to points in 2d-space.
  * This model includes the closed form weighted least squares solution as
@@ -118,6 +120,20 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 			final double[] w )
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
+		fit( p, q, w, 0 );
+	}
+
+	/**
+	 * Closed form weighted least squares solution as described by
+	 * \citet{SchaeferAl06}.
+	 */
+	final public void fit(
+			final double[][] p,
+			final double[][] q,
+			final double[] w,
+			final double epsilon )
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException
+	{
 		assert
 			p.length >= 2 &&
 			q.length >= 2 : "2d affine transformations can be applied to 2d points only.";
@@ -183,7 +199,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 
 		final double det = a00 * a11 - a01 * a01;
 
-		if ( det == 0 )
+		if ( Util.isApproxEqual( det, 0, epsilon ) )
 			throw new IllDefinedDataPointsException();
 
 		m00 = ( a11 * b00 - a01 * b10 ) / det;
@@ -206,6 +222,20 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 			final float[][] p,
 			final float[][] q,
 			final float[] w )
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException
+	{
+		fit( p, q, w, 0 );
+	}
+
+	/**
+	 * Closed form weighted least squares solution as described by
+	 * \citet{SchaeferAl06}.
+	 */
+	final public void fit(
+			final float[][] p,
+			final float[][] q,
+			final float[] w,
+			final float epsilon )
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
 		assert
@@ -273,7 +303,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 
 		final double det = a00 * a11 - a01 * a01;
 
-		if ( det == 0 )
+		if ( Util.isApproxEqual( det, 0, epsilon ) )
 			throw new IllDefinedDataPointsException();
 
 		m00 = ( a11 * b00 - a01 * b10 ) / det;
@@ -293,6 +323,16 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 	 */
 	@Override
 	final public < P extends PointMatch >void fit( final Collection< P > matches )
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException
+	{
+		fit( matches, 0 );
+	}
+
+	/**
+	 * Closed form weighted least squares solution as described by
+	 * \citet{SchaeferAl06}.
+	 */
+	final public < P extends PointMatch >void fit( final Collection< P > matches, final double epsilon )
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
 		if ( matches.size() < MIN_NUM_MATCHES )
@@ -343,7 +383,7 @@ public class AffineModel2D extends AbstractAffineModel2D< AffineModel2D >
 
 		final double det = a00 * a11 - a01 * a01;
 
-		if ( det == 0 )
+		if ( Util.isApproxEqual( det, 0, epsilon ) )
 			throw new IllDefinedDataPointsException();
 
 		m00 = ( a11 * b00 - a01 * b10 ) / det;

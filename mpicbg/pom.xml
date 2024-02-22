@@ -157,5 +157,12 @@
 			<groupId>gov.nist.math</groupId>
 			<artifactId>jama</artifactId>
 		</dependency>
+
+		<!-- Test dependencies -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 </project>
