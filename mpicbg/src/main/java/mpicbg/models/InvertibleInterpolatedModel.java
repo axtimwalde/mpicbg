@@ -20,6 +20,11 @@ package mpicbg.models;
 /**
  * Invertible specialization of {@link InterpolatedModel}.
  *
+ * For invertible matrices A and B, the interpolated model l*A + (1-l)*B does not have to be invertible. In particular,
+ * the inverse can never be expressed in terms of A^{-1} and B^{-1}, in general.
+ * However, in some cases, the action of the inverse on a point can be computed. Subclasses have to provide this
+ * behavior as {@link #applyInverseInPlace(double[])}, but should never implement {@link #createInverse()}.
+ *
  * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
  */
 public class InvertibleInterpolatedModel<
@@ -28,6 +33,9 @@ public class InvertibleInterpolatedModel<
 		M extends InvertibleInterpolatedModel< A, B, M > > extends InterpolatedModel< A, B, M > implements InvertibleCoordinateTransform
 {
 	private static final long serialVersionUID = -1800786784345843623L;
+	protected static final RuntimeException creatingInverseNotSupportedException = new UnsupportedOperationException(
+			"Inverse of an InterpolatedModel cannot be expressed in terms of InterpolatedModel. " +
+			"Use applyInverse[InPlace] instead.");
 
 	public InvertibleInterpolatedModel( final A a, final B b, final double lambda )
 	{
@@ -54,22 +62,13 @@ public class InvertibleInterpolatedModel<
 	@Override
 	public void applyInverseInPlace( final double[] point ) throws NoninvertibleModelException
 	{
-		final double[] copy = b.applyInverse( point );
-		a.applyInverseInPlace( point );
-
-		for ( int d = 0; d < point.length; ++d )
-		{
-			final double dd = copy[ d ] - point[ d ];
-			point[ d ] += lambda * dd;
-		}
+		throw new UnsupportedOperationException("Inverse cannot be applied for general interpolated models. " +
+														"Subclasses should implement this behavior if suitable.");
 	}
 
 	@Override
 	public InvertibleCoordinateTransform createInverse()
 	{
-		@SuppressWarnings( "unchecked" )
-		final InvertibleInterpolatedModel< A, B, M > inverse = new InvertibleInterpolatedModel< A, B, M >( ( A )a.createInverse(), ( B )b.createInverse(), lambda );
-		inverse.cost = cost;
-		return inverse;
+		throw creatingInverseNotSupportedException;
 	}
 }

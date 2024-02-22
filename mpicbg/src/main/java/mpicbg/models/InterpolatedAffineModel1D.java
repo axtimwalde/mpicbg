@@ -35,9 +35,9 @@ final public class InterpolatedAffineModel1D<
 {
 	private static final long serialVersionUID = 2662227348414849267L;
 
-	final protected AffineModel1D affine = new AffineModel1D();
-	final protected double[] afs = new double[ 2 ];
-	final protected double[] bfs = new double[ 2 ];
+	private final AffineModel1D affine = new AffineModel1D();
+	private final double[] afs = new double[ 2 ];
+	private final double[] bfs = new double[ 2 ];
 
 	public InterpolatedAffineModel1D( final A model, final B regularizer, final double lambda )
 	{
@@ -92,14 +92,6 @@ final public class InterpolatedAffineModel1D<
 	}
 
 	@Override
-	public double[] applyInverse( final double[] point ) throws NoninvertibleModelException
-	{
-		final double[] copy = point.clone();
-		applyInverseInPlace( copy );
-		return copy;
-	}
-
-	@Override
 	public void applyInverseInPlace( final double[] point ) throws NoninvertibleModelException
 	{
 		affine.applyInverseInPlace( point );
@@ -108,9 +100,7 @@ final public class InterpolatedAffineModel1D<
 	@Override
 	public InterpolatedAffineModel1D< A, B > createInverse()
 	{
-		final InterpolatedAffineModel1D< A, B > inverse = new InterpolatedAffineModel1D< A, B >( a.createInverse(), b.createInverse(), lambda );
-		inverse.cost = cost;
-		return inverse;
+		throw creatingInverseNotSupportedException;
 	}
 
 	public AffineModel1D createAffineModel1D()
