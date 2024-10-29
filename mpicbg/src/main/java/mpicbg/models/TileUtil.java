@@ -249,9 +249,13 @@ public class TileUtil
 			final boolean canBeProcessed = Collections.disjoint(tile.getConnectedTiles(), executingTiles);
 
 			if (canBeProcessed) {
-				tile.fitModel();
-				tile.apply(damp);
-				executingTiles.remove(tile);
+				try {
+					tile.fitModel();
+					tile.apply(damp);
+				} finally {
+					// clean up if there was an exception, otherwise this can cause a deadlock
+					executingTiles.remove(tile);
+				}
 			} else {
 				executingTiles.remove(tile);
 				pendingTiles.addLast(tile);
