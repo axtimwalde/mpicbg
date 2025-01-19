@@ -62,7 +62,7 @@ public class Feature implements Comparable< Feature >, Serializable
 	@Override
 	final public int compareTo( final Feature f )
 	{
-		return scale < f.scale ? 1 : scale == f.scale ? 0 : -1;
+		return Double.compare(f.scale, scale);
 	}
 
 	final public double descriptorDistance( final Feature f )
@@ -85,11 +85,11 @@ public class Feature implements Comparable< Feature >, Serializable
 	 *
 	 * @return matches
 	 */
-	final static public int matchFeatures(
-			final List< Feature > fs1,
-			final List< Feature > fs2,
-			final List< PointMatch > matches,
-			final double rod )
+	static public int matchFeatures(
+			final List<Feature> fs1,
+			final List<Feature> fs2,
+			final List<PointMatch> matches,
+			final double rod)
 	{
 		for ( final Feature f1 : fs1 )
 		{
