@@ -68,11 +68,24 @@ public class Feature implements Comparable< Feature >, Serializable
 	final public double descriptorDistance( final Feature f )
 	{
 		double d = 0;
-		for ( int i = 0; i < descriptor.length; ++i )
-		{
-			final double a = descriptor[ i ] - f.descriptor[ i ];
+
+		// Unroll the loop to speed up the distance calculation
+		// Feature descriptor lengths are like divisible by 4
+		final int unrolledLength = descriptor.length - 3;
+		int i = 0;
+		for (; i < unrolledLength; i += 4) {
+			final double a0 = descriptor[i] - f.descriptor[i];
+			final double a1 = descriptor[i + 1] - f.descriptor[i + 1];
+			final double a2 = descriptor[i + 2] - f.descriptor[i + 2];
+			final double a3 = descriptor[i + 3] - f.descriptor[i + 3];
+			d += a0 * a0 + a1 * a1 + a2 * a2 + a3 * a3;
+		}
+
+		for (; i < descriptor.length; ++i) {
+			final double a = descriptor[i] - f.descriptor[i];
 			d += a * a;
 		}
+
 		return Math.sqrt( d );
 	}
 
