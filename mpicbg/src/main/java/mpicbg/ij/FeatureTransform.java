@@ -5,8 +5,8 @@ import ij.process.ImageProcessor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Consumer;
 
-import mpicbg.ij.util.FeatureKdTree;
 import mpicbg.imagefeatures.Feature;
 import mpicbg.imagefeatures.FloatArray2D;
 import mpicbg.imagefeatures.FloatArray2DFeatureTransform;
@@ -71,7 +71,7 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 	{
 		for ( final Feature f1 : fs1 )
 		{
-			final FeatureKdTree.Accumulator accumulator = new FeatureKdTree.Accumulator(f1);
+			final Accumulator accumulator = new Accumulator(f1);
 			for (final Feature f2 : fs2) {
 				accumulator.accept(f2);
 			}
@@ -104,6 +104,40 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 			if ( amb )
 				matches.remove( i );
 			else ++i;
+		}
+	}
+
+
+	private static class Accumulator implements Consumer<Feature> {
+		private final Feature target;
+
+		private Feature currentClosest = null;
+		private double bestDistance = Double.MAX_VALUE;
+		private double secondBestDistance = Double.MAX_VALUE;
+
+		public Accumulator(Feature target) {
+			this.target = target;
+		}
+
+		@Override
+		public void accept(Feature feature) {
+			final double d = target.descriptorDistance(feature);
+
+			if (d < bestDistance) {
+				secondBestDistance = bestDistance;
+				bestDistance = d;
+				currentClosest = feature;
+			} else if (d < secondBestDistance) {
+				secondBestDistance = d;
+			}
+		}
+
+		public Feature getClosestChecked(double maxRatioOfDistances) {
+			if (secondBestDistance < Double.MAX_VALUE && bestDistance / secondBestDistance < maxRatioOfDistances) {
+				return currentClosest;
+			} else {
+				return null;
+			}
 		}
 	}
 }
