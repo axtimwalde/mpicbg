@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import mpicbg.ij.util.FeatureKdTree;
 import mpicbg.imagefeatures.Feature;
 import mpicbg.imagefeatures.FloatArray2D;
 import mpicbg.imagefeatures.FloatArray2DFeatureTransform;
@@ -70,29 +71,17 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 	{
 		for ( final Feature f1 : fs1 )
 		{
-			Feature best = null;
-			double best_d = Double.MAX_VALUE;
-			double second_best_d = Double.MAX_VALUE;
-
-			for ( final Feature f2 : fs2 )
-			{
-				final double d = f1.descriptorDistance( f2 );
-				if ( d < best_d )
-				{
-					second_best_d = best_d;
-					best_d = d;
-					best = f2;
-				}
-				else if ( d < second_best_d )
-					second_best_d = d;
+			final FeatureKdTree.Accumulator accumulator = new FeatureKdTree.Accumulator(f1);
+			for (final Feature f2 : fs2) {
+				accumulator.accept(f2);
 			}
-			if ( best != null && second_best_d < Double.MAX_VALUE && best_d / second_best_d < rod )
-				matches.add(
-						new PointMatch(
-								new Point(
-										new double[] { f1.location[ 0 ], f1.location[ 1 ] } ),
-								new Point(
-										new double[] { best.location[ 0 ], best.location[ 1 ] } ) ) );
+
+			final Feature best = accumulator.getClosestChecked(rod);
+			if (best != null) {
+				final Point p1 = new Point(new double[]{f1.location[0], f1.location[1]});
+				final Point p2 = new Point(new double[]{best.location[0], best.location[1]});
+				matches.add(new PointMatch(p1, p2));
+			}
 		}
 
 		// now remove ambiguous matches
