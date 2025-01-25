@@ -17,8 +17,10 @@
 package mpicbg.imagefeatures;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 
+import mpicbg.ij.FeatureTransform;
 import mpicbg.models.InverseCoordinateTransform;
 import mpicbg.models.Point;
 import mpicbg.models.PointMatch;
@@ -91,67 +93,23 @@ public class Feature implements Comparable< Feature >, Serializable
 
 	/**
 	 * Identify corresponding features
+	 * Deprecated: Use {@link FeatureTransform#matchFeatures(Collection, Collection, List, float)} instead.
 	 *
 	 * @param fs1 feature collection from set 1
 	 * @param fs2 feature collection from set 2
+	 * @param matches collects the matching coordinates
 	 * @param rod Ratio of distances (closest/next closest match)
 	 *
-	 * @return matches
+	 * @return Number of matches
 	 */
+	@Deprecated
 	static public int matchFeatures(
 			final List<Feature> fs1,
 			final List<Feature> fs2,
 			final List<PointMatch> matches,
 			final double rod)
 	{
-		for ( final Feature f1 : fs1 )
-		{
-			Feature best = null;
-			double best_d = Double.MAX_VALUE;
-			double second_best_d = Double.MAX_VALUE;
-
-			for ( final Feature f2 : fs2 )
-			{
-				final double d = f1.descriptorDistance( f2 );
-				if ( d < best_d )
-				{
-					second_best_d = best_d;
-					best_d = d;
-					best = f2;
-				}
-				else if ( d < second_best_d )
-					second_best_d = d;
-			}
-			if ( best != null && second_best_d < Double.MAX_VALUE && best_d / second_best_d < rod )
-				matches.add(
-						new PointMatch(
-								new Point(
-										new double[] { f1.location[ 0 ], f1.location[ 1 ] } ),
-								new Point(
-										new double[] { best.location[ 0 ], best.location[ 1 ] } ) ) );
-		}
-
-		// now remove ambiguous matches
-		for ( int i = 0; i < matches.size(); )
-		{
-			boolean amb = false;
-			final PointMatch m = matches.get( i );
-			final double[] m_p2 = m.getP2().getL();
-			for ( int j = i + 1; j < matches.size(); )
-			{
-				final PointMatch n = matches.get( j );
-				final double[] n_p2 = n.getP2().getL();
-				if ( m_p2[ 0 ] == n_p2[ 0 ] && m_p2[ 1 ] == n_p2[ 1 ] )
-				{
-					amb = true;
-					matches.remove( j );
-				}
-				else ++j;
-			}
-			if ( amb )
-				matches.remove( i );
-			else ++i;
-		}
+		FeatureTransform.matchFeatures(fs1, fs2, matches, (float)rod);
 		return matches.size();
 	}
 }
