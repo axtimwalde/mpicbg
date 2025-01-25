@@ -244,7 +244,7 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 			this.root = buildTree(features, 0);
 		}
 
-		private Node buildTree(Collection<Feature> features, int depth) {
+		private static Node buildTree(Collection<Feature> features, int depth) {
 			if (features.isEmpty()) {
 				return null;
 			}
@@ -306,7 +306,7 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 			}
 		}
 
-		private double locationDistanceSquared(Feature a, Feature b) {
+		private static double locationDistanceSquared(Feature a, Feature b) {
 			final double dx = a.location[0] - b.location[0];
 			final double dy = a.location[1] - b.location[1];
 			return dx * dx + dy * dy;
