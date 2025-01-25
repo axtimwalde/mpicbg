@@ -71,7 +71,7 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 	{
 		for ( final Feature f1 : fs1 )
 		{
-			final Accumulator accumulator = new Accumulator(f1);
+			final FeatureAccumulator accumulator = new FeatureAccumulator(f1);
 			for (final Feature f2 : fs2) {
 				accumulator.accept(f2);
 			}
@@ -108,14 +108,14 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 	}
 
 
-	private static class Accumulator implements Consumer<Feature> {
+	private static class FeatureAccumulator implements Consumer<Feature> {
 		private final Feature target;
 
 		private Feature currentClosest = null;
 		private double bestDistance = Double.MAX_VALUE;
 		private double secondBestDistance = Double.MAX_VALUE;
 
-		public Accumulator(Feature target) {
+		public FeatureAccumulator(Feature target) {
 			this.target = target;
 		}
 
