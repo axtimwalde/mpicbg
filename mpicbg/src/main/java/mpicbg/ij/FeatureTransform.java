@@ -4,6 +4,7 @@ import ij.process.ImageProcessor;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -71,8 +72,7 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 	{
 		final NearestNeighborSearch neighborSearch = new BruteForceSearch(fs2);
 
-		for ( final Feature f1 : fs1 )
-		{
+		for (final Feature f1 : fs1) {
 			final FeatureAccumulator accumulator = neighborSearch.findFor(f1);
 			final Feature best = accumulator.getClosestChecked(rod);
 
@@ -83,26 +83,38 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 			}
 		}
 
-		// now remove ambiguous matches
-		for ( int i = 0; i < matches.size(); )
-		{
-			boolean amb = false;
-			final PointMatch m = matches.get( i );
+		removeAmbiguousMatches(matches);
+	}
+
+	/**
+	 * Remove ambiguous matches from a list of matches. A match is ambiguous if a point shows up more than once as the
+	 * target of a match (i.e., the second point in the match).
+	 *
+	 * @param matches list of matches (will be modified in place)
+	 */
+	public static void removeAmbiguousMatches(List<PointMatch> matches) {
+		for (int i = 0; i < matches.size(); ) {
+			boolean isAmbiguous = false;
+			final PointMatch m = matches.get(i);
 			final double[] m_p2 = m.getP2().getL();
-			for ( int j = i + 1; j < matches.size(); )
-			{
-				final PointMatch n = matches.get( j );
+
+			for (int j = i + 1; j < matches.size(); ) {
+				final PointMatch n = matches.get(j);
 				final double[] n_p2 = n.getP2().getL();
-				if ( m_p2[ 0 ] == n_p2[ 0 ] && m_p2[ 1 ] == n_p2[ 1 ] )
-				{
-					amb = true;
-					matches.remove( j );
+
+				if (m_p2[0] == n_p2[0] && m_p2[1] == n_p2[1]) {
+					isAmbiguous = true;
+					matches.remove(j);
+				} else {
+					++j;
 				}
-				else ++j;
 			}
-			if ( amb )
-				matches.remove( i );
-			else ++i;
+
+			if (isAmbiguous) {
+				matches.remove(i);
+			} else {
+				++i;
+			}
 		}
 	}
 
