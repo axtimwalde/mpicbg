@@ -69,14 +69,13 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 			final List< PointMatch > matches,
 			final float rod )
 	{
+		final NearestNeighborSearch neighborSearch = new BruteForceSearch(fs2);
+
 		for ( final Feature f1 : fs1 )
 		{
-			final FeatureAccumulator accumulator = new FeatureAccumulator(f1);
-			for (final Feature f2 : fs2) {
-				accumulator.accept(f2);
-			}
-
+			final FeatureAccumulator accumulator = neighborSearch.findFor(f1);
 			final Feature best = accumulator.getClosestChecked(rod);
+
 			if (best != null) {
 				final Point p1 = new Point(new double[]{f1.location[0], f1.location[1]});
 				final Point p2 = new Point(new double[]{best.location[0], best.location[1]});
@@ -138,6 +137,25 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 			} else {
 				return null;
 			}
+		}
+	}
+
+	private interface NearestNeighborSearch {
+		FeatureAccumulator findFor(Feature f);
+	}
+
+	private static class BruteForceSearch implements NearestNeighborSearch {
+		private final Collection<Feature> features;
+
+		public BruteForceSearch(Collection<Feature> features) {
+			this.features = features;
+		}
+
+		@Override
+		public FeatureAccumulator findFor(Feature f) {
+			final FeatureAccumulator acc = new FeatureAccumulator(f);
+			features.forEach(acc);
+			return acc;
 		}
 	}
 }
