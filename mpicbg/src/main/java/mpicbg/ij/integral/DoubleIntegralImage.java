@@ -51,6 +51,7 @@ final public class DoubleIntegralImage implements IntegralImage
 	final private int height;
 	
 	final private int w;
+	final private int h;
 	final private int w1;
 
 	final private double[] sum;
@@ -62,37 +63,32 @@ final public class DoubleIntegralImage implements IntegralImage
 		
 		w = width + 1;
 		w1 = w + 1;
-		
-		final int w2 = w + w;
+		h = height + 1;
 		
 		final int n = w * height + w;
-		final int n1 = n - w1;
-		final int n2 = n1 - w + 2;
-		
 		sum = new double[ n ];
 
 		/* rows */
-		for ( int i = 0, j = w1; j < n; ++j )
-		{
-			final int end = i + width;
-			double s = sum[ j ] = pixels[ i ];
-			for ( ++i, ++j; i < end; ++i, ++j )
-			{
-				s += pixels[ i ];
-				sum[ j ] = s;
+		for (int j = 1; j < h; ++j) {
+			double rowSum = 0;
+			final int offset = (j - 1) * width;
+			final int offsetSum = j * w + 1;
+
+			for (int i = 0; i < width; ++i) {
+				rowSum += pixels[offset + i];
+				sum[offsetSum + i] = rowSum;
 			}
 		}
-		
+
 		/* columns */
-		for ( int j = w1; j < w2; j -= n1 )
-		{
-			final int end = j + n2;
-			
-			double s = sum[ j ];
-			for ( j += w; j < end; j += w )
-			{
-				s += sum[ j ];
-				sum[ j ] = s;
+		final double[] columnSum = new double[width];
+		for (int j = 1; j < w; ++j) {
+			final int offset = j * w + 1;
+
+			for (int i = 0; i < height; ++i) {
+				final int index = offset + i;
+				columnSum[i] += sum[index];
+				sum[index] = columnSum[i];
 			}
 		}
 	}
@@ -112,6 +108,7 @@ final public class DoubleIntegralImage implements IntegralImage
 		
 		w = width + 1;
 		w1 = w + 1;
+		h = height + 1;
 
 		this.sum = sum;
 	}
@@ -129,6 +126,7 @@ final public class DoubleIntegralImage implements IntegralImage
 
 		w = width + 1;
 		w1 = w + 1;
+		h = height + 1;
 		
 		final int w2 = w + w;
 		
