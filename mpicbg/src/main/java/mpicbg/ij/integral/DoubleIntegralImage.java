@@ -163,16 +163,16 @@ final public class DoubleIntegralImage implements IntegralImage
 	}
 	
 	@Override
-	final public int getWidth() { return width; }
+	public int getWidth() { return width; }
 	@Override
-	final public int getHeight() { return height; }
+	public int getHeight() { return height; }
 	
-	final public double getDoubleSum( final int x, final int y )
+	public double getDoubleSum( final int x, final int y )
 	{
 		return sum[ y * w + w1 + x ];
 	}
 	
-	final public double getDoubleSum( final int xMin, final int yMin, final int xMax, final int yMax )
+	public double getDoubleSum( final int xMin, final int yMin, final int xMax, final int yMax )
 	{
 		final int y1w = yMin * w + w1;
 		final int y2w = yMax * w + w1;
@@ -180,25 +180,25 @@ final public class DoubleIntegralImage implements IntegralImage
 	}
 
 	@Override
-	final public int getSum( final int xMin, final int yMin, final int xMax, final int yMax )
+	public int getSum( final int xMin, final int yMin, final int xMax, final int yMax )
 	{
 		return Float.floatToIntBits( ( float )getDoubleSum( xMin, yMin, xMax, yMax ) );
 	}
 	
 	@Override
-	final public int getScaledSum( final int xMin, final int yMin, final int xMax, final int yMax, final float scale )
+	public int getScaledSum( final int xMin, final int yMin, final int xMax, final int yMax, final float scale )
 	{
 		final int y1w = yMin * w + w1;
 		final int y2w = yMax * w + w1;
 		return Float.floatToIntBits( ( float )( sum[ y1w + xMin ] + sum[ y2w + xMax ] - sum[ y1w + xMax ] - sum[ y2w + xMin ] ) * scale );
 	}
 	
-	final double[] getData()
+	double[] getData()
 	{
 		return sum;
 	}
 	
-	final public FloatProcessor toProcessor()
+	public FloatProcessor toProcessor()
 	{
 		final float[] pixels = new float[ width * height ];
 		for ( int y = 0; y < height; ++y )
