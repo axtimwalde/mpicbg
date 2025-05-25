@@ -41,21 +41,22 @@ import ij.process.ColorProcessor;
 import mpicbg.util.Util;
 
 /**
- * 
+ * A 2d integral image (summed-area table) that allows for fast computation of
+ * the sum of pixel values in a rectangular area.
  *
  * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  */
 final public class LongRGBIntegralImage implements IntegralImage
 {
-	final protected int width;
-	final protected int height;
+	final private int width;
+	final private int height;
 
-	final protected int w;
-	final protected int w1;
+	final private int w;
+	final private int w1;
 
-	final protected long[] sumR;
-	final protected long[] sumG;
-	final protected long[] sumB;
+	final private long[] sumR;
+	final private long[] sumG;
+	final private long[] sumB;
 	
 	LongRGBIntegralImage( final int[] pixels, final int width, final int height )
 	{
@@ -64,60 +65,50 @@ final public class LongRGBIntegralImage implements IntegralImage
 		
 		w = width + 1;
 		w1 = w + 1;
-		
-		final int w2 = w + w;
-		
-		final int n = w * height + w;
-		final int n1 = n - w1;
-		final int n2 = n1 - w + 2;
-		
+		final int h = height + 1;
+		final int n = w * h;
+
 		sumR = new long[ n ];
 		sumG = new long[ n ];
 		sumB = new long[ n ];
 
 		/* rows */
-		for ( int i = 0, j = w1; j < n; ++j )
-		{
-			final int end = i + width;
-			
-			int rgb = pixels[ i ];
-			
-			long sR = sumR[ j ] = ( rgb >> 16 ) & 0xff;;
-			long sG = sumG[ j ] = ( rgb >> 8 ) & 0xff;
-			long sB = sumB[ j ] = rgb & 0xff;
-			
-			for ( ++i, ++j; i < end; ++i, ++j )
-			{
-				rgb = pixels[ i ];
-				
-				sR += ( rgb >> 16 ) & 0xff;;
-				sG += ( rgb >> 8 ) & 0xff;
-				sB += rgb & 0xff;
-				
-				sumR[ j ] = sR;
-				sumG[ j ] = sG;
-				sumB[ j ] = sB;
+		for (int j = 1; j < h; ++j) {
+			long rowSumR = 0;
+			long rowSumG = 0;
+			long rowSumB = 0;
+			final int offset = (j - 1) * width;
+			final int offsetSum = j * w + 1;
+
+			for (int i = 0; i < width; ++i) {
+				final int rgb = pixels[offset + i];
+
+				rowSumR += ( rgb >> 16 ) & 0xff;
+				rowSumG += ( rgb >> 8 ) & 0xff;
+				rowSumB += rgb & 0xff;
+
+				sumR[offsetSum + i] = rowSumR;
+				sumG[offsetSum + i] = rowSumG;
+				sumB[offsetSum + i] = rowSumB;
 			}
 		}
-		
+
 		/* columns */
-		for ( int j = w1; j < w2; j -= n1 )
-		{
-			final int end = j + n2;
-			
-			long sR = sumR[ j ];
-			long sG = sumG[ j ];
-			long sB = sumB[ j ];
-			
-			for ( j += w; j < end; j += w )
-			{
-				sR += sumR[ j ];
-				sG += sumG[ j ];
-				sB += sumB[ j ];
-				
-				sumR[ j ] = sR;
-				sumG[ j ] = sG;
-				sumB[ j ] = sB;
+		final long[] columnSumR = new long[width];
+		final long[] columnSumG = new long[width];
+		final long[] columnSumB = new long[width];
+		for (int j = 1; j < w; ++j) {
+			final int offset = j * w + 1;
+
+			for (int i = 0; i < height; ++i) {
+				final int index = offset + i;
+
+				columnSumR[i] += sumR[index];
+				sumR[index] = columnSumR[i];
+				columnSumG[i] += sumG[index];
+				sumG[index] = columnSumG[i];
+				columnSumB[i] += sumB[index];
+				sumB[index] = columnSumB[i];
 			}
 		}
 	}
@@ -129,9 +120,9 @@ final public class LongRGBIntegralImage implements IntegralImage
 	
 	
 	@Override
-	final public int getWidth() { return width; }
+	public int getWidth() { return width; }
 	@Override
-	final public int getHeight() { return height; }
+	public int getHeight() { return height; }
 	
 
 	/**
@@ -142,7 +133,7 @@ final public class LongRGBIntegralImage implements IntegralImage
 	 * @param y
 	 * @param sums
 	 */
-	final public void longSums( final long[] sums, final int x, final int y )
+	public void longSums( final long[] sums, final int x, final int y )
 	{
 		final int i = y * w + w1 + x;
 		
@@ -162,7 +153,7 @@ final public class LongRGBIntegralImage implements IntegralImage
 	 * @param yMax
 	 * @param sums
 	 */
-	final public void longSums( final long[] sums, final int xMin, final int yMin, final int xMax, final int yMax )
+	public void longSums( final long[] sums, final int xMin, final int yMin, final int xMax, final int yMax )
 	{
 		final int y1w = yMin * w + w1;
 		final int y2w = yMax * w + w1;
@@ -178,7 +169,7 @@ final public class LongRGBIntegralImage implements IntegralImage
 	
 	
 	@Override
-	final public int getSum( final int xMin, final int yMin, final int xMax, final int yMax )
+	public int getSum( final int xMin, final int yMin, final int xMax, final int yMax )
 	{
 		final int y1w = yMin * w + w1;
 		final int y2w = yMax * w + w1;
@@ -195,7 +186,7 @@ final public class LongRGBIntegralImage implements IntegralImage
 	}
 	
 	@Override
-	final public int getScaledSum( final int xMin, final int yMin, final int xMax, final int yMax, final float scale )
+	public int getScaledSum( final int xMin, final int yMin, final int xMax, final int yMax, final float scale )
 	{
 		final int y1w = yMin * w + w1;
 		final int y2w = yMax * w + w1;
