@@ -60,7 +60,7 @@ final public class BlockPMCC
 	
 	private int fpXYWidth, fpXYHeight, offsetXX, offsetYX, offsetXY, offsetYY;
 	
-	final static private void sumAndSumOfSquares(
+	static private void sumAndSumOfSquares(
 			final FloatProcessor fp,
 			final double[] sum,
 			final double[] sumOfSquares )
@@ -110,7 +110,7 @@ final public class BlockPMCC
 		}
 	}
 	
-	final static private void sumAndSumOfSquares(
+	static private void sumAndSumOfSquares(
 			final int width,
 			final int height,
 			final FloatProcessor fp1,
@@ -259,8 +259,8 @@ final public class BlockPMCC
 		final int heightX = fpX.getHeight();
 		final int widthY = fpY.getWidth();
 		final int heightY = fpY.getHeight();
-		final int widthXY = widthX < widthY ? widthX : widthY;
-		final int heightXY = heightX < heightY ? heightX : heightY;
+		final int widthXY = Math.min(widthX, widthY);
+		final int heightXY = Math.min(heightX, heightY);
 		
 		fpR = new FloatProcessor( widthY, heightY );
 		
@@ -301,7 +301,7 @@ final public class BlockPMCC
 	}
 	
 	
-	final public FloatProcessor getTargetProcessor()
+	public FloatProcessor getTargetProcessor()
 	{
 		return fpR;
 	}
@@ -313,7 +313,7 @@ final public class BlockPMCC
 	 * @param offsetX
 	 * @param offsetY
 	 */
-	final public void setOffset( final int offsetX, final int offsetY )
+	public void setOffset( final int offsetX, final int offsetY )
 	{
 		/* TODO simple and stupid first, fast later if it works! */
 		
@@ -335,7 +335,7 @@ final public class BlockPMCC
 			a = fpX.getWidth();
 			b = fpY.getWidth() - offsetX;
 		}
-		fpXYWidth = ( a < b ? a : b );
+		fpXYWidth = Math.min(a, b);
 		
 		if ( offsetY < 0 )
 		{
@@ -351,7 +351,7 @@ final public class BlockPMCC
 			a = fpX.getHeight();
 			b = fpY.getHeight() - offsetY;
 		}
-		fpXYHeight = ( a < b ? a : b );
+		fpXYHeight = Math.min(a, b);
 		
 		
 		/* first row */
@@ -410,7 +410,7 @@ final public class BlockPMCC
 	 * @param blockRadiusX
 	 * @param blockRadiusY
 	 */
-	final public void r( final int blockRadiusX, final int blockRadiusY )
+	public void r( final int blockRadiusX, final int blockRadiusY )
 	{
 		final int width = fpR.getWidth();
 		final int w = fpXYWidth - 1;
@@ -455,7 +455,7 @@ final public class BlockPMCC
 	}
 
 	
-	final public void r( final int blockRadius )
+	public void r( final int blockRadius )
 	{
 		r( blockRadius, blockRadius );
 	}
@@ -469,7 +469,7 @@ final public class BlockPMCC
 	 * @param blockRadiusX
 	 * @param blockRadiusY
 	 */
-	final public void rSignedSquare( final int blockRadiusX, final int blockRadiusY )
+	public void rSignedSquare( final int blockRadiusX, final int blockRadiusY )
 	{
 		final int width = fpR.getWidth();
 		final int w = fpXYWidth - 1;
@@ -516,7 +516,7 @@ final public class BlockPMCC
 		}
 	}
 	
-	final public void rSignedSquare( final int blockRadius )
+	public void rSignedSquare( final int blockRadius )
 	{
 		rSignedSquare( blockRadius, blockRadius );
 	}

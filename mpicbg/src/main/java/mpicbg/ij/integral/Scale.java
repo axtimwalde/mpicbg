@@ -77,12 +77,12 @@ final public class Scale
 		integral = new DoubleIntegralImage( ip );
 	}
 	
-	final static private int round( final double a )
+	static private int round( final double a )
 	{
 		return ( int )( a + Math.signum( a ) * 0.5f );
 	}
 	
-	final public ImageProcessor scale( final int width, final int height )
+	public ImageProcessor scale( final int width, final int height )
 	{
 		final int w = width - 1;
 		final int h = height - 1;
@@ -96,14 +96,14 @@ final public class Scale
 		
 		for ( int y = 0; y < height; ++y )
 		{
-			final int yi = width * Math.min( h, Math.max( 0, y ) );
+			final int yi = width * Math.min(h, y);
 			final double yMinDouble = y * pixelHeight;
 			final int yMin = Math.min( hh, Math.max( -1, round( yMinDouble ) - 1 ) );
 			final int yMax = Math.max( -1, Math.min( hh, round( yMinDouble + pixelHeight - 1 ) ) );
 			final int bh = yMax - yMin;
 			for ( int x = 0; x < width; ++x )
 			{
-				final int xi = Math.min( w, Math.max( 0, x ) );
+				final int xi = Math.min(w, x);
 				final double xMinDouble = x * pixelWidth;
 				final int xMin = Math.min( ww, Math.max( -1, round( xMinDouble ) - 1 ) );
 				final int xMax = Math.min( ww, Math.max( -1, round( xMinDouble + pixelWidth - 1 ) ) );
@@ -115,7 +115,7 @@ final public class Scale
 		return target;
 	}
 	
-	final public ImageProcessor scale( final double scale )
+	public ImageProcessor scale( final double scale )
 	{
 		final int width = round( ip.getWidth() * scale );
 		final int height = round( ip.getHeight() * scale );
@@ -132,15 +132,15 @@ final public class Scale
 	 * @param ip
 	 * @return
 	 */
-	final static public Scale create( final ImageProcessor ip )
+	static public Scale create( final ImageProcessor ip )
 	{
-		if ( FloatProcessor.class.isInstance( ip ) )
+		if (ip instanceof FloatProcessor)
 			return new Scale( ( FloatProcessor )ip );
-		else if ( ByteProcessor.class.isInstance( ip ) )
+		else if (ip instanceof ByteProcessor)
 			return new Scale( ( ByteProcessor )ip );
-		else if ( ShortProcessor.class.isInstance( ip ) )
+		else if (ip instanceof ShortProcessor)
 			return new Scale( ( ShortProcessor )ip );
-		else if ( ColorProcessor.class.isInstance( ip ) )
+		else if (ip instanceof ColorProcessor)
 			return new Scale( ( ColorProcessor )ip );
 		else
 			return null;

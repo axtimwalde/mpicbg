@@ -148,7 +148,7 @@ public class BlockStatistics
 		}
 	}
 	
-	final static protected void integrateColumns(
+	static protected void integrateColumns(
 			final int w1,
 			final int w2,
 			final int n1,
@@ -305,7 +305,7 @@ public class BlockStatistics
 //				final float scale = 1.0f / ( xMax - xMin ) / bh;
 //				final double sum = sums.getDoubleSum( xMin, yMin, xMax, yMax );
 //				final double var = scale * ( sumsOfSquares.getDoubleSum( xMin, yMin, xMax, yMax ) - sum * sum * scale );
-				final long bs = ( xMax - xMin ) * bh;
+				final double bs = ( xMax - xMin ) * bh;
 				final double scale1 = 1.0 / ( bs - 1 );
 				final double scale2 = 1.0 / ( bs * bs - bs );
 				final double sum = sums.getDoubleSum( xMin, yMin, xMax, yMax );
@@ -350,7 +350,7 @@ public class BlockStatistics
 			{
 				final int xMin = Math.max( -1, x - blockRadiusX - 1 );
 				final int xMax = Math.min( w, x + blockRadiusX );
-				final long bs = ( xMax - xMin ) * bh;
+				final double bs = ( xMax - xMin ) * bh;
 				final double scale1 = 1.0 / ( bs - 1 );
 				final double scale2 = 1.0 / ( bs * bs - bs );
 				final double sum = sums.getDoubleSum( xMin, yMin, xMax, yMax );

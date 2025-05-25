@@ -77,7 +77,7 @@ final public class Mean
 		integral = new DoubleIntegralImage( ip );
 	}
 	
-	final public void mean( final int blockRadiusX, final int blockRadiusY )
+	public void mean( final int blockRadiusX, final int blockRadiusY )
 	{
 		final int w = ip.getWidth() - 1;
 		final int h = ip.getHeight() - 1;
@@ -96,7 +96,7 @@ final public class Mean
 		}
 	}
 	
-	final public void mean( final int blockRadius )
+	public void mean( final int blockRadius )
 	{
 		mean( blockRadius, blockRadius );
 	}
@@ -110,15 +110,15 @@ final public class Mean
 	 * @param ip
 	 * @return
 	 */
-	final static public Mean create( final ImageProcessor ip )
+	static public Mean create( final ImageProcessor ip )
 	{
-		if ( FloatProcessor.class.isInstance( ip ) )
+		if (ip instanceof FloatProcessor)
 			return new Mean( ( FloatProcessor )ip );
-		else if ( ByteProcessor.class.isInstance( ip ) )
+		else if (ip instanceof ByteProcessor)
 			return new Mean( ( ByteProcessor )ip );
-		else if ( ShortProcessor.class.isInstance( ip ) )
+		else if (ip instanceof ShortProcessor)
 			return new Mean( ( ShortProcessor )ip );
-		else if ( ColorProcessor.class.isInstance( ip ) )
+		else if (ip instanceof ColorProcessor)
 			return new Mean( ( ColorProcessor )ip );
 		else
 			return null;
