@@ -69,43 +69,36 @@ final public class BlockPMCC
 		final int height = fp.getHeight();
 		
 		final int w = width + 1;
-		final int w1 = w + 1;
-		final int w2 = w + w;
-		
-		final int n = w * height + w;
-		final int n1 = n - w1;
-		final int n2 = n1 - w + 2;
-		
+		final int h = height + 1;
+
 		/* rows */
-		for ( int i = 0, j = w1; j < n; ++j )
-		{
-			final int end = i + width;
-			double s = sum[ j ] = fp.getf( i );
-			double ss = sumOfSquares[ j ] = s * s;
-			for ( ++i, ++j; i < end; ++i, ++j )
-			{
-				final float a = fp.getf( i );
-				s += a;
-				ss += a * a;
-				sum[ j ] = s;
-				sumOfSquares[ j ] = ss;
+		for (int j = 1; j < h; ++j) {
+			double rowSum = 0;
+			double rowSumOfSquares = 0;
+			final int offset = (j - 1) * width;
+			final int offsetSum = j * w + 1;
+
+			for (int i = 0; i < width; ++i) {
+				final float a = fp.getf(offset + i);
+				rowSum += a;
+				sum[offsetSum + i] = rowSum;
+				rowSumOfSquares += a * a;
+				sumOfSquares[offsetSum + i] = rowSumOfSquares;
 			}
 		}
-		
+
 		/* columns */
-		for ( int j = w1; j < w2; j -= n1 )
-		{
-			final int end = j + n2;
-			
-			double s = sum[ j ];
-			double ss = sumOfSquares[ j ];
-			for ( j += w; j < end; j += w )
-			{
-				s += sum[ j ];
-				ss += sumOfSquares[ j ];
-				
-				sum[ j ] = s;
-				sumOfSquares[ j ] = ss;
+		final double[] columnSum = new double[width];
+		final double[] columnSumOfSquares = new double[width];
+		for (int j = 1; j < w; ++j) {
+			final int offset = j * w + 1;
+
+			for (int i = 0; i < height; ++i) {
+				final int index = offset + i;
+				columnSum[i] += sum[index];
+				sum[index] = columnSum[i];
+				columnSumOfSquares[i] += sumOfSquares[index];
+				sumOfSquares[index] = columnSumOfSquares[i];
 			}
 		}
 	}
@@ -121,57 +114,51 @@ final public class BlockPMCC
 			final double[] sumOfSquares2 )
 	{
 		final int w = width + 1;
-		final int w1 = w + 1;
-		final int w2 = w + w;
-		
-		final int n = w * height + w;
-		final int n1 = n - w1;
-		final int n2 = n1 - w + 2;
-		
+		final int h = height + 1;
+
 		/* rows */
-		for ( int i = 0, j = w1; j < n; ++j )
-		{
-			final int end = i + width;
-			double s1 = sum1[ j ] = fp1.getf( i );
-			double ss1 = sumOfSquares1[ j ] = s1 * s1;
-			double s2 = sum2[ j ] = fp2.getf( i );
-			double ss2 = sumOfSquares2[ j ] = s2 * s2;
-			for ( ++i, ++j; i < end; ++i, ++j )
-			{
-				final float a1 = fp1.getf( i );
-				s1 += a1;
-				ss1 += a1 * a1;
-				sum1[ j ] = s1;
-				sumOfSquares1[ j ] = ss1;
-				
-				final float a2 = fp2.getf( i );
-				s2 += a2;
-				ss2 += a2 * a2;
-				sum2[ j ] = s2;
-				sumOfSquares2[ j ] = ss2;
+		for (int j = 1; j < h; ++j) {
+			double rowSum1 = 0;
+			double rowSumOfSquares1 = 0;
+			double rowSum2 = 0;
+			double rowSumOfSquares2 = 0;
+			final int offset = (j - 1) * width;
+			final int offsetSum = j * w + 1;
+
+			for (int i = 0; i < width; ++i) {
+				final float a = fp1.getf(offset + i);
+				rowSum1 += a;
+				sum1[offsetSum + i] = rowSum1;
+				rowSumOfSquares1 += a * a;
+				sumOfSquares1[offsetSum + i] = rowSumOfSquares1;
+
+				final float b = fp2.getf(offset + i);
+				rowSum2 += b;
+				sum2[offsetSum + i] = rowSum2;
+				rowSumOfSquares2 += b * b;
+				sumOfSquares2[offsetSum + i] = rowSumOfSquares2;
 			}
 		}
-		
+
 		/* columns */
-		for ( int j = w1; j < w2; j -= n1 )
-		{
-			final int end = j + n2;
-			
-			double s1 = sum1[ j ];
-			double ss1 = sumOfSquares1[ j ];
-			double s2 = sum2[ j ];
-			double ss2 = sumOfSquares2[ j ];
-			for ( j += w; j < end; j += w )
-			{
-				s1 += sum1[ j ];
-				ss1 += sumOfSquares1[ j ];
-				s2 += sum2[ j ];
-				ss2 += sumOfSquares2[ j ];
-				
-				sum1[ j ] = s1;
-				sumOfSquares1[ j ] = ss1;
-				sum2[ j ] = s2;
-				sumOfSquares2[ j ] = ss2;
+		final double[] columnSum1 = new double[width];
+		final double[] columnSumOfSquares1 = new double[width];
+		final double[] columnSum2 = new double[width];
+		final double[] columnSumOfSquares2 = new double[width];
+		for (int j = 1; j < w; ++j) {
+			final int offset = j * w + 1;
+
+			for (int i = 0; i < height; ++i) {
+				final int index = offset + i;
+				columnSum1[i] += sum1[index];
+				sum1[index] = columnSum1[i];
+				columnSumOfSquares1[i] += sumOfSquares1[index];
+				sumOfSquares1[index] = columnSumOfSquares1[i];
+
+				columnSum2[i] += sum2[index];
+				sum2[index] = columnSum2[i];
+				columnSumOfSquares2[i] += sumOfSquares2[index];
+				sumOfSquares2[index] = columnSumOfSquares2[i];
 			}
 		}
 	}
@@ -182,7 +169,7 @@ final public class BlockPMCC
 	 * 
 	 * <p>Note, that this constructor does not initialize &Sigma;XY.  That has
 	 * to be done for a specified offset through {@link #setOffset(int, int)}
-	 * afterwards.</p>
+	 * afterward.</p>
 	 * 
 	 * @param width
 	 * @param height
@@ -245,7 +232,7 @@ final public class BlockPMCC
 	 * 
 	 * <p>Note, that this constructor does not initialize &Sigma;XY.  That has
 	 * to be done for a specified offset through {@link #setOffset(int, int)}
-	 * afterwards.</p>
+	 * afterward.</p>
 	 * 
 	 * @param fpX
 	 * @param fpY

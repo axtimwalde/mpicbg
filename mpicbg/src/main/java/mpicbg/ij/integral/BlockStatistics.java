@@ -56,7 +56,11 @@ public class BlockStatistics
 	final protected DoubleIntegralImage sums;
 	final protected DoubleIntegralImage sumsOfSquares;
 	final protected FloatProcessor fp;
-	
+
+	/**
+	 * Deprecated: use {@link #integrateRows(int, int, double[], double[])} instead.
+	 */
+	@Deprecated
 	final protected class RowIntegrator extends Thread
 	{
 		final protected double[] sum;
@@ -101,28 +105,32 @@ public class BlockStatistics
 	}
 	
 	final protected void integrateRows(
-			final int w1,
-			final int n,
-			final int width,
+			final int w,
+			final int h,
 			final double[] sum,
 			final double[] sumOfSquares )
 	{
-		for ( int i = 0, j = w1; j < n; ++j )
-		{
-			final int end = i + width;
-			double s = sum[ j ] = fp.getf( i );
-			double ss = sumOfSquares[ j ] = s * s;
-			for ( ++i, ++j; i < end; ++i, ++j )
-			{
-				final float a = fp.getf( i );
-				s += a;
-				ss += a * a;
-				sum[ j ] = s;
-				sumOfSquares[ j ] = ss;
+		final int width = w - 1;
+		for (int j = 1; j < h; ++j) {
+			double rowSum = 0;
+			double rowSumOfSquares = 0;
+			final int offset = (j - 1) * width;
+			final int offsetSum = j * w + 1;
+
+			for (int i = 0; i < width; ++i) {
+				final float a = fp.getf(offset + i);
+				rowSum += a;
+				sum[offsetSum + i] = rowSum;
+				rowSumOfSquares += a * a;
+				sumOfSquares[offsetSum + i] = rowSumOfSquares;
 			}
 		}
 	}
-	
+
+	/**
+	 * Deprecated: use {@link #integrateRows(int, int, double[], double[])} instead.
+	 */
+	@Deprecated
 	final protected void integrateRowsParallel(
 			final int w1,
 			final int n,
@@ -149,27 +157,24 @@ public class BlockStatistics
 	}
 	
 	static protected void integrateColumns(
-			final int w1,
-			final int w2,
-			final int n1,
-			final int n2,
+			final int w,
+			final int h,
 			final double[] sum,
-			final double[] sumOfSquares,
-			final int w )
+			final double[] sumOfSquares )
 	{
-		for ( int j = w1; j < w2; j -= n1 )
-		{
-			final int end = j + n2;
-			
-			double s = sum[ j ];
-			double ss = sumOfSquares[ j ];
-			for ( j += w; j < end; j += w )
-			{
-				s += sum[ j ];
-				ss += sumOfSquares[ j ];
-				
-				sum[ j ] = s;
-				sumOfSquares[ j ] = ss;
+		final int width = w - 1;
+		final int height = h - 1;
+		final double[] columnSum = new double[width];
+		final double[] columnSumOfSquares = new double[width];
+		for (int j = 1; j < w; ++j) {
+			final int offset = j * w + 1;
+
+			for (int i = 0; i < height; ++i) {
+				final int index = offset + i;
+				columnSum[i] += sum[index];
+				sum[index] = columnSum[i];
+				columnSumOfSquares[i] += sumOfSquares[index];
+				sumOfSquares[index] = columnSumOfSquares[i];
 			}
 		}
 	}
@@ -182,21 +187,17 @@ public class BlockStatistics
 		final int height = fp.getHeight();
 		
 		final int w = width + 1;
-		final int w1 = w + 1;
-		final int w2 = w + w;
-		
-		final int n = w * height + w;
-		final int n1 = n - w1;
-		final int n2 = n1 - w + 2;
-		
+		final int h = height + 1;
+		final int n = w * h;
+
 		final double[] sum = new double[ n ];
 		final double[] sumOfSquares = new double[ n ];
 		
 		/* rows */
-		integrateRows( w1, n, width, sum, sumOfSquares );
+		integrateRows( w, h, sum, sumOfSquares );
 		
 		/* columns */
-		integrateColumns( w1, w2, n1, n2, sum, sumOfSquares, w );
+		integrateColumns( w, h, sum, sumOfSquares );
 		
 		sums = new DoubleIntegralImage( sum, width, height );
 		sumsOfSquares = new DoubleIntegralImage( sumOfSquares, width, height );
