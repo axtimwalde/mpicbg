@@ -42,6 +42,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
+import mpicbg.ij.FeatureTransform;
 import mpicbg.models.AbstractModel;
 import mpicbg.models.Point;
 import mpicbg.models.PointMatch;
@@ -517,61 +518,8 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 			final List< Feature > fs2,
 			final float rod )
 	{
-		final List< PointMatch > matches = new ArrayList< PointMatch >();
-
-		for ( final Feature f1 : fs1 )
-		{
-			Feature best = null;
-			double best_d = Double.MAX_VALUE;
-			double second_best_d = Double.MAX_VALUE;
-
-			for ( final Feature f2 : fs2 )
-			{
-				final double d = f1.descriptorDistance( f2 );
-				//System.out.println( d );
-				if ( d < best_d )
-				{
-					second_best_d = best_d;
-					best_d = d;
-					best = f2;
-				}
-				else if ( d < second_best_d )
-					second_best_d = d;
-			}
-			if ( best != null && second_best_d < Double.MAX_VALUE && best_d / second_best_d < rod )
-			//if ( best != null )
-				matches.add(
-						new PointMatch(
-								new Point(
-										new double[] { f1.location[ 0 ], f1.location[ 1 ] } ),
-								new Point(
-										new double[] { best.location[ 0 ], best.location[ 1 ] } ),
-								( f1.scale + best.scale ) / 2.0f ) );
-//			else
-//				System.out.println( "No match found." );
-		}
-
-		// now remove ambiguous matches
-		for ( int i = 0; i < matches.size(); )
-		{
-			boolean amb = false;
-			final PointMatch m = matches.get( i );
-			final double[] m_p2 = m.getP2().getL();
-			for ( int j = i + 1; j < matches.size(); )
-			{
-				final PointMatch n = matches.get( j );
-				final double[] n_p2 = n.getP2().getL();
-				if ( m_p2[ 0 ] == n_p2[ 0 ] && m_p2[ 1 ] == n_p2[ 1 ] )
-				{
-					amb = true;
-					matches.remove( j );
-				}
-				else ++j;
-			}
-			if ( amb )
-				matches.remove( i );
-			else ++i;
-		}
+		final List<PointMatch> matches = new ArrayList<>();
+		FeatureTransform.matchFeatures(fs1, fs2, matches, rod);
 		return matches;
 	}
 
@@ -743,31 +691,8 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 										new double[] { best.location[ 0 ], best.location[ 1 ] } ),
 								( f1.scale + best.scale ) / 2.0f ) );
 		}
-		// now remove ambiguous matches
-		for ( int i = 0; i < matches.size(); )
-		{
-			boolean amb = false;
-			final PointMatch m = matches.get( i );
-			final double[] m_p2 = m.getP2().getL();
-			for ( int j = i + 1; j < matches.size(); )
-			{
-				final PointMatch n = matches.get( j );
-				final double[] n_p2 = n.getP2().getL();
-				if ( m_p2[ 0 ] == n_p2[ 0 ] && m_p2[ 1 ] == n_p2[ 1 ] )
-				{
-					amb = true;
-					//System.out.println( "removing ambiguous match at " + j );
-					matches.remove( j );
-				}
-				else ++j;
-			}
-			if ( amb )
-			{
-				//System.out.println( "removing ambiguous match at " + i );
-				matches.remove( i );
-			}
-			else ++i;
-		}
+
+		FeatureTransform.removeAmbiguousMatches(matches);
 		return matches;
 	}
 
