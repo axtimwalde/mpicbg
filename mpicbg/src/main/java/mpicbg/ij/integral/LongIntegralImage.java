@@ -62,7 +62,7 @@ final public class LongIntegralImage implements IntegralImage
 	final private int w;
 	final private int w1;
 
-	final protected long[] sum;
+	final private long[] sum;
 	
 	LongIntegralImage( final int[] pixels, final int width, final int height )
 	{
@@ -71,37 +71,32 @@ final public class LongIntegralImage implements IntegralImage
 		
 		w = width + 1;
 		w1 = w + 1;
-		
-		final int w2 = w + w;
-		
-		final int n = w * height + w;
-		final int n1 = n - w1;
-		final int n2 = n1 - w + 2;
-		
+		final int h = height + 1;
+		final int n = w * h;
+
 		sum = new long[ n ];
 
 		/* rows */
-		for ( int i = 0, j = w1; j < n; ++j )
-		{
-			final int end = i + width;
-			long s = sum[ j ] = pixels[ i ];
-			for ( ++i, ++j; i < end; ++i, ++j )
-			{
-				s += pixels[ i ];
-				sum[ j ] = s;
+		for (int j = 1; j < h; ++j) {
+			long rowSum = 0;
+			final int offset = (j - 1) * width;
+			final int offsetSum = j * w + 1;
+
+			for (int i = 0; i < width; ++i) {
+				rowSum += pixels[offset + i];
+				sum[offsetSum + i] = rowSum;
 			}
 		}
-		
+
 		/* columns */
-		for ( int j = w1; j < w2; j -= n1 )
-		{
-			final int end = j + n2;
-			
-			long s = sum[ j ];
-			for ( j += w; j < end; j += w )
-			{
-				s += sum[ j ];
-				sum[ j ] = s;
+		final long[] columnSum = new long[width];
+		for (int j = 1; j < w; ++j) {
+			final int offset = j * w + 1;
+
+			for (int i = 0; i < height; ++i) {
+				final int index = offset + i;
+				columnSum[i] += sum[index];
+				sum[index] = columnSum[i];
 			}
 		}
 	}
@@ -131,52 +126,47 @@ final public class LongIntegralImage implements IntegralImage
 
 		w = width + 1;
 		w1 = w + 1;
-		
-		final int w2 = w + w;
-		
-		final int n = w * height + w;
-		final int n1 = n - w1;
-		final int n2 = n1 - w + 2;
-		
+		final int h = height + 1;
+		final int n = w * h;
+
 		sum = new long[ n ];
 
 		/* rows */
-		for ( int i = 0, j = w1; j < n; ++j )
-		{
-			final int end = i + width;
-			long s = sum[ j ] = ip.get( i );
-			for ( ++i, ++j; i < end; ++i, ++j )
-			{
-				s += ip.get( i );
-				sum[ j ] = s;
+		for (int j = 1; j < h; ++j) {
+			long rowSum = 0;
+			final int offset = (j - 1) * width;
+			final int offsetSum = j * w + 1;
+
+			for (int i = 0; i < width; ++i) {
+				rowSum += ip.get(offset + i);
+				sum[offsetSum + i] = rowSum;
 			}
 		}
-		
+
 		/* columns */
-		for ( int j = w1; j < w2; j -= n1 )
-		{
-			final int end = j + n2;
-			
-			long s = sum[ j ];
-			for ( j += w; j < end; j += w )
-			{
-				s += sum[ j ];
-				sum[ j ] = s;
+		final long[] columnSum = new long[width];
+		for (int j = 1; j < w; ++j) {
+			final int offset = j * w + 1;
+
+			for (int i = 0; i < height; ++i) {
+				final int index = offset + i;
+				columnSum[i] += sum[index];
+				sum[index] = columnSum[i];
 			}
 		}
 	}
 	
 	@Override
-	final public int getWidth() { return width; }
+	public int getWidth() { return width; }
 	@Override
-	final public int getHeight() { return height; }
+	public int getHeight() { return height; }
 	
-	final public long getLongSum( final int x, final int y )
+	public long getLongSum( final int x, final int y )
 	{
 		return sum[ y * w + w1 + x ];
 	}
 	
-	final public long getLongSum( final int xMin, final int yMin, final int xMax, final int yMax )
+	public long getLongSum( final int xMin, final int yMin, final int xMax, final int yMax )
 	{
 		final int y1w = yMin * w + w1;
 		final int y2w = yMax * w + w1;
@@ -184,13 +174,13 @@ final public class LongIntegralImage implements IntegralImage
 	}
 	
 	@Override
-	final public int getSum( final int xMin, final int yMin, final int xMax, final int yMax )
+	public int getSum( final int xMin, final int yMin, final int xMax, final int yMax )
 	{
 		return ( int )getLongSum( xMin, yMin, xMax, yMax );
 	}
 	
 	@Override
-	final public int getScaledSum( final int xMin, final int yMin, final int xMax, final int yMax, final float scale )
+	public int getScaledSum( final int xMin, final int yMin, final int xMax, final int yMax, final float scale )
 	{
 		final int y1w = yMin * w + w1;
 		final int y2w = yMax * w + w1;

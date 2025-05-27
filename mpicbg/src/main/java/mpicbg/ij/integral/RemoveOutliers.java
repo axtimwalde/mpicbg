@@ -81,7 +81,7 @@ public class RemoveOutliers extends BlockStatistics
 			{
 				final int xMin = Math.max( -1, x - blockRadiusX - 1 );
 				final int xMax = Math.min( w, x + blockRadiusX );
-				final long bs = ( xMax - xMin ) * bh;
+				final double bs = ( xMax - xMin ) * bh;
 				final double scale = 1.0 / bs;
 				final double scale1 = 1.0 / ( bs - 1 );
 				final double scale2 = 1.0 / ( bs * bs - bs );

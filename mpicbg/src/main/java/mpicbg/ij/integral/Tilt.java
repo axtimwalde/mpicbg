@@ -86,15 +86,15 @@ public class Tilt
 	 * @param ip
 	 * @return
 	 */
-	final static public Tilt create( final ImageProcessor ip )
+	static public Tilt create( final ImageProcessor ip )
 	{
-		if ( FloatProcessor.class.isInstance( ip ) )
+		if (ip instanceof FloatProcessor)
 			return new Tilt( ( FloatProcessor )ip );
-		else if ( ByteProcessor.class.isInstance( ip ) )
+		else if (ip instanceof ByteProcessor)
 			return new Tilt( ( ByteProcessor )ip );
-		else if ( ShortProcessor.class.isInstance( ip ) )
+		else if (ip instanceof ShortProcessor)
 			return new Tilt( ( ShortProcessor )ip );
-		else if ( ColorProcessor.class.isInstance( ip ) )
+		else if (ip instanceof ColorProcessor)
 			return new Tilt( ( ColorProcessor )ip );
 		else
 			return null;

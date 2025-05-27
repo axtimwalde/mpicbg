@@ -41,7 +41,8 @@ import ij.process.ImageProcessor;
 import mpicbg.util.Util;
 
 /**
- * 
+ * A 2d integral image (summed-area table) that allows for fast computation of
+ * the sum of pixel values in a rectangular area.
  *
  * @author Stephan Saalfeld &lt;saalfeld@mpi-cbg.de&gt;
  */
@@ -53,7 +54,7 @@ final public class IntIntegralImage implements IntegralImage
 	final private int w;
 	final private int w1;
 
-	final protected int[] sum;
+	final private int[] sum;
 	
 	IntIntegralImage( final byte[] pixels, final int width, final int height )
 	{
@@ -62,37 +63,32 @@ final public class IntIntegralImage implements IntegralImage
 		
 		w = width + 1;
 		w1 = w + 1;
-		
-		final int w2 = w + w;
-		
-		final int n = w * height + w;
-		final int n1 = n - w1;
-		final int n2 = n1 - w + 2;
-		
+		final int h = height + 1;
+		final int n = w * h;
+
 		sum = new int[ n ];
 
 		/* rows */
-		for ( int i = 0, j = w1; j < n; ++j )
-		{
-			final int end = i + width;
-			int s = sum[ j ] = pixels[ i ];
-			for ( ++i, ++j; i < end; ++i, ++j )
-			{
-				s += pixels[ i ];
-				sum[ j ] = s;
+		for (int j = 1; j < h; ++j) {
+			int rowSum = 0;
+			final int offset = (j - 1) * width;
+			final int offsetSum = j * w + 1;
+
+			for (int i = 0; i < width; ++i) {
+				rowSum += pixels[offset + i];
+				sum[offsetSum + i] = rowSum;
 			}
 		}
-		
+
 		/* columns */
-		for ( int j = w1; j < w2; j -= n1 )
-		{
-			final int end = j + n2;
-			
-			int s = sum[ j ];
-			for ( j += w; j < end; j += w )
-			{
-				s += sum[ j ];
-				sum[ j ] = s;
+		final int[] columnSum = new int[width];
+		for (int j = 1; j < w; ++j) {
+			final int offset = j * w + 1;
+
+			for (int i = 0; i < height; ++i) {
+				final int index = offset + i;
+				columnSum[i] += sum[index];
+				sum[index] = columnSum[i];
 			}
 		}
 	}
@@ -122,53 +118,48 @@ final public class IntIntegralImage implements IntegralImage
 
 		w = width + 1;
 		w1 = w + 1;
-		
-		final int w2 = w + w;
-		
-		final int n = w * height + w;
-		final int n1 = n - w1;
-		final int n2 = n1 - w + 2;
-		
+		final int h = height + 1;
+		final int n = w * h;
+
 		sum = new int[ n ];
 
 		/* rows */
-		for ( int i = 0, j = w1; j < n; ++j )
-		{
-			final int end = i + width;
-			int s = sum[ j ] = ip.get( i );
-			for ( ++i, ++j; i < end; ++i, ++j )
-			{
-				s += ip.get( i );
-				sum[ j ] = s;
+		for (int j = 1; j < h; ++j) {
+			int rowSum = 0;
+			final int offset = (j - 1) * width;
+			final int offsetSum = j * w + 1;
+
+			for (int i = 0; i < width; ++i) {
+				rowSum += ip.get(offset + i);
+				sum[offsetSum + i] = rowSum;
 			}
 		}
-		
+
 		/* columns */
-		for ( int j = w1; j < w2; j -= n1 )
-		{
-			final int end = j + n2;
-			
-			int s = sum[ j ];
-			for ( j += w; j < end; j += w )
-			{
-				s += sum[ j ];
-				sum[ j ] = s;
+		final int[] columnSum = new int[width];
+		for (int j = 1; j < w; ++j) {
+			final int offset = j * w + 1;
+
+			for (int i = 0; i < height; ++i) {
+				final int index = offset + i;
+				columnSum[i] += sum[index];
+				sum[index] = columnSum[i];
 			}
 		}
 	}
 	
 	@Override
-	final public int getWidth() { return width; }
+	public int getWidth() { return width; }
 	@Override
-	final public int getHeight() { return height; }
+	public int getHeight() { return height; }
 	
-	final public int getIntSum( final int x, final int y )
+	public int getIntSum( final int x, final int y )
 	{
 		return sum[ y * w + w1 + x ];
 	}
 	
 	
-	final public int getIntSum( final int xMin, final int yMin, final int xMax, final int yMax )
+	public int getIntSum( final int xMin, final int yMin, final int xMax, final int yMax )
 	{
 		final int y1w = yMin * w + w1;
 		final int y2w = yMax * w + w1;
@@ -177,13 +168,13 @@ final public class IntIntegralImage implements IntegralImage
 	
 	
 	@Override
-	final public int getSum( final int xMin, final int yMin, final int xMax, final int yMax )
+	public int getSum( final int xMin, final int yMin, final int xMax, final int yMax )
 	{
 		return getIntSum( xMin, yMin, xMax, yMax );
 	}
 	
 	@Override
-	final public int getScaledSum( final int xMin, final int yMin, final int xMax, final int yMax, final float scale )
+	public int getScaledSum( final int xMin, final int yMin, final int xMax, final int yMax, final float scale )
 	{
 		final int y1w = yMin * w + w1;
 		final int y2w = yMax * w + w1;

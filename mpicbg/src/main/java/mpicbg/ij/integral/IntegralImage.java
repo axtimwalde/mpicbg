@@ -63,8 +63,8 @@ package mpicbg.ij.integral;
  */
 public interface IntegralImage
 {
-	public int getWidth();
-	public int getHeight();
-	public int getSum( final int xMin, final int yMin, final int xMax, final int yMax );
-	public int getScaledSum( final int xMin, final int yMin, final int xMax, final int yMax, final float scale );
+	int getWidth();
+	int getHeight();
+	int getSum( final int xMin, final int yMin, final int xMax, final int yMax );
+	int getScaledSum( final int xMin, final int yMin, final int xMax, final int yMax, final float scale );
 }
