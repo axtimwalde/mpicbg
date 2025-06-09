@@ -99,7 +99,7 @@ public class FastFlat extends Flat
 	}
 	
 	
-	final static private int[] createHistogram(
+	static private int[] createHistogram(
 			final int blockRadius,
 			final int bins,
 			final int blockXCenter,
@@ -239,7 +239,7 @@ public class FastFlat extends Flat
 			}
 			
 			final int yMin = ( r == 0 ? 0 : rs[ r0 ] );
-			final int yMax = ( r < rs.length ? rs[ r1 ] : ip.getHeight() - 1 );
+			final int yMax = ( r < rs.length ? rs[ r1 ] : ip.getHeight() );
 			
 			for ( int c = 0; c <= cs.length; ++c )
 			{
@@ -264,7 +264,7 @@ public class FastFlat extends Flat
 				}
 				
 				final int xMin = ( c == 0 ? 0 : cs[ c0 ] );
-				final int xMax = ( c < cs.length ? cs[ c1 ] : ip.getWidth() - 1 );
+				final int xMax = ( c < cs.length ? cs[ c1 ] : ip.getWidth() );
 				
 				for ( int y = yMin; y < yMax; ++y )
 				{
