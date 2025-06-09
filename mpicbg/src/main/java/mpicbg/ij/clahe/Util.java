@@ -66,9 +66,8 @@ public class Util
 	 * @param hist source
 	 * @param clippedHist target 
 	 * @param limit clip limit
-	 * @param bins number of bins
 	 */
-	final static private void clipHistogram(
+	static private void clipHistogram(
 			final int[] hist,
 			final int[] clippedHist,
 			final int limit )
@@ -108,11 +107,11 @@ public class Util
 	/**
 	 * Create the full transfer function as a LUT
 	 * 
-	 * @param v the value
 	 * @param hist the histogram from which the function is generated
-	 * @return
+	 * @param limit the limit for clipping histogram entries
+	 * @return the transfer function as a LUT
 	 */
-	final static float[] createTransfer(
+	static float[] createTransfer(
 			final int[] hist,
 			final int limit )
 	{
@@ -147,9 +146,9 @@ public class Util
 	 * @param v the value
 	 * @param clippedHist the clipped histogram from which the transfer
 	 *        function is generated
-	 * @return
+	 * @return the value of the transfer function evaluated at v
 	 */
-	final static public float transferValue(
+	static public float transferValue(
 			final int v,
 			final int[] clippedHist )
 	{
@@ -181,7 +180,7 @@ public class Util
 	 * @param limit
 	 * @return
 	 */
-	final static public float transferValue(
+	static public float transferValue(
 			final int v,
 			final int[] hist,
 			final int[] clippedHist,
