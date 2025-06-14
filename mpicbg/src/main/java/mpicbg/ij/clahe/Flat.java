@@ -84,7 +84,7 @@ public class Flat
 	 * Provides methods for efficient histogram updates when iterating horizontally.
 	 */
 	private static class SlidingWindowHistogram {
-		private final int[] binnedValues; // Row-major storage of binned pixel values
+		private final int[] binnedValues; // Column-major storage of binned pixel values
 		private final int[] histogram;
 		private final int[] clippedHistogram;
 		private final int stride;
@@ -96,7 +96,7 @@ public class Flat
 		 * @param bins Number of histogram bins
 		 */
 		public SlidingWindowHistogram(ByteProcessor src, int bins) {
-			this.stride = src.getWidth();
+			this.stride = src.getHeight();
 			this.binnedValues = new int[src.getWidth() * src.getHeight()];
 			this.histogram = new int[bins + 1];
 			this.clippedHistogram = new int[bins + 1];
@@ -104,10 +104,9 @@ public class Flat
 
 			// Precompute all binned pixel values and store in row-major order
 			for (int y = 0; y < src.getHeight(); y++) {
-				final int offset = y * stride;
 				for (int x = 0; x < src.getWidth(); x++) {
 					final int originalValue = src.get(x, y);
-					binnedValues[offset + x] = mpicbg.util.Util.roundPos(originalValue * binningFactor);
+					binnedValues[x * stride + y] = mpicbg.util.Util.roundPos(originalValue * binningFactor);
 				}
 			}
 		}
@@ -126,10 +125,10 @@ public class Flat
 			this.yMax = yMax;
 
 			// Fill histogram for initial window
-			for (int y = yMin; y < yMax; y++) {
-				final int offset = y * stride;
-					for (int x = xMin; x < xMax; x++) {
-					histogram[binnedValues[offset + x]]++;
+				for (int x = xMin; x < xMax; x++) {
+					int offset = x * stride;
+					for (int y = yMin; y < yMax; y++) {
+						histogram[binnedValues[offset + y]]++;
 				}
 			}
 		}
@@ -139,8 +138,9 @@ public class Flat
 		 * @param x x-coordinate of the column to add
 		 */
 		public void addColumn(final int x) {
+			final int offset = x * stride;
 			for (int y = yMin; y < yMax; y++) {
-				++histogram[binnedValues[y * stride + x]];
+				++histogram[binnedValues[offset + y]];
 			}
 		}
 
@@ -149,8 +149,9 @@ public class Flat
 		 * @param x x-coordinate of the column to remove
 		 */
 		public void removeColumn(final int x) {
+			final int offset = x * stride;
 			for (int y = yMin; y < yMax; y++) {
-				--histogram[binnedValues[y * stride + x]];
+				--histogram[binnedValues[offset + y]];
 			}
 		}
 
