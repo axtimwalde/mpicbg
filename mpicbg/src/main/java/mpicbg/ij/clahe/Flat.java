@@ -98,9 +98,9 @@ public class Flat
 		public SlidingWindowHistogram(ByteProcessor src, int bins) {
 			this.stride = src.getHeight();
 			this.binnedValues = new int[src.getWidth() * src.getHeight()];
-			this.histogram = new int[bins + 1];
-			this.clippedHistogram = new int[bins + 1];
-			final float binningFactor = bins / 255.0f;
+			this.histogram = new int[bins];
+			this.clippedHistogram = new int[bins];
+			final float binningFactor = (bins - 1) / 255.0f;
 
 			// Precompute all binned pixel values and store in row-major order
 			for (int y = 0; y < src.getHeight(); y++) {
@@ -411,6 +411,7 @@ public class Flat
 	{
 		final boolean updatePerRow = imp.isVisible();
 		final SlidingWindowHistogram windowHistogram = new SlidingWindowHistogram(src, bins);
+		final float binningFactor = (bins - 1) / 255.0f;
 		
 		for ( int y = boxYMin; y < boxYMax; ++y )
 		{
@@ -427,7 +428,7 @@ public class Flat
 
 			for ( int x = boxXMin; x < boxXMax; ++x )
 			{
-				final int v = mpicbg.util.Util.roundPos( src.get( x, y ) / 255.0f * bins );
+				final int v = mpicbg.util.Util.roundPos(src.get(x, y) * binningFactor);
 				
 				final int xMin = Math.max( 0, x - blockRadius );
 				final int xMax = x + blockRadius + 1;
