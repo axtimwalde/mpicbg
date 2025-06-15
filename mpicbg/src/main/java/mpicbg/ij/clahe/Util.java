@@ -62,57 +62,82 @@ public class Util
 {
 	/**
 	 * Clip histogram and redistribute clipped entries.
+	 * Compared to the original cited above, this uses a lookahead method to reduce
+	 * the number of distribution steps. It is based on the algorithm described in
+	 * "Resource Efficient Real-Time Processing of Contrast Limited Adaptive Histogram
+	 * Equalization; Unal, Akoglu (2010)".
 	 * 
 	 * @param hist source
 	 * @param clippedHist target 
 	 * @param limit clip limit
-	 * @param bins number of bins
 	 */
-	final static private void clipHistogram(
+	static private void clipHistogram(
 			final int[] hist,
 			final int[] clippedHist,
 			final int limit )
 	{
-		System.arraycopy( hist, 0, clippedHist, 0, hist.length );
-		int clippedEntries = 0, clippedEntriesBefore;
-		do
-		{
-			clippedEntriesBefore = clippedEntries;
-			clippedEntries = 0;
-			for ( int i = 0; i < hist.length; ++i )
-			{
-				final int d = clippedHist[ i ] - limit;
-				if ( d > 0 )
-				{
-					clippedEntries += d;
-					clippedHist[ i ] = limit;
-				}
-			}
-			
-			final int d = clippedEntries / ( hist.length );
-			final int m = clippedEntries % ( hist.length );
-			for ( int i = 0; i < hist.length; ++i)
-				clippedHist[ i ] += d;
-			
-			if ( m != 0 )
-			{
-				final int s = ( hist.length - 1 ) / m;
-				for ( int i = s / 2; i < hist.length; i += s )
-					++clippedHist[ i ];
+		// First pass: copy histogram and clip entries
+		final int nBins = hist.length;
+		int excess = 0;
+		int fullBins = 0;
+		for (int i = 0; i < nBins; ++i) {
+			final int value = hist[i];
+			if (value >= limit) {
+				clippedHist[i] = limit;
+				excess += value - limit;
+				++fullBins;
+			} else {
+				clippedHist[i] = value;
 			}
 		}
-		while ( clippedEntries != clippedEntriesBefore );
+
+		// Do redistribution pass until excess is exhausted
+		while (excess > 0) {
+			final int freeBins = nBins - fullBins;
+			final int proRataExcess = excess / freeBins;
+			int remainder = excess % freeBins;
+
+			// Redistribute the average excess to all bins
+			for (int i = 0; i < nBins; ++i) {
+				// Distribute excess and remainder evenly across bins
+				int value = clippedHist[i];
+				if (value == limit) {
+					// Skip previously filled bins
+					continue;
+				}
+
+				// Add this bin's share of the excess and remainder
+				value += proRataExcess;
+				if (remainder > 0) {
+					++value;
+					--remainder;
+				}
+
+				if (value >= limit) {
+					// Accumulate new excess in the remainder
+					// There is a chance that it will be distributed already in this pass
+					clippedHist[i] = limit;
+					remainder += value - limit;
+					++fullBins;
+				} else {
+					clippedHist[i] = value;
+				}
+			}
+
+			// Update excess for next iteration
+			excess = remainder;
+		}
 	}
 	
 	
 	/**
 	 * Create the full transfer function as a LUT
 	 * 
-	 * @param v the value
 	 * @param hist the histogram from which the function is generated
-	 * @return
+	 * @param limit the limit for clipping histogram entries
+	 * @return the transfer function as a LUT
 	 */
-	final static float[] createTransfer(
+	static float[] createTransfer(
 			final int[] hist,
 			final int limit )
 	{
@@ -147,9 +172,9 @@ public class Util
 	 * @param v the value
 	 * @param clippedHist the clipped histogram from which the transfer
 	 *        function is generated
-	 * @return
+	 * @return the value of the transfer function evaluated at v
 	 */
-	final static public float transferValue(
+	static public float transferValue(
 			final int v,
 			final int[] clippedHist )
 	{
@@ -181,7 +206,7 @@ public class Util
 	 * @param limit
 	 * @return
 	 */
-	final static public float transferValue(
+	static public float transferValue(
 			final int v,
 			final int[] hist,
 			final int[] clippedHist,
