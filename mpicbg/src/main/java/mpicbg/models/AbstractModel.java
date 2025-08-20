@@ -344,7 +344,7 @@ A:		while ( i < iterations )
 
 			int numInliers = 0;
 			boolean isGood = m.test( candidates, tempInliers, epsilon, minInlierRatio );
-			while ( isGood && numInliers != tempInliers.size() )
+			while ( isGood && numInliers < tempInliers.size() )
 			{
 				numInliers = tempInliers.size();
 				try { m.fit( tempInliers ); }
