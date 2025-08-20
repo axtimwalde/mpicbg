@@ -295,6 +295,8 @@ public abstract class AbstractModel< M extends AbstractModel< M > > implements M
 	 *
 	 * @return true if {@link AbstractModel} could be estimated and inliers is not
 	 *   empty, false otherwise.  If false, {@link AbstractModel} remains unchanged.
+	 *   This model instance will be set at the end such that all inliers have errors less than epsilon
+	 *   (if you re-fit the model from the inliers, it may not)
 	 */
 	@Override
 	final public < P extends PointMatch >boolean ransac(
@@ -316,10 +318,9 @@ public abstract class AbstractModel< M extends AbstractModel< M > > implements M
 
 		inliers.clear();
 
-		int i = 0;
 		final HashSet< P > minMatches = new HashSet< P >();
 
-A:		while ( i < iterations )
+		for ( int i = 0; i < iterations; ++i )
 		{
 			// choose model.MIN_SET_SIZE disjunctive matches randomly
 			minMatches.clear();
@@ -335,10 +336,7 @@ A:		while ( i < iterations )
 			}
 			try { m.fit( minMatches ); }
 			catch ( final IllDefinedDataPointsException e )
-			{
-				++i;
-				continue;
-			}
+			{ continue; }
 
 			final ArrayList< P > tempInliers = new ArrayList< P >();
 
@@ -350,21 +348,23 @@ A:		while ( i < iterations )
 				try { m.fit( tempInliers ); }
 				catch ( final IllDefinedDataPointsException e )
 				{
-					++i;
-					continue A;
+					break; // the while loop
 				}
-				isGood = m.test( candidates, tempInliers, epsilon, minInlierRatio, minNumInliers );
+
+				// we want to iterate until the end with getMinNumMatches()
+				// and just at the end check if it became enough to fullfill minNumInliers
+				isGood = m.test( candidates, tempInliers, epsilon, minInlierRatio );
+
+				// make sure we do not only keep the last model, since the
+				// second last can be the better (defined as num inliers) one
+				// now we need to make sure it is enough inliers
+				if ( isGood && m.betterThan( copy ) && tempInliers.size() >= minNumInliers )
+				{
+					copy.set( m );
+					inliers.clear();
+					inliers.addAll( tempInliers );
+				}
 			}
-			if (
-					isGood &&
-					m.betterThan( copy ) &&
-					tempInliers.size() >= minNumInliers )
-			{
-				copy.set( m );
-				inliers.clear();
-				inliers.addAll( tempInliers );
-			}
-			++i;
 		}
 		if ( inliers.size() == 0 )
 			return false;
