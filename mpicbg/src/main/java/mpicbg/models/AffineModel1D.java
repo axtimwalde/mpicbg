@@ -39,6 +39,8 @@ package mpicbg.models;
 
 import java.util.Collection;
 
+import mpicbg.util.Util;
+
 /**
  *
  * @author Stephan Saalfeld &lt;saalfelds@janelia.hhmi.org&gt;
@@ -121,6 +123,20 @@ public class AffineModel1D extends AbstractAffineModel1D< AffineModel1D > implem
 			final double[] w )
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
+		fit( p, q, w, 0 );
+	}
+
+	/**
+	 * Closed form weighted least squares solution as described by
+	 * \citet{SchaeferAl06}.
+	 */
+	final public void fit(
+			final double[][] p,
+			final double[][] q,
+			final double[] w,
+			final double epsilon )
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException
+	{
 		assert
 		p.length >= 1 &&
 		q.length >= 1 : "1d affine transformations can be applied to 1d points only.";
@@ -134,7 +150,7 @@ public class AffineModel1D extends AbstractAffineModel1D< AffineModel1D > implem
 		final int l = p[ 0 ].length;
 
 		if ( l < MIN_NUM_MATCHES )
-			throw new NotEnoughDataPointsException( l + " data points are not enough to estimate a 2d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
+			throw new NotEnoughDataPointsException( l + " data points are not enough to estimate a 1d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
 
 		double pcx = 0;
 		double qcx = 0;
@@ -164,7 +180,7 @@ public class AffineModel1D extends AbstractAffineModel1D< AffineModel1D > implem
 			b += wwpx * qx;
 		}
 
-		if ( a == 0 )
+		if ( Util.isApproxEqual( a, 0, epsilon ) )
 			throw new IllDefinedDataPointsException();
 
 		m00 = b / a;
@@ -185,6 +201,20 @@ public class AffineModel1D extends AbstractAffineModel1D< AffineModel1D > implem
 			final float[] w )
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
+		fit( p, q, w, 0 );
+	}
+
+	/**
+	 * Closed form weighted least squares solution as described by
+	 * \citet{SchaeferAl06}.
+	 */
+	final public void fit(
+			final float[][] p,
+			final float[][] q,
+			final float[] w,
+			final float epsilon)
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException
+	{
 		assert
 		p.length >= 1 &&
 		q.length >= 1 : "1d affine transformations can be applied to 1d points only.";
@@ -198,7 +228,7 @@ public class AffineModel1D extends AbstractAffineModel1D< AffineModel1D > implem
 		final int l = p[ 0 ].length;
 
 		if ( l < MIN_NUM_MATCHES )
-			throw new NotEnoughDataPointsException( l + " data points are not enough to estimate a 2d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
+			throw new NotEnoughDataPointsException( l + " data points are not enough to estimate a 1d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
 
 		double pcx = 0;
 		double qcx = 0;
@@ -228,7 +258,7 @@ public class AffineModel1D extends AbstractAffineModel1D< AffineModel1D > implem
 			b += wwpx * qx;
 		}
 
-		if ( a == 0 )
+		if ( Util.isApproxEqual( a, 0, epsilon ) )
 			throw new IllDefinedDataPointsException();
 
 		m00 = b / a;
@@ -240,15 +270,23 @@ public class AffineModel1D extends AbstractAffineModel1D< AffineModel1D > implem
 	/**
 	 * Closed form weighted least squares solution as described by
 	 * \citet{SchaeferAl06}.
-	 *
-	 * TODO
 	 */
 	@Override
 	final public < P extends PointMatch >void fit( final Collection< P > matches )
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
+		fit( matches, 0 );
+	}
+
+	/**
+	 * Closed form weighted least squares solution as described by
+	 * \citet{SchaeferAl06}.
+	 */
+	final public < P extends PointMatch >void fit( final Collection< P > matches, final double epsilon )
+		throws NotEnoughDataPointsException, IllDefinedDataPointsException
+	{
 		if ( matches.size() < MIN_NUM_MATCHES )
-			throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
+			throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 1d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
 
 		double pcx = 0;
 		double qcx = 0;
@@ -283,7 +321,7 @@ public class AffineModel1D extends AbstractAffineModel1D< AffineModel1D > implem
 			b += wwpx * qx;
 		}
 
-		if ( a == 0 )
+		if ( Util.isApproxEqual( a, 0, epsilon ) )
 			throw new IllDefinedDataPointsException();
 
 		m00 = b / a;
