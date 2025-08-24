@@ -49,6 +49,7 @@ import ij.process.ShortProcessor;
 
 import java.awt.Rectangle;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * "Contrast Limited Adaptive Histogram Equalization" as
@@ -78,6 +79,93 @@ public class Flat
 	static public Flat getInstance(){ return instance; }
 	static public FastFlat getFastInstance(){ return fastInstance; }
 	
+	/**
+	 * A class for storing binned image data for efficient histogram processing.
+	 * Provides methods for efficient histogram updates when iterating horizontally.
+	 */
+	private static class SlidingWindowHistogram {
+		private final int[] binnedValues; // Column-major storage of binned pixel values
+		private final int[] histogram;
+		private final int[] clippedHistogram;
+		private final int stride;
+		private int yMin, yMax; // Current window bounds
+
+		/**
+		 * Create a new sliding window histogram
+		 * @param src Source image
+		 * @param bins Number of histogram bins
+		 */
+		public SlidingWindowHistogram(ByteProcessor src, int bins) {
+			this.stride = src.getHeight();
+			this.binnedValues = new int[src.getWidth() * src.getHeight()];
+			this.histogram = new int[bins];
+			this.clippedHistogram = new int[bins];
+			final float binningFactor = (bins - 1) / 255.0f;
+
+			// Precompute all binned pixel values and store in row-major order
+			for (int y = 0; y < src.getHeight(); y++) {
+				for (int x = 0; x < src.getWidth(); x++) {
+					final int originalValue = src.get(x, y);
+					binnedValues[x * stride + y] = mpicbg.util.Util.roundPos(originalValue * binningFactor);
+				}
+			}
+		}
+
+		/**
+		 * Initialize the histogram for the current row with the initial window
+		 * @param xMin Left bound of the initial window
+		 * @param xMax Right bound of the initial window
+		 * @param yMin Lower bound of the window
+		 * @param yMax Upper bound of the window
+		 */
+		public void initialize(int xMin, int xMax, int yMin, int yMax) {
+			// Clear histogram
+			Arrays.fill(histogram, 0);
+			this.yMin = yMin;
+			this.yMax = yMax;
+
+			// Fill histogram for initial window
+				for (int x = xMin; x < xMax; x++) {
+					int offset = x * stride;
+					for (int y = yMin; y < yMax; y++) {
+						histogram[binnedValues[offset + y]]++;
+				}
+			}
+		}
+
+		/**
+		 * Add a new column to the histogram
+		 * @param x x-coordinate of the column to add
+		 */
+		public void addColumn(final int x) {
+			final int offset = x * stride;
+			for (int y = yMin; y < yMax; y++) {
+				++histogram[binnedValues[offset + y]];
+			}
+		}
+
+		/**
+		 * Remove a column from the histogram
+		 * @param x x-coordinate of the column to remove
+		 */
+		public void removeColumn(final int x) {
+			final int offset = x * stride;
+			for (int y = yMin; y < yMax; y++) {
+				--histogram[binnedValues[offset + y]];
+			}
+		}
+
+		/**
+		 * Get the normalized value for a pixel using histogram equalization
+		 * @param v The binned pixel value
+		 * @param limit The clip limit for histogram equalization
+		 * @return The normalized pixel value (0-255)
+		 */
+		public int getNormalizedValue(final int v, final int limit) {
+			return mpicbg.util.Util.roundPos(Util.transferValue(v, histogram, clippedHistogram, limit) * 255.0f);
+		}
+	}
+
 	/**
 	 * Process an {@link ImagePlus} with a given set of parameters.  Create
 	 * mask and bounding box from the {@link Roi} of that {@link ImagePlus} and
@@ -322,6 +410,8 @@ public class Flat
 			final ArrayList< Apply< ? > > appliers )
 	{
 		final boolean updatePerRow = imp.isVisible();
+		final SlidingWindowHistogram windowHistogram = new SlidingWindowHistogram(src, bins);
+		final float binningFactor = (bins - 1) / 255.0f;
 		
 		for ( int y = boxYMin; y < boxYMax; ++y )
 		{
@@ -334,15 +424,11 @@ public class Flat
 			final int xMax0 = Math.min( imp.getWidth() - 1, boxXMin + blockRadius );
 			
 			/* initially fill histogram */
-			final int[] hist = new int[ bins + 1 ];
-			final int[] clippedHist = new int[ bins + 1 ];
-			for ( int yi = yMin; yi < yMax; ++yi )
-				for ( int xi = xMin0; xi < xMax0; ++xi )
-					++hist[ mpicbg.util.Util.roundPos( src.get( xi, yi ) / 255.0f * bins ) ];
-			
+			windowHistogram.initialize(xMin0, xMax0, yMin, yMax);
+
 			for ( int x = boxXMin; x < boxXMax; ++x )
 			{
-				final int v = mpicbg.util.Util.roundPos( src.get( x, y ) / 255.0f * bins );
+				final int v = mpicbg.util.Util.roundPos(src.get(x, y) * binningFactor);
 				
 				final int xMin = Math.max( 0, x - blockRadius );
 				final int xMax = x + blockRadius + 1;
@@ -351,27 +437,22 @@ public class Flat
 				
 				final int limit;
 				if ( mask == null )
-					limit = ( int )( slope * n / bins + 0.5f );
+					limit = mpicbg.util.Util.roundPos(slope * n / bins);
 				else
-					limit = ( int )( ( 1 + mask.get( x - boxXMin,  y - boxYMin ) / 255.0f * ( slope - 1 ) ) * n / bins + 0.5f );
-				
+					limit = mpicbg.util.Util.roundPos(1 + mask.get(x - boxXMin,  y - boxYMin) / 255.0f * (slope - 1) * n / bins);
+
 				/* remove left behind values from histogram */
-				if ( xMin > 0 )
-				{
-					final int xMin1 = xMin - 1;
-					for ( int yi = yMin; yi < yMax; ++yi )
-						--hist[ mpicbg.util.Util.roundPos( src.get( xMin1, yi ) / 255.0f * bins ) ];						
+				if (xMin > 0) {
+					windowHistogram.removeColumn(xMin - 1);
 				}
 					
 				/* add newly included values to histogram */
-				if ( xMax <= imp.getWidth() )
-				{
-					final int xMax1 = xMax - 1;
-					for ( int yi = yMin; yi < yMax; ++yi )
-						++hist[ mpicbg.util.Util.roundPos( src.get( xMax1, yi ) / 255.0f * bins ) ];						
+				if (xMax <= imp.getWidth()) {
+					windowHistogram.addColumn(xMax - 1);
 				}
-				
-				dst.set( x, y, mpicbg.util.Util.roundPos( Util.transferValue( v, hist, clippedHist, limit ) * 255.0f ) );
+
+				final int normalizedValue = windowHistogram.getNormalizedValue(v, limit);
+				dst.set(x, y, normalizedValue);
 			}
 			
 			/* multiply the current row into ip or the respective channel */
