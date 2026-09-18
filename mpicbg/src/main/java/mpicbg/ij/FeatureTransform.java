@@ -27,7 +27,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.Consumer;
 
 import mpicbg.imagefeatures.Feature;
 import mpicbg.imagefeatures.FloatArray2D;
@@ -90,15 +89,46 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 			final List<PointMatch> matches,
 			final float rod
 	) {
-		final NearestNeighborSearch neighborSearch = new BruteForceSearch(fs2);
+		final Feature[] targets = fs1.toArray(new Feature[0]);
+		final Feature[] candidates = fs2.toArray(new Feature[0]);
+		final TransposedFeatures transposed = new TransposedFeatures(candidates);
+		final float[] dist = new float[candidates.length];
 
-		for (final Feature f1 : fs1) {
-			final FeatureAccumulator accumulator = neighborSearch.findFor(f1);
-			final Feature best = accumulator.getClosestChecked(rod);
+		// Running nearest and second-nearest candidate per target, continued across candidate
+		// blocks. Blocks keep the transposed sub-matrix (128 x block x 4 bytes) L2-resident while
+		// all targets sweep over it; otherwise every target re-streams the whole matrix from L3.
+		final float[] best = new float[targets.length];
+		final float[] second = new float[targets.length];
+		final int[] closest = new int[targets.length];
+		java.util.Arrays.fill(best, Float.MAX_VALUE);
+		java.util.Arrays.fill(second, Float.MAX_VALUE);
 
-			if (best != null) {
+		for (int blockStart = 0; blockStart < candidates.length; blockStart += CANDIDATE_BLOCK) {
+			final int blockEnd = Math.min(candidates.length, blockStart + CANDIDATE_BLOCK);
+
+			for (int i = 0; i < targets.length; ++i) {
+				transposed.squaredDistances(targets[i].descriptor, dist, blockStart, blockEnd);
+
+				// Scan distances, record index of closest candidate and best / second-best distance
+				for (int j = blockStart; j < blockEnd; ++j) {
+					final float d = dist[j];
+					if (d < best[i]) {
+						second[i] = best[i];
+						best[i] = d;
+						closest[i] = j;
+					} else if (d < second[i]) {
+						second[i] = d;
+					}
+				}
+			}
+		}
+
+		for (int i = 0; i < targets.length; ++i) {
+			if (second[i] < Float.MAX_VALUE && Math.sqrt(best[i]) / Math.sqrt(second[i]) < rod) {
+				final Feature f1 = targets[i];
+				final Feature f2 = candidates[closest[i]];
 				final Point p1 = new Point(new double[]{f1.location[0], f1.location[1]});
-				final Point p2 = new Point(new double[]{best.location[0], best.location[1]});
+				final Point p2 = new Point(new double[]{f2.location[0], f2.location[1]});
 				matches.add(new PointMatch(p1, p2));
 			}
 		}
@@ -140,12 +170,11 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 			final double radius,
 			final float rod
 	) {
-		final NearestNeighborSearch neighborSearch = new RadiusSearch(fs2, radius);
+		final RadiusSearch neighborSearch = new RadiusSearch(fs2, radius);
 		final List<PointMatch> matches = new ArrayList<>();
 
 		for (final Feature f1 : fs1) {
-			final FeatureAccumulator accumulator = neighborSearch.findFor(f1);
-			final Feature best = accumulator.getClosestChecked(rod);
+			final Feature best = neighborSearch.findFor(f1, rod);
 
 			if (best != null) {
 				final Point p1 = new Point(new double[]{f1.location[0], f1.location[1]});
@@ -191,59 +220,81 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 	}
 
 
-	private static class FeatureAccumulator implements Consumer<Feature> {
-		private final Feature target;
+	/** Candidates per block: 128 components x 1024 x 4 bytes = 512 KiB, half of a typical L2. */
+	private static final int CANDIDATE_BLOCK = 1024;
 
-		private Feature currentClosest = null;
-		private double bestDistance = Double.MAX_VALUE;
-		private double secondBestDistance = Double.MAX_VALUE;
+	/*
+	 * Candidate descriptors stored transposed and column-major ({@code transposed[k][j]} is
+	 * component k of candidate j). Thus, the distances of one target to all candidates can be
+	 * computed with the candidate index as the innermost loop. That loop is a plain element-wise
+	 * update of {@code dist[j]} with no cross-iteration dependency, which C2 auto-vectorizes; a
+	 * per-pair sum over the 128 components is a float reduction, which it never vectorizes. The
+	 * summation order per pair is the same as in {@link Feature#descriptorDistance}, so results
+	 * are bit-identical.
+	 */
+	private static class TransposedFeatures {
+		private final int n;
+		private final float[][] transposed;
 
-		public FeatureAccumulator(Feature target) {
-			this.target = target;
-		}
+		/** Transpose {@code features} for vectorization during distance calculations. */
+		TransposedFeatures(final Feature[] features) {
+			final int m = features.length;
+			n = (m == 0) ? 0 : features[0].descriptor.length;
+			transposed = new float[n][m];
 
-		@Override
-		public void accept(Feature feature) {
-			final double d = target.descriptorDistance(feature);
-
-			if (d < bestDistance) {
-				secondBestDistance = bestDistance;
-				bestDistance = d;
-				currentClosest = feature;
-			} else if (d < secondBestDistance) {
-				secondBestDistance = d;
+			for (int j = 0; j < m; ++j) {
+				final float[] d = features[j].descriptor;
+				for (int k = 0; k < n; ++k) {
+					transposed[k][j] = d[k];
+				}
 			}
 		}
 
-		public Feature getClosestChecked(double maxRatioOfDistances) {
-			if (secondBestDistance < Double.MAX_VALUE && bestDistance / secondBestDistance < maxRatioOfDistances) {
-				return currentClosest;
-			} else {
-				return null;
+		/**
+		 * Squared distances of {@code target} to the candidates {@code start} (inclusive)
+		 * to {@code end} (exclusive) into {@code dist}.
+		 */
+		void squaredDistances(final float[] target, final float[] dist, final int start, final int end) {
+			java.util.Arrays.fill(dist, start, end, 0f);
+
+			// Manually unroll the loops by 4 to help the compiler vectorize it
+			int k = 0;
+			for (; k < n - 3; k += 4) {
+				// Load 4 components of the target descriptor
+				final float t0 = target[k];
+				final float t1 = target[k + 1];
+				final float t2 = target[k + 2];
+				final float t3 = target[k + 3];
+
+				// Load 4 column-blocks of the transposed candidate descriptors
+				final float[] c0 = transposed[k];
+				final float[] c1 = transposed[k + 1];
+				final float[] c2 = transposed[k + 2];
+				final float[] c3 = transposed[k + 3];
+
+				// Add to the squared distances for each candidate in the block
+				for (int j = start; j < end; ++j) {
+					final float a0 = t0 - c0[j];
+					final float a1 = t1 - c1[j];
+					final float a2 = t2 - c2[j];
+					final float a3 = t3 - c3[j];
+					dist[j] += a0 * a0 + a1 * a1 + a2 * a2 + a3 * a3;
+				}
+			}
+
+			// Cleanup loop for any remaining components
+			for (; k < n; ++k) {
+				final float tk = target[k];
+				final float[] ck = transposed[k];
+				for (int j = start; j < end; ++j) {
+					final float a = tk - ck[j];
+					dist[j] += a * a;
+				}
 			}
 		}
 	}
 
-	private interface NearestNeighborSearch {
-		FeatureAccumulator findFor(Feature f);
-	}
-
-	private static class BruteForceSearch implements NearestNeighborSearch {
-		private final Collection<Feature> features;
-
-		public BruteForceSearch(Collection<Feature> features) {
-			this.features = features;
-		}
-
-		@Override
-		public FeatureAccumulator findFor(Feature f) {
-			final FeatureAccumulator acc = new FeatureAccumulator(f);
-			features.forEach(acc);
-			return acc;
-		}
-	}
-
-	private static class RadiusSearch implements NearestNeighborSearch {
+	private static class RadiusSearch {
 
 		private static class Node {
 			private final Feature feature;
@@ -259,6 +310,11 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 
 		private final double radiusSquared;
 		private final Node root;
+
+		private Feature target;
+		private Feature currentClosest;
+		private double bestDistance;
+		private double secondBestDistance;
 
 		public RadiusSearch(Collection<Feature> features, double radius) {
 			this.radiusSquared = radius * radius;
@@ -283,19 +339,21 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 			return new Node(medianFeature, buildTree(left, depth + 1), buildTree(right, depth + 1));
 		}
 
-		@Override
-		public FeatureAccumulator findFor(Feature f) {
-			final FeatureAccumulator acc = new FeatureAccumulator(f);
-			search(root, f, 0, acc);
-			return acc;
+		public Feature findFor(Feature f, double maxRatioOfDistances) {
+			target = f;
+			currentClosest = null;
+			bestDistance = Double.MAX_VALUE;
+			secondBestDistance = Double.MAX_VALUE;
+			search(root, 0);
+
+			if (secondBestDistance < Double.MAX_VALUE && bestDistance / secondBestDistance < maxRatioOfDistances) {
+				return currentClosest;
+			} else {
+				return null;
+			}
 		}
 
-		private void search(
-				final Node node,
-				final Feature target,
-				final int depth,
-				final FeatureAccumulator acc
-		) {
+		private void search(final Node node, final int depth) {
 			if (node == null) {
 				return;
 			}
@@ -303,7 +361,14 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 			// Include node if it is within the radius
 			final double distanceSquared = locationDistanceSquared(target, node.feature);
 			if (distanceSquared < radiusSquared) {
-				acc.accept(node.feature);
+				final double d = target.descriptorDistance(node.feature);
+				if (d < bestDistance) {
+					secondBestDistance = bestDistance;
+					bestDistance = d;
+					currentClosest = node.feature;
+				} else if (d < secondBestDistance) {
+					secondBestDistance = d;
+				}
 			}
 
 			// Check where the target is relative to the decision boundary
@@ -319,11 +384,11 @@ abstract public class FeatureTransform< T extends FloatArray2DFeatureTransform< 
 				near = node.right;
 				far = node.left;
 			}
-			search(near, target, depth + 1, acc);
+			search(near, depth + 1);
 
 			// Only search the other subtree if it is within the radius
 			if (far != null && distanceToDecisionBoundary * distanceToDecisionBoundary < radiusSquared) {
-				search(far, target, depth + 1, acc);
+				search(far, depth + 1);
 			}
 		}
 

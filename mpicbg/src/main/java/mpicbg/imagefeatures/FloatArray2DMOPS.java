@@ -115,7 +115,7 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 
 	static public long getFeatureObjectSize( final int fdsize )
 	{
-		return fdsize * fdsize * 4 + 32 + 32;
+		return fdsize * fdsize * 4L + 32 + 32;
 	}
 
 
@@ -130,6 +130,9 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 	 * Difference of Gaussian detector
 	 */
 	private final FloatArray2DScaleOctaveDoGDetector dog;
+
+	/** per-candidate scratch (a FloatArray2DMOPS instance is not thread-safe anyway) */
+	private final OrientationHistogram orientationHistogram = new OrientationHistogram();
 
 	/**
 	 * Constructor
@@ -240,7 +243,7 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 		float max = Float.MIN_VALUE;
 		float min = Float.MAX_VALUE;
 
-		//! sample the region arround the keypoint location
+		//! sample the region around the keypoint location
 		for ( int y = p.fdSize - 1; y >= 0; --y )
 		{
 			final double ys =
@@ -283,9 +286,9 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 	}
 
 	/**
-	 * assign orientation to the given candidate, if more than one orientations
+	 * assign orientation to the given candidate, if more than one orientation
 	 * found, duplicate the feature for each orientation
-	 *
+	 * <p>
 	 * estimate the feature descriptor for each of those candidates
 	 *
 	 * @param c candidate {@code 0=>x, 1=>y, 2=>scale index}
@@ -297,10 +300,8 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 			final int o,
 			final List< Feature > features )
 	{
-		final int ORIENTATION_BINS = 36;
-		final int ORIENTATION_BINS1 = ORIENTATION_BINS - 1;
-		final double ORIENTATION_BIN_SIZE = 2.0 * Math.PI / ORIENTATION_BINS;
-		final float[] histogram_bins = new float[ ORIENTATION_BINS ];
+		final int ORIENTATION_BINS = OrientationHistogram.BINS;
+		final double ORIENTATION_BIN_SIZE = OrientationHistogram.BIN_SIZE;
 
 		final int scale = 1 << o;
 
@@ -308,56 +309,9 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 
 		final double octave_sigma = octave.SIGMA[ 0 ] * Math.pow( 2.0, c[ 2 ] / ( double )octave.STEPS );
 
-		// create a circular gaussian window with sigma 1.5 times that of the feature
-		final FloatArray2D gaussianMask =
-			Filter.createGaussianKernelOffset(
-					octave_sigma * 1.5,
-					c[ 0 ] - Math.floor( c[ 0 ] ),
-					c[ 1 ] - Math.floor( c[ 1 ] ),
-					false );
-		//FloatArrayToImagePlus( gaussianMask, "gaussianMask", 0, 0 ).show();
+		final float[] histogram_bins = orientationHistogram.compute(octave, c, octave_sigma);
 
-		// get the gradients in a region arround the keypoints location
-		final FloatArray2D[] src = octave.getL1( ( int )Math.round( c[ 2 ] ) );
-		final FloatArray2D[] gradientROI = new FloatArray2D[ 2 ];
-		gradientROI[ 0 ] = new FloatArray2D( gaussianMask.width, gaussianMask.width );
-		gradientROI[ 1 ] = new FloatArray2D( gaussianMask.width, gaussianMask.width );
-
-		final int half_size = gaussianMask.width / 2;
-		int n = gaussianMask.width * gaussianMask.width - 1;
-		for ( int yi = gaussianMask.width - 1; yi >= 0; --yi )
-		{
-			final int ra_y = src[ 0 ].width * Math.max( 0, Math.min( src[ 0 ].height - 1, ( int )c[ 1 ] + yi - half_size ) );
-			final int ra_x = ra_y + Math.min( ( int )c[ 0 ], src[ 0 ].width - 1 );
-
-			for ( int xi = gaussianMask.width - 1; xi >= 0; --xi )
-			{
-				final int pt = Math.max( ra_y, Math.min( ra_y + src[ 0 ].width - 2, ra_x + xi - half_size ) );
-				gradientROI[ 0 ].data[ n ] = src[ 0 ].data[ pt ];
-				gradientROI[ 1 ].data[ n ] = src[ 1 ].data[ pt ];
-				--n;
-			}
-		}
-
-		// and mask this region with the precalculated gaussion window
-		for ( int i = 0; i < gradientROI[ 0 ].data.length; ++i )
-		{
-			gradientROI[ 0 ].data[ i ] *= gaussianMask.data[ i ];
-		}
-
-		// TODO this is for test
-		//---------------------------------------------------------------------
-		//ImageArrayConverter.FloatArrayToImagePlus( gradientROI[ 0 ], "gaussianMaskedGradientROI", 0, 0 ).show();
-		//ImageArrayConverter.FloatArrayToImagePlus( gradientROI[ 1 ], "gaussianMaskedGradientROI", 0, 0 ).show();
-
-		// build an orientation histogram of the region
-		for ( int i = 0; i < gradientROI[ 0 ].data.length; ++i )
-		{
-			final int bin = Math.max( 0, Math.min( ORIENTATION_BINS1, ( int )( ( gradientROI[ 1 ].data[ i ] + Math.PI ) / ORIENTATION_BIN_SIZE ) ) );
-			histogram_bins[ bin ] += gradientROI[ 0 ].data[ i ];
-		}
-
-		// find the dominant orientation and interpolate it with respect to its two neighbours
+		// find the dominant orientation and interpolate it with respect to its two neighbors
 		int max_i = 0;
 		for ( int i = 0; i < ORIENTATION_BINS; ++i )
 		{
@@ -389,7 +343,7 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 		//---------------------------------------------------------------------
 		//ImageArrayConverter.FloatArrayToImagePlus( pattern, "test", 0f, 1.0f ).show();
 
-		/**
+		/*
 		 * check if there is another significant orientation ( > 80% max )
 		 * if there is one, duplicate the feature and
 		 */
@@ -401,7 +355,7 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 					( max_i - 1 + ORIENTATION_BINS ) % ORIENTATION_BINS != i &&
 					histogram_bins[ i ] > 0.8 * histogram_bins[ max_i ] )
 			{
-				/**
+				/*
 				 * interpolate orientation estimate the offset from center of
 				 * the parabolic extremum of the taylor series through env[1],
 				 * derivatives via central difference and laplace
@@ -429,7 +383,6 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 				}
 			}
 		}
-		return;
 	}
 
 
@@ -442,7 +395,7 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 	 */
 	public List< Feature > runOctave( final int o )
 	{
-		final List< Feature > features = new ArrayList< Feature >();
+		final List< Feature > features = new ArrayList<>();
 		final FloatArray2DScaleOctave octave = octaves[ o ];
 		octave.build();
 		dog.run( octave );
@@ -458,18 +411,17 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 
 	/**
 	 * Detect features in all scale octaves.
-	 *
+	 * <p>
 	 * Note that there are O_SCALE_LD2 more octaves needed for descriptor extraction.
 	 *
 	 * @return detected features
 	 */
 	public List< Feature > run()
 	{
-		final List< Feature > features = new ArrayList< Feature >();
-		for ( int o = 0; o < octaves.length; ++o )
-		{
-			if ( octaves[ o ].state == FloatArray2DScaleOctave.State.EMPTY ) continue;
-			octaves[ o ].build();
+		final List< Feature > features = new ArrayList<>();
+		for (FloatArray2DScaleOctave octave : octaves) {
+			if (octave.state == FloatArray2DScaleOctave.State.EMPTY) continue;
+			octave.build();
 		}
 		for ( int o = 0; o < octaves.length - O_SCALE_LD2; ++o )
 		{
@@ -482,17 +434,17 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 
 	/**
 	 * Detect features in all scale octaves.
-	 *
+	 * <p>
 	 * Note that there are O_SCALE_LD2 more octaves needed for descriptor extraction.
 	 *
 	 * @return detected features
 	 */
 	public List< Feature > run( final int max_size )
 	{
-		final List< Feature > features = new ArrayList< Feature >();
-		for ( int o = 0; o < octaves.length; ++o )
-			if ( octaves[ o ].width <= max_size && octaves[ o ].height <= max_size )
-				octaves[ o ].build();
+		final List< Feature > features = new ArrayList<>();
+		for (FloatArray2DScaleOctave octave : octaves)
+			if (octave.width <= max_size && octave.height <= max_size)
+				octave.build();
 		for ( int o = 0; o < octaves.length - O_SCALE_LD2; ++o )
 			if ( octaves[ o ].width <= max_size && octaves[ o ].height <= max_size )
 			{
@@ -540,7 +492,7 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 			final HashMap< Point, Feature > m1,
 			final HashMap< Point, Feature > m2 )
 	{
-		final List< PointMatch > matches = new ArrayList< PointMatch >();
+		final List< PointMatch > matches = new ArrayList<>();
 
 		for ( final Feature f1 : fs1 )
 		{
@@ -629,7 +581,7 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 			final double max_id,
 			final double rod )
 	{
-		final List< PointMatch > matches = new ArrayList< PointMatch >();
+		final List< PointMatch > matches = new ArrayList<>();
 		final double min_sd = 1.0 / max_sd;
 
 		final int size = fs2.size();
@@ -713,12 +665,12 @@ public class FloatArray2DMOPS extends FloatArray2DFeatureTransform< FloatArray2D
 	{
 		System.out.print( "estimating feature size histogram ..." );
 		final int num_features = features.size();
-		final double h[] = new double[ bins ];
-		final int hb[] = new int[ bins ];
+		final double[] h = new double[ bins ];
+		final int[] hb = new int[ bins ];
 
 		for ( final Feature f : features )
 		{
-			final int bin = ( int )Math.max( 0, Math.min( bins - 1, ( int )( Math.log( f.scale ) / Math.log( 2.0 ) * 28.0f ) ) );
+			final int bin = Math.max(0, Math.min(bins - 1, (int)(Math.log(f.scale) / Math.log(2.0) * 28.0f)));
 			++hb[ bin ];
 		}
 		for ( int i = 0; i < bins; ++i )

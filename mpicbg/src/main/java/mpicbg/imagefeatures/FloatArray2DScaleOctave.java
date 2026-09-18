@@ -21,6 +21,8 @@
  */
 package mpicbg.imagefeatures;
 
+import java.util.Arrays;
+
 /**
  * single octave of a discrete {@code FloatArray2DScaleSpace}
  * <p>
@@ -65,36 +67,30 @@ public class FloatArray2DScaleOctave
 	private float K_MIN1_INV = 1.0f / ( K - 1.0f );
 
 	/**
-	 * steps per octave
-	 * 
-	 * an octave consists of STEPS + 3 images to be 
+	 * Steps per octave. An octave consists of STEPS + 3 images to be.
 	 */
 	public int STEPS = 1;
 	
 	/**
 	 * sigma of gaussian kernels corresponding to the steps of the octave
-	 * 
+	 * <p>
 	 * the first member is the sigma of the gaussian kernel that is assumed to
 	 * be the generating kernel of the first gaussian image instance of the
 	 * octave 
 	 */
 	public float[] SIGMA;
-//	public float[] getSigma()
-//	{
-//		return SIGMA;
-//	}
-	
+
 	/**
 	 * sigma of gaussian kernels required to create the corresponding gaussian
 	 * image instances from the first one
 	 */
-	private float[] SIGMA_DIFF;
+	private final float[] SIGMA_DIFF;
 	
 	/**
 	 * 1D gaussian kernels required to create the corresponding gaussian
 	 * image instances from the first one
 	 */
-	private float[][] KERNEL_DIFF;
+	private final float[][] KERNEL_DIFF;
 	
 	/**
 	 * gaussian smoothed images
@@ -110,7 +106,7 @@ public class FloatArray2DScaleOctave
 	}
 	
 	/**
-	 * scale normalised difference of gaussian images
+	 * scale normalized difference of gaussian images
 	 */
 	private FloatArray2D[] d;
 	public FloatArray2D[] getD()
@@ -134,7 +130,10 @@ public class FloatArray2DScaleOctave
 	 *   that it is within a valid range
 	 *
 	 * @return reference to the gradients
+	 *
+	 * @deprecated use {@link #getGradients(int)}, which does not allocate full-size arrays
 	 */
+	@Deprecated
 	public FloatArray2D[] getL1( int i )
 	{
 		if ( l1[ i ] == null )
@@ -143,13 +142,53 @@ public class FloatArray2DScaleOctave
 		}
 		return l1[ i ];
 	}
+
+	/**
+	 * Gradient of one level, computed per pixel on demand and not stored. SIFT samples only a
+	 * fraction of all pixels, each about 1.5 times, so caching would save little compute but
+	 * cost two full-size arrays per level. Same formulas as {@link Filter#createGradients(FloatArray2D)}.
+	 */
+	public static final class Gradients {
+		final float[] data;
+		public final int width, height;
+
+		Gradients(final FloatArray2D l) {
+			data = l.data;
+			width = l.width;
+			height = l.height;
+		}
+
+		/** central difference in x at ( x, y ), clamped at the border */
+		public float derX(final int x, final int y) {
+			final int r = y * width;
+			return (data[r + Math.min(x + 1, width - 1)] - data[r + Math.max(0, x - 1)]) / 2;
+		}
+
+		/** central difference in y at ( x, y ), clamped at the border */
+		public float derY(final int x, final int y) {
+			return (data[width * Math.min(y + 1, height - 1) + x] - data[width * Math.max(0, y - 1) + x]) / 2;
+		}
+
+		/** Math.pow( d, 2 ) == d * d exactly, so this equals Filter.createGradients */
+		public static float mag(final float der_x, final float der_y) {
+			return (float)Math.sqrt((double)der_x * der_x + (double)der_y * der_y);
+		}
+	}
+
+	private Gradients[] g;
+
+	public Gradients getGradients(final int i) {
+		if (g[i] == null)
+			g[i] = new Gradients(l[i]);
+		return g[i];
+	}
 	
 	/**
 	 * Constructor
 	 * 
 	 * @param img image being the first gaussian instance of the scale octave
 	 *   img must be a 2d-array of float values in range [0.0f, ..., 1.0f]
-	 * @param initial_sigma inital gaussian sigma
+	 * @param initial_sigma initial gaussian sigma
 	 */
 	public FloatArray2DScaleOctave(
 			FloatArray2D img,
@@ -193,11 +232,11 @@ public class FloatArray2DScaleOctave
 	
 	/**
 	 * Constructor
-	 * 
-	 * faster initialisation with precomputed gaussian kernels
+	 * <p>
+	 * faster initialization with precomputed gaussian kernels
 	 * 
 	 * @param img image being the first gaussian instance of the scale octave 
-	 * @param sigma initial_sigma inital gaussian sigma
+	 * @param sigma initial_sigma initial gaussian sigma
 	 * 
 	 */
 	public FloatArray2DScaleOctave(
@@ -228,7 +267,7 @@ public class FloatArray2DScaleOctave
 	
 	/**
 	 * build only the gaussian image with 2 * INITIAL_SIGMA
-	 * 
+	 * <p>
 	 * Use this method for the partial creation of an octaved scale space
 	 * without creating each scale octave.  Like proposed by Lowe
 	 * \citep{Lowe04}, you can use this image to build the next scale octave.
@@ -261,26 +300,19 @@ public class FloatArray2DScaleOctave
 		}
 		else l = new FloatArray2D[ STEPS + 3 ];
 		l[ 0 ] = img;
+		d = new FloatArray2D[STEPS + 2];
+		for (int i = 0; i < d.length; ++i)
+			d[i] = new FloatArray2D(width, height);
+
 		for ( int i = 1; i < SIGMA_DIFF.length; ++i )
 		{
 			if ( state == State.STUB && i == STEPS ) continue;
-			l[ i ] = Filter.convolveSeparable( l[ 0 ], KERNEL_DIFF[ i ], KERNEL_DIFF[ i ] );
-		}
-		d = new FloatArray2D[ STEPS + 2 ];
-		for ( int i = 0; i < d.length; ++i )
-		{
-			d[ i ] = new FloatArray2D( l[ i ].width, l[ i ].height );
-			int j = i + 1;
-			for ( int k = 0; k < l[ i ].data.length; ++k )
-			{
-				d[ i ].data[ k ] = ( l[ j ].data[ k ] - l[ i ].data[ k ] ) * K_MIN1_INV;
-			}
+			final FloatArray2D upper = i + 1 < l.length ? l[i + 1] : null; // the stub, if it is the next level
+			l[i] = Filter.convolveSeparable(l[0], KERNEL_DIFF[i], KERNEL_DIFF[i], l[i - 1], d[i - 1], upper, upper == null ? null : d[i], K_MIN1_INV);
 		}
 		l1 = new FloatArray2D[ STEPS + 3 ][];
-		for ( int i = 0; i < l1.length; ++i )
-		{
-			l1[ i ] = null;
-		}
+		Arrays.fill(l1, null);
+		g = new Gradients[STEPS + 3];
 		
 		state = State.COMPLETE;
 		
@@ -296,6 +328,7 @@ public class FloatArray2DScaleOctave
 		this.d = null;
 		this.l = null;
 		this.l1 = null;
+		this.g = null;
 	}
 
 
