@@ -134,7 +134,7 @@ public class AffineModel1D extends AbstractAffineModel1D< AffineModel1D > implem
 		final int l = p[ 0 ].length;
 
 		if ( l < MIN_NUM_MATCHES )
-			throw new NotEnoughDataPointsException( l + " data points are not enough to estimate a 2d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
+			throw new NotEnoughDataPointsException( l + " data points are not enough to estimate a 1d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
 
 		double pcx = 0;
 		double qcx = 0;
@@ -198,7 +198,7 @@ public class AffineModel1D extends AbstractAffineModel1D< AffineModel1D > implem
 		final int l = p[ 0 ].length;
 
 		if ( l < MIN_NUM_MATCHES )
-			throw new NotEnoughDataPointsException( l + " data points are not enough to estimate a 2d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
+			throw new NotEnoughDataPointsException( l + " data points are not enough to estimate a 1d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
 
 		double pcx = 0;
 		double qcx = 0;
@@ -248,7 +248,7 @@ public class AffineModel1D extends AbstractAffineModel1D< AffineModel1D > implem
 		throws NotEnoughDataPointsException, IllDefinedDataPointsException
 	{
 		if ( matches.size() < MIN_NUM_MATCHES )
-			throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 2d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
+			throw new NotEnoughDataPointsException( matches.size() + " data points are not enough to estimate a 1d affine model, at least " + MIN_NUM_MATCHES + " data points required." );
 
 		double pcx = 0;
 		double qcx = 0;
