@@ -202,8 +202,8 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 		assert point.length >= 2 : "2d homographies can be applied to 2d points only.";
 
 		final double[] t = point.clone();
-		applyInPlace( t );
-		return null;
+		applyInverseInPlace( t );
+		return t;
 	}
 
 	//@Override
@@ -518,7 +518,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 		m.m01 = i01;
 		m.m02 = i02;
 
-		m.m10 = i00;
+		m.m10 = i10;
 		m.m11 = i11;
 		m.m12 = i12;
 
@@ -531,7 +531,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 		m.i01 = m01;
 		m.i02 = m02;
 
-		m.i10 = m00;
+		m.i10 = m10;
 		m.i11 = m11;
 		m.i12 = m12;
 
