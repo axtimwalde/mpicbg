@@ -291,6 +291,24 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 		throws NotEnoughDataPointsException;
 
 	/**
+	 * {@link #ransac(List, Collection, int, double, double, int) RANSAC} with
+	 * a caller-defined {@link RansacStoppingCriterion early stopping criterion}.
+	 * {@code iterations} remains the upper bound.
+	 */
+	public default < P extends PointMatch >boolean ransac(
+			final List< P > candidates,
+			final Collection< P > inliers,
+			final int iterations,
+			final double epsilon,
+			final double minInlierRatio,
+			final int minNumInliers,
+			final RansacStoppingCriterion stop )
+		throws NotEnoughDataPointsException
+	{
+		throw new UnsupportedOperationException();
+	}
+
+	/**
 	 * Call {@link #ransac(List, Collection, int, double, double, int)} with
 	 * minNumInliers = {@link #getMinNumMatches()}.
 	 */
@@ -330,6 +348,25 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 			final int minNumInliers,
 			final double maxTrust )
 		throws NotEnoughDataPointsException;
+
+	/**
+	 * {@link #filterRansac(List, Collection, int, double, double, int, double)}
+	 * with a caller-defined {@link RansacStoppingCriterion early stopping
+	 * criterion} for the RANSAC stage.
+	 */
+	public default < P extends PointMatch >boolean filterRansac(
+			final List< P > candidates,
+			final Collection< P > inliers,
+			final int iterations,
+			final double maxEpsilon,
+			final double minInlierRatio,
+			final int minNumInliers,
+			final double maxTrust,
+			final RansacStoppingCriterion stop )
+		throws NotEnoughDataPointsException
+	{
+		throw new UnsupportedOperationException();
+	}
 
 	/**
 	 * Call {@link #filterRansac(List, Collection, int, double, double, int, double)}
