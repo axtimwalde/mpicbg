@@ -43,6 +43,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
+import java.util.function.Predicate;
 
 /**
  * Abstract class for arbitrary transformation models to be applied
@@ -306,12 +307,12 @@ public abstract class AbstractModel< M extends AbstractModel< M > > implements M
 			final int minNumInliers )
 		throws NotEnoughDataPointsException
 	{
-		return ransac( candidates, inliers, iterations, epsilon, minInlierRatio, minNumInliers, RansacStoppingCriterion.NONE );
+		return ransac( candidates, inliers, iterations, epsilon, minInlierRatio, minNumInliers, s -> false );
 	}
 
 	/**
 	 * {@link #ransac(List, Collection, int, double, double, int) RANSAC} with
-	 * a caller-defined {@link RansacStoppingCriterion early stopping criterion}.
+	 * a caller-defined early stopping predicate, which returns true to stop.
 	 * {@code iterations} remains the upper bound.
 	 */
 	@Override
@@ -322,7 +323,7 @@ public abstract class AbstractModel< M extends AbstractModel< M > > implements M
 			final double epsilon,
 			final double minInlierRatio,
 			final int minNumInliers,
-			final RansacStoppingCriterion stop )
+			final Predicate< RansacState > stop )
 		throws NotEnoughDataPointsException
 	{
 		if ( candidates.size() < getMinNumMatches() )
@@ -337,9 +338,9 @@ public abstract class AbstractModel< M extends AbstractModel< M > > implements M
 
 		int i = 0;
 		final HashSet< P > minMatches = new HashSet< P >();
-		final RansacStoppingCriterion.State state = new RansacStoppingCriterion.State( candidates, inliers, copy );
+		final RansacState state = new RansacState( candidates, inliers, copy );
 
-A:		while ( i < iterations && !stop.shouldStop( state.at( i ) ) )
+A:		while ( i < iterations && !stop.test( state.at( i ) ) )
 		{
 			// choose model.MIN_SET_SIZE disjunctive matches randomly
 			minMatches.clear();
@@ -439,13 +440,13 @@ A:		while ( i < iterations && !stop.shouldStop( state.at( i ) ) )
 			final double maxTrust )
 		throws NotEnoughDataPointsException
 	{
-		return filterRansac( candidates, inliers, iterations, maxEpsilon, minInlierRatio, minNumInliers, maxTrust, RansacStoppingCriterion.NONE );
+		return filterRansac( candidates, inliers, iterations, maxEpsilon, minInlierRatio, minNumInliers, maxTrust, s -> false );
 	}
 
 	/**
 	 * {@link #filterRansac(List, Collection, int, double, double, int, double)}
-	 * with a caller-defined {@link RansacStoppingCriterion early stopping
-	 * criterion} for the RANSAC stage.
+	 * with a caller-defined early stopping predicate
+	 * (true to stop) for the RANSAC stage.
 	 */
 	@Override
 	final public < P extends PointMatch >boolean filterRansac(
@@ -456,7 +457,7 @@ A:		while ( i < iterations && !stop.shouldStop( state.at( i ) ) )
 			final double minInlierRatio,
 			final int minNumInliers,
 			final double maxTrust,
-			final RansacStoppingCriterion stop )
+			final Predicate< RansacState > stop )
 		throws NotEnoughDataPointsException
 	{
 		final ArrayList< P > temp = new ArrayList< P >();
