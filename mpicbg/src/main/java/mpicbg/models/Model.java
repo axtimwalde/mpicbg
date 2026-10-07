@@ -39,6 +39,7 @@ package mpicbg.models;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * {@link CoordinateTransform} whose parameters can be estimated through
@@ -291,6 +292,24 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 		throws NotEnoughDataPointsException;
 
 	/**
+	 * {@link #ransac(List, Collection, int, double, double, int) RANSAC} with
+	 * a caller-defined early stopping predicate, which returns true to stop.
+	 * {@code iterations} remains the upper bound.
+	 */
+	public default < P extends PointMatch >boolean ransac(
+			final List< P > candidates,
+			final Collection< P > inliers,
+			final int iterations,
+			final double epsilon,
+			final double minInlierRatio,
+			final int minNumInliers,
+			final Predicate< ? super RansacState< M, P > > stop )
+		throws NotEnoughDataPointsException
+	{
+		throw new UnsupportedOperationException();
+	}
+
+	/**
 	 * Call {@link #ransac(List, Collection, int, double, double, int)} with
 	 * minNumInliers = {@link #getMinNumMatches()}.
 	 */
@@ -330,6 +349,25 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 			final int minNumInliers,
 			final double maxTrust )
 		throws NotEnoughDataPointsException;
+
+	/**
+	 * {@link #filterRansac(List, Collection, int, double, double, int, double)}
+	 * with a caller-defined early stopping predicate
+	 * (true to stop) for the RANSAC stage.
+	 */
+	public default < P extends PointMatch >boolean filterRansac(
+			final List< P > candidates,
+			final Collection< P > inliers,
+			final int iterations,
+			final double maxEpsilon,
+			final double minInlierRatio,
+			final int minNumInliers,
+			final double maxTrust,
+			final Predicate< ? super RansacState< M, P > > stop )
+		throws NotEnoughDataPointsException
+	{
+		throw new UnsupportedOperationException();
+	}
 
 	/**
 	 * Call {@link #filterRansac(List, Collection, int, double, double, int, double)}
