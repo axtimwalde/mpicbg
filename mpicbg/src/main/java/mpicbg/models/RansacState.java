@@ -12,9 +12,15 @@ import java.util.List;
  */
 public final class RansacState< M extends Model< M >, P extends PointMatch >
 {
-	private final List< P > candidates;
-	private final Collection< P > bestInliers;
-	private final M bestModel;
+	/** All candidates. */
+	public final List< P > candidates;
+
+	/** Inliers of the best model found so far (empty if none yet). */
+	public final Collection< P > bestInliers;
+
+	/** Best model found so far (cost {@link Double#MAX_VALUE} and otherwise undefined if {@link #bestInliers} is empty). */
+	public final M bestModel;
+
 	private int iterations;
 
 	RansacState( final List< P > candidates, final Collection< P > bestInliers, final M bestModel )
@@ -32,19 +38,4 @@ public final class RansacState< M extends Model< M >, P extends PointMatch >
 
 	/** Number of iterations completed so far. */
 	public int iterations() { return iterations; }
-
-	/** Total number of candidates. */
-	public int numCandidates() { return candidates.size(); }
-
-	/** Number of inliers of the best model found so far (0 if none yet). */
-	public int bestNumInliers() { return bestInliers.size(); }
-
-	/** Inliers of the best model found so far (empty if none yet). */
-	public Collection< P > bestInliers() { return bestInliers; }
-
-	/** Cost of the best model found so far ({@link Double#MAX_VALUE} if none yet). */
-	public double bestCost() { return bestModel.getCost(); }
-
-	/** Best model found so far (undefined if {@link #bestNumInliers()} is 0). */
-	public M bestModel() { return bestModel; }
 }
