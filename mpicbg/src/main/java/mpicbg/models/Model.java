@@ -303,7 +303,7 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 			final double epsilon,
 			final double minInlierRatio,
 			final int minNumInliers,
-			final Predicate< RansacState > stop )
+			final Predicate< ? super RansacState< M, P > > stop )
 		throws NotEnoughDataPointsException
 	{
 		throw new UnsupportedOperationException();
@@ -363,7 +363,7 @@ public interface Model< M extends Model< M > > extends CoordinateTransform
 			final double minInlierRatio,
 			final int minNumInliers,
 			final double maxTrust,
-			final Predicate< RansacState > stop )
+			final Predicate< ? super RansacState< M, P > > stop )
 		throws NotEnoughDataPointsException
 	{
 		throw new UnsupportedOperationException();

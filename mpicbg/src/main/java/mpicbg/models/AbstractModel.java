@@ -323,7 +323,7 @@ public abstract class AbstractModel< M extends AbstractModel< M > > implements M
 			final double epsilon,
 			final double minInlierRatio,
 			final int minNumInliers,
-			final Predicate< RansacState > stop )
+			final Predicate< ? super RansacState< M, P > > stop )
 		throws NotEnoughDataPointsException
 	{
 		if ( candidates.size() < getMinNumMatches() )
@@ -338,7 +338,7 @@ public abstract class AbstractModel< M extends AbstractModel< M > > implements M
 
 		int i = 0;
 		final HashSet< P > minMatches = new HashSet< P >();
-		final RansacState state = new RansacState( candidates, inliers, copy );
+		final RansacState< M, P > state = new RansacState<>( candidates, inliers, copy );
 
 A:		while ( i < iterations && !stop.test( state.at( i ) ) )
 		{
@@ -457,7 +457,7 @@ A:		while ( i < iterations && !stop.test( state.at( i ) ) )
 			final double minInlierRatio,
 			final int minNumInliers,
 			final double maxTrust,
-			final Predicate< RansacState > stop )
+			final Predicate< ? super RansacState< M, P > > stop )
 		throws NotEnoughDataPointsException
 	{
 		final ArrayList< P > temp = new ArrayList< P >();
