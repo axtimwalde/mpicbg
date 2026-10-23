@@ -1,0 +1,33 @@
+{
+  "manifest_version": 1,
+  "generator_version": "2",
+  "project_name": "mpicbg",
+  "options": {
+    "profiles": "java,research",
+    "loaded_profiles": "minimal,java,research",
+    "gpu": "none",
+    "timezone": "America/New_York",
+    "maven_mount": "false"
+  },
+  "files": [
+    { "path": ".claude/agents/document-summarizer.md", "sha256": "7feef9ed3fe96ee820c31b8f07536769f171381c467d5c203af73e5c32ea1b21" },
+    { "path": ".claude/agents/github-profile-analyzer.md", "sha256": "9677a161816a4a350483470d76c0a0679f026139d5cc5eb5a3627fca8eff3323" },
+    { "path": ".claude/agents/scholar-profile-analyzer.md", "sha256": "aee2e927434d03042cb0193528c98e66cddf65edeb05b6fb7010ee19c328b96d" },
+    { "path": ".claude/settings.local.json", "sha256": "f120be59992bac457b2f7def64f32b902b15eca76f9c42e74b09841031b9544b" },
+    { "path": ".claude/skills/ensemble/SKILL.md", "sha256": "ac30952c2163d622930fa3b68105b57426f188ad9d8fa7f0843ea1d76e96dfa8" },
+    { "path": ".claude/skills/github-profile/SKILL.md", "sha256": "0122d2843db4f938214bd2289aea20c399e22eec50efca8ada21ec3008c46ee3" },
+    { "path": ".claude/skills/github-profile/github_activity.py", "sha256": "30fff08bc9d342599be583727d34d30c57a91c93e1b8df8db527e99a4488dfa2" },
+    { "path": ".claude/skills/github-profile/github_repos.py", "sha256": "3770e2c378299dd9ec981e6538711c455a770d44b8f63a30ffd06ca9c78ad6b5" },
+    { "path": ".claude/skills/scholar-profile/SKILL.md", "sha256": "d7bde018d622107f3d361d0d546b79529668218bceb281d9b90403741260768e" },
+    { "path": ".claude/skills/scholar-profile/semantic_scholar.py", "sha256": "93fd0417872f6886e64185563a684c2310a204542c2959ae374ea2889eaf2001" },
+    { "path": ".claudeignore", "sha256": "83274b04584a54aea79db6fc583643ff2b5f9680464ae4d6c8b4556cbace606c" },
+    { "path": ".devcontainer/Dockerfile", "sha256": "d27c420e0793c8ad345c16a265263f7b9aaad86a4a77f8855fb97f84a404f672" },
+    { "path": ".devcontainer/devcontainer.json", "sha256": "8cbb07be0b96d31fe106e3acc5fdd8e18941e12ca12c0a9ada38a317f3bfc635" },
+    { "path": ".devcontainer/init-firewall.sh", "sha256": "f4ac7f7189f8126479d6a27deea02c5cd99dc9ad882e206e630dc72a6875c422" },
+    { "path": ".devcontainer/requirements.txt", "sha256": "38e14196383c3b0f4fc167bd12bcc592ccb4b19bce8e29cdd55783d92882791f" },
+    { "path": ".env.example", "sha256": "574a7e0a0f094ac578fbbd5488cc9c1baaac8823865160750cc9a70a8fe9ca87" },
+    { "path": ".gitignore", "sha256": "dad73da7b926a19752c15f265be68c2c72ac7b3bf6fa0ff6cc4354f38dd77e61" },
+    { "path": ".mcp.json", "sha256": "b3342a6271f585004ee86bdc7261e4be340054ba716c7d1a755f55e62fc2674e" },
+    { "path": "CLAUDE.md", "sha256": "a57ccb31701f1b440c7c6db3f5aecdf4d68fd88116076a7bb808871617b87e71" }
+  ]
+}

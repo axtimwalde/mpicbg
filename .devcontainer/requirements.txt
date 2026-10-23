@@ -1,0 +1,11 @@
+# Python packages
+markitdown[all]==0.1.7
+markitdown-mcp  # alpha-only releases, no stable version to pin
+
+# Jupyter environment
+jupyter==1.1.1
+jupytext==1.19.5
+ipython==9.17.1
+
+# Profile packages
+scholarly==1.7.11

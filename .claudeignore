@@ -1,0 +1,20 @@
+# Ignore all environment files
+.env
+.env.*
+.env.local
+.env.production
+.env.development
+
+# Ignore any credentials or secrets
+*.key
+*.pem
+*.cert
+*.crt
+*_secret*
+*_private*
+credentials.json
+secrets.json
+
+# Ignore sensitive configuration
+config/secrets/
+private/
