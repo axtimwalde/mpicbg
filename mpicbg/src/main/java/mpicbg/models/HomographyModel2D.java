@@ -8,12 +8,12 @@
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
@@ -39,9 +39,9 @@ package mpicbg.models;
 
 import java.util.Collection;
 
-import mpicbg.util.Matrix3x3;
 import Jama.Matrix;
 import Jama.SingularValueDecomposition;
+import mpicbg.util.Matrix3x3;
 
 /**
  * 2d-homography {@link AbstractModel} to be applied to points in 2d-space.
@@ -170,7 +170,6 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 				b20, b21, b22 };
 	}
 
-	//@Override
 	@Override
 	final public double[] apply( final double[] point )
 	{
@@ -181,7 +180,6 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 		return t;
 	}
 
-	//@Override
 	@Override
 	final public void applyInPlace( final double[] point )
 	{
@@ -195,18 +193,16 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 		point[ 1 ] = t1 / s;
 	}
 
-	//@Override
 	@Override
 	final public double[] applyInverse( final double[] point ) throws NoninvertibleModelException
 	{
 		assert point.length >= 2 : "2d homographies can be applied to 2d points only.";
 
 		final double[] t = point.clone();
-		applyInPlace( t );
-		return null;
+		applyInverseInPlace( t );
+		return t;
 	}
 
-	//@Override
 	@Override
 	final public void applyInverseInPlace( final double[] point ) throws NoninvertibleModelException
 	{
@@ -334,14 +330,28 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 		}
 		else
 		{
+			/*
+			 * Over-determined case: weighted direct linear transform (DLT) on
+			 * Hartley-normalized coordinates.  Both point sets are translated to
+			 * their (weighted) centroid and scaled such that the mean distance
+			 * from the centroid is sqrt(2).  This keeps the entries of the DLT
+			 * matrix at comparable magnitude, which the SVD requires for a
+			 * well-conditioned null vector at pixel coordinates.  The resulting
+			 * homography Hn is denormalized as H = inv(T2) * Hn * T1.
+			 */
 			final int n = matches.size() * 2;
 			final double[][] a = new double[ n ][ 9 ];
-			int i = 0;
+			final double[] ws = new double[ matches.size() ];
+			final double[][] ps = new double[ matches.size() ][ 2 ];
+			final double[][] qs = new double[ matches.size() ][ 2 ];
 
+			double pcx = 0, pcy = 0, qcx = 0, qcy = 0, wSum = 0;
+			int i = 0;
 			for ( final P pm : matches )
 			{
 				final double[] p = pm.getP1().getL();
 				final double[] q = pm.getP2().getW();
+				final double w = pm.getWeight();
 
 				double px = p[ 0 ];
 				double py = p[ 1 ];
@@ -353,28 +363,77 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 				if ( Double.isInfinite( px ) || Double.isNaN( px ) )
 					px = 1;
 
-				if ( Double.isInfinite( py ) || Double.isNaN( py ))
+				if ( Double.isInfinite( py ) || Double.isNaN( py ) )
 					py = 1;
 
-				if ( Double.isInfinite( qx ) || Double.isNaN( qx ))
+				if ( Double.isInfinite( qx ) || Double.isNaN( qx ) )
 					qx = 1;
 
-				if ( Double.isInfinite( qy ) || Double.isNaN( qy ))
+				if ( Double.isInfinite( qy ) || Double.isNaN( qy ) )
 					qy = 1;
 
-				a[ i ][ 0 ] = -px;
-				a[ i ][ 1 ] = -py;
-				a[ i ][ 2 ] = -1;
-				a[ i ][ 6 ] = qx * px;
-				a[ i ][ 7 ] = qx * py;
-				a[ i++ ][ 8 ] = qx;
+				ps[ i ][ 0 ] = px;
+				ps[ i ][ 1 ] = py;
+				qs[ i ][ 0 ] = qx;
+				qs[ i ][ 1 ] = qy;
+				ws[ i ] = w;
 
-				a[ i ][ 3 ] = -px;
-				a[ i ][ 4 ] = -py;
-				a[ i ][ 5 ] = -1;
-				a[ i ][ 6 ] = qy * px;
-				a[ i ][ 7 ] = qy * py;
-				a[ i++ ][ 8 ] = qy;
+				wSum += w;
+				pcx += w * px;
+				pcy += w * py;
+				qcx += w * qx;
+				qcy += w * qy;
+				++i;
+			}
+
+			if ( wSum <= 0 || Double.isNaN( wSum ) || Double.isInfinite( wSum ) )
+				throw new IllDefinedDataPointsException();
+
+			pcx /= wSum;
+			pcy /= wSum;
+			qcx /= wSum;
+			qcy /= wSum;
+
+			double pd = 0, qd = 0;
+			for ( i = 0; i < ws.length; ++i )
+			{
+				final double dpx = ps[ i ][ 0 ] - pcx, dpy = ps[ i ][ 1 ] - pcy;
+				final double dqx = qs[ i ][ 0 ] - qcx, dqy = qs[ i ][ 1 ] - qcy;
+				pd += ws[ i ] * Math.sqrt( dpx * dpx + dpy * dpy );
+				qd += ws[ i ] * Math.sqrt( dqx * dqx + dqy * dqy );
+			}
+			pd /= wSum;
+			qd /= wSum;
+
+			if ( pd == 0 || qd == 0 )
+				throw new IllDefinedDataPointsException();
+
+			final double sp = Math.sqrt( 2 ) / pd;
+			final double sq = Math.sqrt( 2 ) / qd;
+
+			int r = 0;
+			for ( i = 0; i < ws.length; ++i )
+			{
+				// row scale sqrt( w ) minimizes sum_i w_i * r_i^2
+				final double sw = Math.sqrt( ws[ i ] );
+				final double px = sp * ( ps[ i ][ 0 ] - pcx );
+				final double py = sp * ( ps[ i ][ 1 ] - pcy );
+				final double qx = sq * ( qs[ i ][ 0 ] - qcx );
+				final double qy = sq * ( qs[ i ][ 1 ] - qcy );
+
+				a[ r ][ 0 ] = -sw * px;
+				a[ r ][ 1 ] = -sw * py;
+				a[ r ][ 2 ] = -sw;
+				a[ r ][ 6 ] = sw * qx * px;
+				a[ r ][ 7 ] = sw * qx * py;
+				a[ r++ ][ 8 ] = sw * qx;
+
+				a[ r ][ 3 ] = -sw * px;
+				a[ r ][ 4 ] = -sw * py;
+				a[ r ][ 5 ] = -sw;
+				a[ r ][ 6 ] = sw * qy * px;
+				a[ r ][ 7 ] = sw * qy * py;
+				a[ r++ ][ 8 ] = sw * qy;
 			}
 
 			final Matrix mA = new Matrix( a );
@@ -384,15 +443,42 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 
 			cost = s.get( 8, 8 );
 
-			m00 = v.get( 0, 8 );
-			m01 = v.get( 1, 8 );
-			m02 = v.get( 2, 8 );
-			m10 = v.get( 3, 8 );
-			m11 = v.get( 4, 8 );
-			m12 = v.get( 5, 8 );
-			m20 = v.get( 6, 8 );
-			m21 = v.get( 7, 8 );
-			m22 = v.get( 8, 8 );
+			// Hn in normalized coordinates
+			final double
+					h00 = v.get( 0, 8 ), h01 = v.get( 1, 8 ), h02 = v.get( 2, 8 ),
+					h10 = v.get( 3, 8 ), h11 = v.get( 4, 8 ), h12 = v.get( 5, 8 ),
+					h20 = v.get( 6, 8 ), h21 = v.get( 7, 8 ), h22 = v.get( 8, 8 );
+
+			// Hn * T1 with T1 = [ sp 0 -sp*pcx; 0 sp -sp*pcy; 0 0 1 ]
+			final double
+					t00 = h00 * sp, t01 = h01 * sp, t02 = -sp * ( h00 * pcx + h01 * pcy ) + h02,
+					t10 = h10 * sp, t11 = h11 * sp, t12 = -sp * ( h10 * pcx + h11 * pcy ) + h12,
+					t20 = h20 * sp, t21 = h21 * sp, t22 = -sp * ( h20 * pcx + h21 * pcy ) + h22;
+
+			// inv( T2 ) * ( Hn * T1 ) with inv( T2 ) = [ 1/sq 0 qcx; 0 1/sq qcy; 0 0 1 ]
+			m00 = t00 / sq + qcx * t20;
+			m01 = t01 / sq + qcx * t21;
+			m02 = t02 / sq + qcx * t22;
+			m10 = t10 / sq + qcy * t20;
+			m11 = t11 / sq + qcy * t21;
+			m12 = t12 / sq + qcy * t22;
+			m20 = t20;
+			m21 = t21;
+			m22 = t22;
+
+			// fix the projective scale such that m22 == 1 where possible
+			if ( Math.abs( m22 ) > 1e-12 )
+			{
+				m00 /= m22;
+				m01 /= m22;
+				m02 /= m22;
+				m10 /= m22;
+				m11 /= m22;
+				m12 /= m22;
+				m20 /= m22;
+				m21 /= m22;
+				m22 = 1;
+			}
 
 			invert();
 		}
@@ -505,10 +591,6 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 		max[ 1 ] = maxY;
 	}
 
-	/**
-	 * TODO Not yet tested
-	 */
-	//@Override
 	@Override
 	final public HomographyModel2D createInverse()
 	{
@@ -518,7 +600,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 		m.m01 = i01;
 		m.m02 = i02;
 
-		m.m10 = i00;
+		m.m10 = i10;
 		m.m11 = i11;
 		m.m12 = i12;
 
@@ -531,7 +613,7 @@ public class HomographyModel2D extends AbstractModel< HomographyModel2D > implem
 		m.i01 = m01;
 		m.i02 = m02;
 
-		m.i10 = m00;
+		m.i10 = m10;
 		m.i11 = m11;
 		m.i12 = m12;
 
